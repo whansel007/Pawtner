@@ -7,10 +7,12 @@ export function ProofScreen({
   onBack,
   onVerified,
   medication,
+  petName,
 }: {
   onBack: () => void;
   onVerified: () => void;
   medication: Medication;
+  petName: string;
 }) {
   const { t } = useTranslation();
   const [captured, setCaptured] = useState(false);
@@ -23,7 +25,7 @@ export function ProofScreen({
       <button className={`scanner proof-scanner ${captured ? "captured" : ""}`} onClick={() => setCaptured(true)}>
         {captured ? <><span className="proof-check"><Icon name="check" size={38} /></span><strong>{t("proof.verified")}</strong><small>{medication.name} · {medication.dosage}</small></> : <><span className="camera-orb"><Icon name="camera" size={30} /></span><strong>{t("proof.tapPhoto")}</strong><small>{t("proof.onePill")}</small></>}
       </button>
-      {captured && <button className="primary-button" onClick={onVerified}>{t("proof.giveHeart")}</button>}
+      {captured && <button className="primary-button" onClick={onVerified}>{t("proof.giveHeart", { name: petName })}</button>}
     </section>
   );
 }

@@ -1,28 +1,27 @@
 import { useTranslation } from "react-i18next";
+import type { DerivedDose } from "../../../shared/contract";
 import { Icon } from "../components/Icon";
-import type { Dose, Pet } from "../types";
+import { NextDoseCard } from "../components/NextDoseCard";
+import type { Pet } from "../types";
 
 export function HomeScreen({
-  taken,
-  doses,
+  todayDoses,
   pet,
-  onTaken,
+  onTakenDose,
   onReminders,
   onTreat,
   onWalk,
   onBloodPressure,
 }: {
-  taken: boolean[];
-  doses: Dose[];
+  todayDoses: DerivedDose[];
   pet: Pet;
-  onTaken: (index: number) => void;
+  onTakenDose: (doseId: string) => void;
   onReminders: () => void;
   onTreat: () => void;
   onWalk: () => void;
   onBloodPressure: () => void;
 }) {
   const { t } = useTranslation();
-  const takenCount = taken.filter(Boolean).length;
   return (
     // Stacked column: the dog (shared DogLayer) stands in the leftover space, so its paws always sit just above the chips.
     <div className="home-layout">
@@ -36,35 +35,14 @@ export function HomeScreen({
           </button>
         </div>
       </div>
-      {/* TODO(CodeBuddy, T1-08/09): replace with the compact next-dose card; this slot stays flex: none. */}
-      <section className="content-card home-card">
-        <div className="card-heading">
-          <div>
-            <p className="eyebrow green">{t("home.dailyCare")}</p>
-            <h2>{t("home.title")}</h2>
-          </div>
-          <span className="progress-copy">{t("home.progress", { count: takenCount, total: doses.length })}</span>
-        </div>
-        <div className="home-actions">
-          <button onClick={onWalk}><span><Icon name="walk" size={19} /></span><div><strong>{t("home.walk")}</strong><small>{t("home.walkSub")}</small></div></button>
-          <button onClick={onBloodPressure}><span><Icon name="heart" size={19} /></span><div><strong>{t("home.bp")}</strong><small>{t("home.bpSub")}</small></div></button>
-        </div>
-        <div className="med-list">
-          {doses.map((medicine, index) => (
-            <article className={`med-row ${taken[index] ? "is-taken" : ""}`} key={`${medicine.name}-${medicine.time}`}>
-              <time>{medicine.time}</time>
-              <span className="med-icon"><Icon name="pill" size={20} /></span>
-              <div className="med-copy">
-                <h3>{medicine.name}</h3>
-                <p>{medicine.dose}</p>
-              </div>
-              <button className="taken-button" onClick={() => onTaken(index)}>
-                {taken[index] ? <Icon name="check" size={17} /> : index === 1 ? t("home.taken") : t("home.takeNow")}
-              </button>
-            </article>
-          ))}
-        </div>
-      </section>
+      <NextDoseCard
+        doses={todayDoses}
+        petName={pet.name}
+        onTaken={onTakenDose}
+        onSeeAll={onReminders}
+        onWalk={onWalk}
+        onBloodPressure={onBloodPressure}
+      />
     </div>
   );
 }

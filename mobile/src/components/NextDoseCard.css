@@ -1,0 +1,183 @@
+.next-dose-card {
+  --ndc-gap: 10px;
+  --ndc-pad: 16px 16px 14px;
+
+  position: relative;
+  flex: none;
+  border-radius: 24px;
+  padding: var(--ndc-pad);
+  background: var(--color-surface-card, #fffdf7);
+  box-shadow: var(--shadow-card, 0 2px 16px rgba(0, 0, 0, 0.08));
+  display: flex;
+  flex-direction: column;
+  gap: var(--ndc-gap);
+  font-family: var(--font-family-base, "Nunito", sans-serif);
+}
+
+/* Header row */
+.next-dose-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.next-dose-card__label {
+  font-size: var(--font-size-base, 14px);
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-text-eyebrow-green, #4a7a5a);
+}
+
+.next-dose-card__progress {
+  font-size: var(--font-size-base, 14px);
+  font-weight: 700;
+  color: #6c806f;
+}
+
+/* Dose row */
+.next-dose-card__row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 4px 0;
+}
+
+.next-dose-card__time {
+  font-size: var(--font-size-base, 14px);
+  font-weight: 700;
+  color: #6f7d73;
+  white-space: nowrap;
+}
+
+.next-dose-card__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+.next-dose-card__name {
+  font-size: var(--font-size-xl, 18px);
+  font-weight: 800;
+  color: var(--color-text-heading, #1c3a2a);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.next-dose-card__strength {
+  font-size: var(--font-size-md, 15px);
+  color: var(--color-text-muted, #79867e);
+}
+
+/* Taken button */
+.next-dose-card__taken-btn {
+  min-width: 64px;
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--radius-lg, 12px);
+  color: #fff;
+  background: var(--color-primary-deep, #2d6b4a);
+  font-family: inherit;
+  font-size: var(--font-size-md, 15px);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.next-dose-card__taken-btn:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.next-dose-card__taken-btn:focus-visible {
+  outline: 2px solid var(--color-primary-deep, #2d6b4a);
+  outline-offset: 2px;
+}
+
+/* Empty / all-done state */
+.next-dose-card__empty {
+  margin: 0;
+  padding: 6px 0;
+  font-size: var(--font-size-md, 15px);
+  font-weight: 600;
+  color: #6c806f;
+}
+
+/* Pill buttons row */
+.next-dose-card__pills {
+  display: flex;
+  gap: 8px;
+}
+
+.next-dose-card__pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  border: 0;
+  border-radius: var(--radius-pill, 999px);
+  font-family: inherit;
+  font-size: var(--font-size-md, 15px);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.next-dose-card__pill:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.next-dose-card__pill:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.next-dose-card__pill:nth-child(1) {
+  color: #315743;
+  background: var(--color-surface-sage, #e8f0e9);
+}
+
+.next-dose-card__pill:nth-child(2) {
+  color: #945f45;
+  background: var(--color-surface-cream-alt, #f7efe6);
+}
+
+/* See-all link */
+.next-dose-card__see-all {
+  align-self: flex-start;
+  border: 0;
+  padding: 2px 0 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--font-size-base, 14px);
+  font-weight: 700;
+  color: var(--color-text-muted, #79867e);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.next-dose-card__see-all:focus-visible {
+  outline: 2px solid var(--color-text-muted, #79867e);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .next-dose-card__taken-btn,
+  .next-dose-card__pill,
+  .next-dose-card__taken-btn:active,
+  .next-dose-card__pill:active {
+    transition: none;
+    transform: none;
+  }
+}

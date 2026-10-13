@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap");
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -95,6 +96,7 @@
 
   /* ── Font ── */
   --font-family-base: "Nunito", sans-serif;
+  --font-family-letter: "Pinyon Script", "Snell Roundhand", cursive;
   --font-weight-regular: 400;
   --font-weight-bold: 800;
   --font-weight-black: 900;
@@ -693,7 +695,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
   cursor: pointer;
   background: #1a2a22;
   overflow: hidden;
-  animation: dedication-fade-in 0.8s ease-in-out both;
+  animation: dedication-fade-in 0.25s ease-in-out both;
 }
 
 .intro-dedication-bg {
@@ -734,24 +736,25 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   padding: 44px 56px;
-  animation: dedication-card-rise 1.2s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s both;
+  animation: dedication-card-rise 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) 0.05s both;
 }
 
 .dedication-rule {
   display: block;
-  width: 48px;
+  width: 32px;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 202, 116, 0.6), transparent);
 }
 
 .dedication-text {
   margin: 0;
-  font-family: var(--font-family-base);
-  font-size: 32px;
+  font-family: var(--font-family-letter);
+  font-size: clamp(1.75rem, 8vw, 2.25rem);
   font-weight: 400;
-  letter-spacing: 2px;
+  font-style: normal;
+  letter-spacing: 0;
   color: rgba(255, 253, 247, 0.96);
   text-shadow: 0 2px 20px rgba(20, 40, 28, 0.5);
 }
@@ -784,12 +787,31 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 }
 
 @keyframes dedication-card-rise {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes glow-breathe {
   0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
   50%      { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-cover,
+  .intro-cover-img,
+  .intro-cover-cta,
+  .intro-cover-pulse,
+  .intro-dedication,
+  .intro-dedication-glow,
+  .dedication-card {
+    animation: none !important;
+  }
+  .dedication-card {
+    opacity: 1;
+    transform: none;
+  }
+  .intro-dedication {
+    opacity: 1;
+  }
 }
 
