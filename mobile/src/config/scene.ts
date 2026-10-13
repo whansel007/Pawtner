@@ -43,11 +43,12 @@ export const MOOD_LOOKS: Record<DogMood, { glow: number; playful: boolean }> = {
 /**
  * Where the companion dog stands on each screen.
  * home: on the lawn just above the Today chips. ledge: on the top edge of the screen's content card.
- * ground: the element whose top edge is the dog's feet line. minHeight: TENTATIVE smallest dog size.
+ * ground: the element whose top edge is the dog's feet line.
+ * minHeight / maxHeight: TENTATIVE size limits. The max keeps the small source art from upscaling into blur and dominating tall phones.
  */
 export const DOG_PLACEMENTS = {
-  home: { ground: ".home-layout__chips", minHeight: "clamp(120px, 26dvh, 320px)" },
-  ledge: { ground: ".content-card", minHeight: "clamp(80px, 14dvh, 140px)" },
+  home: { ground: ".home-layout__chips", minHeight: "clamp(120px, 26dvh, 320px)", maxHeight: "34dvh" },
+  ledge: { ground: ".content-card", minHeight: "clamp(80px, 14dvh, 140px)", maxHeight: "34dvh" },
 } as const;
 
 export type DogPlacement = keyof typeof DOG_PLACEMENTS;

@@ -3,7 +3,7 @@ import { DOG_PLACEMENTS, type DogPlacement } from "../config/scene";
 
 /**
  * Publishes the scene geometry as CSS custom properties on the app shell, so CSS does the placing:
- *   --dog-min:     smallest dog size for this placement (config).
+ *   --dog-min, --dog-max: dog size limits for this placement (config).
  *   --ledge-space: on ledge screens, room the content card leaves above itself for the dog.
  *   --ground-y:    the dog's feet line in px from the shell top (top edge of the placement's ground element).
  * The dog layer and the backdrop's lawn line both read --ground-y, so they always agree.
@@ -13,15 +13,16 @@ export function useSceneGround(anchor: RefObject<HTMLElement | null>, placement:
   useLayoutEffect(() => {
     const shell = anchor.current?.closest<HTMLElement>(".app-shell");
     if (!shell) return;
-    const vars = ["--dog-min", "--ledge-space", "--ground-y"];
+    const vars = ["--dog-min", "--dog-max", "--ledge-space", "--ground-y"];
     const clear = () => vars.forEach((name) => shell.style.removeProperty(name));
     if (!placement) {
       clear();
       return;
     }
 
-    const { ground: groundSelector, minHeight } = DOG_PLACEMENTS[placement];
+    const { ground: groundSelector, minHeight, maxHeight } = DOG_PLACEMENTS[placement];
     shell.style.setProperty("--dog-min", minHeight);
+    shell.style.setProperty("--dog-max", maxHeight);
     if (placement === "ledge") shell.style.setProperty("--ledge-space", "var(--dog-min)");
     else shell.style.removeProperty("--ledge-space");
 
