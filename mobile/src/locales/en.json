@@ -33,14 +33,20 @@
     "progress": "{{count}} of {{total}} done",
     "progress_one": "{{count}} of {{total}} done",
     "progress_other": "{{count}} of {{total}} done",
-    "walk": "Walk Max",
+    "walk": "Walk {{name}}",
     "walkSub": "Earn a souvenir",
     "bp": "Blood pressure",
     "bpSub": "Fill a heart",
     "treatAria": "Open caretaker treat",
     "takeNow": "Take now",
     "taken": "Taken",
-    "later": "Later"
+    "later": "Later",
+    "next": "Next",
+    "stillToTake": "Still to take",
+    "allDone": "All done for today",
+    "noDoses": "Nothing scheduled today",
+    "seeAll": "See all",
+    "takenAria": "Mark {{name}} as taken"
   },
   "care": {
     "eyebrow": "Caregiver view",
@@ -106,7 +112,7 @@
     "tapPhoto": "Tap to take proof photo",
     "onePill": "One pill in the frame",
     "verified": "Medicine verified",
-    "giveHeart": "Give Max his heart",
+    "giveHeart": "Give {{name}} his heart",
     "notNow": "Not now"
   },
   "walk": {

@@ -23,10 +23,12 @@ import { DesktopBackdrop, SceneBackdrop } from "./components/SceneBackdrop";
 import { DEFAULT_PHASE } from "./config/scene";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
+import type { DerivedDose } from "../../shared/contract";
 import type { Screen, World, Accessory } from "./types";
 import {
   pet,
   doses,
+  todayDoses,
   medication,
   medicationExplanation,
   nudgeSettings,
@@ -49,14 +51,15 @@ import {
 export default function App() {
   const { t } = useTranslation();
   const [screen, setScreen] = useState<Screen>("cover");
-  const [taken, setTaken] = useState([true, false, false]);
-  const [proofIndex, setProofIndex] = useState(1);
+  const [doseList, setDoseList] = useState<DerivedDose[]>(todayDoses);
+  const [pendingDoseId, setPendingDoseId] = useState<string | null>(null);
   const [bpLogged, setBpLogged] = useState(false);
   const [world, setWorld] = useState<World>("garden");
   const [accessory, setAccessory] = useState<Accessory>("none");
   const [toast, setToast] = useState("");
 
-  const heartCount = Math.min(DEMO_RULES.heartMaximum, 1 + taken.filter(Boolean).length + (bpLogged ? 1 : 0));
+  const takenCount = doseList.filter((d) => d.status === "taken").length;
+  const heartCount = Math.min(DEMO_RULES.heartMaximum, 1 + takenCount + (bpLogged ? 1 : 0));
   // TODO(data wiring): pass the latest agent decision instead of null once the API is connected.
   const mood = selectDogMood(heartCount, null);
   const phase = DEFAULT_PHASE;
@@ -80,17 +83,12 @@ export default function App() {
       <div className={`screen-stage screen-${screen}`}>
         {screen === "home" && (
           <HomeScreen
-            taken={taken}
-            doses={doses}
+            todayDoses={doseList}
             pet={pet}
             mood={mood}
             accessory={accessory !== "none" && <span className={`pet-accessory accessory-${accessory}`} aria-label={t("toast.petAccessoryAria", { name: accessory })}><i /><i /></span>}
-            onTaken={(index) => {
-              if (taken[index]) {
-                notify(t("toast.alreadyCounted"));
-                return;
-              }
-              setProofIndex(index);
+            onTakenDose={(doseId) => {
+              setPendingDoseId(doseId);
               setScreen("proof");
             }}
             onReminders={() => setScreen("reminders")}
@@ -104,7 +102,7 @@ export default function App() {
         {screen === "prescription" && <PrescriptionScreen goHome={() => setScreen("home")} onExplain={() => setScreen("explanation")} medication={medication} />}
         {screen === "explanation" && <ExplanationScreen onBack={() => setScreen("prescription")} onContinue={() => setScreen("schedule")} medicationExplanation={medicationExplanation} />}
         {screen === "schedule" && <ScheduleScreen onBack={() => setScreen("explanation")} onConfirm={() => { setScreen("home"); notify(t("toast.nudgeSet")); }} nudgeSettings={nudgeSettings} />}
-        {screen === "proof" && <ProofScreen onBack={() => setScreen("home")} onVerified={() => { setTaken((current) => current.map((value, index) => index === proofIndex ? true : value)); setScreen("home"); notify(t("toast.heartGained")); }} medication={medication} />}
+        {screen === "proof" && <ProofScreen onBack={() => setScreen("home")} onVerified={() => { /* TODO(API): post a DoseEvent and refetch /today; status is derived, never set by the client. */ setDoseList((current) => current.map((d) => d.id === pendingDoseId ? { ...d, status: "taken" as const, eventAt: new Date().toISOString() } : d)); setScreen("home"); notify(t("toast.heartGained")); }} medication={medication} petName={pet.name} />}
         {screen === "walk" && <WalkScreen goHome={() => setScreen("home")} walkStats={walkStats} />}
         {screen === "milestones" && <MilestonesScreen goHome={() => setScreen("home")} onWalk={() => setScreen("walk")} onCustomize={() => setScreen("customize")} pet={pet} currentWorld={currentWorld} tricks={tricks} souvenirs={souvenirs} />}
         {screen === "health" && <HealthScreen goHome={() => setScreen("home")} bpLogged={bpLogged} logBp={() => { setBpLogged(true); notify(t("toast.bpLogged")); }} onScreening={() => setScreen("screening")} onSummary={() => setScreen("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} />}
