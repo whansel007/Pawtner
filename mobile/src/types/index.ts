@@ -172,6 +172,8 @@ export interface Souvenir {
 export interface Caregiver {
   /** Combined names, e.g. "Mum + Jamie" */
   names: string;
+  /** Caretaker display name, e.g. "Jamie" */
+  caretakerName: string;
   /** Relationship note */
   relationship: string;
   /** Connection status */

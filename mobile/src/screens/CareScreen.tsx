@@ -18,11 +18,12 @@ export function CareScreen({
   restockAlert: RestockAlert;
 }) {
   const { t } = useTranslation();
+  const dogName = pet.name;
   return (
     <section className="content-card full-card">
       <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
       <div className="card-heading">
-        <div><p className="eyebrow green">{t("care.eyebrow")}</p><h2>{t("care.title")}</h2></div>
+        <div><p className="eyebrow green">{t("care.eyebrow")}</p><h2>{t("care.title", { name: dogName })}</h2></div>
         <span className="score-orb">{pet.careScore}%</span>
       </div>
       <p className="supporting">{t("care.supporting")}</p>
@@ -41,7 +42,7 @@ export function CareScreen({
         <p><strong>{t("care.recentActivity")}</strong><span>{careActivity.timestamp}</span></p>
         <p>{careActivity.description}</p>
       </div>
-      <button className="primary-button" onClick={sendTreat}><Icon name="gift" size={20} /> {t("care.sendTreat")}</button>
+      <button className="primary-button" onClick={sendTreat}><Icon name="gift" size={20} /> {t("care.sendTreat", { name: dogName })}</button>
     </section>
   );
 }

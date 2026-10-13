@@ -10,6 +10,7 @@ export function MilestonesScreen({
   currentWorld,
   tricks,
   souvenirs,
+  petName,
 }: {
   goHome: () => void;
   onWalk: () => void;
@@ -18,18 +19,19 @@ export function MilestonesScreen({
   currentWorld: MilestoneWorld;
   tricks: Trick[];
   souvenirs: Souvenir[];
+  petName: string;
 }) {
   const { t } = useTranslation();
   return (
     <section className="content-card full-card">
       <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
-      <p className="eyebrow green">{t("milestones.eyebrow")}</p>
+      <p className="eyebrow green">{t("milestones.eyebrow", { name: petName })}</p>
       <h2>{t("milestones.title", { count: pet.caringDays })}</h2>
       <div className="world-card">
         <span className="world-level">{currentWorld.levelText}</span><h3>{currentWorld.label}</h3><p>{currentWorld.description}</p>
         <div className="world-progress"><span /></div>
       </div>
-      <button className="customize-row" onClick={onCustomize}><span className="feature-icon"><Icon name="star" /></span><div><strong>{t("milestones.worldWardrobe")}</strong><small>{t("milestones.worldWardrobeSub")}</small></div><Icon name="chevron" /></button>
+      <button className="customize-row" onClick={onCustomize}><span className="feature-icon"><Icon name="star" /></span><div><strong>{t("milestones.worldWardrobe")}</strong><small>{t("milestones.worldWardrobeSub", { name: petName })}</small></div><Icon name="chevron" /></button>
       <div className="section-title"><h3>{t("milestones.tricks")}</h3><span>{t("milestones.tricksSub")}</span></div>
       <div className="trick-grid">
         {tricks.map((trick) => (

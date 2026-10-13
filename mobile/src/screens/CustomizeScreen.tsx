@@ -11,6 +11,7 @@ export function CustomizeScreen({
   setAccessory,
   worldOptions,
   accessoryOptions,
+  petName,
 }: {
   onBack: () => void;
   world: World;
@@ -19,12 +20,13 @@ export function CustomizeScreen({
   setAccessory: (accessory: Accessory) => void;
   worldOptions: WorldOption[];
   accessoryOptions: AccessoryOption[];
+  petName: string;
 }) {
   const { t } = useTranslation();
   return (
     <section className="content-card full-card customize-card">
       <button className="back-button" onClick={onBack}><Icon name="back" size={20} /> {t("customize.back")}</button>
-      <p className="eyebrow green">{t("customize.eyebrow")}</p>
+      <p className="eyebrow green">{t("customize.eyebrow", { name: petName })}</p>
       <h2>{t("customize.title")}</h2>
       <p className="supporting">{t("customize.supporting")}</p>
       <div className="section-title"><h3>{t("customize.scenery")}</h3><span>{t("customize.scenerySub")}</span></div>

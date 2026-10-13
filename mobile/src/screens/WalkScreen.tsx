@@ -6,9 +6,11 @@ import type { WalkStats } from "../types";
 export function WalkScreen({
   goHome,
   walkStats,
+  petName,
 }: {
   goHome: () => void;
   walkStats: WalkStats;
+  petName: string;
 }) {
   const { t } = useTranslation();
   const [walking, setWalking] = useState(false);
@@ -20,7 +22,7 @@ export function WalkScreen({
       <div className={`walk-orb ${walking ? "active" : ""}`}>
         <Icon name="walk" size={42} />
         <strong>{walking ? walkStats.duration : "00:00"}</strong>
-        <small>{walking ? walkStats.distance : t("walk.startReady")}</small>
+        <small>{walking ? walkStats.distance : t("walk.startReady", { name: petName })}</small>
       </div>
       <div className="walk-stats">
         <div><strong>{walking ? walkStats.steps : "0"}</strong><small>{t("common.steps")}</small></div>

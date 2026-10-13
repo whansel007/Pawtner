@@ -7,10 +7,12 @@ export function PrescriptionScreen({
   goHome,
   onExplain,
   medication,
+  petName,
 }: {
   goHome: () => void;
   onExplain: () => void;
   medication: Medication;
+  petName: string;
 }) {
   const { t } = useTranslation();
   const [scanned, setScanned] = useState(false);
@@ -19,7 +21,7 @@ export function PrescriptionScreen({
       <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
       <p className="eyebrow green">{t("prescription.eyebrow")}</p>
       <h2>{scanned ? t("prescription.titleFound") : t("prescription.titleScan")}</h2>
-      <p className="supporting">{scanned ? t("prescription.supportingFound") : t("prescription.supportingScan")}</p>
+      <p className="supporting">{scanned ? t("prescription.supportingFound", { name: petName }) : t("prescription.supportingScan")}</p>
       {!scanned ? (
         <>
           <button className="scanner" onClick={() => setScanned(true)}>

@@ -2,6 +2,7 @@ import type { Caregiver, CareActivity, RestockAlert, WeekSummary, BloodPressureR
 
 export const caregiver: Caregiver = {
   names: "Mum + Jamie",
+  caretakerName: "Jamie",
   relationship: "Two people, one Max",
   status: "Connected",
 };
