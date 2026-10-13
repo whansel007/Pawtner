@@ -50,7 +50,7 @@
   },
   "care": {
     "eyebrow": "Caregiver view",
-    "title": "Max is doing great",
+    "title": "{{name}} is doing great",
     "supporting": "You and Mum share one dog. Celebrate the good moments without turning care into surveillance.",
     "daysRemaining": "About {{count}} days remaining",
     "daysRemaining_one": "About {{count}} day remaining",
@@ -59,7 +59,7 @@
     "dosesTaken": "Doses taken",
     "walkedToday": "Walked today",
     "recentActivity": "Recent activity",
-    "sendTreat": "Send Max a treat"
+    "sendTreat": "Send {{name}} a treat"
   },
   "reminders": {
     "eyebrow": "Medication plan",
@@ -79,7 +79,7 @@
     "titleScan": "Scan the prescription",
     "titleFound": "Prescription found",
     "supportingScan": "Place the label inside the frame. We'll fill in the details for you.",
-    "supportingFound": "Please check these details before adding them to Max's plan.",
+    "supportingFound": "Please check these details before adding them to {{name}}'s plan.",
     "tapCapture": "Tap to capture",
     "keepLit": "Keep the label clear and well lit",
     "enterManual": "Enter details manually",
@@ -97,44 +97,44 @@
   },
   "schedule": {
     "eyebrow": "Suggested routine",
-    "title": "When should Max nudge you?",
+    "title": "When should {{name}} nudge you?",
     "supporting": "We made this from the label. Change it anytime.",
     "noAlarm": "No loud alarm, and no scolding if you are late.",
-    "confirm": "Confirm Max's routine"
+    "confirm": "Confirm {{name}}'s routine"
   },
   "proof": {
     "eyebrowCheck": "A quick check",
-    "eyebrowFound": "Max can see it",
-    "titleShow": "Show Max the pill",
+    "eyebrowFound": "{{name}} can see it",
+    "titleShow": "Show {{name}} the pill",
     "titleFound": "That counts!",
     "supportingShow": "Snap the pill before taking it. Nothing is saved to your gallery.",
-    "supportingFound": "The photo matches your saved medicine. Max gained a little more energy.",
+    "supportingFound": "The photo matches your saved medicine. {{name}} gained a little more energy.",
     "tapPhoto": "Tap to take proof photo",
     "onePill": "One pill in the frame",
     "verified": "Medicine verified",
-    "giveHeart": "Give {{name}} his heart",
+    "giveHeart": "Give {{name}} a heart",
     "notNow": "Not now"
   },
   "walk": {
     "eyebrow": "Fresh air",
     "titleReady": "Ready to explore?",
     "titleWalking": "A lovely walk",
-    "startReady": "Start when Max is ready",
+    "startReady": "Start when {{name}} is ready",
     "startWalk": "Start walk",
     "finishWalk": "Finish walk"
   },
   "milestones": {
-    "eyebrow": "Max is learning",
+    "eyebrow": "{{name}} is learning",
     "title": "{{count}} caring days together",
     "worldWardrobe": "World & wardrobe",
-    "worldWardrobeSub": "Revisit scenery and dress Max",
+    "worldWardrobeSub": "Revisit scenery and dress {{name}}",
     "tricks": "Tricks",
     "tricksSub": "Practice makes happy",
     "souvenirs": "Souvenirs",
     "souvenirsSub": "Earned on walks"
   },
   "customize": {
-    "eyebrow": "Max's collection",
+    "eyebrow": "{{name}}'s collection",
     "title": "World & wardrobe",
     "supporting": "New levels never replace old memories. Visit any world you have earned.",
     "scenery": "Scenery",
@@ -148,7 +148,7 @@
     "eyebrow": "This week",
     "title": "Small steps, clearly told",
     "bpLabel": "BLOOD PRESSURE",
-    "bpNeedsReading": "Max needs one reading",
+    "bpNeedsReading": "{{name}} needs one reading",
     "weekSummary": "Your week in plain words",
     "weekSummarySub": "{{doses}} doses · {{walks}} walks",
     "annualCheck": "Annual check",
@@ -170,36 +170,36 @@
   "screening": {
     "eyebrow": "A once-a-year task",
     "title": "Festival day is waiting",
-    "supporting": "Based on your age, it may be time for a health screening. When it is done, Max's kampung celebrates too.",
+    "supporting": "Based on your age, it may be time for a health screening. When it is done, {{name}}'s kampung celebrates too.",
     "checkHealthHub": "Check on HealthHub",
     "remindLater": "Remind me another day",
     "back": "Health"
   },
   "settings": {
-    "eyebrow": "Max's care",
+    "eyebrow": "{{name}}'s care",
     "title": "Settings",
     "addMed": "Add a medication",
     "addMedSub": "Snap a label and set the routine",
-    "nudges": "Max's nudges",
+    "nudges": "{{name}}'s nudges",
     "nudgesSub": "Times, sound and read-aloud",
-    "caretaker": "{{name}}, caretaker",
-    "caretakerSub": "Connected to the same Max",
+    "caretaker": "{{caretaker}}, caretaker",
+    "caretakerSub": "Connected to the same {{name}}",
     "privacyTitle": "Your information stays yours.",
-    "privacyBody": "Jamie sees caring moments, not private medicine details."
+    "privacyBody": "{{caretaker}} sees caring moments, not private medicine details."
   },
   "toast": {
-    "alreadyCounted": "Already counted. Max remembers!",
-    "treatWaiting": "A treat from Jamie is waiting for Max!",
-    "treatSent": "Treat sent. Mum will see Max celebrate!",
-    "nudgeSet": "Max knows when to nudge you.",
-    "heartGained": "Max gained a heart!",
-    "bpLogged": "Reading logged. Max's heart is full!",
-    "worldFlat": "Our flat is now behind Max.",
-    "worldGarden": "The garden is now behind Max.",
-    "worldKampung": "The kampung is now behind Max.",
-    "accessoryNone": "Max is back to his fluffy self.",
-    "accessoryOn": "Max put on his {{name}}.",
-    "hello": "Woof woof! Max is happy you're here.",
-    "petAccessoryAria": "Max is wearing {{name}}"
+    "alreadyCounted": "Already counted. {{name}} remembers!",
+    "treatWaiting": "A treat from {{caretaker}} is waiting for {{name}}!",
+    "treatSent": "Treat sent. Mum will see {{name}} celebrate!",
+    "nudgeSet": "{{name}} knows when to nudge you.",
+    "heartGained": "{{name}} gained a heart!",
+    "bpLogged": "Reading logged. {{name}}'s heart is full!",
+    "worldFlat": "Our flat is now behind {{name}}.",
+    "worldGarden": "The garden is now behind {{name}}.",
+    "worldKampung": "The kampung is now behind {{name}}.",
+    "accessoryNone": "{{name}} is back to a fluffy self.",
+    "accessoryOn": "{{name}} put on a {{item}}.",
+    "hello": "Woof woof! {{name}} is happy you're here.",
+    "petAccessoryAria": "{{name}} is wearing {{item}}"
   }
 }

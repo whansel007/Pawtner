@@ -65,6 +65,9 @@ export default function App() {
   const mood = selectDogMood(heartCount, null);
   const phase = DEFAULT_PHASE;
 
+  const dogName = pet.name;
+  const caretakerName = caregiver.caretakerName;
+
   const notify = (message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(""), 2400);
@@ -84,7 +87,7 @@ export default function App() {
         screen={screen}
         mood={mood}
         dogName={pet.name}
-        accessory={accessory !== "none" && <span className={`pet-accessory accessory-${accessory}`} aria-label={t("toast.petAccessoryAria", { name: accessory })}><i /><i /></span>}
+        accessory={accessory !== "none" && <span className={`pet-accessory accessory-${accessory}`} aria-label={t("toast.petAccessoryAria", { name: dogName, item: accessory })}><i /><i /></span>}
       />
       <TopZone onSettings={() => setScreen("settings")} pet={{ ...pet, heartCount }} />
       <div className={`screen-stage screen-${screen}`}>
@@ -97,29 +100,29 @@ export default function App() {
               setScreen("proof");
             }}
             onReminders={() => setScreen("reminders")}
-            onTreat={() => notify(t("toast.treatWaiting"))}
+            onTreat={() => notify(t("toast.treatWaiting", { name: dogName, caretaker: caretakerName }))}
             onWalk={() => setScreen("walk")}
             onBloodPressure={() => setScreen("health")}
           />
         )}
-        {screen === "care" && <CareScreen goHome={() => setScreen("home")} sendTreat={() => notify(t("toast.treatSent"))} pet={pet} caregiver={caregiver} careActivity={careActivity} restockAlert={restockAlert} />}
+        {screen === "care" && <CareScreen goHome={() => setScreen("home")} sendTreat={() => notify(t("toast.treatSent", { name: dogName }))} pet={pet} caregiver={caregiver} careActivity={careActivity} restockAlert={restockAlert} />}
         {screen === "reminders" && <RemindersScreen goHome={() => setScreen("home")} doses={doses} />}
-        {screen === "prescription" && <PrescriptionScreen goHome={() => setScreen("home")} onExplain={() => setScreen("explanation")} medication={medication} />}
+        {screen === "prescription" && <PrescriptionScreen goHome={() => setScreen("home")} onExplain={() => setScreen("explanation")} medication={medication} petName={dogName} />}
         {screen === "explanation" && <ExplanationScreen onBack={() => setScreen("prescription")} onContinue={() => setScreen("schedule")} medicationExplanation={medicationExplanation} />}
-        {screen === "schedule" && <ScheduleScreen onBack={() => setScreen("explanation")} onConfirm={() => { setScreen("home"); notify(t("toast.nudgeSet")); }} nudgeSettings={nudgeSettings} />}
-        {screen === "proof" && <ProofScreen onBack={() => setScreen("home")} onVerified={() => { /* TODO(API): post a DoseEvent and refetch /today; status is derived, never set by the client. */ setDoseList((current) => current.map((d) => d.id === pendingDoseId ? { ...d, status: "taken" as const, eventAt: new Date().toISOString() } : d)); setScreen("home"); notify(t("toast.heartGained")); }} medication={medication} petName={pet.name} />}
-        {screen === "walk" && <WalkScreen goHome={() => setScreen("home")} walkStats={walkStats} />}
-        {screen === "milestones" && <MilestonesScreen goHome={() => setScreen("home")} onWalk={() => setScreen("walk")} onCustomize={() => setScreen("customize")} pet={pet} currentWorld={currentWorld} tricks={tricks} souvenirs={souvenirs} />}
-        {screen === "health" && <HealthScreen goHome={() => setScreen("home")} bpLogged={bpLogged} logBp={() => { setBpLogged(true); notify(t("toast.bpLogged")); }} onScreening={() => setScreen("screening")} onSummary={() => setScreen("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} />}
-        {screen === "screening" && <ScreeningScreen onBack={() => setScreen("health")} screeningInfo={screeningInfo} />}
+        {screen === "schedule" && <ScheduleScreen onBack={() => setScreen("explanation")} onConfirm={() => { setScreen("home"); notify(t("toast.nudgeSet", { name: dogName })); }} nudgeSettings={nudgeSettings} petName={dogName} />}
+        {screen === "proof" && <ProofScreen onBack={() => setScreen("home")} onVerified={() => { /* TODO(API): post a DoseEvent and refetch /today; status is derived, never set by the client. */ setDoseList((current) => current.map((d) => d.id === pendingDoseId ? { ...d, status: "taken" as const, eventAt: new Date().toISOString() } : d)); setScreen("home"); notify(t("toast.heartGained", { name: dogName })); }} medication={medication} petName={dogName} />}
+        {screen === "walk" && <WalkScreen goHome={() => setScreen("home")} walkStats={walkStats} petName={dogName} />}
+        {screen === "milestones" && <MilestonesScreen goHome={() => setScreen("home")} onWalk={() => setScreen("walk")} onCustomize={() => setScreen("customize")} pet={pet} currentWorld={currentWorld} tricks={tricks} souvenirs={souvenirs} petName={dogName} />}
+        {screen === "health" && <HealthScreen goHome={() => setScreen("home")} bpLogged={bpLogged} logBp={() => { setBpLogged(true); notify(t("toast.bpLogged", { name: dogName })); }} onScreening={() => setScreen("screening")} onSummary={() => setScreen("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
+        {screen === "screening" && <ScreeningScreen onBack={() => setScreen("health")} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen onBack={() => setScreen("health")} weekSummary={weekSummary} />}
-        {screen === "settings" && <SettingsScreen goHome={() => setScreen("home")} addMedication={() => setScreen("prescription")} openCaretaker={() => setScreen("care")} openReminders={() => setScreen("reminders")} caregiver={caregiver} />}
-        {screen === "customize" && <CustomizeScreen onBack={() => setScreen("milestones")} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(nextWorld === "flat" ? t("toast.worldFlat") : nextWorld === "garden" ? t("toast.worldGarden") : t("toast.worldKampung")); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone") : t("toast.accessoryOn", { name: nextAccessory })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} />}
+        {screen === "settings" && <SettingsScreen goHome={() => setScreen("home")} addMedication={() => setScreen("prescription")} openCaretaker={() => setScreen("care")} openReminders={() => setScreen("reminders")} caregiver={caregiver} petName={dogName} />}
+        {screen === "customize" && <CustomizeScreen onBack={() => setScreen("milestones")} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(nextWorld === "flat" ? t("toast.worldFlat", { name: dogName }) : nextWorld === "garden" ? t("toast.worldGarden", { name: dogName }) : t("toast.worldKampung", { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: nextAccessory })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} />}
       </div>
       <div className="bottom-dock" aria-hidden="true" />
       <BottomNav screen={screen} navigate={setScreen} />
       <span className="woof-bubble">woof!</span>
-      <button className="add-button companion-button" onClick={() => notify(t("toast.hello"))} aria-label="Say hello to Max"><Icon name="paw" size={29} /></button>
+      <button className="add-button companion-button" onClick={() => notify(t("toast.hello", { name: dogName }))} aria-label={t("toast.hello", { name: dogName })}><Icon name="paw" size={29} /></button>
       {toast && <div className="toast">{toast}</div>}
         </>
       )}
