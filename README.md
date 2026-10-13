@@ -75,8 +75,11 @@ The rules refuse double dosing after a miss, changing/skipping/stopping medicati
 Run the four shared rule fixtures:
 
 ```sh
+npm run demo:rules
 npm exec vitest run tests/unit/fixtures.test.ts
 ```
+
+`demo:rules` prints each decision, rule ID, dog mood, caretaker-ping flag, and wording source. It stays on templates when `LLM_API_KEY` is blank.
 
 The demo script is not yet runnable because the API, UI, and deployed URL do not exist in this checkout. The required three beats remain: (1) pass 10:00 with a missed dose, show two gentle nudges and an opted-in caretaker check-in without a medicine name; (2) record fictional 185/120 with “bad headache” and show calm “Call 995 now” wording without a model call; (3) draft a weekly doctor question from “feel sleepy at night” and simulate a walk with a fast stretch.
 
