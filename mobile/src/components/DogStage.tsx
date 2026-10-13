@@ -7,7 +7,7 @@ import "./DogStage.css";
 /**
  * Fills its parent slot (not the screen) and stands the dog at the bottom centre of it,
  * sized by container units so it always fits the free space.
- * Layers, back to front: glow → cast shadow → contact shadow → dog (+ accessory overlay).
+ * Layers, back to front: glow → cast shadow (soft ellipse, away from the light) → contact shadow → dog (+ accessory overlay).
  * Video loops would need dog-only clips in this layered design; the old full-scene loop is not supported.
  */
 export function DogStage({
@@ -38,7 +38,7 @@ export function DogStage({
     <div className={`dog-stage dog-stage--${mood}`} style={{ "--dog-glow": look.glow } as CSSProperties}>
       <div className="dog-stage__figure">
         <span className="dog-stage__glow" aria-hidden="true" />
-        <img className="dog-stage__cast-shadow" src={src} alt="" aria-hidden="true" />
+        <span className="dog-stage__cast-shadow" aria-hidden="true" />
         <span className="dog-stage__contact-shadow" aria-hidden="true" />
         <button
           type="button"
