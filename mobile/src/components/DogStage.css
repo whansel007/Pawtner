@@ -1,0 +1,122 @@
+/* The stage is a size container: the dog is sized from the slot it was given, never from the viewport. */
+.dog-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  container-type: size;
+}
+
+.dog-stage__figure {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  height: 92cqh;
+  transform: translateX(-50%);
+}
+
+.dog-stage__pet {
+  position: relative;
+  display: block;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transform-origin: 50% 100%;
+}
+
+.dog-stage__body {
+  position: relative;
+  display: block;
+  height: 100%;
+  transform-origin: 50% 100%;
+}
+
+/* Keeps the image's own aspect ratio; max-width stops a very short, wide slot from making it huge. */
+.dog-stage__image {
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: 72cqw;
+  object-fit: contain;
+  object-position: center bottom;
+  user-select: none;
+}
+
+.dog-stage__glow {
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  width: 150%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 236, 190, 0.75), rgba(255, 236, 190, 0));
+  opacity: var(--dog-glow, 0.5);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* Cast shadow: a soft, dark, flattened ellipse at the feet, falling away from the light (top right). */
+.dog-stage__cast-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: -3%;
+  width: 95%;
+  height: 11%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(25, 40, 22, 0.32), rgba(25, 40, 22, 0));
+  transform: translateX(-62%);
+  pointer-events: none;
+}
+
+.dog-stage__contact-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: -2%;
+  width: 72%;
+  height: 7%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(20, 35, 20, 0.45), rgba(20, 35, 20, 0));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* ── Mood motion: transform and opacity only ── */
+.dog-stage--content .dog-stage__body { animation: dog-breathe 3.6s ease-in-out infinite; }
+.dog-stage--joyful .dog-stage__body { animation: dog-hop 1.6s ease-in-out infinite; }
+.dog-stage--sleepy .dog-stage__body { animation: dog-droop 5s ease-in-out infinite; }
+/* attentive: still and upright, no playful motion */
+
+.dog-stage__pet.is-wiggling { animation: dog-wiggle 0.6s ease-in-out; }
+
+@keyframes dog-breathe {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.012, 1.03); }
+}
+
+@keyframes dog-hop {
+  0%, 55%, 100% { transform: translateY(0) scale(1, 1); }
+  62% { transform: translateY(0) scale(1.04, 0.95); }
+  75% { transform: translateY(-9%) scale(0.98, 1.03); }
+  88% { transform: translateY(0) scale(1.03, 0.97); }
+}
+
+@keyframes dog-droop {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  50% { transform: rotate(-2.5deg) translateY(1.5%); }
+}
+
+@keyframes dog-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  50% { transform: rotate(4deg); }
+  75% { transform: rotate(-2deg); }
+}
+
+/* Same specificity as the mood rules above, and later in the file, so this wins. */
+@media (prefers-reduced-motion: reduce) {
+  .dog-stage .dog-stage__body,
+  .dog-stage .dog-stage__pet.is-wiggling {
+    animation: none;
+  }
+}

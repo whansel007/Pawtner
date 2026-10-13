@@ -1,0 +1,49 @@
+import { useTranslation } from "react-i18next";
+import { Icon } from "../components/Icon";
+import { AccessoryMark } from "../components/AccessoryMark";
+import type { WorldOption, AccessoryOption, World, Accessory } from "../types";
+
+export function CustomizeScreen({
+  onBack,
+  world,
+  setWorld,
+  accessory,
+  setAccessory,
+  worldOptions,
+  accessoryOptions,
+}: {
+  onBack: () => void;
+  world: World;
+  setWorld: (world: World) => void;
+  accessory: Accessory;
+  setAccessory: (accessory: Accessory) => void;
+  worldOptions: WorldOption[];
+  accessoryOptions: AccessoryOption[];
+}) {
+  const { t } = useTranslation();
+  return (
+    <section className="content-card full-card customize-card">
+      <button className="back-button" onClick={onBack}><Icon name="back" size={20} /> {t("customize.back")}</button>
+      <p className="eyebrow green">{t("customize.eyebrow")}</p>
+      <h2>{t("customize.title")}</h2>
+      <p className="supporting">{t("customize.supporting")}</p>
+      <div className="section-title"><h3>{t("customize.scenery")}</h3><span>{t("customize.scenerySub")}</span></div>
+      <div className="world-picker">
+        {worldOptions.map((item) => (
+          <button className={`${item.id} ${world === item.id ? "selected" : ""}`} key={item.id} onClick={() => setWorld(item.id)}>
+            <span className="world-thumb"><i /></span><strong>{item.label}</strong><small>{item.note}</small>
+          </button>
+        ))}
+      </div>
+      <div className="section-title"><h3>{t("customize.accessories")}</h3><span>{t("customize.accessoriesSub")}</span></div>
+      <div className="wardrobe-grid">
+        {accessoryOptions.map((item) => (
+          <button className={accessory === item.id ? "selected" : ""} key={item.id} onClick={() => setAccessory(item.id)}>
+            <span><AccessoryMark accessory={item.id} /></span><strong>{item.label}</strong><small>{item.note}</small>
+          </button>
+        ))}
+      </div>
+      <button className="primary-button" onClick={onBack}>{t("customize.showMe")}</button>
+    </section>
+  );
+}

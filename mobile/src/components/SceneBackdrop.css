@@ -1,0 +1,37 @@
+/* Fills the app column behind everything. Without the image, the shell colour shows through. */
+.scene-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Square art on a tall screen: cover, anchored to the bottom so the lawn fills the floor; the sky may crop. */
+.scene-backdrop__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+}
+
+/* World themes (flat / garden / kampung) set --world-tint on .app-shell. */
+.scene-backdrop__tint {
+  position: absolute;
+  inset: 0;
+  background: var(--world-tint, none);
+}
+
+.desktop-backdrop {
+  display: none;
+}
+
+@media (min-width: 500px) {
+  .desktop-backdrop {
+    display: block;
+    position: fixed;
+    inset: -48px; /* bleed past the edges so the blur has no pale rim */
+    z-index: 0;
+    background: var(--color-bg-base) center / cover no-repeat;
+    filter: blur(24px) brightness(0.65);
+  }
+}
