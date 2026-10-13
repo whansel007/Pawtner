@@ -3,15 +3,27 @@
   position: absolute;
   inset: 0;
   z-index: 0;
+  overflow: hidden;
   pointer-events: none;
+  container-type: size;
+  /* Art size when covering the column (--art-aspect = width / height, from config). */
+  --art-w: max(100cqw, 100cqh * var(--art-aspect));
+  --art-h: calc(var(--art-w) / var(--art-aspect));
 }
 
-/* Square art on a tall screen: cover, anchored to the bottom so the lawn fills the floor; the sky may crop. */
+/*
+ * Ground-line alignment: put the art's lawn line (--art-ground, fraction of its height) on the dog's feet (--ground-y).
+ * Clamped so the art always covers the column: never a gap at the top (<= 0), never at the bottom (>= column - art).
+ * Without a ground line (no dog on this screen) it falls back to the top, showing the full sky.
+ */
 .scene-backdrop__image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center bottom;
+  position: absolute;
+  left: 50%;
+  top: clamp(100cqh - var(--art-h), var(--ground-y, 100cqh) - var(--art-ground) * var(--art-h), 0px);
+  width: var(--art-w);
+  height: var(--art-h);
+  max-width: none;
+  transform: translateX(-50%);
 }
 
 /* World themes (flat / garden / kampung) set --world-tint on .app-shell. */

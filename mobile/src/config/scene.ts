@@ -1,8 +1,8 @@
 import type { DogMood } from "../../../shared/contract";
+import type { Screen } from "../types";
 
 /**
- * One place for every scene asset and look. Swap images here, not in components.
- * Image dimensions are never assumed: backdrops use object-fit cover, the dog keeps its own aspect ratio.
+ * One place for every scene asset, look and dog placement rule. Swap images and tune sizes here, not in components.
  */
 
 export type DayPhase = "day" | "night";
@@ -10,9 +10,14 @@ export type DayPhase = "day" | "night";
 /** Phase is fixed to day until T2-10 (sun / moon by local time) ships its shared helper. */
 export const DEFAULT_PHASE: DayPhase = "day";
 
-export const BACKDROP_BY_PHASE: Record<DayPhase, string> = {
-  day: "/assets/garden-day.webp",
-  night: "/assets/garden-night.webp",
+/**
+ * Backdrop art per phase.
+ * aspect: art width / height. groundLine: where the open lawn starts, as a fraction of the art height from the top.
+ * The backdrop lines the ground line up with the dog's feet, so update both when the art changes.
+ */
+export const BACKDROP_BY_PHASE: Record<DayPhase, { src: string; aspect: number; groundLine: number }> = {
+  day: { src: "/assets/garden-day.webp", aspect: 923 / 2000, groundLine: 0.36 },
+  night: { src: "/assets/garden-night.webp", aspect: 923 / 2000, groundLine: 0.36 },
 };
 
 /** One pose today; drop per-mood images in here later without touching components. */
@@ -34,3 +39,23 @@ export const MOOD_LOOKS: Record<DogMood, { glow: number; playful: boolean }> = {
   sleepy: { glow: 0.35, playful: true },
   attentive: { glow: 0.25, playful: false },
 };
+
+/**
+ * Where the companion dog stands on each screen.
+ * home: on the lawn just above the Today chips. ledge: on the top edge of the screen's content card.
+ * ground: the element whose top edge is the dog's feet line. minHeight: TENTATIVE smallest dog size.
+ */
+export const DOG_PLACEMENTS = {
+  home: { ground: ".home-layout__chips", minHeight: "clamp(120px, 26dvh, 320px)" },
+  ledge: { ground: ".content-card", minHeight: "clamp(80px, 14dvh, 140px)" },
+} as const;
+
+export type DogPlacement = keyof typeof DOG_PLACEMENTS;
+
+/** Screens without the dog: the caretaker view, and the full-screen intro which has no scene at all. */
+const SCREENS_WITHOUT_DOG: readonly Screen[] = ["care", "cover", "dedication"];
+
+export function dogPlacementFor(screen: Screen): DogPlacement | null {
+  if (SCREENS_WITHOUT_DOG.includes(screen)) return null;
+  return screen === "home" ? "home" : "ledge";
+}

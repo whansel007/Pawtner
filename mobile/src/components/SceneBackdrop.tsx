@@ -1,14 +1,19 @@
+import type { CSSProperties } from "react";
 import { BACKDROP_BY_PHASE, type DayPhase } from "../config/scene";
 import { useImageAvailable } from "../lib/useImageAvailable";
 import "./SceneBackdrop.css";
 
-/** Back layer of the scene: the garden for the current phase, filling the app column. Sun and stars are drawn into the image. */
+/**
+ * Back layer of the scene: the garden for the current phase, filling the app column. Sun and stars are drawn into the image.
+ * The art's lawn line is aligned with the dog's feet (--ground-y from the dog layer); see SceneBackdrop.css.
+ */
 export function SceneBackdrop({ phase }: { phase: DayPhase }) {
-  const src = BACKDROP_BY_PHASE[phase];
-  const image = useImageAvailable(src);
+  const art = BACKDROP_BY_PHASE[phase];
+  const image = useImageAvailable(art.src);
+  const artVars = { "--art-aspect": art.aspect, "--art-ground": art.groundLine } as CSSProperties;
   return (
-    <div className={`scene-backdrop scene-backdrop--${phase}`} aria-hidden="true">
-      {image.available && <img className="scene-backdrop__image" src={src} alt="" onError={image.onError} />}
+    <div className={`scene-backdrop scene-backdrop--${phase}`} style={artVars} aria-hidden="true">
+      {image.available && <img className="scene-backdrop__image" src={art.src} alt="" onError={image.onError} />}
       <div className="scene-backdrop__tint" />
     </div>
   );
@@ -20,7 +25,7 @@ export function DesktopBackdrop({ phase }: { phase: DayPhase }) {
     <div
       className="desktop-backdrop"
       aria-hidden="true"
-      style={{ backgroundImage: `url("${BACKDROP_BY_PHASE[phase]}")` }}
+      style={{ backgroundImage: `url("${BACKDROP_BY_PHASE[phase].src}")` }}
     />
   );
 }
