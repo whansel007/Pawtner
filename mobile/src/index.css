@@ -690,7 +690,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
   cursor: pointer;
   background: #1a2a22;
   overflow: hidden;
-  animation: dedication-fade-in 0.4s ease-in-out both;
+  animation: dedication-fade-in 0.25s ease-in-out both;
 }
 
 .intro-dedication-bg {
@@ -733,7 +733,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
   align-items: center;
   gap: 16px;
   padding: 44px 56px;
-  animation: dedication-card-rise 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) 0.1s both;
+  animation: dedication-card-rise 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) 0.05s both;
 }
 
 .dedication-rule {
