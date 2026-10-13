@@ -1,4 +1,7 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import type { DogMood } from "../../../shared/contract";
+import { DogStage } from "../components/DogStage";
 import { Icon } from "../components/Icon";
 import type { Dose, Pet } from "../types";
 
@@ -11,6 +14,8 @@ export function HomeScreen({
   onTreat,
   onWalk,
   onBloodPressure,
+  mood,
+  accessory,
 }: {
   taken: boolean[];
   doses: Dose[];
@@ -20,12 +25,18 @@ export function HomeScreen({
   onTreat: () => void;
   onWalk: () => void;
   onBloodPressure: () => void;
+  mood: DogMood;
+  accessory?: ReactNode;
 }) {
   const { t } = useTranslation();
   const takenCount = taken.filter(Boolean).length;
   return (
-    <>
-      <div className="middle-row">
+    // Stacked column: the dog takes all leftover space, so its paws always sit just above the chips.
+    <div className="home-layout">
+      <div className="home-layout__stage">
+        <DogStage mood={mood} dogName={pet.name} accessory={accessory} />
+      </div>
+      <div className="home-layout__chips">
         <button className="scene-chip" onClick={onReminders}><Icon name="calendar" size={19} />{t("common.today")}</button>
         <div className="scene-actions">
           <span className="scene-chip"><Icon name="flame" size={19} />{pet.streak}</span>
@@ -34,6 +45,7 @@ export function HomeScreen({
           </button>
         </div>
       </div>
+      {/* TODO(CodeBuddy, T1-08/09): replace with the compact next-dose card; this slot stays flex: none. */}
       <section className="content-card home-card">
         <div className="card-heading">
           <div>
@@ -62,6 +74,6 @@ export function HomeScreen({
           ))}
         </div>
       </section>
-    </>
+    </div>
   );
 }
