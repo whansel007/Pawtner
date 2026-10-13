@@ -10,7 +10,8 @@
   position: absolute;
   left: 50%;
   bottom: 0;
-  height: 92cqh;
+  /* Fill the free space below the top bar, capped at --dog-max; never less than --dog-min; never taller than the slot (so never over the chips or card). */
+  height: min(100cqh, max(var(--dog-min, 0px), min(var(--dog-max, 100cqh), calc((100cqh - var(--top-overlap, 0px)) * 0.92))));
   transform: translateX(-50%);
 }
 

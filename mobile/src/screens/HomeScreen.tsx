@@ -1,8 +1,5 @@
-import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import type { DogMood } from "../../../shared/contract";
 import type { DerivedDose } from "../../../shared/contract";
-import { DogStage } from "../components/DogStage";
 import { Icon } from "../components/Icon";
 import { NextDoseCard } from "../components/NextDoseCard";
 import type { Pet } from "../types";
@@ -15,8 +12,6 @@ export function HomeScreen({
   onTreat,
   onWalk,
   onBloodPressure,
-  mood,
-  accessory,
 }: {
   todayDoses: DerivedDose[];
   pet: Pet;
@@ -25,15 +20,12 @@ export function HomeScreen({
   onTreat: () => void;
   onWalk: () => void;
   onBloodPressure: () => void;
-  mood: DogMood;
-  accessory?: ReactNode;
 }) {
   const { t } = useTranslation();
   return (
+    // Stacked column: the dog (shared DogLayer) stands in the leftover space, so its paws always sit just above the chips.
     <div className="home-layout">
-      <div className="home-layout__stage">
-        <DogStage mood={mood} dogName={pet.name} accessory={accessory} />
-      </div>
+      <div className="home-layout__stage" />
       <div className="home-layout__chips">
         <button className="scene-chip" onClick={onReminders}><Icon name="calendar" size={19} />{t("common.today")}</button>
         <div className="scene-actions">

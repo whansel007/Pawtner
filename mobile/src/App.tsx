@@ -20,6 +20,7 @@ import { CoverScreen } from "./screens/CoverScreen";
 import { DedicationScreen } from "./screens/DedicationScreen";
 import { BottomNav } from "./screens/BottomNav";
 import { DesktopBackdrop, SceneBackdrop } from "./components/SceneBackdrop";
+import { DogLayer } from "./components/DogLayer";
 import { DEFAULT_PHASE } from "./config/scene";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
@@ -79,14 +80,18 @@ export default function App() {
         <>
       <SceneBackdrop phase={phase} />
       <div className="scene-shade" />
+      <DogLayer
+        screen={screen}
+        mood={mood}
+        dogName={pet.name}
+        accessory={accessory !== "none" && <span className={`pet-accessory accessory-${accessory}`} aria-label={t("toast.petAccessoryAria", { name: accessory })}><i /><i /></span>}
+      />
       <TopZone onSettings={() => setScreen("settings")} pet={{ ...pet, heartCount }} />
       <div className={`screen-stage screen-${screen}`}>
         {screen === "home" && (
           <HomeScreen
             todayDoses={doseList}
             pet={pet}
-            mood={mood}
-            accessory={accessory !== "none" && <span className={`pet-accessory accessory-${accessory}`} aria-label={t("toast.petAccessoryAria", { name: accessory })}><i /><i /></span>}
             onTakenDose={(doseId) => {
               setPendingDoseId(doseId);
               setScreen("proof");

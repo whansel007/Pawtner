@@ -175,6 +175,9 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
   /* Space reserved once for the overlaid top bar and nav dock; layouts read these instead of magic offsets. */
   --top-bar-space: calc(max(42px, env(safe-area-inset-top)) + 96px);
   --nav-space: calc(max(8px, env(safe-area-inset-bottom)) + 124px);
+  /* The dog layer may start this high, under the top bar; --top-overlap is how much of it the top bar covers. */
+  --stage-top: max(12px, env(safe-area-inset-top));
+  --top-overlap: calc(var(--top-bar-space) - var(--stage-top));
   --side-gutter: 14px;
   position: relative;
   z-index: 1;
@@ -243,7 +246,8 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
   gap: 10px;
   padding: var(--top-bar-space) var(--side-gutter) var(--nav-space);
 }
-.home-layout__stage { flex: 1 1 auto; min-height: 0; }
+/* Empty spacer: the shared dog layer stands on the chips below it. Keeps room for at least --dog-min (it may reach under the top bar). */
+.home-layout__stage { flex: 1 1 auto; min-height: max(0px, calc(var(--dog-min, 0px) - var(--top-overlap))); }
 .home-layout__chips {
   flex: none;
   display: flex;
@@ -336,7 +340,8 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 /* ═══════════════════════════════════════════════════════════════════════
    Full card (shared by sub-screens)
    ═══════════════════════════════════════════════════════════════════════ */
-.full-card { top: calc(var(--top-bar-space) - 12px); overflow-y: auto; padding-bottom: 26px; scrollbar-width: none; }
+/* --ledge-space is set while the dog stands on this card's top edge (see useSceneGround). */
+.full-card { top: calc(var(--top-bar-space) + var(--ledge-space, -12px)); overflow-y: auto; padding-bottom: 26px; scrollbar-width: none; }
 .full-card::-webkit-scrollbar { display: none; }
 .back-button { display: flex; align-items: center; gap: 5px; margin: -5px 0 22px -5px; padding: 5px; border: 0; color: var(--color-text-back); background: transparent; font-weight: var(--font-weight-bold); cursor: pointer; }
 .supporting { max-width: 430px; margin: 10px 0 22px; color: var(--color-text-body); font-size: var(--font-size-lg); line-height: 1.45; }
