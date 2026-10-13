@@ -22,10 +22,10 @@ export const BACKDROP_BY_PHASE: Record<DayPhase, { src: string; aspect: number; 
 
 /** One pose today; drop per-mood images in here later without touching components. */
 export const DOG_IMAGE_BY_MOOD: Record<DogMood, string> = {
-  joyful: "/assets/dog-base.png",
-  content: "/assets/dog-base.png",
-  sleepy: "/assets/dog-base.png",
-  attentive: "/assets/dog-base.png",
+  joyful: "/assets/dog-base.webp",
+  content: "/assets/dog-base.webp",
+  sleepy: "/assets/dog-base.webp",
+  attentive: "/assets/dog-base.webp",
 };
 
 /**
