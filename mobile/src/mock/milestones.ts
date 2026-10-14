@@ -40,5 +40,4 @@ export const walkStats: WalkStats = {
   calories: "48",
   speed: "4.2",
   goal: "Today's goal · 30 minutes · speed check on",
-  gentleNote: "If the trip gets too fast, Max gets dizzy and pauses the distance. He never scolds.",
 };

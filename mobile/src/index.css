@@ -485,6 +485,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .stop-button { background: var(--color-action-stop); }
 .walk-note { color: #7b887f; font-size: var(--font-size-sm); }
 .gentle-note { margin: 8px auto 0; max-width: 330px; color: #88928b; font-size: var(--font-size-sm); line-height: 1.4; }
+.walk-dizzy { margin: 10px auto 0; max-width: 330px; color: #9d543b; font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); line-height: 1.4; }
 
 /* ═══════════════════════════════════════════════════════════════════════
    World card / customize / tricks

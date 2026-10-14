@@ -26,6 +26,7 @@ export function buildAgentInputFromState(params: {
   healthMetrics: HealthMetric[];
   daysOfSupplyByMedicationId?: Record<string, number | null>;
   consecutiveMissedDoses?: number;
+  walkFinished?: boolean;
 }): AgentInput {
   return {
     now: params.now,
@@ -42,5 +43,6 @@ export function buildAgentInputFromState(params: {
     daysOfSupplyByMedicationId: params.daysOfSupplyByMedicationId ?? {},
     consecutiveMissedDoses: params.consecutiveMissedDoses ?? 0,
     caretaker: null,
+    walkFinished: params.walkFinished,
   };
 }

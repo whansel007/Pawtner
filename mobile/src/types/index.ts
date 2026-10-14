@@ -235,8 +235,6 @@ export interface WalkStats {
   speed: string;
   /** Today's goal text */
   goal: string;
-  /** Gentle-note explanation */
-  gentleNote: string;
 }
 
 // Re-export shared types so screens can import everything from types/

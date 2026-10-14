@@ -121,7 +121,10 @@
     "titleWalking": "A lovely walk",
     "startReady": "Start when {{name}} is ready",
     "startWalk": "Start walk",
-    "finishWalk": "Finish walk"
+    "finishWalk": "Finish walk",
+    "simulateWalk": "Simulate walk",
+    "gentleNote": "If the trip gets too fast, {{name}} gets dizzy and pauses the distance. {{name}} never scolds.",
+    "dizzyMessage": "{{name}} feels dizzy, so the distance is paused."
   },
   "milestones": {
     "eyebrow": "{{name}} is learning",
