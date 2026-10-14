@@ -62,10 +62,40 @@ describe("deterministic decision rules", () => {
   });
 
   it("resolves only the four allowed moods", () => {
-    expect(selectDogMood(4, null)).toBe("joyful");
-    expect(selectDogMood(2, null)).toBe("content");
-    expect(selectDogMood(1, null)).toBe("sleepy");
-    expect(selectDogMood(4, { decision: "emergency_995" })).toBe("attentive");
-    for (const heart of [-2, 0, 1, 2, 3, 4, 9]) expect(["joyful", "content", "sleepy", "attentive"]).toContain(selectDogMood(heart, null));
+    expect(selectDogMood(4, null, base.now)).toBe("joyful");
+    expect(selectDogMood(2, null, base.now)).toBe("content");
+    expect(selectDogMood(1, null, base.now)).toBe("sleepy");
+    expect(selectDogMood(4, { decision: "emergency_995", createdAt: base.now }, base.now)).toBe("attentive");
+    for (const heart of [-2, 0, 1, 2, 3, 4, 9]) expect(["joyful", "content", "sleepy", "attentive"]).toContain(selectDogMood(heart, null, base.now));
+  });
+
+  it("keeps the dog joyful for 30 minutes after a celebrate decision, then reverts to heart-based mood", () => {
+    const createdAt = base.now;
+    const celebrate = { decision: "celebrate" as const, createdAt };
+    // Within the 30-minute window — joyful
+    expect(selectDogMood(3, celebrate, "2026-10-14T12:29:00+08:00")).toBe("joyful");
+    expect(selectDogMood(0, celebrate, "2026-10-14T12:29:00+08:00")).toBe("joyful");
+    // At exactly 30 minutes — window has elapsed, reverts to heart-based mood
+    expect(selectDogMood(3, celebrate, "2026-10-14T12:30:00+08:00")).toBe("content");
+    // After 30 minutes — reverts to heart-based mood
+    expect(selectDogMood(3, celebrate, "2026-10-14T12:31:00+08:00")).toBe("content");
+    expect(selectDogMood(2, celebrate, "2026-10-14T12:31:00+08:00")).toBe("content");
+    expect(selectDogMood(1, celebrate, "2026-10-14T12:31:00+08:00")).toBe("sleepy");
+  });
+
+  it("calms down after 30 minutes even at 4/4 hearts following a celebrate decision", () => {
+    const celebrate = { decision: "celebrate" as const, createdAt: base.now };
+    // Within window — joyful
+    expect(selectDogMood(4, celebrate, "2026-10-14T12:15:00+08:00")).toBe("joyful");
+    // After window — not joyful even at 4/4 hearts (celebrate expiry overrides heartMaximum)
+    expect(selectDogMood(4, celebrate, "2026-10-14T12:31:00+08:00")).toBe("content");
+  });
+
+  it("returns joyful at 4/4 hearts when there is no celebrate decision (or it expired)", () => {
+    // No decision at all — 4 hearts is joyful via heartMaximum
+    expect(selectDogMood(4, null, base.now)).toBe("joyful");
+    // An expired celebrate decision at 4 hearts should NOT be joyful
+    const expiredCelebrate = { decision: "celebrate" as const, createdAt: "2026-10-14T11:00:00+08:00" };
+    expect(selectDogMood(4, expiredCelebrate, base.now)).toBe("content");
   });
 });

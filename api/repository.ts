@@ -305,7 +305,7 @@ export class PawtnerRepository {
     const dog = dogResult.rows[0];
     return {
       user: userResult.rows[0],
-      dog: { id: dog.id, name: dog.name, mood: selectDogMood(input.dog.heart, latestDecision), heart: input.dog.heart, streak: input.dog.streak },
+      dog: { id: dog.id, name: dog.name, mood: selectDogMood(input.dog.heart, latestDecision, now), heart: input.dog.heart, streak: input.dog.streak },
       doses: input.doses,
       healthMetrics,
       bloodPressureLoggedToday: healthMetrics.length > 0,
@@ -491,7 +491,7 @@ export class PawtnerRepository {
       period: { start, end: today },
       senior: { id: person.user_id, name: person.senior_name },
       caregiver: person.caregiver_id ? { id: person.caregiver_id, name: person.caregiver_name } : null,
-      dog: { id: person.dog_id, name: person.dog_name, mood: selectDogMood(input.dog.heart, latestDecision), heart: input.dog.heart, streak: input.dog.streak },
+      dog: { id: person.dog_id, name: person.dog_name, mood: selectDogMood(input.dog.heart, latestDecision, now), heart: input.dog.heart, streak: input.dog.streak },
       careScore,
       caringDays: Math.max(stats.completed_days, 0),
       dosesTaken: stats.doses_taken,

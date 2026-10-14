@@ -18,6 +18,8 @@ export const DEMO_RULES = {
   heartWhenNothingDue: 2,
   heartBloodPressureBonus: 1,
   streakMilestones: [3, 7, 14, 30] as const,
+  /** Minutes the dog stays joyful after a celebrate decision before reverting to heart-based mood. */
+  celebrateJoyfulMinutes: 30,
 } as const;
 
 export const EMERGENCY_SYMPTOM_KEYWORDS = [

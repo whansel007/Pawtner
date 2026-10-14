@@ -16,10 +16,23 @@ function isHighReading(systolic: number, diastolic: number): boolean {
   return systolic >= DEMO_RULES.highSystolic || diastolic >= DEMO_RULES.highDiastolic;
 }
 
-export function selectDogMood(heart: number, latestDecision: Pick<AgentDecision, "decision"> | null): DogMood {
+export function selectDogMood(
+  heart: number,
+  latestDecision: Pick<AgentDecision, "decision" | "createdAt"> | null,
+  now: string,
+): DogMood {
   if (latestDecision?.decision === "emergency_995" || latestDecision?.decision === "see_gp_soon") return "attentive";
   if (latestDecision?.decision === "nudge") return "sleepy";
-  if (latestDecision?.decision === "celebrate" || heart >= DEMO_RULES.heartMaximum) return "joyful";
+
+  // Celebrate decisions keep the dog joyful for a fixed window, then expire.
+  if (latestDecision?.decision === "celebrate") {
+    const elapsedMs = Date.parse(now) - Date.parse(latestDecision.createdAt);
+    if (elapsedMs < DEMO_RULES.celebrateJoyfulMinutes * 60_000) return "joyful";
+    // Window expired — fall through to heart-based mood (even at 4/4 hearts).
+  } else if (heart >= DEMO_RULES.heartMaximum) {
+    return "joyful";
+  }
+
   if (latestDecision?.decision === "restock_reminder" || latestDecision?.decision === "doctor_question") return "content";
   if (heart <= 1) return "sleepy";
   return "content";
@@ -46,7 +59,7 @@ function decision(
     refused: false,
     createdAt: input.now,
   };
-  return { ...base, ...targetDose, mood: selectDogMood(input.dog.heart, { decision: kind }) };
+  return { ...base, ...targetDose, mood: selectDogMood(input.dog.heart, { decision: kind, createdAt: input.now }, input.now) };
 }
 
 export function decide(input: AgentInput): AgentDecision {
