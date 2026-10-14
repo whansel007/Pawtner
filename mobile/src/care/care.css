@@ -489,30 +489,14 @@ button.care-brand {
 }
 
 .care-support {
-  padding: clamp(56px, 9vw, 96px) var(--care-gutter) clamp(64px, 10vw, 112px);
-  text-align: center;
-}
-
-.care-support h2 {
-  margin-top: 10px;
-  font-size: clamp(2rem, 1.5rem + 2.2vw, 3.25rem);
-  line-height: 1.05;
-  letter-spacing: -0.035em;
-}
-
-.care-support__intro {
-  max-width: 650px;
-  margin: 18px auto 0;
-  color: var(--care-muted);
-  font-size: var(--care-text-lg);
-  line-height: 1.6;
+  padding: clamp(40px, 7vw, 72px) var(--care-gutter) clamp(48px, 8vw, 96px);
 }
 
 .care-features {
   display: grid;
   max-width: var(--care-max);
-  margin: clamp(32px, 5vw, 56px) auto 0;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  margin: 0 auto;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: var(--care-gap);
   text-align: left;
 }
@@ -524,9 +508,11 @@ button.care-brand {
   box-shadow: var(--care-shadow);
 }
 
-.care-feature h3 {
+.care-feature h2 {
   margin-top: 24px;
   font-size: 1.3rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 .care-feature p {
@@ -1282,30 +1268,44 @@ button.care-brand {
   font-style: italic;
 }
 
-/* ── Footer ── */
+/* ── Footer: framed panel like the cards (inset, gutter, max-width, radius) ── */
 .care-footer {
+  padding: clamp(20px, 4vw, 36px) var(--care-gutter) clamp(24px, 4vw, 40px);
+  background: transparent;
+}
+
+.care-footer__panel {
   position: relative;
-  padding: 32px var(--care-gutter) 16px;
   overflow: hidden;
+  max-width: var(--care-max);
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--care-edge);
+  border-radius: var(--care-radius);
   background-color: var(--care-forest-950);
   background-image: linear-gradient(var(--care-footer-shade), var(--care-footer-shade)), var(--care-garden-image);
   background-position: center 68%;
   background-size: cover;
+  box-shadow: var(--care-shadow);
   color: var(--care-on-dark);
-}
-
-.care-footer__inner,
-.care-footer__bottom {
-  max-width: var(--care-max);
-  margin: 0 auto;
 }
 
 .care-footer__inner {
   display: grid;
-  padding-bottom: 20px;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  grid-template-columns: 1fr;
   align-items: start;
-  gap: 24px 48px;
+  gap: 18px;
+}
+
+@media (min-width: 640px) {
+  .care-footer__inner {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    gap: 20px 32px;
+  }
+}
+
+.care-footer__inner > div {
+  min-width: 0;
 }
 
 .care-footer__text {
@@ -1326,20 +1326,21 @@ button.care-brand {
 .care-footer__nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .care-footer__link {
   display: inline-flex;
-  min-height: var(--care-touch);
-  padding: 0 14px;
+  min-height: 34px;
+  padding: 0 12px;
   align-items: center;
   border: 1px solid var(--care-glass-strong);
-  border-radius: var(--care-radius-sm);
+  border-radius: 999px;
   background: var(--care-glass);
   color: var(--care-on-dark-soft);
-  font-size: var(--care-text-sm);
+  font-size: var(--care-text-xs);
   font-weight: 700;
+  white-space: nowrap;
   transition: transform 180ms ease;
 }
 
@@ -1351,6 +1352,7 @@ button.care-brand {
 
 .care-footer__bottom {
   display: flex;
+  margin-top: clamp(14px, 2vw, 20px);
   padding-top: 12px;
   justify-content: space-between;
   flex-wrap: wrap;
