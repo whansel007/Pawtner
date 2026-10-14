@@ -264,15 +264,19 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .home-layout::-webkit-scrollbar { display: none; }
 /* Empty spacer: the shared dog layer stands on the chips below it. Keeps room for at least --dog-min (it may reach under the top bar). */
 .home-layout__stage { flex: 1 1 auto; min-height: max(0px, calc(var(--dog-min, 0px) - var(--top-overlap))); }
-.home-layout__chips {
-  flex: none;
-  /* Bottom row: the chips' top edge is the dog's ground line. */
+/* Shared chips row: Today on the left, streak + treat on the right. Each wrapper
+   provides its own positioning — .home-layout__chips is a flex child of .home-layout
+   (and sets the dog's ground line), .scene-chips is the absolute landscape row. */
+.home-layout__chips,
+.scene-chips {
   display: flex;
   justify-content: space-between;
   padding-inline: 14px;
 }
-/* Shared .scene-chips: only shown in the landscape two-column layout on non-Home, non-Care screens (see landscape query).
-   Home always uses .home-layout__chips; portrait keeps the shared row hidden so the two rows never duplicate. */
+/* Home's chips are a fixed-size flex child at the bottom of .home-layout; their
+   top edge is the dog's ground line. */
+.home-layout__chips { flex: none; }
+/* Portrait: keep the shared .scene-chips row hidden so it doesn't duplicate Home's own chips. */
 .scene-chips { display: none; }
 .scene-actions { display: flex; gap: 8px; }
 /* Portrait: the cards are plain items of the Home column. Landscape turns this into the right-hand pane. */
@@ -1024,7 +1028,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
     left: calc(var(--side-gutter) + env(safe-area-inset-left));
     right: calc(var(--pane-w) + var(--side-gutter));
     bottom: var(--scene-bottom);
-    display: flex;
+    display: flex; /* re-enables the row in landscape; the shared rule already gives it justify + padding. */
   }
   .app-shell:has(.screen-home) .scene-chips { display: none; }
   .app-shell:has(.screen-care) .scene-chips { display: none; }
