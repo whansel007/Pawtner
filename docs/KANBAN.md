@@ -8,7 +8,7 @@ Updated 2026-10-14 (evening). Tier 1 is due **Wednesday night**; submission **Fr
 Today's plan (agreed 13 Oct evening), in order:
 1. Morning: message P1 for the hosting decision, the first endpoints (`today`, `dose event`) and the contract additions for `/care`.
 2. T1-10 + T1-12 emergency beat.
-3. T1-15 `/care` from the Miro frames, on mock data.
+3. T1-15 `/care` from the Figma Make export, wired to the API with a mock fallback (PR from `claude/care-web`).
 4. Afternoon: T1-16 simulated walk.
 5. Evening: connect to the API if it's ready, then deploy to production.
 6. Later, if there's time: T2-10 morning/night from one shared helper.
@@ -19,7 +19,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Posts dose event and derives status from ledger; offline fallback (local taken + local `celebrate`) on `claude/sleepy-taken-fallback`; scanner/photo is still a prototype. |
 | T1-11 | In-app nudge + demo clock | P2 | Settings demo clock runs the deterministic agent; dose nudges are capped at two per occurrence. |
 | T1-13 | Dog mood on Home | P2 | Shared dog mood fed from API state; visual moods remain motion/glow. |
-| T1-15 | `/care` web page from the Miro frame | P2 / CodeBuddy | Frame in progress. The phone's Care/Settings screens already use the API (summary, consent, threshold min 2). Web page needs P1's caretaker list (see Blocked). |
+| T1-15 | `/care` caretaker web (landing, demo sign-in, This week, Alerts & caregivers, read-only Settings) | P2 / Claude Code | **In review** on `claude/care-web` (built from the Figma Make export). Wired to `/api/today`, `/api/caretaker/summary`, `/api/escalation-settings` (shared threshold saves, min 2); offline → typed mock + friendly notice. The updates-only caretaker is a mock slot until P1's caregivers list lands (see Blocked). EdgeOne copy needs a `/care/*` SPA rewrite like `mobile/vercel.json`. |
 | T1-17 | Public HTTPS URL | P2 (+ P1 API) | **Front end in production** on Vercel: `pawtner-mobile-three.vercel.app` = `main` @ `d318270` (deploy `pawtner-mobile-1fn80qgz0`, 14 Oct evening; checks passed first). No hosted API yet, so it runs on the offline fallback: beats 2 (emergency) and 3 (walk) work; beat 1 (Taken, demo clock) needs the API (`claude/sleepy-taken-fallback`, PR #12, adds an offline fallback for Taken; the demo clock still needs the API). P1 also has a static front-end copy on EdgeOne (`pawtner-dpyqrh9kdlee.edgeone.dev`, built before PR #10; its `/api/*` returns the HTML page, no backend). |
 | T1-18 | Dog assets | Design | Base dog + garden day/night done. Sleepy art (`dog-sleepy.webp`, same canvas) wired on `claude/sleepy-taken-fallback`; joyful, content, attentive still use the base art. |
 
@@ -60,7 +60,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | Item | Blocked on |
 |---|---|
 | T1-17 production URL | P1: host the API and run migrations + fictional seed on the hosted database (Supabase has no Pawtner schema yet). Message drafted for the user to send 14 Oct. |
-| T1-15 caretaker list on the web | P1: `caregivers: { id, name, receivesCheckIns }[]` in `CaretakerSummaryResponse`, 3–4 seeded caretakers, check-in template in `shared/templates.ts`. |
+| T1-15 caretaker list on the web (real data) | P1: `caregivers: { id, name, receivesCheckIns }[]` in `CaretakerSummaryResponse`, 3–4 seeded caretakers, check-in template in `shared/templates.ts`. Until then `/care` shows the API caregiver (gets check-ins) plus the mock updates-only slot `MOCK_UPDATES_ONLY_CARETAKER` in `mobile/src/care/data/mock.ts`. Also wanted: the senior's time zone in the summary (moment times use the viewer's zone). |
 
 ## Kept in view (KIV) / follow-ups
 
