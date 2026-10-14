@@ -3,7 +3,7 @@ import type { Caregiver, CareActivity, RestockAlert, WeekSummary, BloodPressureR
 export const caregiver: Caregiver = {
   names: "Mum + Jamie",
   caretakerName: "Jamie",
-  relationship: "Two people, one Max",
+  relationship: "Two people, one Buddy",
   status: "Connected",
 };
 
@@ -13,7 +13,7 @@ export const careActivity: CareActivity = {
   dosesTotal: 3,
   walkDistance: "1.8 km",
   timestamp: "12:42 PM",
-  description: "Mum took her lunchtime medicine and Max gained a heart.",
+  description: "Mum took her lunchtime medicine and Buddy gained a heart.",
 };
 
 export const restockAlert: RestockAlert = {

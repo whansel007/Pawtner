@@ -13,6 +13,6 @@ describe("PRD refusal cases", () => {
     expect(refuseRequest(text, "2026-10-14T12:00:00+08:00")).toMatchObject({ refused: true, refusalKind: kind, wordingSource: "template" });
   });
   it("does not refuse unrelated conversation", () => {
-    expect(refuseRequest("Hello Max", "2026-10-14T12:00:00+08:00")).toBeNull();
+    expect(refuseRequest("Hello Buddy", "2026-10-14T12:00:00+08:00")).toBeNull();
   });
 });

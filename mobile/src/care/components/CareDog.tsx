@@ -3,7 +3,7 @@ import type { DogMood } from "../../../../shared/contract";
 import { DOG_BASE_IMAGE, DOG_IMAGE_BY_MOOD } from "../../config/scene";
 import { useImageWithFallback } from "../../lib/useImageAvailable";
 
-/** Our crochet dog from the scene config (mood art when it exists, base art otherwise).
+/** Our knitted dog from the scene config (mood art when it exists, base art otherwise).
  *  Pass `alt` to override the personal name in the alt text (used on the public landing,
  *  which must not leak dog or senior names). */
 export function CareDog({ name, mood, size = "large", alt }: { name?: string; mood: DogMood; size?: "large" | "small"; alt?: string }) {

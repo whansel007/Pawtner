@@ -41,7 +41,7 @@ export function CustomizeScreen({
       <div className="wardrobe-grid">
         {accessoryOptions.map((item) => (
           <button className={accessory === item.id ? "selected" : ""} key={item.id} onClick={() => setAccessory(item.id)}>
-            <span><AccessoryMark accessory={item.id} /></span><strong>{item.id === "none" ? item.label : t(`accessory.${item.id}`)}</strong><small>{item.note}</small>
+            <span><AccessoryMark accessory={item.id} /></span><strong>{item.id === "none" ? item.label : t(`accessory.${item.id}`)}</strong><small>{t(item.note, { name: petName })}</small>
           </button>
         ))}
       </div>

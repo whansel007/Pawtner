@@ -3,7 +3,7 @@ export interface Pet {
   name: string;
   /** Current heart count (0–4) derived from doses taken + BP logged */
   heartCount: number;
-  /** Max hearts the bar can show */
+  /** Upper bound on hearts the bar can show */
   maxHearts: number;
   /** Care-progress score shown on the care screen */
   careScore: number;

@@ -3,7 +3,7 @@ import { decide, selectDogMood } from "../../shared/rules.js";
 import type { AgentInput } from "../../shared/contract.js";
 
 const base: AgentInput = {
-  now: "2026-10-14T12:00:00+08:00", userId: "u", dog: { id: "d", name: "Max", heart: 2, streak: 0 },
+  now: "2026-10-14T12:00:00+08:00", userId: "u", dog: { id: "d", name: "Buddy", heart: 2, streak: 0 },
   doses: [], healthMetrics: [], daysOfSupplyByMedicationId: {}, consecutiveMissedDoses: 0,
   caretaker: { optedIn: false, threshold: 2 },
 };

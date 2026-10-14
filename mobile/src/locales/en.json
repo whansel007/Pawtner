@@ -68,7 +68,7 @@
       "brandHome": "Pawtner care home",
       "loading": "Opening Pawtner…",
       "pageTitle": "Pawtner care · {{page}}",
-      "dogAlt": "{{name}}, the crochet Pawtner dog",
+      "dogAlt": "{{name}}, the knitted Pawtner dog",
       "notice": {
         "offline": "Can't reach Pawtner right now. Showing sample information."
       },
@@ -86,11 +86,11 @@
       "landing": {
         "eyebrow": "Made for the whole family",
         "title": "Warm support, without the worry",
-        "intro": "Simple updates, thoughtful check-ins, and a little crochet companion along the way.",
+        "intro": "Simple updates, thoughtful check-ins, and a little knitted companion along the way.",
         "signIn": "Sign in",
         "open": "Open this week",
         "gardenAlt": "A handmade felt garden with knitted trees, flowers and a winding path",
-        "dogAlt": "The Pawtner crochet dog",
+        "dogAlt": "The Pawtner knitted dog",
         "featuresLabel": "What you'll find",
         "featureWeekTitle": "A gentle weekly view",
         "featureWeekBody": "See progress and caring moments without clinical detail or clutter.",
@@ -320,7 +320,8 @@
     "none": "Fluffy",
     "glasses": "Sunny specs",
     "hat": "Sun hat",
-    "flower": "Hibiscus bloom"
+    "flower": "Hibiscus bloom",
+    "justPet": "Just {{name}}"
   },
   "customize": {
     "eyebrow": "{{name}}'s collection",

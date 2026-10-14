@@ -8,8 +8,8 @@ import type { CareData } from "./types.js";
  * Times are built around `now` so the week view always looks current.
  */
 
-const SENIOR = { id: "mock-senior", name: "Siew Lan" };
-const DOG = { id: "mock-dog", name: "Max" };
+const SENIOR = { id: "mock-senior", name: "Rose" };
+const DOG = { id: "mock-dog", name: "Buddy" };
 
 /** The check-ins caretaker when the API is offline or has no caregiver yet. */
 export const MOCK_CHECK_INS_CARETAKER = { id: "mock-caretaker-check-ins", name: "Jamie" } as const;
