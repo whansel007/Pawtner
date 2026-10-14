@@ -8,7 +8,9 @@ export function deriveDoseStatus(
   nudgeHistory: { count: number; lastAt: string | null } = { count: 0, lastAt: null },
 ): DerivedDose {
   const event = events
-    .filter((item) => item.scheduleId === schedule.id && Date.parse(item.occurredAt) <= Date.parse(now))
+    .filter((item) => item.scheduleId === schedule.id
+      && Date.parse(item.scheduledFor) === Date.parse(schedule.scheduledAt)
+      && Date.parse(item.occurredAt) <= Date.parse(now))
     .sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt))[0];
   let status: DerivedDose["status"];
   if (event?.event === "taken") status = "taken";
@@ -45,6 +47,29 @@ export interface StreakDay {
   taken: boolean;
 }
 
+export interface NudgeRecord {
+  scheduleId: string;
+  scheduledFor: string;
+  createdAt: string;
+}
+
+export interface AgentSelectionSource {
+  now: string;
+  /** Local calendar date for the user's configured timezone, formatted YYYY-MM-DD. */
+  today: string;
+  userId: string;
+  dog: { id: string; name: string };
+  /** Occurrences expanded from active recurring schedules for the history window plus today. */
+  doseOccurrences: DoseSchedule[];
+  doseEvents: DoseEvent[];
+  nudges: NudgeRecord[];
+  healthMetrics: HealthMetric[];
+  daysOfSupplyByMedicationId: Record<string, number | null>;
+  /** Set only when this selection follows a newly recorded event that should trigger a celebration. */
+  triggeringDoseEventId?: string;
+  caretaker: AgentInput["caretaker"];
+}
+
 export function computeStreak(days: StreakDay[], today: string): number {
   const byDate = new Map<string, StreakDay[]>();
   for (const item of days) byDate.set(item.date, [...(byDate.get(item.date) ?? []), item]);
@@ -69,4 +94,50 @@ export function buildAgentInput(input: AgentInput): AgentInput {
     throw new RangeError(`Caretaker threshold must be at least ${DEMO_RULES.caretakerMinimumThreshold}.`);
   }
   return input;
+}
+
+export function selectAgentInput(source: AgentSelectionSource): AgentInput {
+  const occurrences = [...source.doseOccurrences].sort((a, b) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt));
+  const derived = occurrences.map((schedule) => {
+    const nudgeHistory = source.nudges.filter((nudge) => nudge.scheduleId === schedule.id
+      && Date.parse(nudge.scheduledFor) === Date.parse(schedule.scheduledAt)
+      && Date.parse(nudge.createdAt) <= Date.parse(source.now))
+      .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+    return deriveDoseStatus(schedule, source.doseEvents, source.now, {
+      count: nudgeHistory.length,
+      lastAt: nudgeHistory.at(-1)?.createdAt ?? null,
+    });
+  });
+  const todayDoses = derived.filter((dose) => dose.scheduledAt.slice(0, 10) === source.today);
+  const metrics = source.healthMetrics.filter((metric) => Date.parse(metric.recordedAt) <= Date.parse(source.now));
+  const streak = computeStreak(derived.map((dose) => ({
+    date: dose.scheduledAt.slice(0, 10),
+    scheduleId: dose.id,
+    taken: dose.status === "taken",
+  })), source.today);
+  const completedOrMissed = derived.filter((dose) => Date.parse(dose.scheduledAt) <= Date.parse(source.now));
+  let consecutiveMissedDoses = 0;
+  for (const dose of [...completedOrMissed].reverse()) {
+    if (dose.status !== "missed") break;
+    consecutiveMissedDoses += 1;
+  }
+  const latestDoseEvent = source.triggeringDoseEventId
+    ? source.doseEvents.find((event) => event.id === source.triggeringDoseEventId
+      && Date.parse(event.occurredAt) <= Date.parse(source.now)) ?? null
+    : null;
+  return buildAgentInput({
+    now: source.now,
+    userId: source.userId,
+    dog: {
+      ...source.dog,
+      heart: computeHeart(todayDoses, hasBloodPressureToday(metrics, source.today)),
+      streak,
+    },
+    doses: todayDoses,
+    latestDoseEvent,
+    healthMetrics: metrics,
+    daysOfSupplyByMedicationId: source.daysOfSupplyByMedicationId,
+    consecutiveMissedDoses,
+    caretaker: source.caretaker,
+  });
 }

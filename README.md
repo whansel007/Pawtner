@@ -64,7 +64,7 @@ All thresholds below are configurable demo values, not clinical advice. These va
 | `emergency_995` | High reading with a symptom, or a note contains a configured emergency symptom. | attentive |
 | `stay_quiet` | No configured rule needs attention. | selected from heart score |
 
-Every decision is designed to include its rule ID, observations, reasoning, wording source, mood, and caretaker-ping flag. “Missed” is derived from schedules and the dose-event ledger; it is never stored as a dose event. Caretaker messages do not include medication names.
+Every decision is designed to include its rule ID, observations, reasoning, wording source, mood, and caretaker-ping flag. “Missed” is derived from schedules and the dose-event ledger; it is never stored as a dose event. Dose events and nudge decisions include the scheduled occurrence timestamp so recurring schedules do not mix events from different days. `selectAgentInput` assembles current scores and history from those occurrences; a celebration requires the just-recorded event to be passed explicitly. Caretaker messages do not include medication names.
 
 ### Refusals
 

@@ -35,6 +35,7 @@ export interface DoseSchedule {
 export interface DoseEvent {
   id: string;
   scheduleId: string;
+  scheduledFor: string;
   event: "taken" | "skipped";
   occurredAt: string;
   proofPhotoUrl?: string | null;
@@ -86,6 +87,8 @@ export interface AgentDecision {
   caretakerPing: boolean;
   refused: boolean;
   refusalKind?: RefusalKind;
+  scheduleId?: string;
+  scheduledFor?: string;
   createdAt: string;
 }
 
@@ -105,6 +108,7 @@ export interface TodayResponse {
 
 export interface DoseEventRequest {
   scheduleId: string;
+  scheduledFor: string;
   event: "taken" | "skipped";
   occurredAt: string;
   proofPhotoUrl?: string | null;

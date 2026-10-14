@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";

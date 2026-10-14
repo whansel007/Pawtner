@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildAgentInput, computeHeart, computeStreak, deriveDoseStatus, hasBloodPressureToday } from "../../shared/selectors.js";
+import { buildAgentInput, computeHeart, computeStreak, deriveDoseStatus, hasBloodPressureToday, selectAgentInput } from "../../shared/selectors.js";
 import type { DoseSchedule, HealthMetric } from "../../shared/contract.js";
+import type { AgentSelectionSource } from "../../shared/selectors.js";
 
 const seedSchedule: DoseSchedule = {
   id: "00000000-0000-4000-8000-000000000006",
@@ -15,13 +16,14 @@ describe("selectors", () => {
     expect(deriveDoseStatus(seedSchedule, [], "2026-10-13T09:59:00+08:00").status).toBe("upcoming");
     expect(deriveDoseStatus(seedSchedule, [], "2026-10-13T10:59:00+08:00").status).toBe("due");
     expect(deriveDoseStatus(seedSchedule, [], "2026-10-13T11:00:00+08:00").status).toBe("missed");
-    expect(deriveDoseStatus(seedSchedule, [{ id: "e1", scheduleId: seedSchedule.id, event: "taken", occurredAt: "2026-10-13T11:01:00+08:00" }], "2026-10-13T11:02:00+08:00").status).toBe("taken");
-    expect(deriveDoseStatus(seedSchedule, [{ id: "e2", scheduleId: seedSchedule.id, event: "skipped", occurredAt: "2026-10-13T11:01:00+08:00" }], "2026-10-13T11:02:00+08:00").status).toBe("skipped");
+    expect(deriveDoseStatus(seedSchedule, [{ id: "e1", scheduleId: seedSchedule.id, scheduledFor: seedSchedule.scheduledAt, event: "taken", occurredAt: "2026-10-13T11:01:00+08:00" }], "2026-10-13T11:02:00+08:00").status).toBe("taken");
+    expect(deriveDoseStatus(seedSchedule, [{ id: "e2", scheduleId: seedSchedule.id, scheduledFor: seedSchedule.scheduledAt, event: "skipped", occurredAt: "2026-10-13T11:01:00+08:00" }], "2026-10-13T11:02:00+08:00").status).toBe("skipped");
+    expect(deriveDoseStatus(seedSchedule, [{ id: "yesterday", scheduleId: seedSchedule.id, scheduledFor: "2026-10-12T10:00:00+08:00", event: "taken", occurredAt: "2026-10-12T10:01:00+08:00" }], "2026-10-13T11:00:00+08:00").status).toBe("missed");
     expect("missed" in deriveDoseStatus(seedSchedule, [], "2026-10-13T11:00:00+08:00")).toBe(false);
   });
 
   it("computes heart from taken share and today's blood-pressure log", () => {
-    const taken = deriveDoseStatus(seedSchedule, [{ id: "e1", scheduleId: seedSchedule.id, event: "taken", occurredAt: "2026-10-13T10:10:00+08:00" }], "2026-10-13T10:11:00+08:00");
+    const taken = deriveDoseStatus(seedSchedule, [{ id: "e1", scheduleId: seedSchedule.id, scheduledFor: seedSchedule.scheduledAt, event: "taken", occurredAt: "2026-10-13T10:10:00+08:00" }], "2026-10-13T10:11:00+08:00");
     const missed = deriveDoseStatus({ ...seedSchedule, id: "second" }, [], "2026-10-13T12:00:00+08:00");
     expect(computeHeart([taken, missed], false)).toBe(2);
     expect(computeHeart([taken, missed], true)).toBe(3);
@@ -48,5 +50,38 @@ describe("selectors", () => {
       doses: [], healthMetrics: [], daysOfSupplyByMedicationId: {}, consecutiveMissedDoses: 0,
       caretaker: { optedIn: true, threshold: 1 },
     })).toThrow(/at least 2/);
+  });
+
+  it("assembles AgentInput from fictional schedule, ledger, nudge, and health rows", () => {
+    const yesterday = "2026-10-12T10:00:00+08:00";
+    const todayMorning = "2026-10-13T10:00:00+08:00";
+    const todayEvening = "2026-10-13T20:00:00+08:00";
+    const source: AgentSelectionSource = {
+      now: "2026-10-13T11:00:00+08:00",
+      today: "2026-10-13",
+      userId: "00000000-0000-4000-8000-000000000001",
+      dog: { id: "00000000-0000-4000-8000-000000000003", name: "Max" },
+      doseOccurrences: [
+        { ...seedSchedule, scheduledAt: yesterday },
+        { ...seedSchedule, scheduledAt: todayMorning },
+        { ...seedSchedule, id: "evening-schedule", scheduledAt: todayEvening },
+      ],
+      doseEvents: [{ id: "seed-event", scheduleId: seedSchedule.id, scheduledFor: yesterday, event: "taken", occurredAt: "2026-10-12T10:05:00+08:00" }],
+      nudges: [
+        { scheduleId: seedSchedule.id, scheduledFor: yesterday, createdAt: "2026-10-12T11:00:00+08:00" },
+        { scheduleId: seedSchedule.id, scheduledFor: todayMorning, createdAt: "2026-10-13T11:00:00+08:00" },
+      ],
+      healthMetrics: [{ id: "seed-bp", kind: "blood_pressure", systolic: 120, diastolic: 80, note: null, recordedAt: "2026-10-13T08:00:00+08:00" }],
+      daysOfSupplyByMedicationId: { "00000000-0000-4000-8000-000000000004": 14 },
+      caretaker: { optedIn: true, threshold: 2 },
+    };
+    const input = selectAgentInput(source);
+
+    expect(input.doses.map((dose) => dose.status)).toEqual(["missed", "upcoming"]);
+    expect(input.doses[0]).toMatchObject({ nudgeCount: 1, lastNudgeAt: "2026-10-13T11:00:00+08:00" });
+    expect(input.dog).toMatchObject({ heart: 1, streak: 1 });
+    expect(input.consecutiveMissedDoses).toBe(1);
+    expect(input.latestDoseEvent).toBeNull();
+    expect(selectAgentInput({ ...source, triggeringDoseEventId: "seed-event" }).latestDoseEvent?.scheduledFor).toBe(yesterday);
   });
 });

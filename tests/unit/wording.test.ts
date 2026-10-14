@@ -15,7 +15,7 @@ describe("model wording fallback", () => {
   it("has template wording for every decision kind with the model disabled", async () => {
     const neutral = { ...sharedFixtures[0]!.input, doses: [], consecutiveMissedDoses: 0, caretaker: { optedIn: false, threshold: 2 } };
     const inputs = [
-      { ...neutral, latestDoseEvent: { id: "e", scheduleId: "s", event: "taken" as const, occurredAt: "2026-10-14T10:00:00+08:00" } },
+      { ...neutral, latestDoseEvent: { id: "e", scheduleId: "s", scheduledFor: "2026-10-14T10:00:00+08:00", event: "taken" as const, occurredAt: "2026-10-14T10:00:00+08:00" } },
       { ...neutral, daysOfSupplyByMedicationId: { med: 4 } },
       { ...neutral, healthMetrics: [{ id: "bp", kind: "blood_pressure" as const, systolic: 120, diastolic: 80, note: "nausea", recordedAt: "2026-10-14T10:00:00+08:00" }] },
       { ...neutral, healthMetrics: [], daysOfSupplyByMedicationId: {} },

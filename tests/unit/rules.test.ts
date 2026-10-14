@@ -18,7 +18,7 @@ describe("deterministic decision rules", () => {
     const at59 = decide({ ...base, now: "2026-10-14T11:59:00+08:00", doses: [dose] });
     expect(at59.decision).toBe("stay_quiet");
     const at60 = decide({ ...base, now: "2026-10-14T12:00:00+08:00", doses: [dose] });
-    expect(at60).toMatchObject({ decision: "nudge", ruleId: "dose_nudge_1", mood: "sleepy" });
+    expect(at60).toMatchObject({ decision: "nudge", ruleId: "dose_nudge_1", mood: "sleepy", scheduleId: "s", scheduledFor: dose.scheduledAt });
     expect(decide({ ...base, now: "2026-10-14T12:59:00+08:00", doses: [{ ...dose, nudgeCount: 1, lastNudgeAt: "2026-10-14T12:00:00+08:00" }] }).decision).toBe("stay_quiet");
     expect(decide({ ...base, now: "2026-10-14T13:00:00+08:00", doses: [{ ...dose, nudgeCount: 1, lastNudgeAt: "2026-10-14T12:00:00+08:00" }] }).ruleId).toBe("dose_nudge_2");
     expect(decide({ ...base, doses: [{ ...dose, nudgeCount: 2, lastNudgeAt: "2026-10-14T11:00:00+08:00" }] }).decision).toBe("stay_quiet");
@@ -32,7 +32,7 @@ describe("deterministic decision rules", () => {
   });
 
   it("celebrates taken doses, walks and streak milestones", () => {
-    expect(decide({ ...base, latestDoseEvent: { id: "e", scheduleId: "s", event: "taken", occurredAt: base.now } })).toMatchObject({ decision: "celebrate", mood: "joyful" });
+    expect(decide({ ...base, latestDoseEvent: { id: "e", scheduleId: "s", scheduledFor: base.now, event: "taken", occurredAt: base.now } })).toMatchObject({ decision: "celebrate", mood: "joyful" });
     expect(decide({ ...base, walkFinished: true }).decision).toBe("celebrate");
     expect(decide({ ...base, streakMilestoneReached: true }).decision).toBe("celebrate");
   });
