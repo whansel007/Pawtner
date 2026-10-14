@@ -63,7 +63,7 @@ export function CareScreen({
         <div><p className="eyebrow green">{t("care.eyebrow")}</p><h2>{t("care.title", { name: dogName })}</h2></div>
         <span className="score-orb">{pet.careScore}%</span>
       </div>
-      <p className="supporting">{t("care.supporting")}</p>
+      <p className="supporting">{t("care.supporting", { name: dogName, caretaker: caregiver.caretakerName })}</p>
       <div className="role-strip"><Icon name="users" size={20} /><div><strong>{caregiver.names}</strong><small>{caregiver.relationship}</small></div><span>{caregiver.status}</span></div>
       {restockAlert.daysRemaining <= 5 && (
         <div className="alert-card warm">

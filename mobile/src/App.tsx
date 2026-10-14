@@ -107,7 +107,11 @@ export default function App() {
   const dogName = today?.dog.name ?? pet.name;
   const caretakerName = careSummary?.caregiver?.name ?? caregiver.caretakerName;
   const livePet = { ...pet, name: dogName, heartCount, streak: today?.dog.streak ?? pet.streak, careScore: careSummary?.careScore ?? pet.careScore, caringDays: careSummary?.caringDays ?? pet.caringDays };
-  const liveCaregiver = careSummary?.caregiver ? { ...caregiver, caretakerName: careSummary.caregiver.name, names: `${careSummary.senior.name} + ${careSummary.caregiver.name}` } : caregiver;
+  // /care pair label: build from data via the care.pairNames pattern, not a hardcoded string.
+  // Live API names take priority; otherwise fall back to the mock data.
+  const liveCaregiver = careSummary?.caregiver
+    ? { ...caregiver, seniorName: careSummary.senior.name, caretakerName: careSummary.caregiver.name, names: t("care.pairNames", { senior: careSummary.senior.name, caretaker: careSummary.caregiver.name }) }
+    : { ...caregiver, names: t("care.pairNames", { senior: caregiver.seniorName, caretaker: caregiver.caretakerName }) };
   const liveCareActivity = careSummary ? { ...careActivity, dosesTaken: `${careSummary.dosesTaken} of ${careSummary.dosesDue}`, dosesTakenCount: careSummary.dosesTaken, dosesTotal: careSummary.dosesDue, walkDistance: `${(careSummary.walkDistanceMeters / 1000).toFixed(1)} km`, description: careSummary.caringMoments[0]?.message ?? "Care routine activity", timestamp: careSummary.latestActivityAt ? new Date(careSummary.latestActivityAt).toLocaleString() : "No recent activity" } : careActivity;
 
   const notify = (message: string) => {
