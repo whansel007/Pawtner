@@ -19,8 +19,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Posts dose event and derives status from ledger; offline fallback (local taken + local `celebrate`) on `claude/sleepy-taken-fallback`; scanner/photo is still a prototype. |
 | T1-11 | In-app nudge + demo clock | P2 | Settings demo clock runs the deterministic agent; dose nudges are capped at two per occurrence. |
 | T1-13 | Dog mood on Home | P2 | Shared dog mood fed from API state; visual moods remain motion/glow. |
-| T1-15 | `/care` caretaker web (landing, demo sign-in, This week, Alerts & caregivers, read-only Settings) | P2 / Claude Code | **In review** on `claude/care-web` (built from the Figma Make export). Wired to `/api/today`, `/api/caretaker/summary`, `/api/escalation-settings` (shared threshold saves, min 2); offline → typed mock + friendly notice. The updates-only caretaker is a mock slot until P1's caregivers list lands (see Blocked). EdgeOne copy needs a `/care/*` SPA rewrite like `mobile/vercel.json`. |
-| T1-17 | Public HTTPS URL | P2 (+ P1 API) | **Front end in production:** `pawtner-care.vercel.app` (and `pawtner-mobile-three.vercel.app`) = `main` @ `34868d9` incl. `/care` (14 Oct evening). No hosted API yet: offline fallback; Taken and the emergency beat and walk work offline, the demo clock and Tier 2 screens need the API. P1's EdgeOne copy (`pawtner-dpyqrh9kdlee.edgeone.dev`) is static and needs the `/care/*` rewrite. |
+| T1-17 | Public HTTPS URL | P2 (+ P1 API) | **Front end in production:** `pawtner-care.vercel.app` (and `pawtner-mobile-three.vercel.app`) = `main` @ `da8351a` incl. `/care`, PR #16 (non-personal landing, framed footer) and PR #17 (accessories scale with the dog, ear flower, chips in landscape) (14 Oct night). No hosted API yet: offline fallback; Taken and the emergency beat and walk work offline, the demo clock and Tier 2 screens need the API. P1's EdgeOne copy (`pawtner-dpyqrh9kdlee.edgeone.dev`) is static and needs the `/care/*` rewrite. |
 | T1-18 | Dog assets | Design | Base dog + garden day/night done. Sleepy art (`dog-sleepy.webp`, same canvas) wired on `claude/sleepy-taken-fallback`; joyful, content, attentive still use the base art. |
 
 ## Backlog (Tier 1)
@@ -54,6 +53,10 @@ Today's plan (agreed 13 Oct evening), in order:
 | — | Home fix: friendly one-time API notice, tap-through toasts, compact decision row | [#7](https://github.com/whansel007/Pawtner/pull/7) |
 | T1-16 | Simulated walk: growing distance, fast (bus) stretch pauses distance, dizzy dog, one walk session posted on finish | [#9](https://github.com/whansel007/Pawtner/pull/9) |
 | — | UI tweaks: landscape two-column layout, shared back navigation, streak chip → Milestones, fixed card frames, tap bubble in the toast slot, stronger hearts, dizzy stars, walk end state (merged into `main` @ `d318270`) | [#10](https://github.com/whansel007/Pawtner/pull/10) |
+| T1-15 | `/care` caretaker web: landing, demo sign-in picker (senior → phone app, check-ins caretaker, updates-only caretaker; front end only), This week, Alerts & caregivers (shared threshold ≥ 2), read-only Settings; crochet dog; `mobile/vercel.json` rewrites | [#14](https://github.com/whansel007/Pawtner/pull/14) |
+| — | `/care` landing not personal (no names, generic dog alt), framed footer (CodeBuddy) | [#16](https://github.com/whansel007/Pawtner/pull/16) |
+| — | Accessories sized relative to the dog (both dog sizes), hibiscus at the ear replaces the bandana, chips in landscape on non-Home screens (CodeBuddy) | [#17](https://github.com/whansel007/Pawtner/pull/17) |
+| — | Proof screen wording: photo is proof, never verification (PRD §7.4) | [#13](https://github.com/whansel007/Pawtner/pull/13) |
 
 ## Blocked
 
