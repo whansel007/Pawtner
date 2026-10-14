@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "./components/Icon";
 import { TopZone } from "./screens/TopZone";
@@ -24,7 +24,8 @@ import { DogLayer } from "./components/DogLayer";
 import { DEFAULT_PHASE } from "./config/scene";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
-import type { AgentDecision, DerivedDose, HealthMetric } from "../../shared/contract";
+import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, EscalationSettingsResponse, HealthMetric, TodayResponse } from "../../shared/contract";
+import { api } from "./lib/api";
 import { requestDecision, buildAgentInputFromState } from "./lib/agent";
 import type { Screen, World, Accessory } from "./types";
 import {
@@ -52,6 +53,11 @@ import {
   walkStats,
 } from "./mock";
 
+function toDateTimeLocal(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export default function App() {
   const { t } = useTranslation();
   const [screen, setScreen] = useState<Screen>("cover");
@@ -63,42 +69,107 @@ export default function App() {
   const [world, setWorld] = useState<World>("garden");
   const [accessory, setAccessory] = useState<Accessory>("none");
   const [toast, setToast] = useState("");
+  const [today, setToday] = useState<TodayResponse | null>(null);
+  const [careSummary, setCareSummary] = useState<CaretakerSummaryResponse | null>(null);
+  const [walkStartedAt, setWalkStartedAt] = useState<string | null>(null);
+  const [apiError, setApiError] = useState("");
+  const [demoNow, setDemoNow] = useState<string | null>(null);
+  const [demoClockValue, setDemoClockValue] = useState(() => toDateTimeLocal(new Date()));
+  const [agentBusy, setAgentBusy] = useState(false);
+  const [escalationSettings, setEscalationSettings] = useState<EscalationSettingsResponse | null>(null);
+
+  const refreshToday = async (now?: string) => {
+    try { const result = await api.today(now ?? demoNow ?? undefined); setToday(result); setDoseList(result.doses); setBpLogged(result.bloodPressureLoggedToday); setLatestDecision(result.latestDecision); setApiError(""); }
+    catch (error) { setApiError(error instanceof Error ? error.message : "Could not connect to Pawtner API"); }
+  };
+  useEffect(() => { void refreshToday(); }, []);
+  useEffect(() => {
+    if (screen === "care" || screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => setApiError(error instanceof Error ? error.message : "Could not load care summary"));
+    if (screen === "settings") void api.escalationSettings().then(setEscalationSettings).catch((error) => setApiError(error instanceof Error ? error.message : "Could not load check-in settings"));
+  }, [screen]);
 
   const takenCount = doseList.filter((d) => d.status === "taken").length;
-  const heartCount = Math.min(DEMO_RULES.heartMaximum, 1 + takenCount + (bpLogged ? 1 : 0));
-  // Mock state: latestDecision is set when a BP reading is logged and resets on page reload.
-  const mood = selectDogMood(heartCount, latestDecision);
+  const heartCount = today?.dog.heart ?? Math.min(DEMO_RULES.heartMaximum, 1 + takenCount + (bpLogged ? 1 : 0));
+  const mood = today ? today.dog.mood : selectDogMood(heartCount, latestDecision);
   const phase = DEFAULT_PHASE;
 
-  const dogName = pet.name;
-  const caretakerName = caregiver.caretakerName;
+  // Names come from data unchanged — no .toLowerCase().
+  const dogName = today?.dog.name ?? pet.name;
+  const caretakerName = careSummary?.caregiver?.name ?? caregiver.caretakerName;
+  const livePet = { ...pet, name: dogName, heartCount, streak: today?.dog.streak ?? pet.streak, careScore: careSummary?.careScore ?? pet.careScore, caringDays: careSummary?.caringDays ?? pet.caringDays };
+  const liveCaregiver = careSummary?.caregiver ? { ...caregiver, caretakerName: careSummary.caregiver.name, names: `${careSummary.senior.name} + ${careSummary.caregiver.name}` } : caregiver;
+  const liveCareActivity = careSummary ? { ...careActivity, dosesTaken: `${careSummary.dosesTaken} of ${careSummary.dosesDue}`, dosesTakenCount: careSummary.dosesTaken, dosesTotal: careSummary.dosesDue, walkDistance: `${(careSummary.walkDistanceMeters / 1000).toFixed(1)} km`, description: careSummary.caringMoments[0]?.message ?? "Care routine activity", timestamp: careSummary.latestActivityAt ? new Date(careSummary.latestActivityAt).toLocaleString() : "No recent activity" } : careActivity;
 
   const notify = (message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(""), 2400);
   };
 
+  /**
+   * BP form submit: posts to the API with systolic, diastolic, note, recordedAt.
+   * Uses the decision in the response for the result card and the calm no-toast rule,
+   * then refreshToday() so mood comes from the server.
+   * If the API call fails (no server), falls back to requestDecision() in lib/agent.ts
+   * so the beat still works offline, and shows William's existing apiError toast.
+   */
   async function handleLogBp(metric: HealthMetric) {
     setHealthMetrics((prev) => [...prev, metric]);
+    const recordedAt = demoNow ?? new Date().toISOString();
+    let decision: AgentDecision;
+    try {
+      const result = await api.healthMetric({
+        systolic: metric.systolic,
+        diastolic: metric.diastolic,
+        note: metric.note,
+        recordedAt,
+      });
+      decision = result.decision;
+      setLatestDecision(decision);
+      await refreshToday();
+    } catch {
+      // Offline fallback: call the rules engine directly so the beat still works.
+      const updatedMetrics = [...healthMetrics, metric];
+      const input = buildAgentInputFromState({
+        now: recordedAt,
+        userId: demoUser.id,
+        dogId: demoDog.id,
+        dogName: dogName,
+        heart: heartCount,
+        streak: today?.dog.streak ?? pet.streak,
+        doses: doseList,
+        healthMetrics: updatedMetrics,
+      });
+      decision = await requestDecision(input);
+      setLatestDecision(decision);
+      setApiError("Could not connect to Pawtner API");
+    }
     setBpLogged(true);
-    const updatedMetrics = [...healthMetrics, metric];
-    const input = buildAgentInputFromState({
-      now: new Date().toISOString(),
-      userId: demoUser.id,
-      dogId: demoDog.id,
-      dogName: pet.name,
-      heart: heartCount,
-      streak: pet.streak,
-      doses: doseList,
-      healthMetrics: updatedMetrics,
-    });
-    const decision = await requestDecision(input);
-    setLatestDecision(decision);
     // Emergency and see-GP moments stay calm: no playful toast.
     if (decision.decision !== "emergency_995" && decision.decision !== "see_gp_soon") {
       notify(t("toast.bpLogged", { name: dogName }));
     }
   }
+
+  const runAgentAtDemoTime = async () => {
+    const parsed = new Date(demoClockValue);
+    if (!Number.isFinite(parsed.getTime())) return;
+    const now = parsed.toISOString();
+    setAgentBusy(true);
+    setDemoNow(now);
+    try {
+      const current = await api.today(now);
+      const result = await api.decide(current.user.id, now);
+      setDemoNow(now);
+      setDemoClockValue(toDateTimeLocal(parsed));
+      await refreshToday(now);
+      setScreen("home");
+      notify(result.decision.wording);
+    } catch (error) {
+      setApiError(error instanceof Error ? error.message : "Could not evaluate the agent rules");
+    } finally {
+      setAgentBusy(false);
+    }
+  };
 
   return (
     <>
@@ -113,15 +184,16 @@ export default function App() {
       <DogLayer
         screen={screen}
         mood={mood}
-        dogName={pet.name}
+        dogName={dogName}
         accessory={accessory !== "none" && <span className={`pet-accessory accessory-${accessory}`} aria-label={t("toast.petAccessoryAria", { name: dogName, item: accessory })}><i /><i /></span>}
       />
-      <TopZone onSettings={() => setScreen("settings")} pet={{ ...pet, heartCount }} />
+      <TopZone onSettings={() => setScreen("settings")} pet={livePet} />
+      {apiError && <div className="toast" role="alert">API: {apiError}</div>}
       <div className={`screen-stage screen-${screen}`}>
         {screen === "home" && (
           <HomeScreen
             todayDoses={doseList}
-            pet={pet}
+            pet={livePet}
             onTakenDose={(doseId) => {
               setPendingDoseId(doseId);
               setScreen("proof");
@@ -130,20 +202,21 @@ export default function App() {
             onTreat={() => notify(t("toast.treatWaiting", { name: dogName, caretaker: caretakerName }))}
             onWalk={() => setScreen("walk")}
             onBloodPressure={() => setScreen("health")}
+            decision={latestDecision}
           />
         )}
-        {screen === "care" && <CareScreen goHome={() => setScreen("home")} sendTreat={() => notify(t("toast.treatSent", { name: dogName }))} pet={pet} caregiver={caregiver} careActivity={careActivity} restockAlert={restockAlert} />}
+        {screen === "care" && <CareScreen goHome={() => setScreen("home")} sendTreat={() => notify(t("toast.treatSent", { name: dogName }))} pet={livePet} caregiver={liveCaregiver} careActivity={liveCareActivity} restockAlert={restockAlert} />}
         {screen === "reminders" && <RemindersScreen goHome={() => setScreen("home")} doses={doses} />}
         {screen === "prescription" && <PrescriptionScreen goHome={() => setScreen("home")} onExplain={() => setScreen("explanation")} medication={medication} petName={dogName} />}
         {screen === "explanation" && <ExplanationScreen onBack={() => setScreen("prescription")} onContinue={() => setScreen("schedule")} medicationExplanation={medicationExplanation} />}
         {screen === "schedule" && <ScheduleScreen onBack={() => setScreen("explanation")} onConfirm={() => { setScreen("home"); notify(t("toast.nudgeSet", { name: dogName })); }} nudgeSettings={nudgeSettings} petName={dogName} />}
-        {screen === "proof" && <ProofScreen onBack={() => setScreen("home")} onVerified={() => { /* TODO(API): post a DoseEvent and refetch /today; status is derived, never set by the client. */ setDoseList((current) => current.map((d) => d.id === pendingDoseId ? { ...d, status: "taken" as const, eventAt: new Date().toISOString() } : d)); setScreen("home"); notify(t("toast.heartGained", { name: dogName })); }} medication={medication} petName={dogName} />}
-        {screen === "walk" && <WalkScreen goHome={() => setScreen("home")} walkStats={walkStats} petName={dogName} />}
+        {screen === "proof" && <ProofScreen onBack={() => setScreen("home")} onVerified={async () => { const dose = doseList.find((item) => item.id === pendingDoseId); if (!dose) return; try { const result = await api.doseEvent({ scheduleId: dose.id, scheduledFor: dose.scheduledAt, event: "taken", occurredAt: demoNow ?? new Date().toISOString() }); setToday(result.today); setDoseList(result.today.doses); setScreen("home"); notify(t("toast.heartGained", { name: dogName })); } catch (error) { setApiError(error instanceof Error ? error.message : "Could not record dose"); } }} medication={medication} petName={dogName} />}
+        {screen === "walk" && <WalkScreen goHome={() => setScreen("home")} walkStats={walkStats} petName={dogName} onWalkState={(walking) => { if (walking) setWalkStartedAt(new Date().toISOString()); else if (walkStartedAt) { void api.walkSession({ startedAt: walkStartedAt, finishedAt: new Date().toISOString(), distanceMeters: 0, fastStretchOccurred: false }).then(() => api.caretakerSummary().then(setCareSummary)).catch((error) => setApiError(error instanceof Error ? error.message : "Could not save walk")); setWalkStartedAt(null); } }} />}
         {screen === "milestones" && <MilestonesScreen goHome={() => setScreen("home")} onWalk={() => setScreen("walk")} onCustomize={() => setScreen("customize")} pet={pet} currentWorld={currentWorld} tricks={tricks} souvenirs={souvenirs} petName={dogName} />}
         {screen === "health" && <HealthScreen goHome={() => setScreen("home")} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => setScreen("screening")} onSummary={() => setScreen("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen onBack={() => setScreen("health")} screeningInfo={screeningInfo} petName={dogName} />}
-        {screen === "summary" && <WeeklySummaryScreen onBack={() => setScreen("health")} weekSummary={weekSummary} />}
-        {screen === "settings" && <SettingsScreen goHome={() => setScreen("home")} addMedication={() => setScreen("prescription")} openCaretaker={() => setScreen("care")} openReminders={() => setScreen("reminders")} caregiver={caregiver} petName={dogName} />}
+        {screen === "summary" && <WeeklySummaryScreen onBack={() => setScreen("health")} weekSummary={careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }], doctorQuestion: careSummary.doctorQuestions[0]?.note ?? weekSummary.doctorQuestion } : weekSummary} />}
+        {screen === "settings" && <SettingsScreen goHome={() => setScreen("home")} addMedication={() => setScreen("prescription")} openCaretaker={() => setScreen("care")} openReminders={() => setScreen("reminders")} caregiver={caregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { setApiError(error instanceof Error ? error.message : "Could not save check-in settings"); } }} />}
         {screen === "customize" && <CustomizeScreen onBack={() => setScreen("milestones")} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(nextWorld === "flat" ? t("toast.worldFlat", { name: dogName }) : nextWorld === "garden" ? t("toast.worldGarden", { name: dogName }) : t("toast.worldKampung", { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: nextAccessory })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} />}
       </div>
       <div className="bottom-dock" aria-hidden="true" />

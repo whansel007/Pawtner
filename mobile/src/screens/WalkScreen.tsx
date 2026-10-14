@@ -7,10 +7,12 @@ export function WalkScreen({
   goHome,
   walkStats,
   petName,
+  onWalkState,
 }: {
   goHome: () => void;
   walkStats: WalkStats;
   petName: string;
+  onWalkState: (walking: boolean) => void;
 }) {
   const { t } = useTranslation();
   const [walking, setWalking] = useState(false);
@@ -29,7 +31,7 @@ export function WalkScreen({
         <div><strong>{walking ? walkStats.calories : "0"}</strong><small>{t("common.calories")}</small></div>
         <div><strong>{walking ? walkStats.speed : "0.0"}</strong><small>{t("common.kmh")}</small></div>
       </div>
-      <button className={`primary-button ${walking ? "stop-button" : ""}`} onClick={() => setWalking(!walking)}>
+      <button className={`primary-button ${walking ? "stop-button" : ""}`} onClick={() => { const next = !walking; setWalking(next); onWalkState(next); }}>
         {walking ? t("walk.finishWalk") : t("walk.startWalk")}
       </button>
       <p className="walk-note">{walkStats.goal}</p>

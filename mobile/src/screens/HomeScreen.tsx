@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
-import type { DerivedDose } from "../../../shared/contract";
+import type { AgentDecision, DerivedDose } from "../../../shared/contract";
 import { Icon } from "../components/Icon";
+import { DecisionLogCard } from "../components/DecisionLogCard";
 import { NextDoseCard } from "../components/NextDoseCard";
 import type { Pet } from "../types";
 
@@ -12,6 +13,7 @@ export function HomeScreen({
   onTreat,
   onWalk,
   onBloodPressure,
+  decision,
 }: {
   todayDoses: DerivedDose[];
   pet: Pet;
@@ -20,6 +22,7 @@ export function HomeScreen({
   onTreat: () => void;
   onWalk: () => void;
   onBloodPressure: () => void;
+  decision: AgentDecision | null;
 }) {
   const { t } = useTranslation();
   return (
@@ -43,6 +46,7 @@ export function HomeScreen({
         onWalk={onWalk}
         onBloodPressure={onBloodPressure}
       />
+      <DecisionLogCard decision={decision} />
     </div>
   );
 }

@@ -2,6 +2,26 @@
   margin-top: 12px;
 }
 
+.decision-log--empty {
+  padding: 16px;
+  border-radius: var(--radius-4xl);
+  background: var(--color-surface-stone);
+}
+
+.decision-log--empty strong {
+  display: block;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-black);
+  color: var(--color-primary);
+  margin-bottom: 4px;
+}
+
+.decision-log--empty p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: #6b7a6e;
+}
+
 .decision-log__toggle {
   min-height: 48px;
   padding: 0 16px;

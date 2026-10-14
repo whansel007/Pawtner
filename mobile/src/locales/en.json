@@ -175,6 +175,8 @@
   "decisionLog": {
     "whyButton": "Why?",
     "whyButtonExpanded": "Hide why",
+    "emptyTitle": "Agent decision",
+    "emptyBody": "No rule has triggered yet.",
     "ruleLabel": "Rule",
     "observationsLabel": "What it noticed",
     "reasoningLabel": "Reasoning",

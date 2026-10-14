@@ -3,9 +3,23 @@ import { useTranslation } from "react-i18next";
 import type { AgentDecision } from "../../../shared/contract";
 import "./DecisionLogCard.css";
 
-export function DecisionLogCard({ decision }: { decision: AgentDecision }) {
+/**
+ * One DecisionLogCard for Home and Health.
+ * - When `decision` is null, shows an en.json empty state (Home before any decision).
+ * - When `decision` is present, shows the "Why?" toggle with the full decision log.
+ */
+export function DecisionLogCard({ decision }: { decision: AgentDecision | null }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+
+  if (!decision) {
+    return (
+      <div className="decision-log decision-log--empty">
+        <strong>{t("decisionLog.emptyTitle")}</strong>
+        <p>{t("decisionLog.emptyBody")}</p>
+      </div>
+    );
+  }
 
   const wordingLabel = decision.wordingSource === "template"
     ? t("decisionLog.wordingTemplate")

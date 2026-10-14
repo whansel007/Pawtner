@@ -140,7 +140,7 @@ export function HealthScreen({
         </div>
       )}
 
-      {showResult && latestDecision && (
+      {latestDecision && (
         <DecisionLogCard decision={latestDecision} />
       )}
 

@@ -22,6 +22,10 @@ export interface PetReactionState {
  *   failed to load; never throws.
  * - Each tap plays exactly the next reaction with its own duration.
  * - The bubble line advances on every bubble; the first bubble shows line 1.
+ *
+ * Effects are split: the audio setup effect never clears the reaction timer.
+ * The reaction timer is cleared only in a separate unmount effect, so when
+ * audio fails mid-bark the reaction still ends after its own duration.
  */
 export function usePetReaction(mood: DogMood, dogName: string): PetReactionState {
   const [active, setActive] = useState<PetReactionKind | null>(null);
@@ -36,7 +40,8 @@ export function usePetReaction(mood: DogMood, dogName: string): PetReactionState
     && typeof window.matchMedia === "function"
     && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Lazily create the Audio element for bark (never throws).
+  // Audio setup effect: creates the Audio element for bark. Never throws.
+  // Does NOT clear the reaction timer — that is handled by a separate effect.
   useEffect(() => {
     if (audioRef.current || audioFailed || !PET_REACTIONS.soundOn) return;
     if (typeof Audio === "undefined") {
@@ -54,10 +59,14 @@ export function usePetReaction(mood: DogMood, dogName: string): PetReactionState
     } catch {
       setAudioFailed(true);
     }
+  }, [audioFailed]);
+
+  // Unmount-only cleanup: clear the reaction timer so it does not fire after unmount.
+  useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [audioFailed]);
+  }, []);
 
   // Build the available rotation up front: drop "bark" when sound is off or
   // the file failed to load.

@@ -1,24 +1,25 @@
 # Handoff
 
-Updated 2026-10-14 (Wed). `main` = `4d269db` (PRs #1–#4 merged). Source of truth for scope: `PRD.md` (repo root), tiers in §9. Status board: `docs/KANBAN.md`. Decisions: `docs/DECISIONS.md`.
+Updated 2026-10-14. Source of truth for scope: `PRD.md` (repo root), tiers in §9. Status board: `docs/KANBAN.md`. Decisions: `docs/DECISIONS.md`.
 
 ## What exists
 
 | Part | Where | State |
 |---|---|---|
-| Senior phone app (Vite + React + TS) | `mobile/` | Runs against mock data in `mobile/src/mock`. 16 screens incl. cover, dedication, Home, Settings, Care, Health, Walk. |
-| Shared contract, rules, selectors, wording | `shared/` | Owned by P1. Contract marked PROVISIONAL. `mobile/` imports types and `selectDogMood` from here. |
+| Senior phone app (Vite + React + TS) | `mobile/` | Core Home, dose proof, BP log, Care, Weekly Summary and Walk calls are wired to `/api`; other screens remain prototype data. |
+| Shared contract, rules, selectors, wording | `shared/` | Owned by P1. Contract remains PROVISIONAL. `mobile/` imports types and mood rules from here. |
 | Database schema + fictional seed | `migrations/` | Owned by P1. README names hosted Supabase Postgres (plain `pg`, no Supabase client). |
-| API | — | Not started (T1-07). Root `npm run dev` only prints that the API is pending. |
+| API | `api/` | Seven routes and PostgreSQL repository. Root `npm run dev` starts the local API on port 3001. |
 
 ## Data flow on the phone (today)
 
-1. `App.tsx` holds screen state, the dose list (`DerivedDose[]` from `mock/home.ts`) and BP state.
-2. Heart count = 1 + doses taken + BP logged, capped at `DEMO_RULES.heartMaximum` (`shared/config`).
-3. Mood = `selectDogMood(heartCount, null)` from `shared/rules` (on `main`; `cb/emergency-beat` is changing this to pass the latest decision); passed to `DogLayer` (the dog, on every senior screen except `care`, `cover`, `dedication`).
-4. `SceneBackdrop` draws the garden; `lib/useSceneGround.ts` measures where the dog stands (Home: top of the chips; other screens: top of the content card) and publishes CSS variables so the art's lawn line and the dog's feet meet.
-5. Home shows `NextDoseCard` (next due/missed dose, then upcoming). "Taken" → proof screen → the dose is marked taken in local state. **TODO(API):** post a `DoseEvent` and refetch; status is derived, never set by the client.
-6. Intro: cover → dedication (auto-advances after `DEDICATION_HOLD_MS`, `config/intro.ts`) → Home.
+1. On launch, `App.tsx` requests `/api/today`; the server assembles scheduled occurrences and ledger events into `DerivedDose[]`.
+2. Heart and streak values come from shared selectors/rules; persisted decisions update the cached dog mood.
+3. Dose confirmation, BP entry, and walk completion write events through the API. Care and Weekly Summary use `/api/caretaker/summary`; caretaker consent and threshold save through `/api/escalation-settings`.
+4. Settings has a demo clock. It calls `/api/agent/decide` at the selected local time; Home shows the saved decision with its rule, observations, reasoning, and wording source.
+5. `SceneBackdrop` draws the garden; `lib/useSceneGround.ts` measures where the dog stands (Home: top of the chips; other screens: top of the content card) and publishes CSS variables so the art's lawn line and the dog's feet meet.
+6. Home shows `NextDoseCard` (next due/missed dose, then upcoming). "Taken" → prototype proof screen → API event; status is re-derived from the ledger. The proof screen does not upload an image.
+7. Intro: cover → dedication (auto-advances after `DEDICATION_HOLD_MS`, `config/intro.ts`) → Home.
 
 Config lives in `mobile/src/config/` (`scene.ts`: images, ground line, dog size limits, screens without the dog; `intro.ts`: dedication timing). Text lives in `mobile/src/locales/en.json`; dog and caretaker names are interpolated from mock data (`{{name}}`, PR #4).
 
@@ -29,6 +30,7 @@ Config lives in `mobile/src/config/` (`scene.ts`: images, ground line, dog size 
 | `mobile/` | `npm run dev` | Dev server (Vite). Add `-- --host` to open it on a phone on the same Wi-Fi. |
 | `mobile/` | `npx tsc --noEmit`, `npm run build` | Typecheck and production build (no `typecheck` script in `mobile/`). |
 | root | `npm run typecheck`, `npm run test:unit` | Typecheck and unit tests for `shared/`. |
+| root + mobile terminals | `npm run dev`, `npm run dev:mobile` | Local API and Vite UI. Vite proxies `/api` to port 3001. |
 | root | `npm run db:migrate`, `npm run db:seed` | Need `DATABASE_URL_DIRECT` in `.env`. |
 
 ## Deployment
@@ -48,8 +50,8 @@ Config lives in `mobile/src/config/` (`scene.ts`: images, ground line, dog size 
 
 ## Known risks
 
-1. The phone app is mock-only; T1-07 APIs and the hosting decision block every "wired to real data" item before Wednesday night.
-2. On `main`, mood still ignores agent decisions (`latestDecision = null`). `cb/emergency-beat` (CodeBuddy, 14 Oct) runs `decide()` from `shared/rules` locally behind `requestDecision()` until T1-07 exists.
+1. The shared Supabase database currently has no Pawtner schema; local `/api/today` reports this until migrations and fictional seed are run with `DATABASE_URL_DIRECT`.
+2. No authentication or roles exist; this API is for the fictional single-user demo only.
 3. Dog size limits and mood looks are TENTATIVE guesses.
 4. Fixed names remain in mock data (`mock/care.ts` "Mum + Jamie", `mock/milestones.ts` "From Jamie").
 5. `README.md` is stale (says the Vite app doesn't exist); `CLAUDE.md` points to `docs/PRD.md` and a missing `docs/ARCHITECTURE.md`.
