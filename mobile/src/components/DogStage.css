@@ -166,14 +166,70 @@
   100% { opacity: 0; transform: translateX(-50%) translateY(-50px) scale(1); }
 }
 
+/* ── Dizzy state: slow wobble + circling stars ── */
+.dog-stage__pet.is-dizzy .dog-stage__body {
+  animation: dog-dizzy-wobble 2s ease-in-out infinite;
+}
+
+.dog-stage__stars {
+  position: absolute;
+  left: 50%;
+  top: 10%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.dog-stage__star {
+  position: absolute;
+  color: #ffd383;
+  opacity: 0;
+  transform: translateX(-50%) scale(0.5);
+}
+
+.dog-stage__star--1 {
+  left: -24px;
+  animation: star-orbit 2s linear infinite;
+}
+
+.dog-stage__star--2 {
+  left: 0;
+  animation: star-orbit 2.4s linear 0.4s infinite;
+}
+
+.dog-stage__star--3 {
+  left: 24px;
+  animation: star-orbit 2.8s linear 0.8s infinite;
+}
+
+@keyframes dog-dizzy-wobble {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes star-orbit {
+  0% { opacity: 0; transform: translateX(-50%) translateY(0) rotate(0deg) scale(0.5); }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-40px) rotate(180deg) scale(1); }
+}
+
 /* Same specificity as the mood rules above, and later in the file, so this wins. */
 @media (prefers-reduced-motion: reduce) {
   .dog-stage .dog-stage__body,
   .dog-stage__pet.is-hop .dog-stage__body,
   .dog-stage__heart--1,
   .dog-stage__heart--2,
-  .dog-stage__heart--3 {
+  .dog-stage__heart--3,
+  .dog-stage__pet.is-dizzy .dog-stage__body,
+  .dog-stage__star--1,
+  .dog-stage__star--2,
+  .dog-stage__star--3 {
     animation: none;
   }
-  .dog-stage__heart { opacity: 0; }
+  .dog-stage__heart,
+  .dog-stage__star {
+    opacity: 0;
+  }
 }

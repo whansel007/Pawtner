@@ -15,11 +15,13 @@ export function DogLayer({
   screen,
   mood,
   dogName,
+  dizzy,
   accessory,
 }: {
   screen: Screen;
   mood: DogMood;
   dogName: string;
+  dizzy?: boolean;
   accessory?: ReactNode;
 }) {
   const anchor = useRef<HTMLDivElement>(null);
@@ -33,6 +35,7 @@ export function DogLayer({
         <DogStage
           mood={mood}
           dogName={dogName}
+          dizzy={dizzy}
           onPet={reaction.onTap}
           reaction={reaction.active}
           bubbleLineIndex={reaction.bubbleLineIndex}

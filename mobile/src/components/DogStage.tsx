@@ -15,6 +15,7 @@ import "./DogStage.css";
 export function DogStage({
   mood,
   dogName,
+  dizzy,
   onPet,
   reaction,
   bubbleLineIndex,
@@ -22,6 +23,7 @@ export function DogStage({
 }: {
   mood: DogMood;
   dogName: string;
+  dizzy?: boolean;
   onPet?: () => void;
   reaction?: PetReactionKind | null;
   bubbleLineIndex?: number;
@@ -35,6 +37,7 @@ export function DogStage({
   if (!image.available) return <div className="dog-stage" />;
 
   const reactionClass = reaction ? ` is-${reaction}` : "";
+  const dizzyClass = dizzy ? " is-dizzy" : "";
   const bubbleLine = reaction === "bubble" && bubbleLineIndex !== undefined
     ? t(`pet.lines.${BUBBLE_LINE_KEYS[bubbleLineIndex % BUBBLE_LINE_KEYS.length]}`, { name: dogName })
     : "";
@@ -57,10 +60,17 @@ export function DogStage({
             {bubbleLine}
           </div>
         )}
+        {dizzy && (
+          <span className="dog-stage__stars" aria-hidden="true">
+            <span className="dog-stage__star dog-stage__star--1"><Icon name="star" size={16} /></span>
+            <span className="dog-stage__star dog-stage__star--2"><Icon name="star" size={14} /></span>
+            <span className="dog-stage__star dog-stage__star--3"><Icon name="star" size={12} /></span>
+          </span>
+        )}
         <button
           type="button"
-          className={`dog-stage__pet${reactionClass}`}
-          onClick={onPet}
+          className={`dog-stage__pet${reactionClass}${dizzyClass}`}
+          onClick={dizzy ? undefined : onPet}
           aria-label={dogName}
         >
           <span className="dog-stage__body">
