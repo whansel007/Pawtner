@@ -1,0 +1,118 @@
+.bp-form {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: var(--radius-5xl);
+  background: var(--color-surface-cream);
+}
+
+.bp-form__title {
+  margin: 0 0 12px;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-black);
+  color: var(--color-text-heading);
+}
+
+.bp-form__row {
+  display: flex;
+  gap: 12px;
+}
+
+.bp-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.bp-form__label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-black);
+  letter-spacing: .5px;
+  color: #6b7a6e;
+}
+
+.bp-form__input {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 2px solid #d8ddd6;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-heading);
+  background: white;
+  outline: none;
+  transition: border-color .15s;
+}
+
+.bp-form__input:focus {
+  border-color: var(--color-primary);
+}
+
+.bp-form__input--note {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-normal);
+}
+
+.bp-form__error {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: #b3261e;
+  background: #fce8e6;
+}
+
+.bp-form__submit {
+  margin-top: 14px;
+  min-height: 48px;
+  width: 100%;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: white;
+  background: var(--color-primary-camera);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-black);
+  cursor: pointer;
+}
+
+/* ── Calm result card: no animation, no emoji, large readable text ── */
+.bp-result {
+  margin-top: 16px;
+  padding: 20px 16px;
+  border-radius: var(--radius-5xl);
+  text-align: center;
+}
+
+.bp-result--emergency {
+  background: #fdf0ee;
+  border: 2px solid #e8c5c0;
+}
+
+.bp-result--gp {
+  background: var(--color-surface-sage-deep);
+  border: 2px solid #c5d9c0;
+}
+
+.bp-result__number {
+  margin: 0 0 8px;
+  font-size: 64px;
+  font-weight: var(--font-weight-black);
+  line-height: 1;
+  color: #b3261e;
+  letter-spacing: -2px;
+}
+
+.bp-result__title {
+  margin: 0 0 8px;
+  font-size: var(--font-size-6xl);
+  font-weight: var(--font-weight-black);
+  line-height: 1.15;
+  color: var(--color-text-heading);
+}
+
+.bp-result__wording {
+  margin: 0;
+  font-size: var(--font-size-3xl);
+  line-height: 1.4;
+  color: #3a4a3e;
+}
