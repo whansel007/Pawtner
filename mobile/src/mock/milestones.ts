@@ -27,7 +27,7 @@ export const worldOptions: WorldOption[] = [
 ];
 
 export const accessoryOptions: AccessoryOption[] = [
-  { id: "none", label: "Fluffy", note: "Just Max" },
+  { id: "none", label: "Fluffy", note: "accessory.justPet" },
   { id: "glasses", label: "Sunny specs", note: "3 walks" },
   { id: "hat", label: "Sun hat", note: "7 day streak" },
   { id: "flower", label: "Hibiscus bloom", note: "From Jamie" },

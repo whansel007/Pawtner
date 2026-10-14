@@ -320,7 +320,8 @@
     "none": "Fluffy",
     "glasses": "Sunny specs",
     "hat": "Sun hat",
-    "flower": "Hibiscus bloom"
+    "flower": "Hibiscus bloom",
+    "justPet": "Just {{name}}"
   },
   "customize": {
     "eyebrow": "{{name}}'s collection",

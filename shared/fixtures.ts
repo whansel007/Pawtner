@@ -9,7 +9,7 @@ export interface AgentFixture {
 const baseInput: AgentInput = {
   now: "2026-10-14T10:00:00+08:00",
   userId: "user-demo-001",
-  dog: { id: "dog-demo-001", name: "Max", heart: 2, streak: 0 },
+  dog: { id: "dog-demo-001", name: "Buddy", heart: 2, streak: 0 },
   doses: [],
   latestDoseEvent: null,
   healthMetrics: [],

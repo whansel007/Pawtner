@@ -46,7 +46,7 @@ describe("selectors", () => {
     expect(hasBloodPressureToday([metric], "2026-10-13")).toBe(true);
     expect(hasBloodPressureToday([metric], "2026-10-14")).toBe(false);
     expect(() => buildAgentInput({
-      now: "2026-10-13T10:00:00+08:00", userId: "u", dog: { id: "d", name: "Max", heart: 2, streak: 0 },
+      now: "2026-10-13T10:00:00+08:00", userId: "u", dog: { id: "d", name: "Buddy", heart: 2, streak: 0 },
       doses: [], healthMetrics: [], daysOfSupplyByMedicationId: {}, consecutiveMissedDoses: 0,
       caretaker: { optedIn: true, threshold: 1 },
     })).toThrow(/at least 2/);
@@ -60,7 +60,7 @@ describe("selectors", () => {
       now: "2026-10-13T11:00:00+08:00",
       today: "2026-10-13",
       userId: "00000000-0000-4000-8000-000000000001",
-      dog: { id: "00000000-0000-4000-8000-000000000003", name: "Max" },
+      dog: { id: "00000000-0000-4000-8000-000000000003", name: "Buddy" },
       doseOccurrences: [
         { ...seedSchedule, scheduledAt: yesterday },
         { ...seedSchedule, scheduledAt: todayMorning },

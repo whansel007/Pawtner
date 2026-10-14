@@ -6,7 +6,7 @@ export const demoUser = { id: "user-demo" };
 export const demoDog = { id: "dog-demo" };
 
 export const pet: Pet = {
-  name: "max",
+  name: "Buddy",
   heartCount: 2,
   maxHearts: 4,
   careScore: 86,
@@ -93,7 +93,7 @@ export const nudgeSettings: NudgeSettings = {
     { label: "Night", time: "8:00 PM", note: "After dinner" },
   ],
   tone: "gentle",
-  message: "Max will give a gentle woof.",
+  message: "Buddy will give a gentle woof.",
 };
 
 export const weekSummary: WeekSummary = {
@@ -102,7 +102,7 @@ export const weekSummary: WeekSummary = {
   totalDays: 7,
   metrics: [
     { value: "12 / 14", label: "medicines taken" },
-    { value: "3", label: "walks with Max" },
+    { value: "3", label: "walks with Buddy" },
     { value: "128 / 78", label: "latest blood pressure" },
     { value: "1 new", label: "trick learned" },
   ],
