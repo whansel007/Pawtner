@@ -2,6 +2,9 @@
 
 export type PetReactionKind = "hop" | "hearts" | "bubble" | "bark";
 
+/** Bubble-line keys that rotate on successive bubble reactions. The lines live in en.json. */
+export const BUBBLE_LINE_KEYS = ["happy1", "happy2", "happy3", "happy4"] as const;
+
 export const PET_REACTIONS = {
   /** Rotation order for successive taps. */
   order: ["hop", "hearts", "bubble", "bark"] as const,

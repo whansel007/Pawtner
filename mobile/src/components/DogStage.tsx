@@ -3,10 +3,9 @@ import { useTranslation } from "react-i18next";
 import type { DogMood } from "../../../shared/contract";
 import { DOG_IMAGE_BY_MOOD, MOOD_LOOKS } from "../config/scene";
 import { useImageAvailable } from "../lib/useImageAvailable";
-import type { PetReactionKind } from "../config/pet";
+import { BUBBLE_LINE_KEYS, type PetReactionKind } from "../config/pet";
+import { Icon } from "./Icon";
 import "./DogStage.css";
-
-const BUBBLE_LINES = ["happy1", "happy2", "happy3", "happy4"] as const;
 
 /**
  * Presentational: receives the current reaction as a prop and renders it.
@@ -37,7 +36,7 @@ export function DogStage({
 
   const reactionClass = reaction ? ` is-${reaction}` : "";
   const bubbleLine = reaction === "bubble" && bubbleLineIndex !== undefined
-    ? t(`pet.lines.${BUBBLE_LINES[bubbleLineIndex % BUBBLE_LINES.length]}`, { name: dogName })
+    ? t(`pet.lines.${BUBBLE_LINE_KEYS[bubbleLineIndex % BUBBLE_LINE_KEYS.length]}`, { name: dogName })
     : "";
 
   return (
@@ -48,9 +47,9 @@ export function DogStage({
         <span className="dog-stage__contact-shadow" aria-hidden="true" />
         {reaction === "hearts" && (
           <span className="dog-stage__hearts" aria-hidden="true">
-            <span className="dog-stage__heart dog-stage__heart--1"><IconHeart /></span>
-            <span className="dog-stage__heart dog-stage__heart--2"><IconHeart /></span>
-            <span className="dog-stage__heart dog-stage__heart--3"><IconHeart /></span>
+            <span className="dog-stage__heart dog-stage__heart--1"><Icon name="heart" size={20} /></span>
+            <span className="dog-stage__heart dog-stage__heart--2"><Icon name="heart" size={20} /></span>
+            <span className="dog-stage__heart dog-stage__heart--3"><Icon name="heart" size={20} /></span>
           </span>
         )}
         {reaction === "bubble" && (
@@ -71,13 +70,5 @@ export function DogStage({
         </button>
       </div>
     </div>
-  );
-}
-
-function IconHeart() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
-      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" />
-    </svg>
   );
 }

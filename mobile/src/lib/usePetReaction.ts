@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PET_REACTIONS, PET_REACTIONS_REDUCED_MOTION, type PetReactionKind } from "../config/pet";
 import type { DogMood } from "../../../shared/contract";
 
@@ -7,7 +7,7 @@ export interface PetReactionState {
   active: PetReactionKind | null;
   /** Tap handler. Does nothing playful when mood is attentive or a reaction is playing. */
   onTap: () => void;
-  /** Index into the rotation for the next idle tap. */
+  /** Index of the next bubble line to show (0-based; first bubble shows line 0). */
   bubbleLineIndex: number;
 }
 
@@ -18,7 +18,10 @@ export interface PetReactionState {
  * Rules:
  * - mood "attentive" → tapping does nothing playful (no reaction at all).
  * - prefers-reduced-motion → rotate only through bubble and bark.
- * - bark → skipped if the audio file fails to load or sound is off; never throw.
+ * - bark is dropped from the rotation up front when sound is off or the file
+ *   failed to load; never throws.
+ * - Each tap plays exactly the next reaction with its own duration.
+ * - The bubble line advances on every bubble; the first bubble shows line 1.
  */
 export function usePetReaction(mood: DogMood, dogName: string): PetReactionState {
   const [active, setActive] = useState<PetReactionKind | null>(null);
@@ -32,10 +35,6 @@ export function usePetReaction(mood: DogMood, dogName: string): PetReactionState
   const reducedMotion = typeof window !== "undefined"
     && typeof window.matchMedia === "function"
     && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  const rotation: readonly PetReactionKind[] = reducedMotion
-    ? PET_REACTIONS_REDUCED_MOTION
-    : PET_REACTIONS.order;
 
   // Lazily create the Audio element for bark (never throws).
   useEffect(() => {
@@ -59,23 +58,32 @@ export function usePetReaction(mood: DogMood, dogName: string): PetReactionState
     };
   }, []);
 
+  // Build the available rotation up front: drop "bark" when sound is off or
+  // the file failed to load.
+  const rotation = useMemo(() => {
+    const base = reducedMotion
+      ? PET_REACTIONS_REDUCED_MOTION
+      : PET_REACTIONS.order;
+    const barkAvailable = PET_REACTIONS.soundOn && !audioFailedRef.current;
+    return barkAvailable ? base : base.filter((r) => r !== "bark");
+  }, [reducedMotion, audioFailedRef.current]);
+
   const onTap = useCallback(() => {
     // Attentive mood: no playful reactions at all.
     if (mood === "attentive") return;
     // Cooldown: ignore taps while a reaction is playing.
     if (active !== null) return;
+    if (rotation.length === 0) return;
 
     const kind = rotation[indexRef.current % rotation.length];
     indexRef.current += 1;
 
-    // Bark: skip if audio failed or sound is off.
-    if (kind === "bark") {
-      if (audioFailedRef.current || !PET_REACTIONS.soundOn) {
-        // Skip to next reaction instead.
-        const next = rotation[indexRef.current % rotation.length];
-        if (next === "bark") return; // avoid infinite skip in reduced-motion
-        setActive(next);
-      } else {
+    if (kind === "bubble") {
+      // bubbleLineIndex is the line to show on THIS bubble (0-based).
+      // It advances for the next bubble when this reaction ends.
+      setActive("bubble");
+    } else {
+      if (kind === "bark") {
         const audio = audioRef.current;
         if (audio) {
           audio.currentTime = 0;
@@ -83,17 +91,15 @@ export function usePetReaction(mood: DogMood, dogName: string): PetReactionState
             audioFailedRef.current = true;
           });
         }
-        setActive("bark");
       }
-    } else if (kind === "bubble") {
-      setBubbleLineIndex((prev) => prev + 1);
-      setActive("bubble");
-    } else {
       setActive(kind);
     }
 
     const duration = PET_REACTIONS.duration[kind];
-    timerRef.current = setTimeout(() => setActive(null), duration);
+    timerRef.current = setTimeout(() => {
+      setActive(null);
+      if (kind === "bubble") setBubbleLineIndex((prev) => prev + 1);
+    }, duration);
   }, [mood, active, rotation]);
 
   return { active, onTap, bubbleLineIndex };
