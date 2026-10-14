@@ -111,10 +111,10 @@
     "titleShow": "Show {{name}} the pill",
     "titleFound": "That counts!",
     "supportingShow": "Snap the pill before taking it. Nothing is saved to your gallery.",
-    "supportingFound": "The photo matches your saved medicine. {{name}} gained a little more energy.",
+    "supportingFound": "Thank you. The photo is kept for proof. {{name}} gained a little more energy.",
     "tapPhoto": "Tap to take proof photo",
     "onePill": "One pill in the frame",
-    "verified": "Medicine verified",
+    "verified": "Photo saved!",
     "giveHeart": "Give {{name}} a heart",
     "notNow": "Not now"
   },
