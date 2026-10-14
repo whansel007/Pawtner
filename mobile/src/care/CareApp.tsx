@@ -103,9 +103,6 @@ export default function CareApp() {
       <main className="care-main" id="care-main" ref={mainRef} tabIndex={-1} key={route}>
         {route === "landing" && (
           <LandingPage
-            seniorName={data.summary.senior.name}
-            dogName={data.today.dog.name}
-            dogMood={data.today.dog.mood}
             signedIn={viewer !== null}
             onStart={() => go(viewer ? "week" : "signIn")}
           />
