@@ -1017,7 +1017,8 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
     padding: var(--top-bar-space) var(--side-gutter) var(--scene-bottom) calc(var(--side-gutter) + env(safe-area-inset-left));
     overflow: visible;
   }
-  /* Show chips under the dog in the left column on every senior screen; hide Home's duplicate row. */
+  /* Show chips under the dog in the left column on every non-Home, non-Care screen.
+     Home keeps its own .home-layout__chips (the dog's ground line is measured from it) and the shared row is hidden on Home. */
   .scene-chips {
     position: absolute;
     left: calc(var(--side-gutter) + env(safe-area-inset-left));
@@ -1025,7 +1026,6 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
     bottom: var(--scene-bottom);
     display: flex;
   }
-  .home-layout__chips { display: none; }
   .app-shell:has(.screen-home) .scene-chips { display: none; }
   .app-shell:has(.screen-care) .scene-chips { display: none; }
 
