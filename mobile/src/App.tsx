@@ -22,6 +22,7 @@ import { BottomNav } from "./screens/BottomNav";
 import { DesktopBackdrop, SceneBackdrop } from "./components/SceneBackdrop";
 import { DogLayer } from "./components/DogLayer";
 import { PetAccessory } from "./components/PetAccessory";
+import { SceneChips } from "./components/SceneChips";
 import { DEFAULT_PHASE, phaseFromTime } from "./config/scene";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
@@ -315,13 +316,12 @@ export default function App() {
       />
       <TopZone onSettings={() => navigate("settings")} onHome={goHome} pet={livePet} />
       <div className="scene-chips">
-        <button className="scene-chip" onClick={() => navigate("reminders")}><Icon name="calendar" size={19} />{t("common.today")}</button>
-        <div className="scene-actions">
-          <button className="scene-chip" onClick={() => navigate("milestones")}>{t("home.streakChip", { count: livePet.streak })}</button>
-          <button className="scene-chip gift-chip" onClick={() => notify(t("toast.treatWaiting", { name: dogName, caretaker: caretakerName }))} aria-label={t("home.treatAria")}>
-            <Icon name="gift" size={19} /><span className="badge-dot" />
-          </button>
-        </div>
+        <SceneChips
+          streak={livePet.streak}
+          onToday={() => navigate("reminders")}
+          onStreak={() => navigate("milestones")}
+          onTreat={() => notify(t("toast.treatWaiting", { name: dogName, caretaker: caretakerName }))}
+        />
       </div>
       <div className={`screen-stage screen-${screen}`}>
         {screen === "home" && (
