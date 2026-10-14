@@ -1,8 +1,11 @@
 import { useTranslation } from "react-i18next";
+import type { DogMood } from "../../../../shared/contract";
 import { Icon } from "../../components/Icon";
+import { CareDog } from "../components/CareDog";
 import { CARE_GARDEN_IMAGE } from "../config";
 
 interface LandingPageProps {
+  dogMood: DogMood;
   signedIn: boolean;
   onStart: () => void;
 }
@@ -13,13 +16,14 @@ const FEATURES = [
   { key: "Calm", icon: "heart", tone: "sun" },
 ] as const;
 
-export function LandingPage({ signedIn, onStart }: LandingPageProps) {
+export function LandingPage({ dogMood, signedIn, onStart }: LandingPageProps) {
   const { t } = useTranslation();
   return (
     <div className="care-page-enter">
       <section className="care-hero" aria-labelledby="care-hero-title">
         <img className="care-hero__scene" src={CARE_GARDEN_IMAGE} alt={t("care.web.landing.gardenAlt")} />
         <div className="care-hero__copy">
+          <CareDog mood={dogMood} alt={t("care.web.landing.dogAlt")} />
           <p className="care-eyebrow care-eyebrow--light">{t("care.web.landing.eyebrow")}</p>
           <h1 id="care-hero-title">{t("care.web.landing.title")}</h1>
           <p className="care-hero__intro">{t("care.web.landing.intro")}</p>
