@@ -26,9 +26,9 @@ export interface PetReactionState {
 export function usePetReaction(mood: DogMood, dogName: string): PetReactionState {
   const [active, setActive] = useState<PetReactionKind | null>(null);
   const [bubbleLineIndex, setBubbleLineIndex] = useState(0);
+  const [audioFailed, setAudioFailed] = useState(!PET_REACTIONS.soundOn);
   const indexRef = useRef(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioFailedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Check reduced-motion preference.
@@ -38,25 +38,26 @@ export function usePetReaction(mood: DogMood, dogName: string): PetReactionState
 
   // Lazily create the Audio element for bark (never throws).
   useEffect(() => {
-    if (audioRef.current || audioFailedRef.current) return;
+    if (audioRef.current || audioFailed || !PET_REACTIONS.soundOn) return;
     if (typeof Audio === "undefined") {
-      audioFailedRef.current = true;
+      setAudioFailed(true);
       return;
     }
     try {
       const audio = new Audio(PET_REACTIONS.barkSoundPath);
       audio.preload = "auto";
-      audio.addEventListener("error", () => {
-        audioFailedRef.current = true;
-      });
+      const onError = () => setAudioFailed(true);
+      audio.addEventListener("error", onError);
+      // If the browser has already set an error (e.g. from a previous cached failure), mark it now.
+      if (audio.error) onError();
       audioRef.current = audio;
     } catch {
-      audioFailedRef.current = true;
+      setAudioFailed(true);
     }
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, []);
+  }, [audioFailed]);
 
   // Build the available rotation up front: drop "bark" when sound is off or
   // the file failed to load.
@@ -64,9 +65,10 @@ export function usePetReaction(mood: DogMood, dogName: string): PetReactionState
     const base = reducedMotion
       ? PET_REACTIONS_REDUCED_MOTION
       : PET_REACTIONS.order;
-    const barkAvailable = PET_REACTIONS.soundOn && !audioFailedRef.current;
-    return barkAvailable ? base : base.filter((r) => r !== "bark");
-  }, [reducedMotion, audioFailedRef.current]);
+    return PET_REACTIONS.soundOn && !audioFailed
+      ? base
+      : base.filter((r) => r !== "bark");
+  }, [reducedMotion, audioFailed]);
 
   const onTap = useCallback(() => {
     // Attentive mood: no playful reactions at all.
@@ -88,7 +90,7 @@ export function usePetReaction(mood: DogMood, dogName: string): PetReactionState
         if (audio) {
           audio.currentTime = 0;
           audio.play().catch(() => {
-            audioFailedRef.current = true;
+            setAudioFailed(true);
           });
         }
       }

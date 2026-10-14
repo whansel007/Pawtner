@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { DecisionLogCard } from "../components/DecisionLogCard";
@@ -95,13 +95,14 @@ export function HealthScreen({
   const showResult = isEmergency || isSeeGp;
 
   // Scroll the result card into view after the decision arrives, without smooth scroll under reduced motion.
-  if (showResult && resultRef.current) {
+  useEffect(() => {
+    if (!showResult || !resultRef.current) return;
     const prefersReduced = typeof window !== "undefined"
       && typeof window.matchMedia === "function"
       && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    resultRef.current.scrollIntoView({ behavior: prefersReduced ? "auto" : "smooth", block: "center" });
+    resultRef.current.scrollIntoView({ behavior: prefersReduced ? "auto" : "smooth", block: "start" });
     resultRef.current.focus({ preventScroll: true });
-  }
+  }, [showResult]);
 
   return (
     <section className="content-card full-card">

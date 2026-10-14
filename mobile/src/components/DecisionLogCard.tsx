@@ -11,6 +11,12 @@ export function DecisionLogCard({ decision }: { decision: AgentDecision }) {
     ? t("decisionLog.wordingTemplate")
     : t("decisionLog.wordingModel");
 
+  function formatValue(value: string | number | boolean | null): string {
+    if (typeof value === "boolean") return value ? t("decisionLog.booleanYes") : t("decisionLog.booleanNo");
+    if (value === null) return "—";
+    return String(value);
+  }
+
   return (
     <div className="decision-log">
       <button
@@ -27,6 +33,12 @@ export function DecisionLogCard({ decision }: { decision: AgentDecision }) {
             <dt>{t("decisionLog.ruleLabel")}</dt>
             <dd>{decision.ruleId}</dd>
           </div>
+          {decision.scheduledFor && (
+            <div className="decision-log__row">
+              <dt>{t("decisionLog.scheduledForLabel")}</dt>
+              <dd>{decision.scheduledFor}</dd>
+            </div>
+          )}
           <div className="decision-log__section">
             <dt className="decision-log__section-label">{t("decisionLog.observationsLabel")}</dt>
             {Object.entries(decision.observations).map(([key, value]) => {
@@ -34,7 +46,7 @@ export function DecisionLogCard({ decision }: { decision: AgentDecision }) {
               return (
                 <div className="decision-log__row" key={key}>
                   <dt>{label}</dt>
-                  <dd>{String(value)}</dd>
+                  <dd>{formatValue(value)}</dd>
                 </div>
               );
             })}
