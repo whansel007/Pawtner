@@ -29,12 +29,18 @@ export const BACKDROP_BY_PHASE: Record<DayPhase, { src: string; aspect: number; 
   night: { src: "/assets/garden-night.webp", aspect: 923 / 2000, groundLine: 0.36 },
 };
 
-/** One pose today; drop per-mood images in here later without touching components. */
+/** The default dog art. DogStage falls back to it when a mood image fails to load. */
+export const DOG_BASE_IMAGE = "/assets/dog-base.webp";
+
+/**
+ * Dog art per mood. Every image shares the base art's canvas (1000x1300, transparent, same feet line),
+ * so the ground line and accessory positions stay valid. Only sleepy has its own art today.
+ */
 export const DOG_IMAGE_BY_MOOD: Record<DogMood, string> = {
-  joyful: "/assets/dog-base.webp",
-  content: "/assets/dog-base.webp",
-  sleepy: "/assets/dog-base.webp",
-  attentive: "/assets/dog-base.webp",
+  joyful: DOG_BASE_IMAGE,
+  content: DOG_BASE_IMAGE,
+  sleepy: "/assets/dog-sleepy.webp",
+  attentive: DOG_BASE_IMAGE,
 };
 
 /**

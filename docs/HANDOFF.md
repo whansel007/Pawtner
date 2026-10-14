@@ -22,7 +22,7 @@ Updated 2026-10-14. Source of truth for scope: `PRD.md` (repo root), tiers in §
 7. Intro: cover → dedication (auto-advances after `DEDICATION_HOLD_MS`, `config/intro.ts`) → Home.
 8. Navigation: `lib/useNavigation.ts` keeps the screen and a short history (`lib/navigation.ts`). Top-level screens (home, health, milestones, walk, settings) show "Home"; drilled-down screens show "Back" and return to where they were opened from. Every non-Home screen uses `components/FullCard.tsx` (fixed frame, back button, inner scroll).
 
-Config lives in `mobile/src/config/` (`scene.ts`: images, ground line, dog size limits, screens without the dog; `intro.ts`: dedication timing). Text lives in `mobile/src/locales/en.json`; dog and caretaker names are interpolated from mock data (`{{name}}`, PR #4).
+Config lives in `mobile/src/config/` (`scene.ts`: images incl. `DOG_IMAGE_BY_MOOD` (sleepy has its own art; a mood image that fails to load falls back to `DOG_BASE_IMAGE`), ground line, dog size limits, screens without the dog; `intro.ts`: dedication timing). Text lives in `mobile/src/locales/en.json`; dog and caretaker names are interpolated from mock data (`{{name}}`, PR #4).
 
 ## Commands
 

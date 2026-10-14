@@ -84,3 +84,8 @@
 | One `FullCard` (fixed white frame + back button, inner `.full-card__scroll`) and one `BackButton`. Top-level screens (home, health, milestones, walk, settings) say "Home"; drilled-down screens say "Back" and pop a small history (`lib/navigation.ts`, `useNavigation`, max 10). | Scrolling cards lost their frame; back labels were per screen and always went to a fixed screen. | The back button no longer scrolls away (always visible). | Final |
 | Streak chip is a button ("🔥 N days", plural) to Milestones, which opens with "N days in a row with every dose taken."; both use the live streak (`livePet`). | The flame number had no meaning or action. | Emoji rendering varies by platform. | Final |
 
+## 2026-10-14 — Sleepy art and offline "Taken" (branch `claude/sleepy-taken-fallback`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| `sleepy` uses its own art (`dog-sleepy.webp`, 1000×1300, same canvas and feet line as `dog-base.webp`); the other moods stay on the base art. If a mood image fails to load, `DogStage` shows `DOG_BASE_IMAGE` (`useImageWithFallback`); the dog hides only if the base art fails too. | First mood art available; same canvas keeps the ground line and accessory positions valid. | No preload: the first switch to sleepy may show the new image a moment late. | Tentative until the full mood sheet exists |

@@ -22,7 +22,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | — | UI tweaks: landscape two-column layout, shared back navigation, streak chip → Milestones, fixed card frames, tap bubble in the toast slot, stronger hearts, dizzy stars, walk end state | P2 / Claude Code | Branch `claude/ui-tweaks`, committed locally; push + PR waiting for the user's yes (team mode). |
 | T1-15 | `/care` web page from the Miro frame | P2 / CodeBuddy | Frame in progress. The phone's Care/Settings screens already use the API (summary, consent, threshold min 2). Web page needs P1's caretaker list (see Blocked). |
 | T1-17 | Public HTTPS URL | P2 (+ P1 API) | Preview of `main` @ `806cc66` (front end only, no API, offline fallback): `pawtner-mobile-3vgi0crkq-fresfrida.vercel.app` (14 Oct 15:02). Production `pawtner-mobile-three.vercel.app` still serves the 13 Oct build. `main` now calls `/api` on load, so a front-end deploy needs a hosted API first (until then the app runs on the offline fallback and shows one notice). |
-| T1-18 | Dog assets | Design | Base dog + garden day/night done. 4-mood sheet not started. |
+| T1-18 | Dog assets | Design | Base dog + garden day/night done. Sleepy art (`dog-sleepy.webp`, same canvas) wired on `claude/sleepy-taken-fallback`; joyful, content, attentive still use the base art. |
 
 ## Backlog (Tier 1)
 
