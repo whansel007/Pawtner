@@ -28,6 +28,6 @@ export function refuseRequest(text: string, now: string, heart = 2): AgentDecisi
     refusalKind: match.kind,
     createdAt: now,
   };
-  decision.mood = selectDogMood(heart, { decision: decision.decision });
+  decision.mood = selectDogMood(heart, { decision: decision.decision, createdAt: decision.createdAt }, now);
   return decision;
 }
