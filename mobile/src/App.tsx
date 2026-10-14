@@ -96,7 +96,8 @@ export default function App() {
 
   const pendingDose = doseList.find((item) => item.id === pendingDoseId);
   const heartCount = today?.dog.heart ?? localHeartCount(doseList, bpLogged);
-  const mood = today ? today.dog.mood : selectDogMood(heartCount, latestDecision);
+  // selectDogMood needs the current time: a celebrate keeps the dog joyful only for DEMO_RULES.celebrateJoyfulMinutes.
+  const mood = today ? today.dog.mood : selectDogMood(heartCount, latestDecision, demoNow ?? new Date().toISOString());
   // T2-10: sun/moon by local time using shared helper
   const phase = demoNow ? (() => { try { return phaseFromTime(demoNow, "Asia/Singapore"); } catch { return DEFAULT_PHASE; } })() : DEFAULT_PHASE;
 
