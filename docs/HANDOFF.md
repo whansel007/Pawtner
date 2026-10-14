@@ -7,6 +7,7 @@ Updated 2026-10-14. Source of truth for scope: `PRD.md` (repo root), tiers in §
 | Part | Where | State |
 |---|---|---|
 | Senior phone app (Vite + React + TS) | `mobile/` | Core Home, dose proof, BP log, Care, Weekly Summary and Walk calls are wired to `/api`; other screens remain prototype data. |
+| Caretaker web app (`/care`, T1-15) | `mobile/src/care/` | Same Vite app, separate route and lazy-loaded chunk. Demo sign-in picker, This week, Alerts & caregivers, Settings (read-only). Reads `/api/today`, `/api/caretaker/summary`, `/api/escalation-settings`; saves the threshold with `PUT /api/escalation-settings`. Offline → typed mock data + one friendly notice. Branch `claude/care-web`. |
 | Shared contract, rules, selectors, wording | `shared/` | Owned by P1. Contract remains PROVISIONAL. `mobile/` imports types and mood rules from here. |
 | Database schema + fictional seed | `migrations/` | Owned by P1. README names hosted Supabase Postgres (plain `pg`, no Supabase client). |
 | API | `api/` | Seven routes and PostgreSQL repository. Root `npm run dev` starts the local API on port 3001. |
@@ -22,6 +23,17 @@ Updated 2026-10-14. Source of truth for scope: `PRD.md` (repo root), tiers in §
 7. Intro: cover → dedication (auto-advances after `DEDICATION_HOLD_MS`, `config/intro.ts`) → Home.
 8. Navigation: `lib/useNavigation.ts` keeps the screen and a short history (`lib/navigation.ts`). Top-level screens (home, health, milestones, walk, settings) show "Home"; drilled-down screens show "Back" and return to where they were opened from. Every non-Home screen uses `components/FullCard.tsx` (fixed frame, back button, inner scroll).
 
+## Caretaker web (`/care`)
+
+- **Routing.** `mobile/src/main.tsx` switches on the path: `/` renders the phone `App` (unchanged), `/care` and `/care/*` render `care/CareApp.tsx`, lazy-loaded so the phone bundle and CSS stay as they were (phone CSS build output verified byte-identical to `main`). `lib/pathname.ts` (`usePathname`, `navigateTo` = `history.pushState`, `replacePath`) keeps browser back/forward working; no router dependency. Routes and the redirect rule live in `care/routing.ts`: `/care` landing, `/care/sign-in`, `/care/week`, `/care/alerts`, `/care/settings`; signed-in pages without a persona `replaceState` to the picker; unknown `/care/*` paths show the landing.
+- **Deep links on Vercel.** `mobile/vercel.json` rewrites `/care` and `/care/:path*` to `/index.html` (Root Directory is `mobile`). P1's EdgeOne copy needs the same SPA rewrite for `/care/*`.
+- **Demo sign-in (front end only).** `/care/sign-in` lists three personas from `care/data/personas.ts`: the senior (name from `summary.senior.name`; choosing her opens `/`), the caretaker who **gets check-ins** (`summary.caregiver.name`, mock "Jamie" if the API has none) and the caretaker with **updates only** (mock slot `MOCK_UPDATES_ONLY_CARETAKER`, "Alex", in `care/data/mock.ts`). The chosen caretaker slot (`checkIns` / `updatesOnly`, not a name) is kept in `sessionStorage` key `pawtner.care.persona` (wrapped in try/catch); Log out clears it and returns to `/care`. No passwords, accounts or database changes.
+- **Visibility.** Rules in `care/lib/rules.ts`: updates-only caretakers don't see caring moments of kind `check_in` (`visibleMoments`), and see Alerts read-only with a calm note; `checkInLock()` allows editing the threshold only for the check-ins caretaker, with consent on (`escalation.optedIn`) and the API reachable.
+- **Data mapping.** Today ring = `today.doses` taken / total (counts only, never medicine names). Streak = `dog.streak`; seven weekday hearts, the last `min(streak, 7)` filled (`streakHearts`, `recentDays`). Caring moments = `summary.caringMoments` (time via `Intl` in the viewer's local zone; the API has no senior time zone yet). Questions for the doctor = `summary.doctorQuestions`. Consent = `escalation.optedIn`; one shared threshold stepper, minimum `DEMO_RULES.caretakerMinimumThreshold`, saved with the existing `api.updateEscalationSettings({ optedIn, threshold })`. Message preview = `care.web.alerts.preview` in `en.json` with the senior's name and the threshold, no medicine name. Settings shows dog and senior names from data, a weekly-summary preview (visible moments, streak, walks, doctor-question count) and "Medication editing: coming soon".
+- **Offline.** `care/hooks/useCareData.ts` calls the three endpoints once; any failure is logged to the console and replaced by `buildMockCareData()` (typed like the API responses), and the page shows `care.web.notice.offline`. Saving is disabled offline.
+- **Look.** `care/care.css` holds one token block scoped to `.care-root` (cream/forest palette, Inter, radii, spacing); every class starts with `care-`. The dog is ours (`DOG_IMAGE_BY_MOOD` from `config/scene.ts`, by `dog.mood`); the design's cartoon dog is not used. Garden art: `public/assets/care-garden.webp` (1920×800, 121 KB, from the design's 2.8 MB PNG), path in `care/config.ts`.
+- **Mocks to replace** when P1 adds them: the updates-only caretaker (needs `caregivers: { id, name, receivesCheckIns }[]` in `CaretakerSummaryResponse`), the check-ins caretaker fallback when `summary.caregiver` is null, and the senior's time zone for moment times.
+
 Config lives in `mobile/src/config/` (`scene.ts`: images incl. `DOG_IMAGE_BY_MOOD` (sleepy has its own art; a mood image that fails to load falls back to `DOG_BASE_IMAGE`), ground line, dog size limits, screens without the dog; `intro.ts`: dedication timing). Text lives in `mobile/src/locales/en.json`; dog and caretaker names are interpolated from mock data (`{{name}}`, PR #4).
 
 ## Commands
@@ -30,7 +42,7 @@ Config lives in `mobile/src/config/` (`scene.ts`: images incl. `DOG_IMAGE_BY_MOO
 |---|---|---|
 | `mobile/` | `npm run dev` | Dev server (Vite). Add `-- --host` to open it on a phone on the same Wi-Fi. |
 | `mobile/` | `npx tsc --noEmit`, `npm run build` | Typecheck and production build (no `typecheck` script in `mobile/`). |
-| root | `npm run typecheck`, `npm run test:unit` | Typecheck and unit tests for `shared/`. |
+| root | `npm run typecheck`, `npm run test:unit` | Typecheck and unit tests for `shared/` and the pure mobile helpers (navigation, walk, `/care` rules in `tests/unit/care.test.ts`). |
 | root + mobile terminals | `npm run dev`, `npm run dev:mobile` | Local API and Vite UI. Vite proxies `/api` to port 3001. |
 | root | `npm run db:migrate`, `npm run db:seed` | Need `DATABASE_URL_DIRECT` in `.env`. |
 

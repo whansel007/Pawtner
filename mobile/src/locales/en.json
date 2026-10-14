@@ -62,7 +62,180 @@
     "dosesTaken": "Doses taken",
     "walkedToday": "Walked today",
     "recentActivity": "Recent activity",
-    "sendTreat": "Send {{name}} a treat"
+    "sendTreat": "Send {{name}} a treat",
+    "web": {
+      "brand": "Pawtner",
+      "brandHome": "Pawtner care home",
+      "loading": "Opening Pawtner…",
+      "pageTitle": "Pawtner care · {{page}}",
+      "dogAlt": "{{name}}, the crochet Pawtner dog",
+      "notice": {
+        "offline": "Can't reach Pawtner right now. Showing sample information."
+      },
+      "nav": {
+        "label": "Pawtner sections",
+        "footerLabel": "Footer navigation",
+        "week": "This week",
+        "alerts": "Alerts & caregivers",
+        "settings": "Settings"
+      },
+      "header": {
+        "signedInAs": "Signed in as {{name}}",
+        "logOut": "Log out"
+      },
+      "landing": {
+        "eyebrow": "Care that feels close",
+        "title": "Gentle care, always connected",
+        "intro": "A calm, shared place for {{senior}}, family and {{dog}} to keep every caring moment close.",
+        "signIn": "Sign in",
+        "open": "Open this week",
+        "gardenAlt": "A handmade felt garden with knitted trees, flowers and a winding path",
+        "supportEyebrow": "Made for the whole family",
+        "supportTitle": "Warm support, without the worry",
+        "supportIntro": "Simple updates, thoughtful check-ins, and a little crochet companion along the way.",
+        "featureWeekTitle": "A gentle weekly view",
+        "featureWeekBody": "See progress and caring moments without clinical detail or clutter.",
+        "featureFamilyTitle": "Family coordination",
+        "featureFamilyBody": "Keep trusted people close with clear, consent-led check-ins.",
+        "featureCalmTitle": "Calm by design",
+        "featureCalmBody": "Warm language and reassuring summaries keep attention on care."
+      },
+      "signIn": {
+        "eyebrow": "Welcome",
+        "title": "Who's visiting?",
+        "demo": "Demo: pick who you are. No account needed.",
+        "listLabel": "People in this demo",
+        "senior": "Opens {{name}}'s phone app",
+        "checkIns": "Caretaker · Gets check-ins",
+        "updatesOnly": "Caretaker · Updates only",
+        "back": "Back to start"
+      },
+      "week": {
+        "eyebrow": "{{day}}, this week",
+        "title": "A gentle look at {{name}}'s week",
+        "intro": "Small caring moments, all in one calm place.",
+        "todayEyebrow": "Today",
+        "ringValue": "{{done}} of {{total}}",
+        "ringCaption": "done",
+        "ringLabel": "{{done}} of {{total}} doses taken today",
+        "state": {
+          "none": {
+            "title": "A quiet day",
+            "lead": "Nothing is scheduled today.",
+            "body": "Caring moments will still show up here."
+          },
+          "allDone": {
+            "title": "All done today",
+            "badge": "All done",
+            "lead": "Every dose is taken today.",
+            "body": "{{dog}} is having a lovely day."
+          },
+          "missed": {
+            "title": "A gentle day",
+            "lead": "{{done}} of {{total}} doses taken",
+            "body": "A dose was missed. {{dog}} nudges gently first; check-ins come only after several in a row."
+          },
+          "onTrack": {
+            "title": "A steady day",
+            "badge": "On track",
+            "lead": "{{done}} of {{total}} doses taken",
+            "body": "There is plenty of time for the rest of today."
+          }
+        },
+        "streakEyebrow": "A lovely rhythm",
+        "streakTitle_zero": "A fresh start",
+        "streakTitle_one": "{{count}}-day streak",
+        "streakTitle_other": "{{count}}-day streak",
+        "streakBadge": "All week",
+        "streakLabel_zero": "Hearts for the last {{days}} days. A new streak starts with the next day of every dose.",
+        "streakLabel_one": "Hearts for the last {{days}} days. {{count}} day in a row with every dose taken.",
+        "streakLabel_other": "Hearts for the last {{days}} days. {{count}} days in a row with every dose taken.",
+        "momentsEyebrow": "Shared with care",
+        "momentsTitle": "Caring moments",
+        "momentsWhen": "This week",
+        "momentsEmpty": "No caring moments yet this week.",
+        "momentKind": {
+          "celebration": "Celebration",
+          "check_in": "Check-in"
+        },
+        "questionsEyebrow": "Added by {{name}}",
+        "questionsTitle": "Questions for the doctor",
+        "questionsSaved": "Saved on {{day}} · Ready for the next visit",
+        "questionsEarlier": "Also this week",
+        "questionsEmpty": "No questions saved this week."
+      },
+      "alerts": {
+        "eyebrow": "A trusted circle",
+        "title": "Alerts & caregivers",
+        "intro": "Kind check-ins, shared only with people {{name}} trusts.",
+        "cardEyebrow": "Gentle alerts",
+        "cardTitle": "Check-in preferences",
+        "consentBadge": "Consent given",
+        "noConsentBadge": "Not turned on",
+        "consentOn": "{{name}} has agreed to check-ins",
+        "consentOnSub": "{{name}} can change this on the phone at any time.",
+        "consentOff": "{{name}} hasn't turned on check-ins",
+        "consentOffSub": "Check-ins start only after {{name}} agrees on the phone.",
+        "stepperLead": "Send a check-in after",
+        "stepperUnit": "missed doses in a row",
+        "stepperValue": "{{count}} missed doses in a row",
+        "decrease": "Fewer missed doses",
+        "increase": "More missed doses",
+        "minimumNote": "{{count}} is the lowest setting.",
+        "saving": "Saving…",
+        "saved": "Saved. Check-ins wait for {{count}} missed doses in a row.",
+        "saveFailed": "That didn't save. Please try again in a moment.",
+        "lock": {
+          "updatesOnly": "Check-ins go to the people {{name}} chose. You'll still see caring moments and the weekly view.",
+          "noConsent": "This setting opens once {{name}} agrees to check-ins.",
+          "offline": "Saving is paused while Pawtner is offline. The setting shown is sample information."
+        },
+        "previewLabel": "Gentle message preview",
+        "preview": "{{name}} has missed {{count}} doses in a row. Maybe give them a call?",
+        "previewNote": "Check-ins never name a medicine.",
+        "listEyebrow": "Trusted people",
+        "listTitle": "Family caretakers",
+        "listCount_one": "{{count}} person",
+        "listCount_other": "{{count}} people",
+        "getsCheckIns": "Gets check-ins",
+        "updatesOnly": "Updates only",
+        "you": "You"
+      },
+      "settings": {
+        "eyebrow": "Made personal",
+        "title": "Settings",
+        "intro": "Names and weekly updates, as {{name}}'s phone knows them.",
+        "namesEyebrow": "Names",
+        "namesTitle": "The family at a glance",
+        "dogName": "Dog's name",
+        "seniorName": "Senior's display name",
+        "namesNote": "Names are set on {{name}}'s phone.",
+        "medsSoon": "Medication editing: coming soon",
+        "summaryEyebrow": "Every Sunday",
+        "summaryTitle": "Weekly summary",
+        "summaryIntro": "Shown here in Pawtner as a calm, on-screen page.",
+        "previewLabel": "Weekly notes",
+        "previewNames": "{{senior}} & {{dog}}",
+        "momentsStat_one": "caring moment",
+        "momentsStat_other": "caring moments",
+        "streakStat_one": "{{count}} day",
+        "streakStat_other": "{{count}} days",
+        "streakStatLabel": "steady rhythm",
+        "walks_zero": "No walks yet this week",
+        "walks_one": "{{count}} walk with {{dog}}",
+        "walks_other": "{{count}} walks with {{dog}}",
+        "questions_zero": "no notes for the next visit",
+        "questions_one": "{{count}} note for the next visit",
+        "questions_other": "{{count}} notes for the next visit"
+      },
+      "footer": {
+        "tagline": "Gentle care, thoughtfully connected.",
+        "noteEyebrow": "Made for caring circles",
+        "note": "A calm place for the small moments that matter.",
+        "bottom": "Warm support, never clinical.",
+        "demo": "Demo with fictional people."
+      }
+    }
   },
   "reminders": {
     "eyebrow": "Medication plan",
