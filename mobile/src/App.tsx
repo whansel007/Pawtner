@@ -164,7 +164,8 @@ export default function App() {
 
   /**
    * Walk start/finish from WalkScreen. Start records the start time.
-   * Finish posts one walk session (WalkScreen reports a simulated finish only once).
+   * Finish posts one walk session (WalkScreen reports a simulated finish only once),
+   * uses the decision in the response, then refreshToday() so the dog's mood comes from the server.
    * If the API call fails, a simulated walk falls back to requestDecision() so the dog still reacts offline.
    */
   async function handleWalkState(walking: boolean, simulated?: WalkCompletion) {
@@ -178,12 +179,14 @@ export default function App() {
     setWalkStartedAt(null);
     setDizzy(false);
     try {
-      await api.walkSession({
+      const result = await api.walkSession({
         startedAt,
         finishedAt,
         distanceMeters: simulated?.distanceMeters ?? 0,
         fastStretchOccurred: simulated?.fastStretchOccurred ?? false,
       });
+      setLatestDecision(result.decision);
+      await refreshToday();
       setCareSummary(await api.caretakerSummary());
     } catch (error) {
       reportApiProblem(error, true);
