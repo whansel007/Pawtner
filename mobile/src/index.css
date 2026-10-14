@@ -466,6 +466,12 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .proof-scanner.captured { color: #315a43; background: var(--color-surface-sage-darker); }
 .proof-check { z-index: 1; display: grid; place-items: center; width: 70px; height: 70px; border-radius: var(--radius-full); color: white; background: var(--color-accent-proof); box-shadow: var(--shadow-proof); }
 
+.scanner.scanning .camera-orb { animation: pulse 1s ease-in-out infinite; }
+.ocr-preview { margin-top: 14px; text-align: left; padding: 10px 14px; border-radius: var(--radius-3xl); background: var(--color-surface-sage); }
+.ocr-preview small { color: var(--color-text-faint); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: .04em; }
+.ocr-preview p { margin-top: 4px; color: var(--color-text-body); font-size: var(--font-size-sm); line-height: 1.4; }
+@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.15); opacity: .7; } }
+
 /* ═══════════════════════════════════════════════════════════════════════
    Plain card / explain points / listen button
    ═══════════════════════════════════════════════════════════════════════ */

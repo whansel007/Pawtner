@@ -11,7 +11,7 @@ export function ProofScreen({
   medicationName,
 }: {
   back: BackAction;
-  onVerified: () => void | Promise<void>;
+  onVerified: (photoUrl: string | null) => void | Promise<void>;
   petName: string;
   medicationName?: string;
 }) {
@@ -66,7 +66,7 @@ export function ProofScreen({
         </p>
       )}
 
-      {captured && <button className="primary-button" onClick={onVerified}>{t("proof.giveHeart", { name: petName })}</button>}
+      {captured && <button className="primary-button" onClick={() => void onVerified(photoUrl)}>{t("proof.giveHeart", { name: petName })}</button>}
     </FullCard>
   );
 }

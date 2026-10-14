@@ -243,10 +243,10 @@ export default function App() {
    * in lib/agent.ts for a celebrate decision, so the beat still works offline.
    * The local change is not saved: the next successful /api/today replaces it.
    */
-  async function handleDoseVerified() {
+  async function handleDoseVerified(proofPhotoUrl: string | null) {
     if (!pendingDose) return;
     const occurredAt = demoNow ?? new Date().toISOString();
-    const doseEvent = { scheduleId: pendingDose.id, scheduledFor: pendingDose.scheduledAt, event: "taken" as const, occurredAt };
+    const doseEvent = { scheduleId: pendingDose.id, scheduledFor: pendingDose.scheduledAt, event: "taken" as const, occurredAt, proofPhotoUrl };
     try {
       const result = await api.doseEvent(doseEvent);
       setToday(result.today);
