@@ -34,7 +34,7 @@ Config lives in `mobile/src/config/` (`scene.ts`: images, ground line, dog size 
 ## Deployment
 
 - Vercel project `pawtner-mobile` (account `fresfrida`), **Root Directory `mobile`**, not linked to GitHub, so pushing or merging deploys nothing. Deploys run from the **repo root** with the Vercel CLI (`vercel deploy` for previews, `--prod` for production).
-- Production URL: `pawtner-mobile-three.vercel.app`, serving a build from before PR #4 (names fix). The final T1-17 host is undecided (EdgeOne Pages vs Vercel, P1).
+- Production URL: `pawtner-mobile-three.vercel.app`, serving deploy `pawtner-mobile-a8mx1lyw6` (13 Oct 23:16), from before PR #4 (names fix). Next production deploy: this evening, after the API connection (plan step 5). The Vercel connector returns 403 for this project; `vercel --scope fresfrida list pawtner-mobile` works. The final T1-17 host is undecided (EdgeOne Pages vs Vercel, P1).
 - `vercel link` writes `.env.local` with a `VERCEL_OIDC_TOKEN`; delete it and never commit it.
 - `mobile/.vercel` is an old link from `mobile/`; don't deploy from there.
 
@@ -43,7 +43,7 @@ Config lives in `mobile/src/config/` (`scene.ts`: images, ground line, dog size 
 - Team mode: every push needs the user's yes, typed in the session that pushes. Only the user merges PRs. Never commit to `main`, never force-push.
 - Claude Code: `claude/*` branches, structural fixes. CodeBuddy: `cb/*` branches, features (its chats are the judging proof; screenshots go in `proof/`).
 - Several tools share one checkout. Use `git worktree` for parallel work instead of switching branches in the main folder. Create each worktree from `origin/main` (`git fetch && git worktree add ../pawtner-<task> -b <branch> origin/main`), then run `npm install` in the root and in `mobile/`.
-- The main folder (`Pawtner-repo`) is on `cb/names-from-data`, already merged, so it has no `docs/KANBAN.md` or `docs/HANDOFF.md`. On 14 Oct CodeBuddy read that stale state and tried to restart T1-08; a fresh chat with a context-reset message fixed it. Trust `git log origin/main` over a tool's memory.
+- Keep the main folder (`Pawtner-repo`) on `main` and pull. On 14 Oct it was still on the merged `cb/names-from-data` (no KANBAN/HANDOFF), and CodeBuddy tried to restart T1-08; a fresh chat with a context-reset message fixed it, and the folder was switched to `main`. Trust `git log origin/main` over a tool's memory.
 
 ## Known risks
 

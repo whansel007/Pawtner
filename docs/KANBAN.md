@@ -5,14 +5,23 @@ Updated 2026-10-14 (Wed). Tier 1 is due **tonight (Wed)**; submission **Fri 16 O
 
 ## Doing
 
+Today's plan (agreed 13 Oct evening), in order:
+1. Morning: message P1 for the hosting decision, the first endpoints (`today`, `dose event`) and the contract additions for `/care`.
+2. T1-10 + T1-12 emergency beat.
+3. T1-15 `/care` from the Miro frames, on mock data.
+4. Afternoon: T1-16 simulated walk.
+5. Evening: connect to the API if it's ready, then deploy to production.
+6. Later, if there's time: T2-10 morning/night from one shared helper.
+
 | ID | Item | Owner | State |
 |---|---|---|---|
-| T1-10 + T1-12 | BP log form → `decide()` → calm 995 message, attentive dog; decision log card. Bundled with tap-the-dog reactions (hop → hearts → speech bubble → bark). | P2 / CodeBuddy | Prompt handed to CodeBuddy 14 Oct; branch `cb/emergency-beat` (worktree `../pawtner-emergency`), not pushed yet. Bark needs a licence-free `mobile/public/assets/bark.mp3` from the user; skipped until it exists. |
-| T1-15 | `/care` weekly summary + escalation settings | P2 / CodeBuddy | Waiting for the user's Miro frames. Care screen exists with mock data only; no router yet (`care` is screen state, not a `/care` URL). |
-| T1-16 | "Simulate walk" (dizzy on the fast stretch) | P2 / CodeBuddy | Prompt being drafted. Walk screen exists with mock data only. |
+| — | Message P1: hosting, `today` + `dose event` endpoints, `/care` contract additions | P2 | Not confirmed sent. |
+| T1-10 + T1-12 | BP log form → `decide()` → calm 995 message, attentive dog; decision log card. Bundled with tap-the-dog reactions (hop → hearts → speech bubble → bark), added 14 Oct. | P2 / CodeBuddy | Prompt handed to CodeBuddy 14 Oct for branch `cb/emergency-beat` (worktree `../pawtner-emergency`); not started on disk yet. Bark needs a licence-free `mobile/public/assets/bark.mp3` from the user; skipped until it exists. |
+| T1-15 | `/care` weekly summary + escalation settings, on mock data | P2 / CodeBuddy | Waiting for the Miro frames. Fixes agreed 13 Oct: no email, the same dog, read-only settings, slots for the missing fields. No router yet (`care` is screen state, not a `/care` URL); `care` is in `SCREENS_WITHOUT_DOG`. |
+| T1-16 | "Simulate walk" (dizzy on the fast stretch) | P2 / CodeBuddy | Afternoon. Walk screen exists with mock data only. |
 | T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Mock: Taken → proof screen → dose marked taken locally. TODO: post a `DoseEvent` once the API exists. |
 | T1-13 | Dog mood on Home | P2 | One dog image; mood via motion/glow from `selectDogMood`. On `main` still not driven by agent decisions (`App.tsx`: `selectDogMood(heartCount, null)`); T1-10 work changes this. |
-| T1-17 | Public HTTPS URL | P2 (+ P1 API) | Vercel previews work. Production URL `pawtner-mobile-three.vercel.app` serves a build from before PR #4 (names fix). Production host not decided. |
+| T1-17 | Public HTTPS URL | P2 (+ P1 API) | Production `pawtner-mobile-three.vercel.app` = deploy `pawtner-mobile-a8mx1lyw6`, created 13 Oct 23:16, before PR #4 (verified 14 Oct: live bundle still has "Max is doing great"). Next production deploy planned for this evening (step 5). Vercel isn't linked to GitHub, so merges don't deploy. |
 | T1-18 | Dog assets | Design | Base dog + garden day/night done. 4-mood sheet not started. |
 
 ## Backlog (Tier 1)
@@ -21,7 +30,7 @@ Updated 2026-10-14 (Wed). Tier 1 is due **tonight (Wed)**; submission **Fri 16 O
 |---|---|---|---|
 | T1-07 | APIs (today, dose event, health metric, agent decide, caretaker summary, escalation, walk) | P1 | No API code in the repo yet; front-end wiring waits on this. |
 | T1-08 | Home wired to the API (schedule card, hearts, streak) | P2 | Names-from-data part done (PR #4); API wiring waits on T1-07. |
-| T1-11 | In-app nudge + demo clock | P2 | Not started. |
+| T1-11 | In-app nudge + demo clock | P2 | Not started; not in today's plan. |
 
 ## In repo, owned by P1 (not re-verified by the advisor)
 
@@ -57,7 +66,7 @@ Updated 2026-10-14 (Wed). Tier 1 is due **tonight (Wed)**; submission **Fri 16 O
 |---|---|
 | Fixed names left in mock data | `mobile/src/mock/care.ts` has `names: "Mum + Jamie"`; `mobile/src/mock/milestones.ts` has `note: "From Jamie"`. Renaming the caretaker won't change these; derive them from the name fields. |
 | Heart score computed inline | `App.tsx` computes `heartCount` itself instead of `computeHeart` from `shared/selectors`; two sources of truth. |
-| Main folder on a merged branch | The main checkout sits on `cb/names-from-data` (merged in PR #4), so it has no `docs/KANBAN.md` or `docs/HANDOFF.md`. This misled CodeBuddy on 14 Oct. Start new work from `origin/main` in a worktree. |
+| Stale checkouts mislead tools | On 14 Oct the main folder was still on the merged `cb/names-from-data` (no KANBAN/HANDOFF) and CodeBuddy tried to restart T1-08. Main folder switched to `main` the same morning. Start new work from `origin/main` in a worktree. |
 | Dedication cross-fade into Home | Deferred by the user; needs Home rendered under the dedication overlay. |
 | `README.md` is stale | Says the Vite app is not implemented. |
 | `CLAUDE.md` paths | Points to `docs/PRD.md` and `docs/ARCHITECTURE.md`; the PRD is at the repo root and ARCHITECTURE.md doesn't exist. |
