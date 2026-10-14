@@ -33,10 +33,10 @@ export const ACCESSORY_LAYOUTS: Record<Exclude<AccessoryId, "none">, AccessoryLa
     rotate: "-2deg",
   },
   flower: {
-    top: "16%",
-    left: "68%",
-    width: "10%",
-    height: "9%",
-    rotate: "-8deg",
+    top: "10%",
+    left: "76%",
+    width: "24%",
+    height: "24%",
+    rotate: "-10deg",
   },
 };

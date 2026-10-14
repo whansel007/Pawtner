@@ -271,13 +271,9 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
   justify-content: space-between;
   padding-inline: 14px;
 }
-/* Shared chips row: visible on Home in portrait, and on every senior screen in landscape (see landscape query). */
+/* Shared .scene-chips: only shown in the landscape two-column layout on non-Home, non-Care screens (see landscape query).
+   Home always uses .home-layout__chips; portrait keeps the shared row hidden so the two rows never duplicate. */
 .scene-chips { display: none; }
-.app-shell:has(.screen-home) .scene-chips {
-  display: flex;
-  justify-content: space-between;
-  padding-inline: 14px;
-}
 .scene-actions { display: flex; gap: 8px; }
 /* Portrait: the cards are plain items of the Home column. Landscape turns this into the right-hand pane. */
 .home-layout__cards { display: contents; }
@@ -1030,6 +1026,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
     display: flex;
   }
   .home-layout__chips { display: none; }
+  .app-shell:has(.screen-home) .scene-chips { display: none; }
   .app-shell:has(.screen-care) .scene-chips { display: none; }
 
   /* Right pane */
