@@ -24,13 +24,16 @@ import { DogLayer } from "./components/DogLayer";
 import { DEFAULT_PHASE } from "./config/scene";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
-import type { CaretakerSummaryResponse, DerivedDose, EscalationSettingsResponse, TodayResponse } from "../../shared/contract";
+import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, EscalationSettingsResponse, HealthMetric, TodayResponse } from "../../shared/contract";
 import { api } from "./lib/api";
+import { requestDecision, buildAgentInputFromState } from "./lib/agent";
 import type { Screen, World, Accessory } from "./types";
 import {
   pet,
   doses,
   todayDoses,
+  demoUser,
+  demoDog,
   medication,
   medicationExplanation,
   nudgeSettings,
@@ -61,6 +64,8 @@ export default function App() {
   const [doseList, setDoseList] = useState<DerivedDose[]>(todayDoses);
   const [pendingDoseId, setPendingDoseId] = useState<string | null>(null);
   const [bpLogged, setBpLogged] = useState(false);
+  const [healthMetrics, setHealthMetrics] = useState<HealthMetric[]>([]);
+  const [latestDecision, setLatestDecision] = useState<AgentDecision | null>(null);
   const [world, setWorld] = useState<World>("garden");
   const [accessory, setAccessory] = useState<Accessory>("none");
   const [toast, setToast] = useState("");
@@ -74,7 +79,7 @@ export default function App() {
   const [escalationSettings, setEscalationSettings] = useState<EscalationSettingsResponse | null>(null);
 
   const refreshToday = async (now?: string) => {
-    try { const result = await api.today(now ?? demoNow ?? undefined); setToday(result); setDoseList(result.doses); setBpLogged(result.bloodPressureLoggedToday); setApiError(""); }
+    try { const result = await api.today(now ?? demoNow ?? undefined); setToday(result); setDoseList(result.doses); setBpLogged(result.bloodPressureLoggedToday); setLatestDecision(result.latestDecision); setApiError(""); }
     catch (error) { setApiError(error instanceof Error ? error.message : "Could not connect to Pawtner API"); }
   };
   useEffect(() => { void refreshToday(); }, []);
@@ -85,10 +90,11 @@ export default function App() {
 
   const takenCount = doseList.filter((d) => d.status === "taken").length;
   const heartCount = today?.dog.heart ?? Math.min(DEMO_RULES.heartMaximum, 1 + takenCount + (bpLogged ? 1 : 0));
-  const mood = today ? today.dog.mood : selectDogMood(heartCount, null);
+  const mood = today ? today.dog.mood : selectDogMood(heartCount, latestDecision);
   const phase = DEFAULT_PHASE;
 
-  const dogName = today?.dog.name.toLowerCase() ?? pet.name;
+  // Names come from data unchanged — no .toLowerCase().
+  const dogName = today?.dog.name ?? pet.name;
   const caretakerName = careSummary?.caregiver?.name ?? caregiver.caretakerName;
   const livePet = { ...pet, name: dogName, heartCount, streak: today?.dog.streak ?? pet.streak, careScore: careSummary?.careScore ?? pet.careScore, caringDays: careSummary?.caringDays ?? pet.caringDays };
   const liveCaregiver = careSummary?.caregiver ? { ...caregiver, caretakerName: careSummary.caregiver.name, names: `${careSummary.senior.name} + ${careSummary.caregiver.name}` } : caregiver;
@@ -98,6 +104,51 @@ export default function App() {
     setToast(message);
     window.setTimeout(() => setToast(""), 2400);
   };
+
+  /**
+   * BP form submit: posts to the API with systolic, diastolic, note, recordedAt.
+   * Uses the decision in the response for the result card and the calm no-toast rule,
+   * then refreshToday() so mood comes from the server.
+   * If the API call fails (no server), falls back to requestDecision() in lib/agent.ts
+   * so the beat still works offline, and shows William's existing apiError toast.
+   */
+  async function handleLogBp(metric: HealthMetric) {
+    setHealthMetrics((prev) => [...prev, metric]);
+    const recordedAt = demoNow ?? new Date().toISOString();
+    let decision: AgentDecision;
+    try {
+      const result = await api.healthMetric({
+        systolic: metric.systolic,
+        diastolic: metric.diastolic,
+        note: metric.note,
+        recordedAt,
+      });
+      decision = result.decision;
+      setLatestDecision(decision);
+      await refreshToday();
+    } catch {
+      // Offline fallback: call the rules engine directly so the beat still works.
+      const updatedMetrics = [...healthMetrics, metric];
+      const input = buildAgentInputFromState({
+        now: recordedAt,
+        userId: demoUser.id,
+        dogId: demoDog.id,
+        dogName: dogName,
+        heart: heartCount,
+        streak: today?.dog.streak ?? pet.streak,
+        doses: doseList,
+        healthMetrics: updatedMetrics,
+      });
+      decision = await requestDecision(input);
+      setLatestDecision(decision);
+      setApiError("Could not connect to Pawtner API");
+    }
+    setBpLogged(true);
+    // Emergency and see-GP moments stay calm: no playful toast.
+    if (decision.decision !== "emergency_995" && decision.decision !== "see_gp_soon") {
+      notify(t("toast.bpLogged", { name: dogName }));
+    }
+  }
 
   const runAgentAtDemoTime = async () => {
     const parsed = new Date(demoClockValue);
@@ -151,7 +202,7 @@ export default function App() {
             onTreat={() => notify(t("toast.treatWaiting", { name: dogName, caretaker: caretakerName }))}
             onWalk={() => setScreen("walk")}
             onBloodPressure={() => setScreen("health")}
-            decision={today?.latestDecision ?? null}
+            decision={latestDecision}
           />
         )}
         {screen === "care" && <CareScreen goHome={() => setScreen("home")} sendTreat={() => notify(t("toast.treatSent", { name: dogName }))} pet={livePet} caregiver={liveCaregiver} careActivity={liveCareActivity} restockAlert={restockAlert} />}
@@ -162,7 +213,7 @@ export default function App() {
         {screen === "proof" && <ProofScreen onBack={() => setScreen("home")} onVerified={async () => { const dose = doseList.find((item) => item.id === pendingDoseId); if (!dose) return; try { const result = await api.doseEvent({ scheduleId: dose.id, scheduledFor: dose.scheduledAt, event: "taken", occurredAt: demoNow ?? new Date().toISOString() }); setToday(result.today); setDoseList(result.today.doses); setScreen("home"); notify(t("toast.heartGained", { name: dogName })); } catch (error) { setApiError(error instanceof Error ? error.message : "Could not record dose"); } }} medication={medication} petName={dogName} />}
         {screen === "walk" && <WalkScreen goHome={() => setScreen("home")} walkStats={walkStats} petName={dogName} onWalkState={(walking) => { if (walking) setWalkStartedAt(new Date().toISOString()); else if (walkStartedAt) { void api.walkSession({ startedAt: walkStartedAt, finishedAt: new Date().toISOString(), distanceMeters: 0, fastStretchOccurred: false }).then(() => api.caretakerSummary().then(setCareSummary)).catch((error) => setApiError(error instanceof Error ? error.message : "Could not save walk")); setWalkStartedAt(null); } }} />}
         {screen === "milestones" && <MilestonesScreen goHome={() => setScreen("home")} onWalk={() => setScreen("walk")} onCustomize={() => setScreen("customize")} pet={pet} currentWorld={currentWorld} tricks={tricks} souvenirs={souvenirs} petName={dogName} />}
-        {screen === "health" && <HealthScreen goHome={() => setScreen("home")} bpLogged={bpLogged} logBp={async (systolic, diastolic) => { try { await api.healthMetric({ systolic, diastolic, recordedAt: demoNow ?? new Date().toISOString() }); setBpLogged(true); await refreshToday(); notify(t("toast.bpLogged", { name: dogName })); } catch (error) { setApiError(error instanceof Error ? error.message : "Could not save reading"); } }} onScreening={() => setScreen("screening")} onSummary={() => setScreen("summary")} bloodPressureReading={today?.healthMetrics[0] ? { ...bloodPressureReading, systolic: today.healthMetrics[0].systolic, diastolic: today.healthMetrics[0].diastolic, note: today.healthMetrics[0].note ?? "Logged today" } : bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
+        {screen === "health" && <HealthScreen goHome={() => setScreen("home")} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => setScreen("screening")} onSummary={() => setScreen("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen onBack={() => setScreen("health")} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen onBack={() => setScreen("health")} weekSummary={careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }], doctorQuestion: careSummary.doctorQuestions[0]?.note ?? weekSummary.doctorQuestion } : weekSummary} />}
         {screen === "settings" && <SettingsScreen goHome={() => setScreen("home")} addMedication={() => setScreen("prescription")} openCaretaker={() => setScreen("care")} openReminders={() => setScreen("reminders")} caregiver={caregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { setApiError(error instanceof Error ? error.message : "Could not save check-in settings"); } }} />}

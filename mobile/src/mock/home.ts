@@ -1,6 +1,10 @@
 import type { Pet, Dose, Medication, MedicationExplanation, NudgeSettings, WeekSummary, BloodPressureReading, ScreeningInfo, ActivityLink, ClinicTask } from "../types";
 import type { DerivedDose } from "../../../shared/contract";
 
+/** Demo identifiers used by the mock agent flow. */
+export const demoUser = { id: "user-demo" };
+export const demoDog = { id: "dog-demo" };
+
 export const pet: Pet = {
   name: "max",
   heartCount: 2,
