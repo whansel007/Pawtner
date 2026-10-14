@@ -1,9 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import type { MilestoneWorld, Trick, Souvenir, Pet } from "../types";
 
 export function MilestonesScreen({
-  goHome,
+  back,
   onWalk,
   onCustomize,
   pet,
@@ -12,7 +14,7 @@ export function MilestonesScreen({
   souvenirs,
   petName,
 }: {
-  goHome: () => void;
+  back: BackAction;
   onWalk: () => void;
   onCustomize: () => void;
   pet: Pet;
@@ -23,10 +25,10 @@ export function MilestonesScreen({
 }) {
   const { t } = useTranslation();
   return (
-    <section className="content-card full-card">
-      <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
+    <FullCard back={back}>
       <p className="eyebrow green">{t("milestones.eyebrow", { name: petName })}</p>
       <h2>{t("milestones.title", { count: pet.caringDays })}</h2>
+      <p className="streak-line">{t("milestones.streakLine", { count: pet.streak })}</p>
       <div className="world-card">
         <span className="world-level">{currentWorld.levelText}</span><h3>{currentWorld.label}</h3><p>{currentWorld.description}</p>
         <div className="world-progress"><span /></div>
@@ -42,6 +44,6 @@ export function MilestonesScreen({
       {souvenirs.map((souvenir) => (
         <button className="souvenir-row" key={souvenir.name} onClick={onWalk}><span>{souvenir.distance}</span><div><strong>{souvenir.name}</strong><small>{souvenir.note}</small></div><Icon name="chevron" /></button>
       ))}
-    </section>
+    </FullCard>
   );
 }

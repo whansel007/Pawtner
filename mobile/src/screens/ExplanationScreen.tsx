@@ -1,13 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import type { MedicationExplanation } from "../types";
 
 export function ExplanationScreen({
-  onBack,
+  back,
   onContinue,
   medicationExplanation,
 }: {
-  onBack: () => void;
+  back: BackAction;
   onContinue: () => void;
   medicationExplanation: MedicationExplanation;
 }) {
@@ -19,8 +21,7 @@ export function ExplanationScreen({
     }
   };
   return (
-    <section className="content-card full-card">
-      <button className="back-button" onClick={onBack}><Icon name="back" size={20} /> {t("explanation.back")}</button>
+    <FullCard back={back}>
       <p className="eyebrow green">{t("explanation.eyebrow")}</p>
       <h2>{t("explanation.title")}</h2>
       <div className="plain-card">
@@ -35,6 +36,6 @@ export function ExplanationScreen({
       </div>
       <button className="listen-button" onClick={readAloud}><Icon name="speaker" /> {t("explanation.readAloud")}</button>
       <button className="primary-button" onClick={onContinue}>{t("explanation.continue")}</button>
-    </section>
+    </FullCard>
   );
 }

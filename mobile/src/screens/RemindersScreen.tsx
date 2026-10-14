@@ -1,18 +1,19 @@
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import type { Dose } from "../types";
 
 export function RemindersScreen({
-  goHome,
+  back,
   doses,
 }: {
-  goHome: () => void;
+  back: BackAction;
   doses: Dose[];
 }) {
   const { t } = useTranslation();
   return (
-    <section className="content-card full-card">
-      <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
+    <FullCard back={back}>
       <p className="eyebrow green">{t("reminders.eyebrow")}</p>
       <h2>{t("reminders.title")}</h2>
       <div className="next-dose">
@@ -31,6 +32,6 @@ export function RemindersScreen({
         ))}
       </div>
       <button className="primary-button"><Icon name="plus" size={20} /> {t("reminders.add")}</button>
-    </section>
+    </FullCard>
   );
 }

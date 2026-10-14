@@ -1,22 +1,23 @@
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import type { NudgeSettings } from "../types";
 
 export function ScheduleScreen({
-  onBack,
+  back,
   onConfirm,
   nudgeSettings,
   petName,
 }: {
-  onBack: () => void;
+  back: BackAction;
   onConfirm: () => void;
   nudgeSettings: NudgeSettings;
   petName: string;
 }) {
   const { t } = useTranslation();
   return (
-    <section className="content-card full-card">
-      <button className="back-button" onClick={onBack}><Icon name="back" size={20} /> {t("schedule.back")}</button>
+    <FullCard back={back}>
       <p className="eyebrow green">{t("schedule.eyebrow")}</p>
       <h2>{t("schedule.title", { name: petName })}</h2>
       <p className="supporting">{t("schedule.supporting")}</p>
@@ -25,6 +26,6 @@ export function ScheduleScreen({
       ))}
       <div className="dog-message"><Icon name="bell" /><p><strong>{nudgeSettings.message}</strong><br />{t("schedule.noAlarm")}</p></div>
       <button className="primary-button" onClick={onConfirm}>{t("schedule.confirm", { name: petName })}</button>
-    </section>
+    </FullCard>
   );
 }

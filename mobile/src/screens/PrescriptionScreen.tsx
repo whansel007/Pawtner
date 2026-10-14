@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import type { Medication } from "../types";
 
 export function PrescriptionScreen({
-  goHome,
+  back,
   onExplain,
   medication,
   petName,
 }: {
-  goHome: () => void;
+  back: BackAction;
   onExplain: () => void;
   medication: Medication;
   petName: string;
@@ -17,8 +19,7 @@ export function PrescriptionScreen({
   const { t } = useTranslation();
   const [scanned, setScanned] = useState(false);
   return (
-    <section className="content-card full-card scan-card">
-      <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
+    <FullCard back={back} className="scan-card">
       <p className="eyebrow green">{t("prescription.eyebrow")}</p>
       <h2>{scanned ? t("prescription.titleFound") : t("prescription.titleScan")}</h2>
       <p className="supporting">{scanned ? t("prescription.supportingFound", { name: petName }) : t("prescription.supportingScan")}</p>
@@ -40,6 +41,6 @@ export function PrescriptionScreen({
           <button className="primary-button" onClick={onExplain}>{t("prescription.explain")}</button>
         </div>
       )}
-    </section>
+    </FullCard>
   );
 }

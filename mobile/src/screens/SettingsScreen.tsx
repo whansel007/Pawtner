@@ -1,11 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import type { Caregiver } from "../types";
 import type { EscalationSettingsResponse } from "../../../shared/contract";
 import { useEffect, useState } from "react";
 
 export function SettingsScreen({
-  goHome,
+  back,
   addMedication,
   openCaretaker,
   openReminders,
@@ -18,7 +20,7 @@ export function SettingsScreen({
   escalationSettings,
   onSaveEscalationSettings,
 }: {
-  goHome: () => void;
+  back: BackAction;
   addMedication: () => void;
   openCaretaker: () => void;
   openReminders: () => void;
@@ -37,8 +39,7 @@ export function SettingsScreen({
   const [settingsBusy, setSettingsBusy] = useState(false);
   useEffect(() => { if (escalationSettings) setEscalationDraft(escalationSettings); }, [escalationSettings]);
   return (
-    <section className="content-card full-card settings-card">
-      <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
+    <FullCard back={back} className="settings-card">
       <p className="eyebrow green">{t("settings.eyebrow", { name: petName })}</p>
       <h2>{t("settings.title")}</h2>
       <div className="settings-group">
@@ -46,6 +47,7 @@ export function SettingsScreen({
         <button onClick={openReminders}><span className="feature-icon sage"><Icon name="bell" /></span><div><strong>{t("settings.nudges", { name: petName })}</strong><small>{t("settings.nudgesSub")}</small></div><Icon name="chevron" /></button>
         <button onClick={openCaretaker}><span className="feature-icon sage"><Icon name="users" /></span><div><strong>{t("settings.caretaker", { caretaker: caretakerName })}</strong><small>{t("settings.caretakerSub", { name: petName })}</small></div><Icon name="chevron" /></button>
       </div>
+      <div className="settings-note"><Icon name="heart" /><p><strong>{t("settings.privacyTitle")}</strong><br />{t("settings.privacyBody", { caretaker: caretakerName })}</p></div>
       <div className="demo-clock-card">
         <p className="eyebrow green">Agent demo</p>
         <h3>Demo clock</h3>
@@ -65,7 +67,6 @@ export function SettingsScreen({
         <p>Check-ins never include medicine names. The minimum threshold is two missed doses.</p>
         <button className="primary-button" disabled={!escalationSettings || settingsBusy} onClick={async () => { setSettingsBusy(true); try { await onSaveEscalationSettings(escalationDraft); } finally { setSettingsBusy(false); } }}>{settingsBusy ? "Saving…" : "Save check-in settings"}</button>
       </div>
-      <div className="settings-note"><Icon name="heart" /><p><strong>{t("settings.privacyTitle")}</strong><br />{t("settings.privacyBody", { caretaker: caretakerName })}</p></div>
-    </section>
+    </FullCard>
   );
 }

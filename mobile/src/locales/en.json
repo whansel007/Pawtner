@@ -25,6 +25,7 @@
   },
   "topZone": {
     "heartsAria": "{{count}} out of four hearts",
+    "homeAria": "{{name}}, go to Home",
     "settingsAria": "Open care dashboard"
   },
   "home": {
@@ -46,7 +47,9 @@
     "allDone": "All done for today",
     "noDoses": "Nothing scheduled today",
     "seeAll": "See all",
-    "takenAria": "Mark {{name}} as taken"
+    "takenAria": "Mark {{name}} as taken",
+    "streakChip_one": "🔥 {{count}} day",
+    "streakChip_other": "🔥 {{count}} days"
   },
   "care": {
     "eyebrow": "Caregiver view",
@@ -119,6 +122,9 @@
     "eyebrow": "Fresh air",
     "titleReady": "Ready to explore?",
     "titleWalking": "A lovely walk",
+    "titleDone": "Walk done",
+    "km": "{{km}} km",
+    "doneMessage": "Walk done: {{km}} km. {{name}} loved it!",
     "startReady": "Start when {{name}} is ready",
     "startWalk": "Start walk",
     "finishWalk": "Finish walk",
@@ -129,6 +135,8 @@
   "milestones": {
     "eyebrow": "{{name}} is learning",
     "title": "{{count}} caring days together",
+    "streakLine_one": "{{count}} day in a row with every dose taken.",
+    "streakLine_other": "{{count}} days in a row with every dose taken.",
     "worldWardrobe": "World & wardrobe",
     "worldWardrobeSub": "Revisit scenery and dress {{name}}",
     "tricks": "Tricks",
@@ -144,8 +152,7 @@
     "scenerySub": "All unlocked",
     "accessories": "Accessories",
     "accessoriesSub": "Tap to wear",
-    "showMe": "Show me at home",
-    "back": "Milestones"
+    "showMe": "Show me at home"
   },
   "health": {
     "eyebrow": "This week",
@@ -224,16 +231,14 @@
     "caringDays_one": "{{count}} of {{total}} caring day",
     "caringDays_other": "{{count}} of {{total}} caring days",
     "askDoctor": "ASK YOUR DOCTOR",
-    "doneReading": "Done reading",
-    "back": "Health"
+    "doneReading": "Done reading"
   },
   "screening": {
     "eyebrow": "A once-a-year task",
     "title": "Festival day is waiting",
     "supporting": "Based on your age, it may be time for a health screening. When it is done, {{name}}'s kampung celebrates too.",
     "checkHealthHub": "Check on HealthHub",
-    "remindLater": "Remind me another day",
-    "back": "Health"
+    "remindLater": "Remind me another day"
   },
   "settings": {
     "eyebrow": "{{name}}'s care",
