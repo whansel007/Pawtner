@@ -28,6 +28,7 @@ import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, EscalationSe
 import { api } from "./lib/api";
 import { requestDecision, buildAgentInputFromState } from "./lib/agent";
 import type { Screen, World, Accessory } from "./types";
+import type { WalkCompletion } from "./lib/simulatedWalk";
 import {
   pet,
   doses,
@@ -161,6 +162,48 @@ export default function App() {
     }
   }
 
+  /**
+   * Walk start/finish from WalkScreen. Start records the start time.
+   * Finish posts one walk session (WalkScreen reports a simulated finish only once).
+   * If the API call fails, a simulated walk falls back to requestDecision() so the dog still reacts offline.
+   */
+  async function handleWalkState(walking: boolean, simulated?: WalkCompletion) {
+    if (walking) {
+      setWalkStartedAt(new Date().toISOString());
+      return;
+    }
+    if (!walkStartedAt && !simulated) return;
+    const startedAt = walkStartedAt ?? new Date().toISOString();
+    const finishedAt = new Date().toISOString();
+    setWalkStartedAt(null);
+    setDizzy(false);
+    try {
+      await api.walkSession({
+        startedAt,
+        finishedAt,
+        distanceMeters: simulated?.distanceMeters ?? 0,
+        fastStretchOccurred: simulated?.fastStretchOccurred ?? false,
+      });
+      setCareSummary(await api.caretakerSummary());
+    } catch (error) {
+      reportApiProblem(error, true);
+      if (simulated) {
+        const input = buildAgentInputFromState({
+          now: finishedAt,
+          userId: demoUser.id,
+          dogId: demoDog.id,
+          dogName,
+          heart: heartCount,
+          streak: today?.dog.streak ?? pet.streak,
+          doses: doseList,
+          healthMetrics,
+          walkFinished: true,
+        });
+        setLatestDecision(await requestDecision(input));
+      }
+    }
+  }
+
   const runAgentAtDemoTime = async () => {
     const parsed = new Date(demoClockValue);
     if (!Number.isFinite(parsed.getTime())) return;
@@ -222,7 +265,7 @@ export default function App() {
         {screen === "explanation" && <ExplanationScreen onBack={() => setScreen("prescription")} onContinue={() => setScreen("schedule")} medicationExplanation={medicationExplanation} />}
         {screen === "schedule" && <ScheduleScreen onBack={() => setScreen("explanation")} onConfirm={() => { setScreen("home"); notify(t("toast.nudgeSet", { name: dogName })); }} nudgeSettings={nudgeSettings} petName={dogName} />}
         {screen === "proof" && <ProofScreen onBack={() => setScreen("home")} onVerified={async () => { const dose = doseList.find((item) => item.id === pendingDoseId); if (!dose) return; try { const result = await api.doseEvent({ scheduleId: dose.id, scheduledFor: dose.scheduledAt, event: "taken", occurredAt: demoNow ?? new Date().toISOString() }); setToday(result.today); setDoseList(result.today.doses); setScreen("home"); notify(t("toast.heartGained", { name: dogName })); } catch (error) { reportApiProblem(error, true); } }} medication={medication} petName={dogName} />}
-        {screen === "walk" && <WalkScreen goHome={() => setScreen("home")} walkStats={walkStats} petName={dogName} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => { if (walking) { setWalkStartedAt(new Date().toISOString()); } else if (walkStartedAt || simulated) { const startedAt = walkStartedAt ?? new Date().toISOString(); const finishedAt = new Date().toISOString(); const distanceMeters = simulated?.distanceMeters ?? 0; const fastStretchOccurred = simulated?.fastStretchOccurred ?? false; void api.walkSession({ startedAt, finishedAt, distanceMeters, fastStretchOccurred }).then(() => api.caretakerSummary().then(setCareSummary)).catch((error) => { reportApiProblem(error, true); if (simulated) { const input = buildAgentInputFromState({ now: finishedAt, userId: demoUser.id, dogId: demoDog.id, dogName, heart: heartCount, streak: today?.dog.streak ?? pet.streak, doses: doseList, healthMetrics, walkFinished: true }); void requestDecision(input).then(setLatestDecision); } }); setWalkStartedAt(null); setDizzy(false); } }} />}
+        {screen === "walk" && <WalkScreen goHome={() => setScreen("home")} walkStats={walkStats} petName={dogName} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
         {screen === "milestones" && <MilestonesScreen goHome={() => setScreen("home")} onWalk={() => setScreen("walk")} onCustomize={() => setScreen("customize")} pet={pet} currentWorld={currentWorld} tricks={tricks} souvenirs={souvenirs} petName={dogName} />}
         {screen === "health" && <HealthScreen goHome={() => setScreen("home")} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => setScreen("screening")} onSummary={() => setScreen("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen onBack={() => setScreen("health")} screeningInfo={screeningInfo} petName={dogName} />}

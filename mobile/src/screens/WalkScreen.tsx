@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import type { WalkStats } from "../types";
 import { useSimulatedWalk } from "../lib/simulatedWalk";
+import type { WalkCompletion } from "../lib/simulatedWalk";
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -20,7 +21,7 @@ export function WalkScreen({
   goHome: () => void;
   walkStats: WalkStats;
   petName: string;
-  onWalkState: (walking: boolean, simulated?: { distanceMeters: number; fastStretchOccurred: boolean }) => void;
+  onWalkState: (walking: boolean, simulated?: WalkCompletion) => void;
   onDizzyChange?: (dizzy: boolean) => void;
 }) {
   const { t } = useTranslation();
@@ -31,14 +32,27 @@ export function WalkScreen({
     onDizzyChange?.(simState.dizzy);
   }, [simState.dizzy, onDizzyChange]);
 
+  // Keep the latest parent callback without re-running effects when its identity changes.
+  const onWalkStateRef = useRef(onWalkState);
   useEffect(() => {
-    if (simStarted && simState.finished) {
-      onWalkState(false, {
-        distanceMeters: simState.distanceMeters,
-        fastStretchOccurred: simState.fastStretchOccurred,
-      });
+    onWalkStateRef.current = onWalkState;
+  }, [onWalkState]);
+
+  // Report completion exactly once per simulated walk; re-arm when a new simulation starts.
+  const completionReportedRef = useRef(false);
+  useEffect(() => {
+    if (!simStarted) return;
+    if (!simState.finished) {
+      completionReportedRef.current = false;
+      return;
     }
-  }, [simStarted, simState.finished, simState.distanceMeters, simState.fastStretchOccurred, onWalkState]);
+    if (completionReportedRef.current) return;
+    completionReportedRef.current = true;
+    onWalkStateRef.current(false, {
+      distanceMeters: simState.distanceMeters,
+      fastStretchOccurred: simState.fastStretchOccurred,
+    });
+  }, [simStarted, simState.finished, simState.distanceMeters, simState.fastStretchOccurred]);
 
   const isSimulating = simStarted && !simState.finished;
   const isActive = walking || isSimulating;

@@ -11,6 +11,9 @@ export interface WalkState {
   finished: boolean;
 }
 
+/** What a finished simulated walk reports back to the app. */
+export type WalkCompletion = Pick<WalkState, "distanceMeters" | "fastStretchOccurred">;
+
 /**
  * Pure function: given a track and elapsed simulated time, return the current walk state.
  * Distance grows only at or below FAST_SPEED_KMH.
