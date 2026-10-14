@@ -102,3 +102,11 @@
 | `/care` Settings is **read-only**: dog and senior names from data, weekly-summary preview, no toggle; "Medication editing: coming soon" kept (no web medication editing exists). Consent is shown, never changed, on the web. | User decision; consent belongs to the senior (phone). | Caretakers can't rename anything from the web. | Final |
 | The design's cartoon dog is replaced by our crochet dog (`DOG_IMAGE_BY_MOOD`, by `dog.mood`); the felt garden is reused as `care-garden.webp` (1920×800, 121 KB, from a 2.8 MB PNG). | One dog everywhere; page weight. | The garden is a second art style next to the phone's garden. | Final |
 | When an API call fails, `/care` shows typed mock data and one friendly notice (`care.web.notice.offline`); details go to the console. Saving is disabled offline. | Same rule as the phone (`reportApiProblem`); no hosted API yet. | Mixed live/mock data if only one call fails. | Final |
+
+## 2026-10-14 — Demo names and wording
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Demo senior is **Rose** (was Siew Lan); demo dog is **Buddy** (was Max). Changed in `migrations/seed.sql`, `shared/fixtures.ts`, mock data and tests (PR #19); no hardcoded names in components ("Just {{name}}"). | User's choice; Buddy was picked by CodeBuddy when the prompt kept a `<NAME>` placeholder, then accepted by the user. | P1 must seed the hosted DB from main after #19. | Final |
+| User-facing wording says **knitted**, not crochet. | User: "knitted sounds better". | — | Final |
+
