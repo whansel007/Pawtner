@@ -11,7 +11,9 @@
     "demo:rules": "tsx scripts/demo-rules.ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
-    "dev": "node -e \"console.error('Local API server is not implemented pending contract confirmation.'); process.exit(1)\""
+    "db:import:hsa-products": "tsx scripts/import-hsa-products.ts",
+    "dev": "tsx watch api/server.ts",
+    "dev:mobile": "npm --prefix mobile run dev"
   },
   "devDependencies": {
     "@types/node": "^24.7.2",

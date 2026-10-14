@@ -19,5 +19,6 @@ export default defineConfig({
     port: 5173,
     // The app imports shared/ (selectDogMood, DogMood) from the repo root.
     fs: { allow: ['..'] },
+    proxy: { '/api': 'http://localhost:3001' },
   },
 })

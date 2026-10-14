@@ -1,6 +1,6 @@
 # Kanban
 
-Updated 2026-10-14 (Wed). Tier 1 is due **tonight (Wed)**; submission **Fri 16 Oct**. IDs refer to `PRD.md` §9.
+Updated 2026-10-14. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**. IDs refer to `PRD.md` §9.
 "Mock" = works on the phone against mock data in `mobile/src/mock`, not yet wired to the API.
 
 ## Doing
@@ -15,22 +15,22 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | Owner | State |
 |---|---|---|---|
-| — | Message P1: hosting, `today` + `dose event` endpoints, `/care` contract additions | P2 | Not confirmed sent. |
-| T1-10 + T1-12 | BP log form → `decide()` → calm 995 message, attentive dog; decision log card. Bundled with tap-the-dog reactions (hop → hearts → speech bubble → bark), added 14 Oct. | P2 / CodeBuddy | Prompt handed to CodeBuddy 14 Oct for branch `cb/emergency-beat` (worktree `../pawtner-emergency`); not started on disk yet. Bark needs a licence-free `mobile/public/assets/bark.mp3` from the user; skipped until it exists. |
-| T1-15 | `/care` weekly summary + escalation settings, on mock data | P2 / CodeBuddy | Waiting for the Miro frames. Fixes agreed 13 Oct: no email, the same dog, read-only settings, slots for the missing fields. No router yet (`care` is screen state, not a `/care` URL); `care` is in `SCREENS_WITHOUT_DOG`. |
-| T1-16 | "Simulate walk" (dizzy on the fast stretch) | P2 / CodeBuddy | Afternoon. Walk screen exists with mock data only. |
-| T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Mock: Taken → proof screen → dose marked taken locally. TODO: post a `DoseEvent` once the API exists. |
-| T1-13 | Dog mood on Home | P2 | One dog image; mood via motion/glow from `selectDogMood`. On `main` still not driven by agent decisions (`App.tsx`: `selectDogMood(heartCount, null)`); T1-10 work changes this. |
-| T1-17 | Public HTTPS URL | P2 (+ P1 API) | Production `pawtner-mobile-three.vercel.app` = deploy `pawtner-mobile-a8mx1lyw6`, created 13 Oct 23:16, before PR #4 (verified 14 Oct: live bundle still has "Max is doing great"). Next production deploy planned for this evening (step 5). Vercel isn't linked to GitHub, so merges don't deploy. |
+| T1-08 | Home schedule card, names from data | P2 / CodeBuddy | Wired to `/api/today`; upcoming reminders remain mock. |
+| T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Posts dose event and derives status from ledger; scanner/photo is still a prototype. |
+| T1-11 | In-app nudge + demo clock | P2 | Settings demo clock runs the deterministic agent; dose nudges are capped at two per occurrence. |
+| T1-12 | Decision log card | P2 | Home shows latest wording, observations, rule, reasoning, and wording source. |
+| T1-13 | Dog mood on Home | P2 | Shared dog mood fed from API state; visual moods remain motion/glow. |
+| T1-17 | Public HTTPS URL | P2 (+ P1 API) | Vercel previews work. Production host not decided; production URL serves an older build. |
 | T1-18 | Dog assets | Design | Base dog + garden day/night done. 4-mood sheet not started. |
 
 ## Backlog (Tier 1)
 
 | ID | Item | Owner | Note |
 |---|---|---|---|
-| T1-07 | APIs (today, dose event, health metric, agent decide, caretaker summary, escalation, walk) | P1 | No API code in the repo yet; front-end wiring waits on this. |
-| T1-08 | Home wired to the API (schedule card, hearts, streak) | P2 | Names-from-data part done (PR #4); API wiring waits on T1-07. |
-| T1-11 | In-app nudge + demo clock | P2 | Not started; not in today's plan. |
+| T1-07 | APIs (today, dose event, health metric, agent decide, caretaker summary, escalation, walk) | P1 | Implemented in `api/`; integration test covers today, BP emergency rule and dose event. |
+| T1-10 | BP log + 185/120 "bad headache" → calm 995 message, attentive dog | P2 | BP entry posts to API; fixed emergency wording and attentive mood appear in the Home decision log. |
+| T1-15 | `/care` weekly summary + escalation settings | P2 | Care and weekly summary use backend aggregates; consent and threshold save through the API (minimum two). |
+| T1-16 | "Simulate walk" (dizzy on the fast stretch) | P2 | Walk completion posts a simulated session; no GPS or distance capture. |
 
 ## In repo, owned by P1 (not re-verified by the advisor)
 
@@ -57,7 +57,6 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | Item | Blocked on |
 |---|---|
-| Wiring the phone app to real data (T1-08 to T1-12, T1-15, T1-16) | T1-07 APIs and the hosting decision (P1) |
 | T1-17 production URL | Hosting choice: EdgeOne Pages vs Vercel (P1) |
 
 ## Kept in view (KIV) / follow-ups
@@ -68,7 +67,6 @@ Today's plan (agreed 13 Oct evening), in order:
 | Heart score computed inline | `App.tsx` computes `heartCount` itself instead of `computeHeart` from `shared/selectors`; two sources of truth. |
 | Stale checkouts mislead tools | On 14 Oct the main folder was still on the merged `cb/names-from-data` (no KANBAN/HANDOFF) and CodeBuddy tried to restart T1-08. Main folder switched to `main` the same morning. Start new work from `origin/main` in a worktree. |
 | Dedication cross-fade into Home | Deferred by the user; needs Home rendered under the dedication overlay. |
-| `README.md` is stale | Says the Vite app is not implemented. |
 | `CLAUDE.md` paths | Points to `docs/PRD.md` and `docs/ARCHITECTURE.md`; the PRD is at the repo root and ARCHITECTURE.md doesn't exist. |
 | `docs/ARCHITECTURE.md`, `docs/BRIEF.md`, `docs/DOG_BIBLE.md` missing | Referenced by the PRD. |
 | `mobile/.vercel` | Old, untracked link in the main folder's `mobile/`; deploys must run from the repo root. Remove later. |

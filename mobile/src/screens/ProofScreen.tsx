@@ -10,7 +10,7 @@ export function ProofScreen({
   petName,
 }: {
   onBack: () => void;
-  onVerified: () => void;
+  onVerified: () => void | Promise<void>;
   medication: Medication;
   petName: string;
 }) {
