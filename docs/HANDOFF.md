@@ -17,9 +17,10 @@ Updated 2026-10-14. Source of truth for scope: `PRD.md` (repo root), tiers in §
 2. Heart and streak values come from shared selectors/rules; persisted decisions update the cached dog mood.
 3. Dose confirmation, BP entry, and walk completion write events through the API. Care and Weekly Summary use `/api/caretaker/summary`; caretaker consent and threshold save through `/api/escalation-settings`.
 4. Settings has a demo clock. It calls `/api/agent/decide` at the selected local time; Home shows the saved decision with its rule, observations, reasoning, and wording source.
-5. `SceneBackdrop` draws the garden; `lib/useSceneGround.ts` measures where the dog stands (Home: top of the chips; other screens: top of the content card) and publishes CSS variables so the art's lawn line and the dog's feet meet.
+5. `SceneBackdrop` draws the garden; `lib/useSceneGround.ts` measures where the dog stands (portrait Home: top of the chips; other portrait screens: top of the content card; landscape: on the lawn in the left column, see `DOG_PLACEMENTS` and `LANDSCAPE_MEDIA_QUERY` in `config/scene.ts`) and publishes CSS variables so the art's lawn line and the dog's feet meet. It also publishes the dog's box (`--dog-top`, `--dog-height`) so the tap bubble (`PetBubble`, in the toast slot under the hearts) never covers the head.
 6. Home shows `NextDoseCard` (next due/missed dose, then upcoming). "Taken" → prototype proof screen → API event; status is re-derived from the ledger. The proof screen does not upload an image.
 7. Intro: cover → dedication (auto-advances after `DEDICATION_HOLD_MS`, `config/intro.ts`) → Home.
+8. Navigation: `lib/useNavigation.ts` keeps the screen and a short history (`lib/navigation.ts`). Top-level screens (home, health, milestones, walk, settings) show "Home"; drilled-down screens show "Back" and return to where they were opened from. Every non-Home screen uses `components/FullCard.tsx` (fixed frame, back button, inner scroll).
 
 Config lives in `mobile/src/config/` (`scene.ts`: images, ground line, dog size limits, screens without the dog; `intro.ts`: dedication timing). Text lives in `mobile/src/locales/en.json`; dog and caretaker names are interpolated from mock data (`{{name}}`, PR #4).
 
@@ -60,3 +61,4 @@ Config lives in `mobile/src/config/` (`scene.ts`: images, ground line, dog size 
 5. Dog size limits and mood looks are TENTATIVE guesses.
 6. Fixed names remain in mock data (`mock/care.ts` "Mum + Jamie", `mock/milestones.ts` "From Jamie").
 7. `README.md` is stale (says the Vite app doesn't exist); `CLAUDE.md` points to `docs/PRD.md` and a missing `docs/ARCHITECTURE.md`.
+8. Landscape two-column layout (phones and tablets held sideways) is checked in headless Chromium at 844×390, 932×430, 740×360, 1024×768 and 1180×820, not yet on a real device. At 740×360 the card is ~230 px tall (scrolls).

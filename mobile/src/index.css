@@ -172,9 +172,17 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
    ═══════════════════════════════════════════════════════════════════════ */
 /* The app is one phone-width column. Everything inside is positioned against it, never the window. */
 .app-shell {
-  /* Space reserved once for the overlaid top bar and nav dock; layouts read these instead of magic offsets. */
-  --top-bar-space: calc(max(42px, env(safe-area-inset-top)) + 96px);
+  /* Top of the name and settings button; never under the notch. */
+  --top-pad: max(30px, env(safe-area-inset-top));
+  /* Space reserved once for the overlaid top bar and nav dock; layouts read these instead of magic offsets.
+     The top bar includes the toast slot under the hearts, so toasts and the tap bubble sit above a dog standing on a card. */
+  --top-bar-space: calc(var(--top-pad) + 112px);
   --nav-space: calc(max(8px, env(safe-area-inset-bottom)) + 124px);
+  /* One slot for toasts and the tap-the-dog bubble: just under the name and hearts, centred over the scene. */
+  --toast-top: calc(var(--top-pad) + 76px);
+  --overlay-center: 50%;
+  --overlay-max-width: calc(100% - 32px);
+  --chip-h: 46px;
   /* The dog layer may start this high, under the top bar; --top-overlap is how much of it the top bar covers. */
   --stage-top: max(12px, env(safe-area-inset-top));
   --top-overlap: calc(var(--top-bar-space) - var(--stage-top));
@@ -201,6 +209,9 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
   background: linear-gradient(180deg, rgba(22, 54, 38, .4) 0%, transparent 22%, transparent 45%, rgba(15, 36, 26, .1) 68%, rgba(15, 36, 26, .36) 100%);
 }
 
+/* Lawn marker: the dog's ground line on landscape screens without chips (see DOG_PLACEMENTS.lawn). Unused in portrait. */
+.scene-ground { position: absolute; left: 0; right: 0; bottom: 0; height: 0; pointer-events: none; }
+
 /* ═══════════════════════════════════════════════════════════════════════
    Top zone
    ═══════════════════════════════════════════════════════════════════════ */
@@ -213,12 +224,14 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: max(42px, env(safe-area-inset-top)) 28px 12px;
+  padding: var(--top-pad) 28px 12px;
   color: white;
   text-shadow: var(--shadow-top-zone);
 }
 
-.dog-name { margin: 0; font-size: var(--font-size-9xl); line-height: 1; font-weight: var(--font-weight-black); letter-spacing: -1.4px; }
+/* Name + hearts: one button back to Home, styled as plain text. */
+.top-zone__home { display: block; padding: 0; border: 0; border-radius: var(--radius-sm); color: inherit; background: none; text-align: left; text-shadow: inherit; cursor: pointer; }
+.dog-name { display: block; margin: 0; font-size: var(--font-size-9xl); line-height: 1; font-weight: var(--font-weight-black); letter-spacing: -1.4px; }
 .hearts { display: flex; gap: 2px; margin-top: 7px; color: var(--color-accent-heart); font-size: 28px; line-height: .92; filter: var(--shadow-hearts); }
 .heart-empty { color: white; }
 .glass-button, .scene-chip {
@@ -254,12 +267,15 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .home-layout__stage { flex: 1 1 auto; min-height: max(0px, calc(var(--dog-min, 0px) - var(--top-overlap))); }
 .home-layout__chips {
   flex: none;
+  /* Bottom row: the chips' top edge is the dog's ground line. */
   display: flex;
   justify-content: space-between;
   padding-inline: 14px;
 }
 .scene-actions { display: flex; gap: 8px; }
-.scene-chip { position: relative; height: 46px; padding: 0 14px; display: flex; align-items: center; gap: 7px; border-radius: var(--radius-pill); font-size: var(--font-size-3xl); font-weight: var(--font-weight-black); cursor: pointer; }
+/* Portrait: the cards are plain items of the Home column. Landscape turns this into the right-hand pane. */
+.home-layout__cards { display: contents; }
+.scene-chip { position: relative; height: var(--chip-h); padding: 0 14px; display: flex; align-items: center; gap: 7px; border-radius: var(--radius-pill); font-size: var(--font-size-3xl); font-weight: var(--font-weight-black); cursor: pointer; }
 .gift-chip { width: 42px; justify-content: center; padding: 0; }
 .badge-dot { position: absolute; top: 2px; right: 2px; width: 10px; height: 10px; border-radius: var(--radius-full); background: var(--color-accent-badge); border: 2px solid white; }
 
@@ -344,10 +360,18 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 /* ═══════════════════════════════════════════════════════════════════════
    Full card (shared by sub-screens)
    ═══════════════════════════════════════════════════════════════════════ */
-/* --ledge-space is set while the dog stands on this card's top edge (see useSceneGround). */
-.full-card { top: calc(var(--top-bar-space) + var(--ledge-space, -12px)); overflow-y: auto; padding-bottom: 26px; scrollbar-width: none; }
-.full-card::-webkit-scrollbar { display: none; }
-.back-button { display: flex; align-items: center; gap: 5px; margin: -5px 0 22px -5px; padding: 5px; border: 0; color: var(--color-text-back); background: transparent; font-weight: var(--font-weight-bold); cursor: pointer; }
+/*
+ * --ledge-space is set while the dog stands on this card's top edge (see useSceneGround).
+ * The card is a fixed frame (white, rounded, padding kept) holding the back button; only .full-card__scroll scrolls,
+ * so scrolled content is clipped inside the frame instead of running into the card's edge. (FullCard.tsx)
+ */
+.full-card { top: calc(var(--top-bar-space) + var(--ledge-space, -12px)); display: flex; flex-direction: column; overflow: hidden; }
+.full-card > .back-button { flex: none; align-self: flex-start; }
+/* Spans the frame's side padding (negative margin + padding) so focus rings and shadows aren't clipped at the content edge. */
+.full-card__scroll { flex: 1 1 auto; min-height: 0; margin-inline: -20px; padding: 8px 20px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.full-card__scroll::-webkit-scrollbar { display: none; }
+.back-button { display: flex; align-items: center; gap: 5px; margin: -5px 0 14px -5px; padding: 5px; border: 0; color: var(--color-text-back); background: transparent; font-weight: var(--font-weight-bold); cursor: pointer; }
+.streak-line { margin: 6px 0 0; color: var(--color-text-body); font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); }
 .supporting { max-width: 430px; margin: 10px 0 22px; color: var(--color-text-body); font-size: var(--font-size-lg); line-height: 1.45; }
 .score-orb { flex: none; display: grid; place-items: center; width: 57px; height: 57px; border-radius: var(--radius-full); color: #204a36; background: var(--color-accent-score); font-weight: var(--font-weight-black); }
 
@@ -485,6 +509,8 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .stop-button { background: var(--color-action-stop); }
 .walk-note { color: #7b887f; font-size: var(--font-size-sm); }
 .gentle-note { margin: 8px auto 0; max-width: 330px; color: #88928b; font-size: var(--font-size-sm); line-height: 1.4; }
+.walk-orb.done { border-color: var(--color-accent-walk-border); }
+.walk-done { margin: 0 auto 12px; max-width: 330px; color: #315a43; font-size: var(--font-size-xl); font-weight: var(--font-weight-black); line-height: 1.4; }
 .walk-dizzy { margin: 10px auto 0; max-width: 330px; color: #9d543b; font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); line-height: 1.4; }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -667,7 +693,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
    Toast
    ═══════════════════════════════════════════════════════════════════════ */
 /* Toasts are information only, so taps pass through to the dog and buttons beneath. */
-.toast { position: absolute; z-index: 80; pointer-events: none; top: 98px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); padding: 12px 18px; border-radius: var(--radius-pill); color: white; background: var(--color-toast-bg); box-shadow: var(--shadow-toast); font-size: var(--font-size-base); font-weight: var(--font-weight-bold); animation: toast-in .2s ease-out; }
+.toast { position: absolute; z-index: 80; pointer-events: none; top: var(--toast-top); left: var(--overlay-center); transform: translateX(-50%); width: max-content; max-width: var(--overlay-max-width); padding: 9px 18px; border-radius: var(--radius-pill); color: white; background: var(--color-toast-bg); box-shadow: var(--shadow-toast); font-size: var(--font-size-base); font-weight: var(--font-weight-bold); animation: toast-in .2s ease-out; }
 
 @keyframes toast-in { from { transform: translate(-50%, -10px); opacity: 0; } }
 
@@ -880,3 +906,77 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   Landscape: two columns
+   ────────────────────────────────────────────────────────────────────────
+   Phones and tablets held sideways (touch), and any short landscape window.
+   Keep this query in sync with LANDSCAPE_MEDIA_QUERY in config/scene.ts: the dog's placement follows it.
+   Left column: garden, top bar, dog and Home's chips. Right pane: the screen's card (scrolling inside),
+   with the nav and paw button below it; the blurred garden (DesktopBackdrop) shows behind the pane.
+   A desktop with a mouse never matches, so it keeps the centred 430 px column.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (orientation: landscape) and (hover: none) and (pointer: coarse), (orientation: landscape) and (max-height: 520px) {
+  .app-shell {
+    /* Right pane: never narrower than a 360 px phone's card, never wider than a roomy one.
+       vw, not %: the shell is full-width here, and % would resolve against each element's own container. */
+    --pane-w: clamp(360px, 48vw, 480px);
+    --pane-top: max(12px, env(safe-area-inset-top));
+    --scene-bottom: max(12px, env(safe-area-inset-bottom));
+    --top-pad: max(clamp(12px, 3dvh, 30px), env(safe-area-inset-top));
+    /* A slightly lower dock so the card keeps more height on short screens. */
+    --nav-space: calc(max(8px, env(safe-area-inset-bottom)) + 110px);
+    --overlay-center: calc((100% - var(--pane-w)) / 2);
+    --overlay-max-width: calc(100% - var(--pane-w) - 32px);
+    max-width: none;
+    background: transparent;
+  }
+
+  /* Left column */
+  .scene-backdrop,
+  .scene-shade { right: var(--pane-w); }
+  .top-zone { width: auto; right: var(--pane-w); padding-left: calc(28px + env(safe-area-inset-left)); padding-right: 20px; }
+  .dog-layer { left: calc(var(--side-gutter) + env(safe-area-inset-left)); right: calc(var(--pane-w) + var(--side-gutter)); }
+  /* Same height as Home's chips row, so the dog stands at the same spot on every screen. */
+  .scene-ground { right: var(--pane-w); bottom: calc(var(--scene-bottom) + var(--chip-h)); }
+  .home-layout {
+    right: var(--pane-w);
+    padding: var(--top-bar-space) var(--side-gutter) var(--scene-bottom) calc(var(--side-gutter) + env(safe-area-inset-left));
+    overflow: visible;
+  }
+
+  /* Right pane */
+  .home-layout__cards {
+    position: absolute;
+    top: var(--pane-top);
+    bottom: var(--nav-space);
+    left: 100%;
+    width: var(--pane-w);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 max(var(--side-gutter), env(safe-area-inset-right)) 0 var(--side-gutter);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+  .home-layout__cards::-webkit-scrollbar { display: none; }
+  .full-card {
+    top: var(--pane-top);
+    left: calc(100% - var(--pane-w) + var(--side-gutter));
+    right: max(var(--side-gutter), env(safe-area-inset-right));
+  }
+  .bottom-dock {
+    left: calc(100% - var(--pane-w) + var(--side-gutter));
+    right: max(var(--side-gutter), env(safe-area-inset-right));
+    height: 100px;
+  }
+  .bottom-nav {
+    left: calc(100% - var(--pane-w) + 30px);
+    bottom: max(26px, calc(env(safe-area-inset-bottom) + 18px));
+    width: min(250px, calc(var(--pane-w) - 122px));
+    height: 64px;
+  }
+  .bottom-nav button { height: 52px; }
+  .add-button { right: max(29px, calc(env(safe-area-inset-right) + 15px)); bottom: max(28px, calc(env(safe-area-inset-bottom) + 20px)); width: 60px; height: 60px; }
+  .woof-bubble { right: max(23px, calc(env(safe-area-inset-right) + 9px)); bottom: max(92px, calc(env(safe-area-inset-bottom) + 84px)); }
+}

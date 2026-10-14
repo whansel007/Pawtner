@@ -1,18 +1,19 @@
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import type { WeekSummary } from "../types";
 
 export function WeeklySummaryScreen({
-  onBack,
+  back,
   weekSummary,
 }: {
-  onBack: () => void;
+  back: BackAction;
   weekSummary: WeekSummary;
 }) {
   const { t } = useTranslation();
   return (
-    <section className="content-card full-card">
-      <button className="back-button" onClick={onBack}><Icon name="back" size={20} /> {t("summary.back")}</button>
+    <FullCard back={back}>
       <p className="eyebrow green">{t("summary.eyebrow")}</p>
       <h2>{t("summary.title")}</h2>
       <div className="summary-score"><strong>{weekSummary.rating}</strong><span>{t("summary.caringDays", { count: weekSummary.caringDays, total: weekSummary.totalDays })}</span></div>
@@ -22,7 +23,7 @@ export function WeeklySummaryScreen({
         ))}
       </div>
       <div className="doctor-question"><Icon name="book" /><div><small>{t("summary.askDoctor")}</small><p>{weekSummary.doctorQuestion}</p></div></div>
-      <button className="primary-button" onClick={onBack}>{t("summary.doneReading")}</button>
-    </section>
+      <button className="primary-button" onClick={back.onBack}>{t("summary.doneReading")}</button>
+    </FullCard>
   );
 }

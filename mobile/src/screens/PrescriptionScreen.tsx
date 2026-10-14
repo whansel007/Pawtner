@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import { api } from "../lib/api";
 import type { CreateMedicationRequest } from "../../../shared/contract";
 
@@ -17,12 +19,15 @@ interface HsaProduct {
 type Stage = "search" | "results" | "confirm" | "done";
 
 export function PrescriptionScreen({
-  goHome,
+  back,
+  onHome,
   onExplain,
   onSaved,
   petName,
 }: {
-  goHome: () => void;
+  back: BackAction;
+  /** "Home" action on the saved state (a finish action, not the back button). */
+  onHome: () => void;
   onExplain?: (medicineName: string) => void;
   onSaved?: (medicationId?: string) => void;
   petName: string;
@@ -107,8 +112,7 @@ export function PrescriptionScreen({
   };
 
   return (
-    <section className="content-card full-card scan-card">
-      <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
+    <FullCard back={back} className="scan-card">
       <p className="eyebrow green">{t("prescription.eyebrow")}</p>
       <h2>{stage === "done" ? "Medicine added" : stage === "confirm" ? "Confirm details" : t("prescription.titleScan")}</h2>
       <p className="supporting">
@@ -224,9 +228,9 @@ export function PrescriptionScreen({
           {strength && <div className="field"><small>{t("prescription.dosage")}</small><strong>{strength}</strong></div>}
           {prescribedFor && <div className="field"><small>Your doctor said it's for</small><strong>{prescribedFor}</strong></div>}
           <button className="primary-button" onClick={() => onExplain?.(name)}>Explain this medicine</button>
-          <button className="text-button" onClick={goHome}>{t("common.home")}</button>
+          <button className="text-button" onClick={onHome}>{t("common.home")}</button>
         </div>
       )}
-    </section>
+    </FullCard>
   );
 }

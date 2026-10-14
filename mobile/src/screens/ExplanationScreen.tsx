@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import { api } from "../lib/api";
 import type { MedicineExplanationResponse } from "../../../shared/contract";
 
 export function ExplanationScreen({
-  onBack,
+  back,
   onContinue,
   medicineName,
 }: {
-  onBack: () => void;
+  back: BackAction;
   onContinue: () => void;
   medicineName: string;
 }) {
@@ -36,22 +38,19 @@ export function ExplanationScreen({
   };
 
   if (loading) return (
-    <section className="content-card full-card">
-      <button className="back-button" onClick={onBack}><Icon name="back" size={20} /> {t("explanation.back")}</button>
+    <FullCard back={back}>
       <p className="supporting">Loading medicine information…</p>
-    </section>
+    </FullCard>
   );
 
   if (error || !info) return (
-    <section className="content-card full-card">
-      <button className="back-button" onClick={onBack}><Icon name="back" size={20} /> {t("explanation.back")}</button>
+    <FullCard back={back}>
       <p className="error-text">{error || "Could not load explanation."}</p>
-    </section>
+    </FullCard>
   );
 
   return (
-    <section className="content-card full-card">
-      <button className="back-button" onClick={onBack}><Icon name="back" size={20} /> {t("explanation.back")}</button>
+    <FullCard back={back}>
       <p className="eyebrow green">{t("explanation.eyebrow")}</p>
       <h2>{t("explanation.title")}</h2>
       <div className="plain-card">
@@ -78,6 +77,6 @@ export function ExplanationScreen({
       </div>
 
       <button className="primary-button" onClick={onContinue}>{t("explanation.continue")}</button>
-    </section>
+    </FullCard>
   );
 }

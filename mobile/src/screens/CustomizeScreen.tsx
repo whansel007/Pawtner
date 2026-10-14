@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import { AccessoryMark } from "../components/AccessoryMark";
 import type { WorldOption, AccessoryOption, World, Accessory } from "../types";
 
 export function CustomizeScreen({
-  onBack,
+  back,
   world,
   setWorld,
   accessory,
@@ -13,7 +14,7 @@ export function CustomizeScreen({
   accessoryOptions,
   petName,
 }: {
-  onBack: () => void;
+  back: BackAction;
   world: World;
   setWorld: (world: World) => void;
   accessory: Accessory;
@@ -24,8 +25,7 @@ export function CustomizeScreen({
 }) {
   const { t } = useTranslation();
   return (
-    <section className="content-card full-card customize-card">
-      <button className="back-button" onClick={onBack}><Icon name="back" size={20} /> {t("customize.back")}</button>
+    <FullCard back={back} className="customize-card">
       <p className="eyebrow green">{t("customize.eyebrow", { name: petName })}</p>
       <h2>{t("customize.title")}</h2>
       <p className="supporting">{t("customize.supporting")}</p>
@@ -45,7 +45,7 @@ export function CustomizeScreen({
           </button>
         ))}
       </div>
-      <button className="primary-button" onClick={onBack}>{t("customize.showMe")}</button>
-    </section>
+      <button className="primary-button" onClick={back.onBack}>{t("customize.showMe")}</button>
+    </FullCard>
   );
 }

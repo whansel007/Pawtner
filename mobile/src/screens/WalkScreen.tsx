@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import type { WalkStats } from "../types";
 import { useSimulatedWalk } from "../lib/simulatedWalk";
 import type { WalkCompletion } from "../lib/walkState";
@@ -11,14 +13,24 @@ function formatDuration(seconds: number): string {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+function formatKm(meters: number): string {
+  return (meters / 1000).toFixed(2);
+}
+
+/** The last simulated walk's result, kept on screen until another walk starts or the senior leaves. */
+interface FinishedWalk {
+  durationSeconds: number;
+  distanceMeters: number;
+}
+
 export function WalkScreen({
-  goHome,
+  back,
   walkStats,
   petName,
   onWalkState,
   onDizzyChange,
 }: {
-  goHome: () => void;
+  back: BackAction;
   walkStats: WalkStats;
   petName: string;
   onWalkState: (walking: boolean, simulated?: WalkCompletion) => void;
@@ -26,6 +38,7 @@ export function WalkScreen({
 }) {
   const { t } = useTranslation();
   const [walking, setWalking] = useState(false);
+  const [finishedWalk, setFinishedWalk] = useState<FinishedWalk | null>(null);
   const { state: simState, start: startSim, started: simStarted } = useSimulatedWalk();
 
   useEffect(() => {
@@ -48,49 +61,57 @@ export function WalkScreen({
     }
     if (completionReportedRef.current) return;
     completionReportedRef.current = true;
+    setFinishedWalk({ durationSeconds: simState.durationSeconds, distanceMeters: simState.distanceMeters });
     onWalkStateRef.current(false, {
       distanceMeters: simState.distanceMeters,
       fastStretchOccurred: simState.fastStretchOccurred,
     });
-  }, [simStarted, simState.finished, simState.distanceMeters, simState.fastStretchOccurred]);
+  }, [simStarted, simState.finished, simState.durationSeconds, simState.distanceMeters, simState.fastStretchOccurred]);
 
   const isSimulating = simStarted && !simState.finished;
   const isActive = walking || isSimulating;
+  const done = !isActive ? finishedWalk : null;
 
   return (
-    <section className="content-card full-card walk-card">
-      <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
+    <FullCard back={back} className="walk-card">
       <p className="eyebrow green">{t("walk.eyebrow")}</p>
-      <h2>{isActive ? t("walk.titleWalking") : t("walk.titleReady")}</h2>
-      <div className={`walk-orb ${isActive ? "active" : ""}`}>
+      <h2>{isActive ? t("walk.titleWalking") : done ? t("walk.titleDone") : t("walk.titleReady")}</h2>
+      <div className={`walk-orb ${isActive ? "active" : ""} ${done ? "done" : ""}`}>
         <Icon name="walk" size={42} />
         <strong>
           {isSimulating
             ? formatDuration(simState.durationSeconds)
             : walking
               ? walkStats.duration
-              : "00:00"}
+              : done
+                ? formatDuration(done.durationSeconds)
+                : "00:00"}
         </strong>
         <small>
           {isSimulating
-            ? `${(simState.distanceMeters / 1000).toFixed(2)} km`
+            ? t("walk.km", { km: formatKm(simState.distanceMeters) })
             : walking
               ? walkStats.distance
-              : t("walk.startReady", { name: petName })}
+              : done
+                ? t("walk.km", { km: formatKm(done.distanceMeters) })
+                : t("walk.startReady", { name: petName })}
         </small>
       </div>
+      {done && (
+        <p className="walk-done" role="status">{t("walk.doneMessage", { km: formatKm(done.distanceMeters), name: petName })}</p>
+      )}
       <div className="walk-stats">
         <div><strong>{walking ? walkStats.steps : "0"}</strong><small>{t("common.steps")}</small></div>
         <div><strong>{walking ? walkStats.calories : "0"}</strong><small>{t("common.calories")}</small></div>
         <div><strong>{isSimulating ? simState.speedKmh.toFixed(1) : walking ? walkStats.speed : "0.0"}</strong><small>{t("common.kmh")}</small></div>
       </div>
       {!isSimulating && (
-        <button className={`primary-button ${walking ? "stop-button" : ""}`} onClick={() => { const next = !walking; setWalking(next); onWalkState(next); }}>
+        <button className={`primary-button ${walking ? "stop-button" : ""}`} onClick={() => { const next = !walking; if (next) setFinishedWalk(null); setWalking(next); onWalkState(next); }}>
           {walking ? t("walk.finishWalk") : t("walk.startWalk")}
         </button>
       )}
       {!walking && !isSimulating && (
-        <button className="primary-button" onClick={() => { onWalkState(true); startSim(); }}>
+        <button className="primary-button" onClick={() => { setFinishedWalk(null); onWalkState(true); startSim(); }}>
           {t("walk.simulateWalk")}
         </button>
       )}
@@ -99,6 +120,6 @@ export function WalkScreen({
       )}
       <p className="walk-note">{walkStats.goal}</p>
       <p className="gentle-note">{t("walk.gentleNote", { name: petName })}</p>
-    </section>
+    </FullCard>
   );
 }

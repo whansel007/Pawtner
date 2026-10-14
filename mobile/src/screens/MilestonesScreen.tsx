@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import { api } from "../lib/api";
 import type { MilestonesResponse } from "../../../shared/contract";
 import type { Pet } from "../types";
 
 export function MilestonesScreen({
-  goHome,
+  back,
   onWalk,
   onCustomize,
   pet,
   petName,
 }: {
-  goHome: () => void;
+  back: BackAction;
   onWalk: () => void;
   onCustomize: () => void;
   pet: Pet;
@@ -27,19 +29,18 @@ export function MilestonesScreen({
   }, []);
 
   if (loading) return (
-    <section className="content-card full-card">
-      <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
+    <FullCard back={back}>
       <p className="supporting">Loading milestones…</p>
-    </section>
+    </FullCard>
   );
 
   const caringDays = data?.caringDays ?? pet.caringDays;
 
   return (
-    <section className="content-card full-card">
-      <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
+    <FullCard back={back}>
       <p className="eyebrow green">{t("milestones.eyebrow", { name: petName })}</p>
       <h2>{t("milestones.title", { count: caringDays })}</h2>
+      <p className="streak-line">{t("milestones.streakLine", { count: pet.streak })}</p>
 
       {data && (
         <div className="world-card">
@@ -77,6 +78,6 @@ export function MilestonesScreen({
       {data?.nextSouvenirTarget && (
         <p className="supporting">Next: {data.nextSouvenirTarget.name} at {(data.nextSouvenirTarget.cumulativeMeters / 1000).toFixed(1)} km ({(data.nextSouvenirTarget.progress * 100).toFixed(0)}% there)</p>
       )}
-    </section>
+    </FullCard>
   );
 }

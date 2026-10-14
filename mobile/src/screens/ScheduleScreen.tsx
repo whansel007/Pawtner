@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import { api } from "../lib/api";
 
 interface Slot {
@@ -10,12 +12,12 @@ interface Slot {
 }
 
 export function ScheduleScreen({
-  onBack,
+  back,
   onConfirm,
   petName,
   medicationId,
 }: {
-  onBack: () => void;
+  back: BackAction;
   onConfirm: () => void;
   petName: string;
   medicationId?: string;
@@ -54,8 +56,7 @@ export function ScheduleScreen({
   };
 
   return (
-    <section className="content-card full-card">
-      <button className="back-button" onClick={onBack}><Icon name="back" size={20} /> {t("schedule.back")}</button>
+    <FullCard back={back}>
       <p className="eyebrow green">{t("schedule.eyebrow")}</p>
       <h2>{t("schedule.title", { name: petName })}</h2>
       <p className="supporting">{t("schedule.supporting")}</p>
@@ -72,6 +73,6 @@ export function ScheduleScreen({
       <button className="primary-button" disabled={saving} onClick={save}>
         {saving ? "Saving…" : t("schedule.confirm", { name: petName })}
       </button>
-    </section>
+    </FullCard>
   );
 }

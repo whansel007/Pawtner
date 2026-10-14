@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import { DecisionLogCard } from "../components/DecisionLogCard";
 import { BP_RANGE } from "../config/bp";
 import type { AgentDecision, HealthMetric } from "../../../shared/contract";
@@ -8,7 +10,7 @@ import type { BloodPressureReading, ScreeningInfo, ActivityLink, ClinicTask, Wee
 import "./HealthScreen.css";
 
 export function HealthScreen({
-  goHome,
+  back,
   bpLogged,
   healthMetrics,
   latestDecision,
@@ -22,7 +24,7 @@ export function HealthScreen({
   weekSummary,
   petName,
 }: {
-  goHome: () => void;
+  back: BackAction;
   bpLogged: boolean;
   healthMetrics: HealthMetric[];
   latestDecision: AgentDecision | null;
@@ -105,8 +107,7 @@ export function HealthScreen({
   }, [showResult]);
 
   return (
-    <section className="content-card full-card">
-      <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
+    <FullCard back={back}>
       <p className="eyebrow green">{t("health.eyebrow")}</p>
       <h2>{t("health.title")}</h2>
 
@@ -189,6 +190,6 @@ export function HealthScreen({
       <button className="health-bubble"><span className="feature-icon"><Icon name="camera" /></span><div><strong>{clinicTasks.title}</strong><small>{clinicTasks.subtitle}</small></div><Icon name="chevron" /></button>
       <button className="screening-card" onClick={onScreening}><span>{t("health.annualCheck")}</span><div><strong>{t("health.screeningTitle")}</strong><small>{t("health.screeningSub")}</small></div><Icon name="chevron" /></button>
       <a className="activity-link" href={activityLink.url} target="_blank" rel="noreferrer"><span className="feature-icon sage"><Icon name="walk" /></span><div><strong>{activityLink.title}</strong><small>{activityLink.subtitle}</small></div><Icon name="chevron" /></a>
-    </section>
+    </FullCard>
   );
 }

@@ -1,0 +1,48 @@
+/*
+ * Positioned against the app shell, in the same slot as the toast (--toast-top, --overlay-center from index.css).
+ * Head guard: --dog-top / --dog-height come from useSceneGround. If the bubble's bottom would reach the dog's head
+ * (less a 9% allowance for the joyful bounce), it is translated up just enough, but never above --stage-top.
+ */
+.pet-bubble {
+  --bubble-gap: calc(4px + var(--dog-height, 0px) * 0.09);
+  position: absolute;
+  z-index: 79;
+  top: var(--toast-top);
+  left: var(--overlay-center, 50%);
+  width: max-content;
+  max-width: var(--overlay-max-width, calc(100% - 32px));
+  margin: 0;
+  padding: 8px 16px;
+  border-radius: 18px 18px 18px 5px;
+  color: #2a4a36;
+  background: white;
+  box-shadow: 0 6px 18px rgba(20, 40, 28, 0.22);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.3;
+  text-align: center;
+  pointer-events: none;
+  translate: -50% clamp(
+    calc(var(--stage-top) - var(--toast-top)),
+    calc(var(--dog-top, 100vh) - var(--bubble-gap) - var(--toast-top) - 100%),
+    0px
+  );
+  animation: pet-bubble-in 0.22s ease-out;
+}
+
+/* Empty live region: kept in the tree for announcements, invisible and out of the way. */
+.pet-bubble--idle {
+  padding: 0;
+  opacity: 0;
+  box-shadow: none;
+  animation: none;
+}
+
+@keyframes pet-bubble-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-bubble { animation: none; }
+}

@@ -50,14 +50,29 @@ export const MOOD_LOOKS: Record<DogMood, { glow: number; playful: boolean }> = {
 };
 
 /**
+ * Two-column scene for phones and tablets held sideways (and any short landscape window).
+ * Desktop (mouse) keeps the centred portrait column. index.css repeats this query for the layout rules; keep both in sync.
+ */
+export const LANDSCAPE_MEDIA_QUERY =
+  "(orientation: landscape) and (hover: none) and (pointer: coarse), (orientation: landscape) and (max-height: 520px)";
+
+export type SceneLayout = "portrait" | "landscape";
+
+/**
  * Where the companion dog stands on each screen.
- * home: on the lawn just above the Today chips. ledge: on the top edge of the screen's content card.
  * ground: the element whose top edge is the dog's feet line.
  * minHeight / maxHeight: TENTATIVE size limits. The max keeps the small source art from upscaling into blur and dominating tall phones.
+ * ledge: the screen's content card leaves room above itself (--ledge-space) so the dog can stand on its top edge.
+ *
+ * Portrait: home = on the lawn just above the Today chips; ledge = on the top edge of the content card.
+ * Landscape: the dog stays on the lawn in the left column on every screen. homeWide = on Home's chips;
+ * lawn = on the .scene-ground marker, which sits at the same height as Home's chips so the dog doesn't jump between screens.
  */
 export const DOG_PLACEMENTS = {
-  home: { ground: ".home-layout__chips", minHeight: "clamp(120px, 26dvh, 320px)", maxHeight: "34dvh" },
-  ledge: { ground: ".content-card", minHeight: "clamp(80px, 14dvh, 140px)", maxHeight: "34dvh" },
+  home: { ground: ".home-layout__chips", minHeight: "clamp(120px, 26dvh, 320px)", maxHeight: "34dvh", ledge: false },
+  ledge: { ground: ".content-card", minHeight: "clamp(80px, 14dvh, 140px)", maxHeight: "34dvh", ledge: true },
+  homeWide: { ground: ".home-layout__chips", minHeight: "clamp(110px, 30dvh, 300px)", maxHeight: "46dvh", ledge: false },
+  lawn: { ground: ".scene-ground", minHeight: "clamp(110px, 30dvh, 300px)", maxHeight: "46dvh", ledge: false },
 } as const;
 
 export type DogPlacement = keyof typeof DOG_PLACEMENTS;
@@ -65,7 +80,8 @@ export type DogPlacement = keyof typeof DOG_PLACEMENTS;
 /** Screens without the dog: the caretaker view, and the full-screen intro which has no scene at all. */
 const SCREENS_WITHOUT_DOG: readonly Screen[] = ["care", "cover", "dedication"];
 
-export function dogPlacementFor(screen: Screen): DogPlacement | null {
+export function dogPlacementFor(screen: Screen, layout: SceneLayout = "portrait"): DogPlacement | null {
   if (SCREENS_WITHOUT_DOG.includes(screen)) return null;
+  if (layout === "landscape") return screen === "home" ? "homeWide" : "lawn";
   return screen === "home" ? "home" : "ledge";
 }

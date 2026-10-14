@@ -1,19 +1,21 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
+import { FullCard } from "../components/FullCard";
+import type { BackAction } from "../lib/navigation";
 import { api } from "../lib/api";
 import type { Caregiver, CareActivity, RestockAlert, Pet } from "../types";
 import type { MedicationDetail } from "../../../shared/contract";
 
 export function CareScreen({
-  goHome,
+  back,
   sendTreat,
   pet,
   caregiver,
   careActivity,
   restockAlert,
 }: {
-  goHome: () => void;
+  back: BackAction;
   sendTreat: () => void;
   pet: Pet;
   caregiver: Caregiver;
@@ -56,8 +58,7 @@ export function CareScreen({
   };
 
   return (
-    <section className="content-card full-card">
-      <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
+    <FullCard back={back}>
       <div className="card-heading">
         <div><p className="eyebrow green">{t("care.eyebrow")}</p><h2>{t("care.title", { name: dogName })}</h2></div>
         <span className="score-orb">{pet.careScore}%</span>
@@ -118,6 +119,6 @@ export function CareScreen({
         <p>{careActivity.description}</p>
       </div>
       <button className="primary-button" onClick={sendTreat}><Icon name="gift" size={20} /> {t("care.sendTreat", { name: dogName })}</button>
-    </section>
+    </FullCard>
   );
 }
