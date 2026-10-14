@@ -1,6 +1,6 @@
 # Kanban
 
-Updated 2026-10-14. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**. IDs refer to `PRD.md` §9.
+Updated 2026-10-14 (afternoon). Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**. IDs refer to `PRD.md` §9.
 "Mock" = works on the phone against mock data in `mobile/src/mock`, not yet wired to the API.
 
 ## Doing
@@ -18,9 +18,11 @@ Today's plan (agreed 13 Oct evening), in order:
 | T1-08 | Home schedule card, names from data | P2 / CodeBuddy | Wired to `/api/today`; upcoming reminders remain mock. |
 | T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Posts dose event and derives status from ledger; scanner/photo is still a prototype. |
 | T1-11 | In-app nudge + demo clock | P2 | Settings demo clock runs the deterministic agent; dose nudges are capped at two per occurrence. |
-| T1-12 | Decision log card | P2 | Home shows latest wording, observations, rule, reasoning, and wording source. |
 | T1-13 | Dog mood on Home | P2 | Shared dog mood fed from API state; visual moods remain motion/glow. |
-| T1-17 | Public HTTPS URL | P2 (+ P1 API) | Vercel previews work. Production host not decided; production URL serves an older build. |
+| — | Home fix: friendly one-time API notice, tap-through toasts, compact decision row | P2 / Claude Code | [#7](https://github.com/whansel007/Pawtner/pull/7) open, waiting for the user's review. |
+| T1-16 | "Simulate walk" (dizzy on the fast stretch) | P2 / CodeBuddy | Next CodeBuddy task. `main` posts a walk with `distanceMeters: 0, fastStretchOccurred: false`; recorded points, growing distance, fast stretch and dizzy dog still to build. |
+| T1-15 | `/care` web page from the Miro frame | P2 / CodeBuddy | Frame in progress. The phone's Care/Settings screens already use the API (summary, consent, threshold min 2). Web page needs P1's caretaker list (see Blocked). |
+| T1-17 | Public HTTPS URL | P2 (+ P1 API) | Production `pawtner-mobile-three.vercel.app` still serves the 13 Oct build. `main` now calls `/api` on load, so a front-end deploy needs a hosted API first (until then the app runs on the offline fallback and shows one notice). |
 | T1-18 | Dog assets | Design | Base dog + garden day/night done. 4-mood sheet not started. |
 
 ## Backlog (Tier 1)
@@ -28,9 +30,6 @@ Today's plan (agreed 13 Oct evening), in order:
 | ID | Item | Owner | Note |
 |---|---|---|---|
 | T1-07 | APIs (today, dose event, health metric, agent decide, caretaker summary, escalation, walk) | P1 | Implemented in `api/`; integration test covers today, BP emergency rule and dose event. |
-| T1-10 | BP log + 185/120 "bad headache" → calm 995 message, attentive dog | P2 | BP entry posts to API; fixed emergency wording and attentive mood appear in the Home decision log. |
-| T1-15 | `/care` weekly summary + escalation settings | P2 | Care and weekly summary use backend aggregates; consent and threshold save through the API (minimum two). |
-| T1-16 | "Simulate walk" (dizzy on the fast stretch) | P2 | Walk completion posts a simulated session; no GPS or distance capture. |
 
 ## In repo, owned by P1 (not re-verified by the advisor)
 
@@ -51,19 +50,26 @@ Today's plan (agreed 13 Oct evening), in order:
 | — | Layered scene: portrait garden, separate dog with shadow, ground-line alignment, dog on every senior screen | [#1](https://github.com/whansel007/Pawtner/pull/1) |
 | — | Compact next-dose card (mock), dedication screen auto-advance (1.1 s, Pinyon Script) | [#2](https://github.com/whansel007/Pawtner/pull/2) |
 | — | Docs: KANBAN, HANDOFF, decisions for 13 Oct; CodeBuddy proof screenshots | [#3](https://github.com/whansel007/Pawtner/pull/3) |
+| T1-10 + T1-12 | BP form with note → `/api/health-metric` (offline fallback: `decide()` via `lib/agent.ts`) → calm 995 card above the form, no playful toast, attentive dog; one `DecisionLogCard` (en.json text, Yes/No, "Why?") on Health and Home; tap-the-dog rotation (hop, hearts, bubble; bark once `bark.mp3` exists). Built by CodeBuddy; merge with P1's API wiring resolved by CodeBuddy. Squash-merged. | [#6](https://github.com/whansel007/Pawtner/pull/6) |
+| — | Docs for 14 Oct (plan, caretakers decisions, docs push/merge rule) | [#5](https://github.com/whansel007/Pawtner/pull/5) |
 | T1-08 (part) | Names from data: dog and caretaker names via i18n interpolation; `en.json` has no hardcoded "Max", "Jamie" or "Siew" | [#4](https://github.com/whansel007/Pawtner/pull/4) |
 
 ## Blocked
 
 | Item | Blocked on |
 |---|---|
-| T1-17 production URL | Hosting choice: EdgeOne Pages vs Vercel (P1) |
+| T1-17 production URL | P1: host the API and run migrations + fictional seed on the hosted database (Supabase has no Pawtner schema yet). Message drafted for the user to send 14 Oct. |
+| T1-15 caretaker list on the web | P1: `caregivers: { id, name, receivesCheckIns }[]` in `CaretakerSummaryResponse`, 3–4 seeded caretakers, check-in template in `shared/templates.ts`. |
 
 ## Kept in view (KIV) / follow-ups
 
 | Item | Note |
 |---|---|
 | Fixed names left in mock data | `mobile/src/mock/care.ts` has `names: "Mum + Jamie"`; `mobile/src/mock/milestones.ts` has `note: "From Jamie"`. Renaming the caretaker won't change these; derive them from the name fields. |
+| CodeBuddy credits below 5% (14 Oct) | Spend CodeBuddy only on judged features (T1-16, then T1-15). Claude Code does merges, structural fixes and screenshots. Ask organisers about a top-up. |
+| Toast says "heart is full!" at 3 of 4 hearts | `toast.bpLogged` text; pre-existing. |
+| Mock dog name `"max"` lowercase; mock medicines are veterinary (Apoquel, Gabapentin) | `mobile/src/mock/home.ts`; a judge may notice. |
+| BP inputs have no accessible name | Labels wrap a span and the input; the accessibility tree shows unnamed textboxes. Add `htmlFor`/`id` or `aria-label`. |
 | Heart score computed inline | `App.tsx` computes `heartCount` itself instead of `computeHeart` from `shared/selectors`; two sources of truth. |
 | Stale checkouts mislead tools | On 14 Oct the main folder was still on the merged `cb/names-from-data` (no KANBAN/HANDOFF) and CodeBuddy tried to restart T1-08. Main folder switched to `main` the same morning. Start new work from `origin/main` in a worktree. |
 | Dedication cross-fade into Home | Deferred by the user; needs Home rendered under the dedication overlay. |

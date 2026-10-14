@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "./components/Icon";
 import { TopZone } from "./screens/TopZone";
@@ -72,20 +72,21 @@ export default function App() {
   const [today, setToday] = useState<TodayResponse | null>(null);
   const [careSummary, setCareSummary] = useState<CaretakerSummaryResponse | null>(null);
   const [walkStartedAt, setWalkStartedAt] = useState<string | null>(null);
-  const [apiError, setApiError] = useState("");
+  // One friendly notice per outage; the technical error goes to the console, never to the senior.
+  const apiWarned = useRef(false);
   const [demoNow, setDemoNow] = useState<string | null>(null);
   const [demoClockValue, setDemoClockValue] = useState(() => toDateTimeLocal(new Date()));
   const [agentBusy, setAgentBusy] = useState(false);
   const [escalationSettings, setEscalationSettings] = useState<EscalationSettingsResponse | null>(null);
 
   const refreshToday = async (now?: string) => {
-    try { const result = await api.today(now ?? demoNow ?? undefined); setToday(result); setDoseList(result.doses); setBpLogged(result.bloodPressureLoggedToday); setLatestDecision(result.latestDecision); setApiError(""); }
-    catch (error) { setApiError(error instanceof Error ? error.message : "Could not connect to Pawtner API"); }
+    try { const result = await api.today(now ?? demoNow ?? undefined); setToday(result); setDoseList(result.doses); setBpLogged(result.bloodPressureLoggedToday); setLatestDecision(result.latestDecision); apiWarned.current = false; }
+    catch (error) { reportApiProblem(error); }
   };
   useEffect(() => { void refreshToday(); }, []);
   useEffect(() => {
-    if (screen === "care" || screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => setApiError(error instanceof Error ? error.message : "Could not load care summary"));
-    if (screen === "settings") void api.escalationSettings().then(setEscalationSettings).catch((error) => setApiError(error instanceof Error ? error.message : "Could not load check-in settings"));
+    if (screen === "care" || screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
+    if (screen === "settings") void api.escalationSettings().then(setEscalationSettings).catch((error) => reportApiProblem(error));
   }, [screen]);
 
   const takenCount = doseList.filter((d) => d.status === "taken").length;
@@ -105,12 +106,21 @@ export default function App() {
     window.setTimeout(() => setToast(""), 2400);
   };
 
+  /** Background loads warn once per outage; failed user actions always say so. */
+  const reportApiProblem = (error: unknown, userAction = false) => {
+    console.warn("Pawtner API:", error);
+    if (userAction) { notify(t("toast.apiActionFailed")); return; }
+    if (apiWarned.current) return;
+    apiWarned.current = true;
+    notify(t("toast.apiOffline"));
+  };
+
   /**
    * BP form submit: posts to the API with systolic, diastolic, note, recordedAt.
    * Uses the decision in the response for the result card and the calm no-toast rule,
    * then refreshToday() so mood comes from the server.
    * If the API call fails (no server), falls back to requestDecision() in lib/agent.ts
-   * so the beat still works offline, and shows William's existing apiError toast.
+   * so the beat still works offline, and shows the one-time offline notice.
    */
   async function handleLogBp(metric: HealthMetric) {
     setHealthMetrics((prev) => [...prev, metric]);
@@ -141,7 +151,7 @@ export default function App() {
       });
       decision = await requestDecision(input);
       setLatestDecision(decision);
-      setApiError("Could not connect to Pawtner API");
+      reportApiProblem("health-metric request failed");
     }
     setBpLogged(true);
     // Emergency and see-GP moments stay calm: no playful toast.
@@ -165,7 +175,7 @@ export default function App() {
       setScreen("home");
       notify(result.decision.wording);
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : "Could not evaluate the agent rules");
+      reportApiProblem(error, true);
     } finally {
       setAgentBusy(false);
     }
@@ -188,7 +198,6 @@ export default function App() {
         accessory={accessory !== "none" && <span className={`pet-accessory accessory-${accessory}`} aria-label={t("toast.petAccessoryAria", { name: dogName, item: accessory })}><i /><i /></span>}
       />
       <TopZone onSettings={() => setScreen("settings")} pet={livePet} />
-      {apiError && <div className="toast" role="alert">API: {apiError}</div>}
       <div className={`screen-stage screen-${screen}`}>
         {screen === "home" && (
           <HomeScreen
@@ -210,13 +219,13 @@ export default function App() {
         {screen === "prescription" && <PrescriptionScreen goHome={() => setScreen("home")} onExplain={() => setScreen("explanation")} medication={medication} petName={dogName} />}
         {screen === "explanation" && <ExplanationScreen onBack={() => setScreen("prescription")} onContinue={() => setScreen("schedule")} medicationExplanation={medicationExplanation} />}
         {screen === "schedule" && <ScheduleScreen onBack={() => setScreen("explanation")} onConfirm={() => { setScreen("home"); notify(t("toast.nudgeSet", { name: dogName })); }} nudgeSettings={nudgeSettings} petName={dogName} />}
-        {screen === "proof" && <ProofScreen onBack={() => setScreen("home")} onVerified={async () => { const dose = doseList.find((item) => item.id === pendingDoseId); if (!dose) return; try { const result = await api.doseEvent({ scheduleId: dose.id, scheduledFor: dose.scheduledAt, event: "taken", occurredAt: demoNow ?? new Date().toISOString() }); setToday(result.today); setDoseList(result.today.doses); setScreen("home"); notify(t("toast.heartGained", { name: dogName })); } catch (error) { setApiError(error instanceof Error ? error.message : "Could not record dose"); } }} medication={medication} petName={dogName} />}
-        {screen === "walk" && <WalkScreen goHome={() => setScreen("home")} walkStats={walkStats} petName={dogName} onWalkState={(walking) => { if (walking) setWalkStartedAt(new Date().toISOString()); else if (walkStartedAt) { void api.walkSession({ startedAt: walkStartedAt, finishedAt: new Date().toISOString(), distanceMeters: 0, fastStretchOccurred: false }).then(() => api.caretakerSummary().then(setCareSummary)).catch((error) => setApiError(error instanceof Error ? error.message : "Could not save walk")); setWalkStartedAt(null); } }} />}
+        {screen === "proof" && <ProofScreen onBack={() => setScreen("home")} onVerified={async () => { const dose = doseList.find((item) => item.id === pendingDoseId); if (!dose) return; try { const result = await api.doseEvent({ scheduleId: dose.id, scheduledFor: dose.scheduledAt, event: "taken", occurredAt: demoNow ?? new Date().toISOString() }); setToday(result.today); setDoseList(result.today.doses); setScreen("home"); notify(t("toast.heartGained", { name: dogName })); } catch (error) { reportApiProblem(error, true); } }} medication={medication} petName={dogName} />}
+        {screen === "walk" && <WalkScreen goHome={() => setScreen("home")} walkStats={walkStats} petName={dogName} onWalkState={(walking) => { if (walking) setWalkStartedAt(new Date().toISOString()); else if (walkStartedAt) { void api.walkSession({ startedAt: walkStartedAt, finishedAt: new Date().toISOString(), distanceMeters: 0, fastStretchOccurred: false }).then(() => api.caretakerSummary().then(setCareSummary)).catch((error) => reportApiProblem(error, true)); setWalkStartedAt(null); } }} />}
         {screen === "milestones" && <MilestonesScreen goHome={() => setScreen("home")} onWalk={() => setScreen("walk")} onCustomize={() => setScreen("customize")} pet={pet} currentWorld={currentWorld} tricks={tricks} souvenirs={souvenirs} petName={dogName} />}
         {screen === "health" && <HealthScreen goHome={() => setScreen("home")} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => setScreen("screening")} onSummary={() => setScreen("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen onBack={() => setScreen("health")} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen onBack={() => setScreen("health")} weekSummary={careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }], doctorQuestion: careSummary.doctorQuestions[0]?.note ?? weekSummary.doctorQuestion } : weekSummary} />}
-        {screen === "settings" && <SettingsScreen goHome={() => setScreen("home")} addMedication={() => setScreen("prescription")} openCaretaker={() => setScreen("care")} openReminders={() => setScreen("reminders")} caregiver={caregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { setApiError(error instanceof Error ? error.message : "Could not save check-in settings"); } }} />}
+        {screen === "settings" && <SettingsScreen goHome={() => setScreen("home")} addMedication={() => setScreen("prescription")} openCaretaker={() => setScreen("care")} openReminders={() => setScreen("reminders")} caregiver={caregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} />}
         {screen === "customize" && <CustomizeScreen onBack={() => setScreen("milestones")} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(nextWorld === "flat" ? t("toast.worldFlat", { name: dogName }) : nextWorld === "garden" ? t("toast.worldGarden", { name: dogName }) : t("toast.worldKampung", { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: nextAccessory })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} />}
       </div>
       <div className="bottom-dock" aria-hidden="true" />

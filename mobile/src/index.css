@@ -621,7 +621,8 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 /* ═══════════════════════════════════════════════════════════════════════
    Toast
    ═══════════════════════════════════════════════════════════════════════ */
-.toast { position: absolute; z-index: 80; top: 98px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); padding: 12px 18px; border-radius: var(--radius-pill); color: white; background: var(--color-toast-bg); box-shadow: var(--shadow-toast); font-size: var(--font-size-base); font-weight: var(--font-weight-bold); animation: toast-in .2s ease-out; }
+/* Toasts are information only, so taps pass through to the dog and buttons beneath. */
+.toast { position: absolute; z-index: 80; pointer-events: none; top: 98px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); padding: 12px 18px; border-radius: var(--radius-pill); color: white; background: var(--color-toast-bg); box-shadow: var(--shadow-toast); font-size: var(--font-size-base); font-weight: var(--font-weight-bold); animation: toast-in .2s ease-out; }
 
 @keyframes toast-in { from { transform: translate(-50%, -10px); opacity: 0; } }
 

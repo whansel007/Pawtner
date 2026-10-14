@@ -257,6 +257,8 @@
     "accessoryNone": "{{name}} is back to a fluffy self.",
     "accessoryOn": "{{name}} put on a {{item}}.",
     "hello": "Woof woof! {{name}} is happy you're here.",
-    "petAccessoryAria": "{{name}} is wearing {{item}}"
+    "petAccessoryAria": "{{name}} is wearing {{item}}",
+    "apiOffline": "Can't reach Pawtner right now. Showing saved information.",
+    "apiActionFailed": "That didn't save. Please try again in a moment."
   }
 }

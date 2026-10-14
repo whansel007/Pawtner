@@ -61,3 +61,15 @@
 | **One shared check-in threshold** for all caretakers ("send a check-in after N missed doses in a row", minimum 2). **No database change:** the schema keeps `threshold` per `user_caregivers` row, and saving writes the same value to every row. The existing `EscalationSettingsRequest { optedIn, threshold }` already carries one value. | User: the web page has one setting; time is short, so P2's changes stay front-end only. | Per-person thresholds are not offered; rows could drift if something writes one row directly. | Final |
 | `relationship` ("Neighbor", "Friend") is **dropped** from `/care`: each caretaker shows name, initial and "Gets check-ins" / "Updates only". | No database changes this week; the page then looks the same on mock data and on the API. | Less context per person (e.g. why a neighbour gets updates only). | Final for the hackathon |
 
+## 2026-10-14 — Afternoon: P1's API wiring, merges, CodeBuddy credits
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| PR #6 merged with **squash**. | Its history contained 18 MB of UI screenshots that were later deleted; squash keeps them out of `main`. | The six CodeBuddy commits show as one on `main` (they remain visible in PR #6). | Final |
+| When PR #6 conflicted with P1's front-end wiring: keep P1's API calls (`lib/api.ts`, `refreshToday`, demo clock, escalation settings); keep P2's BP form with note, result card, `DecisionLogCard` and tap reactions. William's `DecisionLogCard` and the dog-name `.toLowerCase()` were removed. | P1's form had no note, so the "bad headache" 995 path could not fire; names come from data unchanged. | — | Final |
+| The BP form falls back to local `decide()` when `/api/health-metric` fails. | No hosted API yet; the emergency beat must still work on the deployed URL. | Offline readings aren't saved. | Tentative until the API is hosted |
+| Raw API errors are never shown to the senior: console detail, one friendly notice per outage for background loads, a notice on every failed user action; toasts don't block taps. | A stuck technical toast covered the dog and blocked taps on 360×640. | Background failures after the first notice are silent until the API recovers. | Final (PR #7) |
+| Home shows the decision log only once a decision exists, as one compact row. | The empty card took the dog's space on short phones. | Slight crop of the dog's head at 360×640 when a decision exists. | Final (PR #7) |
+| Ownership split with P1: P1 owns `api/`, `shared/`, `migrations/`, `mobile/src/lib/api.ts`; P2 owns screens and components. | Both built the same front-end features on 14 Oct. | Screen changes P1 needs go through P2. | Final (user told P1) |
+| With CodeBuddy credits below 5%, CodeBuddy builds only judged features (T1-16, then T1-15); Claude Code does merges, structural fixes and screenshots. | Credits ran low after screenshot-script loops. | Fewer CodeBuddy commits; proof already exceeds the PRD target (13 chat screenshots, target 10+). | Final |
+
