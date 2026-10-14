@@ -45,13 +45,17 @@ Config lives in `mobile/src/config/` (`scene.ts`: images, ground line, dog size 
 - Team mode: every push needs the user's yes, typed in the session that pushes. Only the user merges PRs. Never commit to `main`, never force-push.
 - Standing exception (user, 14 Oct): **docs-only** commits authored by the user (Frescylia Frida) may be pushed without asking, and the docs PR may be merged by Claude Code if GitHub reports no conflicts. Code PRs still need the user's yes and the user's merge.
 - Claude Code: `claude/*` branches, structural fixes. CodeBuddy: `cb/*` branches, features (its chats are the judging proof; screenshots go in `proof/`).
+- Split agreed 14 Oct: P1 (William) owns `api/`, `shared/`, `migrations/` and `mobile/src/lib/api.ts`; P2 owns `mobile/src/screens` and `mobile/src/components`. Screen changes go through P2.
+- CodeBuddy prompts start with "TARGET TOOL: CodeBuddy / You are CodeBuddy…" (it called itself Claude Code after reading this repo's `CLAUDE.md`). Its UI screenshots go to `docs/screenshots/<feature>/`; `proof/` is only for screenshots of its chats, taken by the user.
 - Several tools share one checkout. Use `git worktree` for parallel work instead of switching branches in the main folder. Create each worktree from `origin/main` (`git fetch && git worktree add ../pawtner-<task> -b <branch> origin/main`), then run `npm install` in the root and in `mobile/`.
 - Keep the main folder (`Pawtner-repo`) on `main` and pull. On 14 Oct it was still on the merged `cb/names-from-data` (no KANBAN/HANDOFF), and CodeBuddy tried to restart T1-08; a fresh chat with a context-reset message fixed it, and the folder was switched to `main`. Trust `git log origin/main` over a tool's memory.
 
 ## Known risks
 
 1. The shared Supabase database currently has no Pawtner schema; local `/api/today` reports this until migrations and fictional seed are run with `DATABASE_URL_DIRECT`.
-2. No authentication or roles exist; this API is for the fictional single-user demo only.
-3. Dog size limits and mood looks are TENTATIVE guesses.
-4. Fixed names remain in mock data (`mock/care.ts` "Mum + Jamie", `mock/milestones.ts` "From Jamie").
-5. `README.md` is stale (says the Vite app doesn't exist); `CLAUDE.md` points to `docs/PRD.md` and a missing `docs/ARCHITECTURE.md`.
+2. API failures: `reportApiProblem()` in `App.tsx` logs the detail to the console; background loads show one `toast.apiOffline` per outage, failed user actions always show `toast.apiActionFailed` (PR #7). The BP form falls back to local `decide()` when the API is unreachable.
+3. At 360×640 the Home decision row (~56 px) crops the top of the dog's head slightly once a decision exists.
+4. No authentication or roles exist; this API is for the fictional single-user demo only.
+5. Dog size limits and mood looks are TENTATIVE guesses.
+6. Fixed names remain in mock data (`mock/care.ts` "Mum + Jamie", `mock/milestones.ts` "From Jamie").
+7. `README.md` is stale (says the Vite app doesn't exist); `CLAUDE.md` points to `docs/PRD.md` and a missing `docs/ARCHITECTURE.md`.
