@@ -52,9 +52,10 @@
     "streakChip_other": "🔥 {{count}} days"
   },
   "care": {
-    "eyebrow": "Caregiver view",
+    "eyebrow": "Shared with your circle",
     "title": "{{name}} is doing great",
-    "supporting": "You and Mum share one dog. Celebrate the good moments without turning care into surveillance.",
+    "supporting": "You and {{caretaker}} look after {{name}} together. Good moments are shared; medicine details stay private.",
+    "pairNames": "{{senior}} + {{caretaker}}",
     "daysRemaining": "About {{count}} days remaining",
     "daysRemaining_one": "About {{count}} day remaining",
     "daysRemaining_other": "About {{count}} days remaining",
