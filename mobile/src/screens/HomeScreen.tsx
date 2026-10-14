@@ -46,7 +46,8 @@ export function HomeScreen({
         onWalk={onWalk}
         onBloodPressure={onBloodPressure}
       />
-      <DecisionLogCard decision={decision} />
+      {/* Only once the agent has decided something; an empty card would take the dog's space on short phones. */}
+      {decision && <DecisionLogCard decision={decision} summary={decision.wording} />}
     </div>
   );
 }

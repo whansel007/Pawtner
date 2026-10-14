@@ -7,8 +7,9 @@ import "./DecisionLogCard.css";
  * One DecisionLogCard for Home and Health.
  * - When `decision` is null, shows an en.json empty state (Home before any decision).
  * - When `decision` is present, shows the "Why?" toggle with the full decision log.
+ * - `summary` (Home) puts the decision's wording on the same row as the toggle.
  */
-export function DecisionLogCard({ decision }: { decision: AgentDecision | null }) {
+export function DecisionLogCard({ decision, summary }: { decision: AgentDecision | null; summary?: string }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
@@ -32,7 +33,8 @@ export function DecisionLogCard({ decision }: { decision: AgentDecision | null }
   }
 
   return (
-    <div className="decision-log">
+    <div className={`decision-log${summary ? " decision-log--summary" : ""}`}>
+      {summary && <p className="decision-log__summary">{summary}</p>}
       <button
         className="decision-log__toggle"
         onClick={() => setOpen((v) => !v)}
