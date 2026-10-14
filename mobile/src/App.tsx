@@ -92,7 +92,7 @@ export default function App() {
   const takenCount = doseList.filter((d) => d.status === "taken").length;
   const pendingDose = doseList.find((item) => item.id === pendingDoseId);
   const heartCount = today?.dog.heart ?? Math.min(DEMO_RULES.heartMaximum, 1 + takenCount + (bpLogged ? 1 : 0));
-  const mood = today ? today.dog.mood : selectDogMood(heartCount, latestDecision);
+  const mood = today ? today.dog.mood : selectDogMood(heartCount, latestDecision, demoNow ?? new Date().toISOString());
   // T2-10: sun/moon by local time using shared helper
   const phase = demoNow ? (() => { try { return phaseFromTime(demoNow, "Asia/Singapore"); } catch { return DEFAULT_PHASE; } })() : DEFAULT_PHASE;
 
@@ -233,10 +233,10 @@ export default function App() {
   }
 
   /** Proof verified: record the pending dose as taken, then return Home with a heart. */
-  async function handleDoseVerified() {
+  async function handleDoseVerified(proofPhotoUrl: string | null) {
     if (!pendingDose) return;
     try {
-      const result = await api.doseEvent({ scheduleId: pendingDose.id, scheduledFor: pendingDose.scheduledAt, event: "taken", occurredAt: demoNow ?? new Date().toISOString() });
+      const result = await api.doseEvent({ scheduleId: pendingDose.id, scheduledFor: pendingDose.scheduledAt, event: "taken", occurredAt: demoNow ?? new Date().toISOString(), proofPhotoUrl });
       setToday(result.today);
       setDoseList(result.today.doses);
       navigate("home");

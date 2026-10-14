@@ -30,7 +30,7 @@ export const api = {
   caretakerSummary: () => request<CaretakerSummaryResponse>("/caretaker/summary"),
   escalationSettings: () => request<EscalationSettingsResponse>("/escalation-settings"),
   updateEscalationSettings: (data: EscalationSettingsRequest) => request<EscalationSettingsResponse>("/escalation-settings", { method: "PUT", body: JSON.stringify(data) }),
-  doseEvent: (data: { scheduleId: string; scheduledFor: string; event: "taken"; occurredAt: string }) => request<DoseEventResponse>("/dose-event", { method: "POST", body: JSON.stringify(data) }),
+  doseEvent: (data: { scheduleId: string; scheduledFor: string; event: "taken"; occurredAt: string; proofPhotoUrl?: string | null }) => request<DoseEventResponse>("/dose-event", { method: "POST", body: JSON.stringify(data) }),
   healthMetric: (data: { systolic: number; diastolic: number; note?: string | null; recordedAt: string }) => request<HealthMetricResponse>("/health-metric", { method: "POST", body: JSON.stringify(data) }),
   walkSession: (data: { startedAt: string; finishedAt: string; distanceMeters: number; fastStretchOccurred: boolean }) => request<WalkSessionResponse>("/walk-session", { method: "POST", body: JSON.stringify(data) }),
 

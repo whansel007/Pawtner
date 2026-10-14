@@ -16,7 +16,52 @@ interface HsaProduct {
   activeIngredients: string | null;
 }
 
-type Stage = "search" | "results" | "confirm" | "done";
+type Stage = "scan" | "search" | "results" | "confirm" | "done";
+
+/**
+ * Extract text from a label photo using the browser's TextDetector (Shape Detection API)
+ * where available, with a graceful fallback to the search screen.
+ */
+async function extractLabelText(file: File): Promise<string | null> {
+  // Try the experimental TextDetector API (Chrome on some platforms)
+  const TD = (window as unknown as { TextDetector?: new () => { detect: (img: ImageBitmap) => Promise<{ rawValue: string }[]> } }).TextDetector;
+  if (!TD) return null;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const detector = new TD();
+    const results = await detector.detect(bitmap);
+    bitmap.close?.();
+    const text = results.map((r) => r.rawValue).join(" ").trim();
+    return text || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extract the most likely medication name and strength from raw OCR text.
+ * Looks for patterns like "Paracetamol 500mg" or "Amlodipine 5 mg".
+ */
+function parseLabelFields(text: string): { name: string; strength: string | null } {
+  const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  // Try to find a line that looks like a medication name + strength
+  const medLine = lines.find((line) =>
+    /\d+\s*(?:mg|mcg|g|ml|iu)\b/i.test(line) || /^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*$/.test(line),
+  );
+  if (medLine) {
+    const strengthMatch = medLine.match(/(\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml|iu)\b)/i);
+    const strength = strengthMatch?.[1] ?? null;
+    const name = medLine.replace(strengthMatch?.[0] ?? "", "").trim() || medLine;
+    return { name: name.replace(/\s+/g, " "), strength };
+  }
+  // Fallback: use the first non-trivial line as the name
+  const firstLine = lines.find((l) => l.length >= 3 && l.length <= 60) ?? lines[0] ?? "";
+  const strengthMatch = firstLine.match(/(\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml|iu)\b)/i);
+  return {
+    name: (strengthMatch ? firstLine.replace(strengthMatch[0], "") : firstLine).trim() || text.slice(0, 40),
+    strength: strengthMatch?.[1] ?? null,
+  };
+}
 
 export function PrescriptionScreen({
   back,
@@ -33,7 +78,10 @@ export function PrescriptionScreen({
   petName: string;
 }) {
   const { t } = useTranslation();
-  const [stage, setStage] = useState<Stage>("search");
+  const [stage, setStage] = useState<Stage>("scan");
+  const [scanning, setScanning] = useState(false);
+  const [scanError, setScanError] = useState("");
+  const [extractedText, setExtractedText] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<HsaProduct[]>([]);
   const [searching, setSearching] = useState(false);
@@ -87,6 +135,37 @@ export function PrescriptionScreen({
     setStage("confirm");
   };
 
+  const onScanFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setScanning(true);
+    setScanError("");
+    setExtractedText(null);
+    try {
+      const text = await extractLabelText(file);
+      if (text && text.trim().length >= 2) {
+        const { name: parsedName, strength: parsedStrength } = parseLabelFields(text);
+        setExtractedText(text);
+        // Auto-search the HSA register with the extracted name
+        const searchTerm = parsedName.slice(0, 50);
+        setQuery(searchTerm);
+        const res = await api.searchProducts(searchTerm);
+        setResults(res.products);
+        // Pre-fill fields from OCR in case no HSA match is selected
+        setName(parsedName);
+        setStrength(parsedStrength ?? "");
+        setStage("results");
+      } else {
+        // OCR returned nothing useful — fall back to manual search
+        setStage("search");
+      }
+    } catch {
+      setScanError("Could not read the label. Try again or search manually.");
+    } finally {
+      setScanning(false);
+    }
+  };
+
   const save = async () => {
     if (!name.trim()) return;
     setSaving(true);
@@ -114,14 +193,53 @@ export function PrescriptionScreen({
   return (
     <FullCard back={back} className="scan-card">
       <p className="eyebrow green">{t("prescription.eyebrow")}</p>
-      <h2>{stage === "done" ? "Medicine added" : stage === "confirm" ? "Confirm details" : t("prescription.titleScan")}</h2>
+      <h2>{stage === "done" ? "Medicine added" : stage === "confirm" ? "Confirm details" : stage === "scan" ? t("prescription.titleScan") : "Search medicines"}</h2>
       <p className="supporting">
         {stage === "done"
           ? `${name} is on ${petName}'s schedule.`
           : stage === "confirm"
           ? t("prescription.supportingFound", { name: petName })
-          : t("prescription.supportingScan")}
+          : stage === "scan"
+          ? t("prescription.supportingScan")
+          : "Search the HSA register by medicine name or active ingredient."}
       </p>
+
+      {stage === "scan" && (
+        <>
+          <label className={`scanner ${scanning ? "scanning" : ""}`}>
+            {scanning ? (
+              <>
+                <span className="camera-orb"><Icon name="camera" size={30} /></span>
+                <strong>Reading label…</strong>
+                <small>Holding the bottle steady helps</small>
+              </>
+            ) : (
+              <>
+                <span className="camera-orb"><Icon name="camera" size={30} /></span>
+                <strong>{t("prescription.tapCapture")}</strong>
+                <small>{t("prescription.keepLit")}</small>
+              </>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={onScanFile}
+              style={{ display: "none" }}
+              aria-label={t("prescription.tapCapture")}
+            />
+          </label>
+          {scanError && <p className="error-text">{scanError}</p>}
+          {extractedText && (
+            <div className="ocr-preview">
+              <small>Text read from label:</small>
+              <p>{extractedText.slice(0, 200)}</p>
+            </div>
+          )}
+          <button className="text-button" onClick={() => setStage("search")}>Search or enter manually</button>
+          <p className="hsa-credit">A label scan helps fill in details. Always check the package and ask your pharmacist.</p>
+        </>
+      )}
 
       {stage === "search" && (
         <>
