@@ -19,7 +19,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Posts dose event and derives status from ledger; offline fallback (local taken + local `celebrate`) on `claude/sleepy-taken-fallback`; scanner/photo is still a prototype. |
 | T1-11 | In-app nudge + demo clock | P2 | Settings demo clock runs the deterministic agent; dose nudges are capped at two per occurrence. |
 | T1-13 | Dog mood on Home | P2 | Shared dog mood fed from API state; visual moods remain motion/glow. |
-| T1-17 | Public HTTPS URL | P2 (+ P1 API) | **Front end in production:** `pawtner-care.vercel.app` (and `pawtner-mobile-three.vercel.app`) = `main` @ `d8db4ab` incl. `/care`, PR #16 (non-personal landing, framed footer) and PR #17 (accessories scale with the dog, ear flower, chips in landscape) (14 Oct night). No hosted API yet: offline fallback; Taken and the emergency beat and walk work offline, the demo clock and Tier 2 screens need the API. P1's EdgeOne copy (`pawtner-dpyqrh9kdlee.edgeone.dev`) is static and needs the `/care/*` rewrite. |
+| T1-17 | Public HTTPS URL | P2 (+ P1 API) | **Front end in production:** `pawtner-care.vercel.app` (and `pawtner-mobile-three.vercel.app`) = `main` @ `32ca8ab` incl. `/care`, PR #16 (non-personal landing, framed footer) and PR #17 (accessories scale with the dog, ear flower, chips in landscape) (14 Oct night). No hosted API yet: offline fallback; Taken and the emergency beat and walk work offline, the demo clock and Tier 2 screens need the API. P1's EdgeOne copy (`pawtner-dpyqrh9kdlee.edgeone.dev`) is static and needs the `/care/*` rewrite. |
 | T1-18 | Dog assets | Design | Base dog + garden day/night done. Sleepy art (`dog-sleepy.webp`, same canvas) wired on `claude/sleepy-taken-fallback`; joyful, content, attentive still use the base art. |
 
 ## Backlog (Tier 1)
@@ -59,6 +59,9 @@ Today's plan (agreed 13 Oct evening), in order:
 | — | Proof screen wording: photo is proof, never verification (PRD §7.4) | [#13](https://github.com/whansel007/Pawtner/pull/13) |
 | — | Demo names Rose (senior) and Buddy (dog), knitted wording (CodeBuddy) | [#19](https://github.com/whansel007/Pawtner/pull/19) |
 | — | `/care` landing: tighter vertical spacing (CodeBuddy) | [#21](https://github.com/whansel007/Pawtner/pull/21) |
+| — | Landscape chips row identical to Home: one shared `SceneChips` component (CodeBuddy) | [#23](https://github.com/whansel007/Pawtner/pull/23) |
+| — | Landscape caregiver view: Buddy and chips in the left column; portrait unchanged (CodeBuddy) | [#24](https://github.com/whansel007/Pawtner/pull/24) |
+| — | Caregiver view wording: "Shared with your circle", names from data ("Rose + Jamie") (CodeBuddy) | [#25](https://github.com/whansel007/Pawtner/pull/25) |
 
 ## Blocked
 
@@ -71,6 +74,9 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | Item | Note |
 |---|---|
+| Buddy video (KIV, resume 15 Oct) | User has ~1000 Miora credits. Plan: pitch/demo video clip first; optional in-app celebration card (MP4 with its own background, muted, plays once, still fallback). No transparent in-app dog video (iPhone Safari format issues). |
+| P1 hosting branch `cb/api-hosting-edgeone` (unmerged, 14 Oct) | Wires API hosting for Vercel and EdgeOne and seeds caretaker Alex (`opted_in = false`). Adds a ROOT `vercel.json`, while the Vercel project builds from Root Directory `mobile` with `mobile/vercel.json` (the `/care` rewrites): review before merge so deploys and `/care` deep links keep working. |
+| Offline sample text still names people | `mobile/src/mock/care.ts`: "Two people, one Buddy"; activity "Mum took her lunchtime medicine and Buddy gained a heart." Shown only without the API. |
 | Fixed names left in mock data | `mobile/src/mock/care.ts` has `names: "Mum + Jamie"`; `mobile/src/mock/milestones.ts` has `note: "From Jamie"`. Renaming the caretaker won't change these; derive them from the name fields. |
 | CodeBuddy credits below 5% (14 Oct) | Spend CodeBuddy only on judged features (T1-16, then T1-15). Claude Code does merges, structural fixes and screenshots. Ask organisers about a top-up. |
 | First load shows a plain green screen for ~3 s | Seen on the 14 Oct preview: `garden-day.webp` and `dog-base.webp` load after Home appears. Preload them during the cover/dedication. |
