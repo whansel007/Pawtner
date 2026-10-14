@@ -10,7 +10,6 @@
   position: absolute;
   left: 50%;
   bottom: 0;
-  /* Fill the free space below the top bar, capped at --dog-max; never less than --dog-min; never taller than the slot (so never over the chips or card). */
   height: min(100cqh, max(var(--dog-min, 0px), min(var(--dog-max, 100cqh), calc((100cqh - var(--top-overlap, 0px)) * 0.92))));
   transform: translateX(-50%);
 }
@@ -33,7 +32,6 @@
   transform-origin: 50% 100%;
 }
 
-/* Keeps the image's own aspect ratio; max-width stops a very short, wide slot from making it huge. */
 .dog-stage__image {
   display: block;
   height: 100%;
@@ -57,7 +55,6 @@
   pointer-events: none;
 }
 
-/* Cast shadow: a soft, dark, flattened ellipse at the feet, falling away from the light (top right). */
 .dog-stage__cast-shadow {
   position: absolute;
   left: 50%;
@@ -84,18 +81,67 @@
 
 /* ── Mood motion: transform and opacity only ── */
 .dog-stage--content .dog-stage__body { animation: dog-breathe 3.6s ease-in-out infinite; }
-.dog-stage--joyful .dog-stage__body { animation: dog-hop 1.6s ease-in-out infinite; }
+.dog-stage--joyful .dog-stage__body { animation: dog-hop-mood 1.6s ease-in-out infinite; }
 .dog-stage--sleepy .dog-stage__body { animation: dog-droop 5s ease-in-out infinite; }
 /* attentive: still and upright, no playful motion */
 
-.dog-stage__pet.is-wiggling { animation: dog-wiggle 0.6s ease-in-out; }
+/* ── Tap reactions (transform + opacity only) ── */
+
+/* hop: a short jump with squash */
+.dog-stage__pet.is-hop .dog-stage__body { animation: pet-hop 0.6s ease-out; }
+
+/* hearts: 3 small hearts rise and fade (decoration only) */
+.dog-stage__hearts {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.dog-stage__heart {
+  position: absolute;
+  color: #e85a6a;
+  opacity: 0;
+  transform: translateX(-50%) translateY(0) scale(0.5);
+}
+
+.dog-stage__heart--1 { left: -18px; animation: heart-rise 1.2s ease-out forwards; }
+.dog-stage__heart--2 { left: 0; animation: heart-rise 1.2s ease-out 0.15s forwards; }
+.dog-stage__heart--3 { left: 18px; animation: heart-rise 1.2s ease-out 0.3s forwards; }
+
+/* bubble: speech bubble above the dog */
+.dog-stage__bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 78%;
+  transform: translateX(-50%);
+  max-width: 200px;
+  padding: 10px 16px;
+  border-radius: 16px 16px 16px 4px;
+  background: white;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.3;
+  color: #2a4a36;
+  text-align: center;
+  white-space: normal;
+  z-index: 6;
+  pointer-events: none;
+  /* Must not cover the top bar buttons — max-height keeps it below the top zone */
+  max-height: 80px;
+  overflow: hidden;
+}
 
 @keyframes dog-breathe {
   0%, 100% { transform: scale(1, 1); }
   50% { transform: scale(1.012, 1.03); }
 }
 
-@keyframes dog-hop {
+@keyframes dog-hop-mood {
   0%, 55%, 100% { transform: translateY(0) scale(1, 1); }
   62% { transform: translateY(0) scale(1.04, 0.95); }
   75% { transform: translateY(-9%) scale(0.98, 1.03); }
@@ -107,17 +153,28 @@
   50% { transform: rotate(-2.5deg) translateY(1.5%); }
 }
 
-@keyframes dog-wiggle {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-5deg); }
-  50% { transform: rotate(4deg); }
-  75% { transform: rotate(-2deg); }
+@keyframes pet-hop {
+  0% { transform: translateY(0) scale(1, 1); }
+  20% { transform: translateY(0) scale(1.08, 0.88); }
+  50% { transform: translateY(-14%) scale(0.96, 1.04); }
+  80% { transform: translateY(0) scale(1.05, 0.92); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+@keyframes heart-rise {
+  0% { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.5); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-50px) scale(1); }
 }
 
 /* Same specificity as the mood rules above, and later in the file, so this wins. */
 @media (prefers-reduced-motion: reduce) {
   .dog-stage .dog-stage__body,
-  .dog-stage .dog-stage__pet.is-wiggling {
+  .dog-stage__pet.is-hop .dog-stage__body,
+  .dog-stage__heart--1,
+  .dog-stage__heart--2,
+  .dog-stage__heart--3 {
     animation: none;
   }
+  .dog-stage__heart { opacity: 0; }
 }
