@@ -251,7 +251,8 @@ export default function App() {
       setToday(result.today);
       setDoseList(result.today.doses);
     } catch (error) {
-      reportApiProblem(error, true);
+      // Background notice (once per outage), not "didn't save": the dose is shown as taken locally.
+      reportApiProblem(error);
       const localDoses = doseList.map((d) => (d.id === pendingDose.id ? { ...d, status: "taken" as const, eventAt: occurredAt } : d));
       setDoseList(localDoses);
       const localEvent: DoseEvent = { id: `local-${pendingDose.id}-${occurredAt}`, ...doseEvent };
