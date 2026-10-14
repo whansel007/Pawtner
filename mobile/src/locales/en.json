@@ -316,6 +316,12 @@
     "souvenirs": "Souvenirs",
     "souvenirsSub": "Earned on walks"
   },
+  "accessory": {
+    "none": "Fluffy",
+    "glasses": "Sunny specs",
+    "hat": "Sun hat",
+    "flower": "Hibiscus bloom"
+  },
   "customize": {
     "eyebrow": "{{name}}'s collection",
     "title": "World & wardrobe",
