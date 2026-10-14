@@ -38,12 +38,42 @@ testApi("HTTP handlers persist events and return the shared response contract", 
   });
 
   it("serves today and records a deterministic emergency reading and dose event", async () => {
-    const now = "2026-10-14T15:00:00+08:00";
+    const now = "2026-10-13T23:00:00+08:00";
     const todayResponse = await handler(new Request(`http://localhost/api/today?now=${encodeURIComponent(now)}`));
     expect(todayResponse.status).toBe(200);
     const today = await todayResponse.json();
     expect(today).toMatchObject({ user: { name: "Siew Lan" }, dog: { name: "Max" } });
     expect(today.doses.length).toBeGreaterThan(0);
+
+    const settingsResponse = await handler(new Request("http://localhost/api/escalation-settings"));
+    expect(await settingsResponse.json()).toEqual({ optedIn: true, threshold: 2 });
+    const invalidSettings = await handler(new Request("http://localhost/api/escalation-settings", {
+      method: "PUT", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ optedIn: true, threshold: 1 }),
+    }));
+    expect(invalidSettings.status).toBe(400);
+    const updatedSettings = await handler(new Request("http://localhost/api/escalation-settings", {
+      method: "PUT", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ optedIn: false, threshold: 3 }),
+    }));
+    expect(await updatedSettings.json()).toEqual({ optedIn: false, threshold: 3 });
+    await handler(new Request("http://localhost/api/escalation-settings", {
+      method: "PUT", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ optedIn: true, threshold: 2 }),
+    }));
+
+    const decideAt = async (time: string) => handler(new Request("http://localhost/api/agent/decide", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ userId: today.user.id, now: time }),
+    }));
+    const firstNudge = await decideAt("2026-10-13T11:01:00+08:00");
+    expect((await firstNudge.json()).decision).toMatchObject({ decision: "nudge", ruleId: "dose_nudge_1" });
+    const secondNudge = await decideAt("2026-10-13T12:01:00+08:00");
+    expect((await secondNudge.json()).decision).toMatchObject({ decision: "nudge", ruleId: "dose_nudge_2" });
+    const afterNudgeLimit = await decideAt("2026-10-13T13:01:00+08:00");
+    expect((await afterNudgeLimit.json()).decision.decision).toBe("restock_reminder");
+    const decisionLogResponse = await handler(new Request(`http://localhost/api/today?now=${encodeURIComponent("2026-10-13T13:01:00+08:00")}`));
+    expect((await decisionLogResponse.json()).latestDecision).toMatchObject({ decision: "restock_reminder", wordingSource: "template" });
 
     const healthResponse = await handler(new Request("http://localhost/api/health-metric", {
       method: "POST", headers: { "content-type": "application/json" },
@@ -61,5 +91,5 @@ testApi("HTTP handlers persist events and return the shared response contract", 
     expect(eventResponse.status).toBe(201);
     const event = await eventResponse.json();
     expect(event).toMatchObject({ event: { scheduleId: dose.id, event: "taken" }, today: { doses: expect.any(Array) } });
-  }, 30_000);
+  }, 60_000);
 });

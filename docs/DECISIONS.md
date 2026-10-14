@@ -27,6 +27,13 @@
 - The user's integration request authorizes implementing the seven Tier 1 API operations. Non-Tier-1 screens remain on their existing mocks; label OCR and other Tier 2 work are excluded.
 - Verified the API on configured Supabase data and the mobile production build; the shared contract remains provisional pending product/design sign-off.
 
+## 2026-10-14 — Demo clock and decision visibility
+
+- Settings can evaluate the deterministic agent at a selected local time; Home shows each saved decision with its rule, observations, reasoning, and wording source.
+- Latest-decision reads are bounded by the requested clock time so a past demo run does not display a decision from the future.
+- Integration coverage confirms first and second dose nudges, then no third nudge for that occurrence.
+- Caretaker consent and the threshold are editable in Settings and persist through the API; the database and API both enforce a minimum threshold of two.
+
 ## 2026-10-13 — Ways of working
 
 | Decision | Reason | Tradeoff | Status |

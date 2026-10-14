@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient, QueryResultRow } from "pg";
 import { DEMO_RULES } from "../shared/config.js";
-import { decide } from "../shared/rules.js";
+import { decide, selectDogMood } from "../shared/rules.js";
 import { selectAgentInput, type AgentSelectionSource } from "../shared/selectors.js";
 import { applyModelWording } from "../shared/wording.js";
 import type {
@@ -25,6 +25,17 @@ export class ApiError extends Error {
   constructor(readonly status: number, message: string) {
     super(message);
   }
+}
+
+export interface RegisteredProduct {
+  id: string;
+  brandName: string;
+  genericName: string | null;
+  strength: string | null;
+  dosageForm: string | null;
+  routeOfAdministration: string | null;
+  forensicClassification: string | null;
+  sourceAttribution: string;
 }
 
 function iso(value: Date | string): string {
@@ -91,6 +102,36 @@ function mapEvent(row: QueryResultRow): DoseEvent {
 
 export class PawtnerRepository {
   constructor(private readonly pool: Pool) {}
+
+  async searchRegisteredProducts(query: string): Promise<{ query: string; products: RegisteredProduct[] }> {
+    const term = query.trim().replace(/[!%_]/g, (character) => `!${character}`);
+    if (term.length < 2) return { query: query.trim(), products: [] };
+    const result = await this.pool.query(
+      `SELECT id::text AS id, brand_name, generic_name, strength, dosage_form,
+              route_of_administration, forensic_classification, source_attribution
+       FROM sg_registered_products
+       WHERE brand_name ILIKE $1 ESCAPE '!' OR COALESCE(generic_name, '') ILIKE $1 ESCAPE '!'
+       ORDER BY CASE WHEN lower(brand_name) = lower($2) OR lower(generic_name) = lower($2) THEN 0
+                     WHEN brand_name ILIKE $3 ESCAPE '!' OR COALESCE(generic_name, '') ILIKE $3 ESCAPE '!' THEN 1
+                     ELSE 2 END,
+                brand_name
+       LIMIT 20`,
+      [`%${term}%`, query.trim(), `${term}%`],
+    );
+    return {
+      query: query.trim(),
+      products: result.rows.map((row) => ({
+        id: row.id,
+        brandName: row.brand_name,
+        genericName: row.generic_name,
+        strength: row.strength,
+        dosageForm: row.dosage_form,
+        routeOfAdministration: row.route_of_administration,
+        forensicClassification: row.forensic_classification,
+        sourceAttribution: row.source_attribution,
+      })),
+    };
+  }
 
   private async transaction<T>(callback: (client: PoolClient) => Promise<T>): Promise<T> {
     const client = await this.pool.connect();
@@ -208,10 +249,11 @@ export class PawtnerRepository {
     return selectAgentInput(source);
   }
 
-  private async latestDecision(client: PoolClient | Pool, userId: string): Promise<AgentDecision | null> {
+  private async latestDecision(client: PoolClient | Pool, userId: string, now?: string): Promise<AgentDecision | null> {
     const result = await client.query(
-      "SELECT * FROM agent_decisions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1",
-      [userId],
+      `SELECT * FROM agent_decisions WHERE user_id = $1 AND ($2::timestamptz IS NULL OR created_at <= $2::timestamptz)
+       ORDER BY created_at DESC LIMIT 1`,
+      [userId, now ?? null],
     );
     return mapDecision(result.rows[0]);
   }
@@ -223,11 +265,11 @@ export class PawtnerRepository {
     const timezoneResult = await client.query("SELECT timezone FROM users WHERE id = $1", [userId]);
     const today = localDate(now, timezoneResult.rows[0].timezone);
     const healthMetrics = input.healthMetrics.filter((metric) => localDate(metric.recordedAt, timezoneResult.rows[0].timezone) === today);
-    const latestDecision = await this.latestDecision(client, userId);
+    const latestDecision = await this.latestDecision(client, userId, now);
     const dog = dogResult.rows[0];
     return {
       user: userResult.rows[0],
-      dog: { id: dog.id, name: dog.name, mood: dog.mood, heart: input.dog.heart, streak: input.dog.streak },
+      dog: { id: dog.id, name: dog.name, mood: selectDogMood(input.dog.heart, latestDecision), heart: input.dog.heart, streak: input.dog.streak },
       doses: input.doses,
       healthMetrics,
       bloodPressureLoggedToday: healthMetrics.length > 0,
@@ -401,7 +443,7 @@ export class PawtnerRepository {
        ORDER BY recorded_at DESC LIMIT 10`,
       [userId, start, today, person.timezone],
     );
-    const latestDecision = await this.latestDecision(this.pool, userId);
+    const latestDecision = await this.latestDecision(this.pool, userId, now);
     const input = await this.loadInput(this.pool, userId, now);
     const stats = scheduleStats.rows[0];
     const walks = walkStats.rows[0];
@@ -413,7 +455,7 @@ export class PawtnerRepository {
       period: { start, end: today },
       senior: { id: person.user_id, name: person.senior_name },
       caregiver: person.caregiver_id ? { id: person.caregiver_id, name: person.caregiver_name } : null,
-      dog: { id: person.dog_id, name: person.dog_name, mood: person.mood, heart: input.dog.heart, streak: input.dog.streak },
+      dog: { id: person.dog_id, name: person.dog_name, mood: selectDogMood(input.dog.heart, latestDecision), heart: input.dog.heart, streak: input.dog.streak },
       careScore,
       caringDays: Math.max(stats.completed_days, 0),
       dosesTaken: stats.doses_taken,

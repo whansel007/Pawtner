@@ -8,7 +8,7 @@ Built for the Tencent Cloud AI CAN DO IT Hackathon Singapore 2026, healthcare tr
 
 Rules decide; the model only words things. Every current decision has pre-written wording. Model wording is optional, has a timeout, and falls back to the template on missing keys, timeouts, or errors. `emergency_995` never calls the model. No model integration or network call is currently configured.
 
-Thresholds and symptom terms are in [`shared/config.ts`](shared/config.ts). The API contract is in [`shared/contract.ts`](shared/contract.ts) and was reviewed against the exported UI. The mobile UI is now wired to the API for today's doses, dose events, blood pressure entry, walks, caregiver summary, and weekly summary. Other screens still use their existing prototype data.
+Thresholds and symptom terms are in [`shared/config.ts`](shared/config.ts). The API contract is in [`shared/contract.ts`](shared/contract.ts) and was reviewed against the exported UI. The mobile UI is now wired to the API for today's doses, dose events, blood pressure entry, walks, caregiver summary, weekly summary, and caretaker escalation settings. Settings includes a demo clock that evaluates the agent rules; Home shows the decision log. Other screens still use their existing prototype data.
 
 ## Architecture
 
@@ -34,6 +34,8 @@ cp .env.example .env
 ```
 
 Set `DATABASE_URL` to the pooled PostgreSQL URL and `DATABASE_URL_DIRECT` for migration/seed commands. Apply the schema and fictional seed with `npm run db:migrate` and `npm run db:seed`. Run `npm run typecheck` and `npm run test:unit` without a database. Set `DATABASE_URL` to run `npm run test:integration`; integration tests skip when it is empty.
+
+To refresh the HSA registered therapeutic product catalog, apply migrations and run `npm run db:import:hsa-products`. The importer downloads the official data.gov.sg dataset, validates a nonempty response, and replaces the catalog in a single database transaction. Search it with `GET /api/products/search?q=...`; searches shorter than two characters return no matches. The imported register is a lookup aid and does not establish that a product is appropriate for an individual.
 
 Start the API with `npm run dev` and the UI in a second terminal with `npm run dev:mobile`. Vite proxies `/api` requests to `http://localhost:3001`. Seed the configured database before opening the UI. The proof scanner and walk tracking remain prototype interactions; no image is uploaded and no GPS distance is collected.
 

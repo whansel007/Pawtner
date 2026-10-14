@@ -9,6 +9,8 @@ Updated 2026-10-14. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 |---|---|---|---|
 | T1-08 | Home schedule card, names from data | P2 / CodeBuddy | Wired to `/api/today`; upcoming reminders remain mock. |
 | T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Posts dose event and derives status from ledger; scanner/photo is still a prototype. |
+| T1-11 | In-app nudge + demo clock | P2 | Settings demo clock runs the deterministic agent; dose nudges are capped at two per occurrence. |
+| T1-12 | Decision log card | P2 | Home shows latest wording, observations, rule, reasoning, and wording source. |
 | T1-13 | Dog mood on Home | P2 | Shared dog mood fed from API state; visual moods remain motion/glow. |
 | T1-17 | Public HTTPS URL | P2 (+ P1 API) | Vercel previews work. Production host not decided; production URL serves an older build. |
 | T1-18 | Dog assets | Design | Base dog + garden day/night done. 4-mood sheet not started. |
@@ -18,10 +20,8 @@ Updated 2026-10-14. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 | ID | Item | Owner | Note |
 |---|---|---|---|
 | T1-07 | APIs (today, dose event, health metric, agent decide, caretaker summary, escalation, walk) | P1 | Implemented in `api/`; integration test covers today, BP emergency rule and dose event. |
-| T1-10 | BP log + 185/120 "bad headache" → calm 995 message, attentive dog | P2 | BP entry posts to API; fixed emergency wording uses template. Full UI decision-log flow remains pending. |
-| T1-11 | In-app nudge + demo clock | P2 | Not started. |
-| T1-12 | Decision log card | P2 | Not started. |
-| T1-15 | `/care` weekly summary + escalation settings | P2 | Care and weekly summary use backend aggregates; escalation endpoints exist, settings controls remain pending. |
+| T1-10 | BP log + 185/120 "bad headache" → calm 995 message, attentive dog | P2 | BP entry posts to API; fixed emergency wording and attentive mood appear in the Home decision log. |
+| T1-15 | `/care` weekly summary + escalation settings | P2 | Care and weekly summary use backend aggregates; consent and threshold save through the API (minimum two). |
 | T1-16 | "Simulate walk" (dizzy on the fast stretch) | P2 | Walk completion posts a simulated session; no GPS or distance capture. |
 
 ## In repo, owned by P1 (not re-verified by the advisor)
@@ -47,7 +47,6 @@ Updated 2026-10-14. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 
 | Item | Blocked on |
 |---|---|
-| Wiring the phone app to real data (T1-08 to T1-12, T1-15, T1-16) | T1-07 APIs and the hosting decision (P1) |
 | T1-17 production URL | Hosting choice: EdgeOne Pages vs Vercel (P1) |
 
 ## Kept in view (KIV) / follow-ups
@@ -55,7 +54,6 @@ Updated 2026-10-14. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 | Item | Note |
 |---|---|
 | Dedication cross-fade into Home | Deferred by the user; needs Home rendered under the dedication overlay. |
-| `README.md` is stale | Says the Vite app is not implemented. |
 | `CLAUDE.md` paths | Points to `docs/PRD.md` and `docs/ARCHITECTURE.md`; the PRD is at the repo root and ARCHITECTURE.md doesn't exist. |
 | `docs/ARCHITECTURE.md`, `docs/BRIEF.md`, `docs/DOG_BIBLE.md` missing | Referenced by the PRD. |
 | `mobile/.vercel` | Old link from `mobile/`; deploys must run from the repo root. Remove later. |

@@ -14,6 +14,11 @@ export function createApiHandler(repository: PawtnerRepository) {
       const url = new URL(request.url);
       const now = url.searchParams.get("now") ?? new Date().toISOString();
       if (!validDate(now)) throw new ApiError(400, "now must be an ISO date.");
+      if (request.method === "GET" && url.pathname === "/api/products/search") {
+        const query = url.searchParams.get("q") ?? "";
+        if (query.length > 120) throw new ApiError(400, "q must be at most 120 characters.");
+        return json(await repository.searchRegisteredProducts(query));
+      }
       if (request.method === "GET" && url.pathname === "/api/today") return json(await repository.getToday(now));
       if (request.method === "GET" && url.pathname === "/api/caretaker/summary") return json(await repository.getCaretakerSummary(now));
       if (request.method === "GET" && url.pathname === "/api/escalation-settings") return json(await repository.getEscalationSettings());

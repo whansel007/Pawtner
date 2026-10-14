@@ -11,6 +11,7 @@
     "demo:rules": "tsx scripts/demo-rules.ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
+    "db:import:hsa-products": "tsx scripts/import-hsa-products.ts",
     "dev": "tsx watch api/server.ts",
     "dev:mobile": "npm --prefix mobile run dev"
   },
