@@ -1,10 +1,10 @@
 import type { Caregiver, CareActivity, RestockAlert, WeekSummary, BloodPressureReading, ScreeningInfo, ActivityLink, ClinicTask } from "../types";
 
 export const caregiver: Caregiver = {
-  names: "Mum + Jamie",
+  names: "Jamie · Alex",
   caretakerName: "Jamie",
-  relationship: "Two people, one Max",
-  status: "Connected",
+  relationship: "Jamie gets check-ins, Alex gets updates only",
+  status: "Gets check-ins",
 };
 
 export const careActivity: CareActivity = {
