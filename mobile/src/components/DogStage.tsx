@@ -1,16 +1,15 @@
 import { type CSSProperties, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
 import type { DogMood } from "../../../shared/contract";
 import { DOG_IMAGE_BY_MOOD, MOOD_LOOKS } from "../config/scene";
 import { useImageAvailable } from "../lib/useImageAvailable";
-import { BUBBLE_LINE_KEYS, type PetReactionKind } from "../config/pet";
+import { HEART_BURST_COUNT, type PetReactionKind } from "../config/pet";
 import { Icon } from "./Icon";
 import "./DogStage.css";
 
 /**
  * Presentational: receives the current reaction as a prop and renders it.
  * Layers, back to front: glow → cast shadow → contact shadow → dog (+ accessory overlay)
- * → reaction overlay (hearts, bubble).
+ * → reaction overlay (hearts, dizzy stars). The speech bubble lives outside the dog (PetBubble), so it never covers the head.
  */
 export function DogStage({
   mood,
@@ -18,7 +17,6 @@ export function DogStage({
   dizzy,
   onPet,
   reaction,
-  bubbleLineIndex,
   accessory,
 }: {
   mood: DogMood;
@@ -26,10 +24,8 @@ export function DogStage({
   dizzy?: boolean;
   onPet?: () => void;
   reaction?: PetReactionKind | null;
-  bubbleLineIndex?: number;
   accessory?: ReactNode;
 }) {
-  const { t } = useTranslation();
   const src = DOG_IMAGE_BY_MOOD[mood];
   const image = useImageAvailable(src);
   const look = MOOD_LOOKS[mood];
@@ -38,9 +34,6 @@ export function DogStage({
 
   const reactionClass = reaction ? ` is-${reaction}` : "";
   const dizzyClass = dizzy ? " is-dizzy" : "";
-  const bubbleLine = reaction === "bubble" && bubbleLineIndex !== undefined
-    ? t(`pet.lines.${BUBBLE_LINE_KEYS[bubbleLineIndex % BUBBLE_LINE_KEYS.length]}`, { name: dogName })
-    : "";
 
   return (
     <div className={`dog-stage dog-stage--${mood}`} style={{ "--dog-glow": look.glow } as CSSProperties}>
@@ -50,21 +43,21 @@ export function DogStage({
         <span className="dog-stage__contact-shadow" aria-hidden="true" />
         {reaction === "hearts" && (
           <span className="dog-stage__hearts" aria-hidden="true">
-            <span className="dog-stage__heart dog-stage__heart--1"><Icon name="heart" size={20} /></span>
-            <span className="dog-stage__heart dog-stage__heart--2"><Icon name="heart" size={20} /></span>
-            <span className="dog-stage__heart dog-stage__heart--3"><Icon name="heart" size={20} /></span>
+            {Array.from({ length: HEART_BURST_COUNT }, (_, index) => (
+              <span className={`dog-stage__heart dog-stage__heart--${index + 1}`} key={index}><Icon name="heart" size={30} /></span>
+            ))}
           </span>
         )}
-        {reaction === "bubble" && (
-          <div className="dog-stage__bubble" aria-live="polite" role="status">
-            {bubbleLine}
-          </div>
-        )}
         {dizzy && (
+          // Each star rides two nested movers (x and y, a quarter-cycle apart), which traces an ellipse around the head.
           <span className="dog-stage__stars" aria-hidden="true">
-            <span className="dog-stage__star dog-stage__star--1"><Icon name="star" size={16} /></span>
-            <span className="dog-stage__star dog-stage__star--2"><Icon name="star" size={14} /></span>
-            <span className="dog-stage__star dog-stage__star--3"><Icon name="star" size={12} /></span>
+            {[1, 2, 3].map((star) => (
+              <span className={`dog-stage__orbit dog-stage__orbit--${star}`} key={star}>
+                <span className="dog-stage__orbit-y">
+                  <span className="dog-stage__star"><Icon name="star" size={26} /></span>
+                </span>
+              </span>
+            ))}
           </span>
         )}
         <button

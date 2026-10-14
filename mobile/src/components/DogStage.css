@@ -90,11 +90,11 @@
 /* hop: a short jump with squash */
 .dog-stage__pet.is-hop .dog-stage__body { animation: pet-hop 0.6s ease-out; }
 
-/* hearts: 3 small hearts rise and fade (decoration only) */
+/* hearts: a burst of 5 filled hearts pops above the head, rises and fades (decoration only) */
 .dog-stage__hearts {
   position: absolute;
   left: 50%;
-  top: 0;
+  top: 4%;
   width: 0;
   height: 0;
   pointer-events: none;
@@ -103,37 +103,25 @@
 
 .dog-stage__heart {
   position: absolute;
-  color: #e85a6a;
+  left: var(--heart-x, 0px);
+  color: #ef5a6f;
   opacity: 0;
-  transform: translateX(-50%) translateY(0) scale(0.5);
+  transform: translate(-50%, 10px) scale(0.4);
+  animation: heart-burst 1.05s cubic-bezier(0.2, 0.7, 0.3, 1) var(--heart-delay, 0s) forwards;
 }
 
-.dog-stage__heart--1 { left: -18px; animation: heart-rise 1.2s ease-out forwards; }
-.dog-stage__heart--2 { left: 0; animation: heart-rise 1.2s ease-out 0.15s forwards; }
-.dog-stage__heart--3 { left: 18px; animation: heart-rise 1.2s ease-out 0.3s forwards; }
-
-/* bubble: speech bubble above the dog */
-.dog-stage__bubble {
-  position: absolute;
-  left: 50%;
-  bottom: 72%;
-  transform: translateX(-50%);
-  width: max-content;
-  max-width: min(60cqw, 220px);
-  min-width: 120px;
-  padding: 10px 14px;
-  border-radius: 16px 16px 16px 4px;
-  background: white;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  line-height: 1.3;
-  color: #2a4a36;
-  text-align: center;
-  white-space: normal;
-  z-index: 6;
-  pointer-events: none;
+.dog-stage__heart svg {
+  fill: currentColor;
+  stroke: white;
+  stroke-width: 1.4;
+  filter: drop-shadow(0 2px 3px rgba(80, 20, 30, 0.3));
 }
+
+.dog-stage__heart--1 { --heart-x: -46px; --heart-drift: -14px; --heart-delay: 0s; }
+.dog-stage__heart--2 { --heart-x: -22px; --heart-drift: -6px; --heart-delay: 0.08s; }
+.dog-stage__heart--3 { --heart-x: 0px; --heart-drift: 0px; --heart-delay: 0.16s; }
+.dog-stage__heart--4 { --heart-x: 22px; --heart-drift: 6px; --heart-delay: 0.24s; }
+.dog-stage__heart--5 { --heart-x: 46px; --heart-drift: 14px; --heart-delay: 0.3s; }
 
 @keyframes dog-breathe {
   0%, 100% { transform: scale(1, 1); }
@@ -160,10 +148,11 @@
   100% { transform: translateY(0) scale(1, 1); }
 }
 
-@keyframes heart-rise {
-  0% { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.5); }
-  20% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(-50%) translateY(-50px) scale(1); }
+@keyframes heart-burst {
+  0% { opacity: 0; transform: translate(-50%, 10px) scale(0.4); }
+  16% { opacity: 1; transform: translate(-50%, -12px) scale(1.25); }
+  32% { opacity: 1; transform: translate(-50%, -30px) scale(1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--heart-drift, 0px)), -110px) scale(1.05); }
 }
 
 /* ── Dizzy state: slow wobble + circling stars ── */
@@ -171,36 +160,52 @@
   animation: dog-dizzy-wobble 2s ease-in-out infinite;
 }
 
+/*
+ * Dizzy stars: a halo above the head. The box is the orbit's ellipse (90% of the dog wide, 18% tall, never smaller
+ * than the stars need), centred a little above the top of the head so the stars ride clear of the ears. Each star rides an x mover and a y mover (ease-in-out, a quarter-cycle apart),
+ * which traces the ellipse; a depth pulse makes the far side smaller. Transform and opacity only.
+ */
 .dog-stage__stars {
+  --orbit-half: 1.2s; /* half of one lap */
   position: absolute;
   left: 50%;
-  top: 10%;
-  width: 0;
-  height: 0;
+  top: -12%;
+  width: max(90%, 96px);
+  height: max(18%, 22px);
+  transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 5;
 }
 
+.dog-stage__orbit,
+.dog-stage__orbit-y {
+  position: absolute;
+  inset: 0;
+}
+
+.dog-stage__orbit { animation: star-orbit-x var(--orbit-half) ease-in-out var(--orbit-delay, 0s) infinite alternate; }
+.dog-stage__orbit-y { animation: star-orbit-y var(--orbit-half) ease-in-out calc(var(--orbit-delay, 0s) - var(--orbit-half) / 2) infinite alternate; }
+
+/* Three stars a third of a lap apart. */
+.dog-stage__orbit--1 { --orbit-delay: 0s; }
+.dog-stage__orbit--2 { --orbit-delay: calc(var(--orbit-half) * -2 / 3); }
+.dog-stage__orbit--3 { --orbit-delay: calc(var(--orbit-half) * -4 / 3); }
+
 .dog-stage__star {
   position: absolute;
-  color: #ffd383;
-  opacity: 0;
-  transform: translateX(-50%) scale(0.5);
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  color: #4a2c00;
+  animation: star-depth var(--orbit-half) ease-in-out calc(var(--orbit-delay, 0s) - var(--orbit-half) / 2) infinite alternate;
 }
 
-.dog-stage__star--1 {
-  left: -24px;
-  animation: star-orbit 2s linear infinite;
-}
-
-.dog-stage__star--2 {
-  left: 0;
-  animation: star-orbit 2.4s linear 0.4s infinite;
-}
-
-.dog-stage__star--3 {
-  left: 24px;
-  animation: star-orbit 2.8s linear 0.8s infinite;
+.dog-stage__star svg {
+  display: block;
+  fill: #ffc531;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  filter: drop-shadow(0 1px 2px rgba(30, 18, 0, 0.55));
 }
 
 @keyframes dog-dizzy-wobble {
@@ -208,28 +213,38 @@
   50% { transform: rotate(3deg); }
 }
 
-@keyframes star-orbit {
-  0% { opacity: 0; transform: translateX(-50%) translateY(0) rotate(0deg) scale(0.5); }
-  15% { opacity: 1; }
-  85% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(-50%) translateY(-40px) rotate(180deg) scale(1); }
+@keyframes star-orbit-x {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(50%); }
+}
+
+@keyframes star-orbit-y {
+  from { transform: translateY(-50%); }
+  to { transform: translateY(50%); }
+}
+
+/* Far side (top of the ellipse) is smaller and dimmer; near side is full size. */
+@keyframes star-depth {
+  from { transform: scale(0.72); opacity: 0.8; }
+  to { transform: scale(1.12); opacity: 1; }
 }
 
 /* Same specificity as the mood rules above, and later in the file, so this wins. */
 @media (prefers-reduced-motion: reduce) {
   .dog-stage .dog-stage__body,
   .dog-stage__pet.is-hop .dog-stage__body,
-  .dog-stage__heart--1,
-  .dog-stage__heart--2,
-  .dog-stage__heart--3,
+  .dog-stage__heart,
   .dog-stage__pet.is-dizzy .dog-stage__body,
-  .dog-stage__star--1,
-  .dog-stage__star--2,
-  .dog-stage__star--3 {
+  .dog-stage__orbit,
+  .dog-stage__orbit-y,
+  .dog-stage__star {
     animation: none;
   }
-  .dog-stage__heart,
-  .dog-stage__star {
+  .dog-stage__heart {
     opacity: 0;
   }
+  /* Still fallback: three stars resting in an arc above the head. */
+  .dog-stage__orbit--1 { transform: translate(-38%, 10%); }
+  .dog-stage__orbit--2 { transform: translateY(-40%); }
+  .dog-stage__orbit--3 { transform: translate(38%, 10%); }
 }
