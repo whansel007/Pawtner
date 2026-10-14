@@ -1021,7 +1021,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
     padding: var(--top-bar-space) var(--side-gutter) var(--scene-bottom) calc(var(--side-gutter) + env(safe-area-inset-left));
     overflow: visible;
   }
-  /* Show chips under the dog in the left column on every non-Home, non-Care screen.
+  /* Show chips under the dog in the left column on every screen with a landscape scene.
      Home keeps its own .home-layout__chips (the dog's ground line is measured from it) and the shared row is hidden on Home. */
   .scene-chips {
     position: absolute;
@@ -1031,7 +1031,6 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
     display: flex; /* re-enables the row in landscape; the shared rule already gives it justify + padding. */
   }
   .app-shell:has(.screen-home) .scene-chips { display: none; }
-  .app-shell:has(.screen-care) .scene-chips { display: none; }
 
   /* Right pane */
   .home-layout__cards {
