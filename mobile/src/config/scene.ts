@@ -1,13 +1,22 @@
 import type { DogMood } from "../../../shared/contract";
+import { getDayPhase, type DayPhase } from "../../../shared/day-phase";
 import type { Screen } from "../types";
 
 /**
  * One place for every scene asset, look and dog placement rule. Swap images and tune sizes here, not in components.
  */
 
-export type DayPhase = "day" | "night";
+export type { DayPhase };
 
-/** Phase is fixed to day until T2-10 (sun / moon by local time) ships its shared helper. */
+/**
+ * T2-10: Sun/moon by local time. Uses the shared helper so the same logic
+ * applies everywhere. Falls back to "day" if timezone is unknown.
+ */
+export function phaseFromTime(now: string, timezone: string): DayPhase {
+  return getDayPhase(now, timezone);
+}
+
+/** Default phase used before the API reports a time. */
 export const DEFAULT_PHASE: DayPhase = "day";
 
 /**

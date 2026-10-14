@@ -21,7 +21,7 @@ import { DedicationScreen } from "./screens/DedicationScreen";
 import { BottomNav } from "./screens/BottomNav";
 import { DesktopBackdrop, SceneBackdrop } from "./components/SceneBackdrop";
 import { DogLayer } from "./components/DogLayer";
-import { DEFAULT_PHASE } from "./config/scene";
+import { DEFAULT_PHASE, phaseFromTime } from "./config/scene";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
 import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, EscalationSettingsResponse, HealthMetric, TodayResponse } from "../../shared/contract";
@@ -36,9 +36,6 @@ import {
   todayDoses,
   demoUser,
   demoDog,
-  medication,
-  medicationExplanation,
-  nudgeSettings,
   weekSummary,
   bloodPressureReading,
   screeningInfo,
@@ -47,9 +44,6 @@ import {
   caregiver,
   careActivity,
   restockAlert,
-  currentWorld,
-  tricks,
-  souvenirs,
   worldOptions,
   accessoryOptions,
   walkStats,
@@ -82,6 +76,8 @@ export default function App() {
   const [demoClockValue, setDemoClockValue] = useState(() => toDateTimeLocal(new Date()));
   const [agentBusy, setAgentBusy] = useState(false);
   const [escalationSettings, setEscalationSettings] = useState<EscalationSettingsResponse | null>(null);
+  const [savedMedicationId, setSavedMedicationId] = useState<string | undefined>(undefined);
+  const [savedMedicationName, setSavedMedicationName] = useState<string>("");
 
   const refreshToday = async (now?: string) => {
     try { const result = await api.today(now ?? demoNow ?? undefined); setToday(result); setDoseList(result.doses); setBpLogged(result.bloodPressureLoggedToday); setLatestDecision(result.latestDecision); apiWarned.current = false; }
@@ -94,9 +90,11 @@ export default function App() {
   }, [screen]);
 
   const takenCount = doseList.filter((d) => d.status === "taken").length;
+  const pendingDose = doseList.find((item) => item.id === pendingDoseId);
   const heartCount = today?.dog.heart ?? Math.min(DEMO_RULES.heartMaximum, 1 + takenCount + (bpLogged ? 1 : 0));
   const mood = today ? today.dog.mood : selectDogMood(heartCount, latestDecision);
-  const phase = DEFAULT_PHASE;
+  // T2-10: sun/moon by local time using shared helper
+  const phase = demoNow ? (() => { try { return phaseFromTime(demoNow, "Asia/Singapore"); } catch { return DEFAULT_PHASE; } })() : DEFAULT_PHASE;
 
   // Names come from data unchanged — no .toLowerCase().
   const dogName = today?.dog.name ?? pet.name;
@@ -209,6 +207,45 @@ export default function App() {
     }
   }
 
+  /** Caretaker treat: posts to the API; the toast shows either way so the demo beat never stalls. */
+  async function handleSendTreat() {
+    try { await api.sendTreat(); } catch { /* demo: still confirm the treat */ }
+    notify(t("toast.treatSent", { name: dogName }));
+  }
+
+  /** Prescription "Explain this medicine": remember the name, then drill into the explanation. */
+  function handleExplainMedicine(medicineName: string) {
+    setSavedMedicationName(medicineName);
+    navigate("explanation");
+  }
+
+  /** A medication was saved: keep its id for the schedule step and refresh today's doses. */
+  function handleMedicationSaved(medicationId?: string) {
+    setSavedMedicationId(medicationId);
+    void refreshToday();
+  }
+
+  /** Schedule confirmed: back Home with a nudge toast, then refresh so new doses appear. */
+  function handleScheduleConfirmed() {
+    navigate("home");
+    notify(t("toast.nudgeSet", { name: dogName }));
+    void refreshToday();
+  }
+
+  /** Proof verified: record the pending dose as taken, then return Home with a heart. */
+  async function handleDoseVerified() {
+    if (!pendingDose) return;
+    try {
+      const result = await api.doseEvent({ scheduleId: pendingDose.id, scheduledFor: pendingDose.scheduledAt, event: "taken", occurredAt: demoNow ?? new Date().toISOString() });
+      setToday(result.today);
+      setDoseList(result.today.doses);
+      navigate("home");
+      notify(t("toast.heartGained", { name: dogName }));
+    } catch (error) {
+      reportApiProblem(error, true);
+    }
+  }
+
   const runAgentAtDemoTime = async () => {
     const parsed = new Date(demoClockValue);
     if (!Number.isFinite(parsed.getTime())) return;
@@ -265,14 +302,14 @@ export default function App() {
             decision={latestDecision}
           />
         )}
-        {screen === "care" && <CareScreen back={back} sendTreat={() => notify(t("toast.treatSent", { name: dogName }))} pet={livePet} caregiver={liveCaregiver} careActivity={liveCareActivity} restockAlert={restockAlert} />}
+        {screen === "care" && <CareScreen back={back} sendTreat={handleSendTreat} pet={livePet} caregiver={liveCaregiver} careActivity={liveCareActivity} restockAlert={restockAlert} />}
         {screen === "reminders" && <RemindersScreen back={back} doses={doses} />}
-        {screen === "prescription" && <PrescriptionScreen back={back} onExplain={() => navigate("explanation")} medication={medication} petName={dogName} />}
-        {screen === "explanation" && <ExplanationScreen back={back} onContinue={() => navigate("schedule")} medicationExplanation={medicationExplanation} />}
-        {screen === "schedule" && <ScheduleScreen back={back} onConfirm={() => { navigate("home"); notify(t("toast.nudgeSet", { name: dogName })); }} nudgeSettings={nudgeSettings} petName={dogName} />}
-        {screen === "proof" && <ProofScreen back={back} onVerified={async () => { const dose = doseList.find((item) => item.id === pendingDoseId); if (!dose) return; try { const result = await api.doseEvent({ scheduleId: dose.id, scheduledFor: dose.scheduledAt, event: "taken", occurredAt: demoNow ?? new Date().toISOString() }); setToday(result.today); setDoseList(result.today.doses); navigate("home"); notify(t("toast.heartGained", { name: dogName })); } catch (error) { reportApiProblem(error, true); } }} medication={medication} petName={dogName} />}
+        {screen === "prescription" && <PrescriptionScreen back={back} onHome={goHome} onExplain={handleExplainMedicine} onSaved={handleMedicationSaved} petName={dogName} />}
+        {screen === "explanation" && <ExplanationScreen back={back} onContinue={() => navigate("schedule")} medicineName={savedMedicationName} />}
+        {screen === "schedule" && <ScheduleScreen back={back} onConfirm={handleScheduleConfirmed} petName={dogName} medicationId={savedMedicationId} />}
+        {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} />}
         {screen === "walk" && <WalkScreen back={back} walkStats={walkStats} petName={dogName} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
-        {screen === "milestones" && <MilestonesScreen back={back} onWalk={() => navigate("walk")} onCustomize={() => navigate("customize")} pet={livePet} currentWorld={currentWorld} tricks={tricks} souvenirs={souvenirs} petName={dogName} />}
+        {screen === "milestones" && <MilestonesScreen back={back} onWalk={() => navigate("walk")} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} />}
         {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }], doctorQuestion: careSummary.doctorQuestions[0]?.note ?? weekSummary.doctorQuestion } : weekSummary} />}

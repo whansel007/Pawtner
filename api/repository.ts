@@ -4,10 +4,16 @@ import { DEMO_RULES } from "../shared/config.js";
 import { decide, selectDogMood } from "../shared/rules.js";
 import { selectAgentInput, type AgentSelectionSource } from "../shared/selectors.js";
 import { applyModelWording } from "../shared/wording.js";
+import { SOUVENIR_TIERS, unlockedSouvenirs, nextSouvenir } from "../shared/souvenirs.js";
+import { FALLBACK_EXPLANATION, HEALTHHUB_MEDICATIONS_URL, NDF_URL, validateRephrase } from "../shared/medlineplus.js";
 import type {
   AgentDecision,
   AgentInput,
   CaretakerSummaryResponse,
+  CreateMedicationRequest,
+  CreateMedicationResponse,
+  CreateScheduleRequest,
+  CreateScheduleResponse,
   DoseEvent,
   DoseEventRequest,
   DoseEventResponse,
@@ -16,7 +22,13 @@ import type {
   HealthMetric,
   HealthMetricRequest,
   HealthMetricResponse,
+  MedicationDetail,
+  MedicationListResponse,
+  MedicineExplanationResponse,
+  MilestonesResponse,
+  SouvenirResponse,
   TodayResponse,
+  TreatResponse,
   WalkSessionRequest,
   WalkSessionResponse,
 } from "../shared/contract.js";
@@ -35,6 +47,7 @@ export interface RegisteredProduct {
   dosageForm: string | null;
   routeOfAdministration: string | null;
   forensicClassification: string | null;
+  activeIngredients: string | null;
   sourceAttribution: string;
 }
 
@@ -100,6 +113,22 @@ function mapEvent(row: QueryResultRow): DoseEvent {
   };
 }
 
+function mapMedication(row: QueryResultRow): MedicationDetail {
+  return {
+    id: row.id,
+    name: row.name,
+    strength: row.strength,
+    dosageForm: row.dosage_form ?? null,
+    routeOfAdministration: row.route_of_administration ?? null,
+    activeIngredients: row.active_ingredients ?? null,
+    genericName: row.generic_name ?? null,
+    prescribedFor: row.prescribed_for ?? null,
+    daysOfSupply: row.days_of_supply ?? null,
+    photoUrl: row.photo_url ?? null,
+    active: row.active,
+  };
+}
+
 export class PawtnerRepository {
   constructor(private readonly pool: Pool) {}
 
@@ -108,11 +137,17 @@ export class PawtnerRepository {
     if (term.length < 2) return { query: query.trim(), products: [] };
     const result = await this.pool.query(
       `SELECT id::text AS id, brand_name, generic_name, strength, dosage_form,
-              route_of_administration, forensic_classification, source_attribution
+              route_of_administration, forensic_classification, active_ingredients, source_attribution
        FROM sg_registered_products
-       WHERE brand_name ILIKE $1 ESCAPE '!' OR COALESCE(generic_name, '') ILIKE $1 ESCAPE '!'
-       ORDER BY CASE WHEN lower(brand_name) = lower($2) OR lower(generic_name) = lower($2) THEN 0
-                     WHEN brand_name ILIKE $3 ESCAPE '!' OR COALESCE(generic_name, '') ILIKE $3 ESCAPE '!' THEN 1
+       WHERE brand_name ILIKE $1 ESCAPE '!'
+          OR COALESCE(generic_name, '') ILIKE $1 ESCAPE '!'
+          OR COALESCE(active_ingredients, '') ILIKE $1 ESCAPE '!'
+       ORDER BY CASE WHEN lower(brand_name) = lower($2)
+                        OR lower(generic_name) = lower($2)
+                        OR lower(active_ingredients) = lower($2) THEN 0
+                     WHEN brand_name ILIKE $3 ESCAPE '!'
+                       OR COALESCE(generic_name, '') ILIKE $3 ESCAPE '!'
+                       OR COALESCE(active_ingredients, '') ILIKE $3 ESCAPE '!' THEN 1
                      ELSE 2 END,
                 brand_name
        LIMIT 20`,
@@ -128,6 +163,7 @@ export class PawtnerRepository {
         dosageForm: row.dosage_form,
         routeOfAdministration: row.route_of_administration,
         forensicClassification: row.forensic_classification,
+        activeIngredients: row.active_ingredients,
         sourceAttribution: row.source_attribution,
       })),
     };
@@ -519,6 +555,34 @@ export class PawtnerRepository {
       );
       const { decision } = await this.decideAndPersist(client, userId, request.finishedAt, undefined, { walkFinished: true });
       const row = result.rows[0];
+
+      // T2-09: unlock souvenirs based on cumulative walk distance
+      const cumulativeResult = await client.query(
+        "SELECT COALESCE(sum(distance_meters), 0)::int AS total FROM walk_sessions WHERE user_id = $1",
+        [userId],
+      );
+      const cumulative = cumulativeResult.rows[0].total;
+      const shouldUnlock = unlockedSouvenirs(cumulative);
+      let souvenirId: string | null = null;
+      if (shouldUnlock.length > 0) {
+        // Insert any newly unlocked souvenirs
+        for (const key of shouldUnlock) {
+          const existing = await client.query(
+            "SELECT 1 FROM souvenirs WHERE user_id = $1 AND souvenir_key = $2",
+            [userId, key],
+          );
+          if (!existing.rowCount) {
+            const souvenirIdRow = randomUUID();
+            await client.query(
+              "INSERT INTO souvenirs (id, user_id, souvenir_key, unlocked_at) VALUES ($1, $2, $3, $4)",
+              [souvenirIdRow, userId, key, request.finishedAt],
+            );
+            // Return the last newly unlocked one
+            souvenirId = souvenirIdRow;
+          }
+        }
+      }
+
       return {
         id: row.id,
         startedAt: iso(row.started_at),
@@ -526,8 +590,393 @@ export class PawtnerRepository {
         distanceMeters: row.distance_meters,
         fastStretchOccurred: row.fast_stretch_occurred,
         decision,
-        souvenirId: null,
+        souvenirId,
       };
     });
+  }
+
+  // ── T2-02 / T2-06: Medication CRUD ──
+
+  async listMedications(): Promise<MedicationListResponse> {
+    const userId = await this.getDefaultUserId();
+    const result = await this.pool.query(
+      `SELECT id::text, name, strength, dosage_form, route_of_administration,
+              active_ingredients, generic_name, prescribed_for, days_of_supply,
+              photo_url, active
+       FROM medications WHERE user_id = $1 ORDER BY created_at`,
+      [userId],
+    );
+    return { medications: result.rows.map(mapMedication) };
+  }
+
+  async createMedication(request: CreateMedicationRequest): Promise<CreateMedicationResponse> {
+    return this.transaction(async (client) => {
+      const userId = await this.getDefaultUserId(client);
+      if (!request.name?.trim()) throw new ApiError(400, "Medicine name is required.");
+      if (request.name.length > 200) throw new ApiError(400, "Medicine name must be at most 200 characters.");
+      const id = randomUUID();
+      const result = await client.query(
+        `INSERT INTO medications
+           (id, user_id, name, strength, dosage_form, route_of_administration,
+            active_ingredients, generic_name, prescribed_for, days_of_supply, photo_url)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         RETURNING id::text, name, strength, dosage_form, route_of_administration,
+                   active_ingredients, generic_name, prescribed_for, days_of_supply,
+                   photo_url, active`,
+        [
+          id, userId, request.name.trim(),
+          request.strength?.trim() || null,
+          request.dosageForm?.trim() || null,
+          request.routeOfAdministration?.trim() || null,
+          request.activeIngredients?.trim() || null,
+          request.genericName?.trim() || null,
+          request.prescribedFor?.trim() || null,
+          Number.isInteger(request.daysOfSupply) ? request.daysOfSupply : null,
+          request.photoUrl?.trim() || null,
+        ],
+      );
+      return { medication: mapMedication(result.rows[0]) };
+    });
+  }
+
+  async updateMedication(medicationId: string, request: Partial<CreateMedicationRequest>): Promise<{ medication: MedicationDetail }> {
+    return this.transaction(async (client) => {
+      const userId = await this.getDefaultUserId(client);
+      const existing = await client.query(
+        "SELECT 1 FROM medications WHERE id = $1 AND user_id = $2",
+        [medicationId, userId],
+      );
+      if (!existing.rowCount) throw new ApiError(404, "Medication not found.");
+      const fields: string[] = [];
+      const params: unknown[] = [];
+      const fieldMap: Record<string, string> = {
+        name: "name",
+        strength: "strength",
+        dosageForm: "dosage_form",
+        routeOfAdministration: "route_of_administration",
+        activeIngredients: "active_ingredients",
+        genericName: "generic_name",
+        prescribedFor: "prescribed_for",
+        daysOfSupply: "days_of_supply",
+        photoUrl: "photo_url",
+      };
+      let paramIndex = 1;
+      for (const [key, column] of Object.entries(fieldMap)) {
+        if (key in request && request[key as keyof CreateMedicationRequest] !== undefined) {
+          const value = request[key as keyof CreateMedicationRequest];
+          fields.push(`${column} = $${paramIndex++}`);
+          params.push(typeof value === "string" ? (value.trim() || null) : value ?? null);
+        }
+      }
+      if (fields.length === 0) throw new ApiError(400, "No fields to update.");
+      params.push(medicationId, userId);
+      const result = await client.query(
+        `UPDATE medications SET ${fields.join(", ")}
+         WHERE id = $${paramIndex++} AND user_id = $${paramIndex++}
+         RETURNING id::text, name, strength, dosage_form, route_of_administration,
+                   active_ingredients, generic_name, prescribed_for, days_of_supply,
+                   photo_url, active`,
+        params,
+      );
+      return { medication: mapMedication(result.rows[0]) };
+    });
+  }
+
+  async createSchedule(request: CreateScheduleRequest): Promise<CreateScheduleResponse> {
+    return this.transaction(async (client) => {
+      const userId = await this.getDefaultUserId(client);
+      if (!request.medicationId?.trim()) throw new ApiError(400, "medicationId is required.");
+      if (!request.scheduledTime?.trim()) throw new ApiError(400, "scheduledTime is required.");
+      if (!request.startsOn?.trim()) throw new ApiError(400, "startsOn is required.");
+      // Validate time format HH:MM
+      if (!/^\d{2}:\d{2}$/.test(request.scheduledTime)) throw new ApiError(400, "scheduledTime must be HH:MM.");
+      // Validate date format YYYY-MM-DD
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(request.startsOn)) throw new ApiError(400, "startsOn must be YYYY-MM-DD.");
+      if (request.endsOn && !/^\d{4}-\d{2}-\d{2}$/.test(request.endsOn)) throw new ApiError(400, "endsOn must be YYYY-MM-DD.");
+
+      // Ownership check
+      const owns = await client.query(
+        "SELECT 1 FROM medications WHERE id = $1 AND user_id = $2",
+        [request.medicationId, userId],
+      );
+      if (!owns.rowCount) throw new ApiError(404, "Medication not found for this user.");
+
+      const id = randomUUID();
+      const result = await client.query(
+        `INSERT INTO med_schedules (id, medication_id, scheduled_time, starts_on, ends_on)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id::text, medication_id::text, scheduled_time::text, starts_on::text, ends_on::text`,
+        [id, request.medicationId, request.scheduledTime, request.startsOn, request.endsOn ?? null],
+      );
+      const row = result.rows[0];
+      return {
+        schedule: {
+          id: row.id,
+          medicationId: row.medication_id,
+          scheduledTime: row.scheduled_time,
+          startsOn: row.starts_on,
+          endsOn: row.ends_on,
+        },
+      };
+    });
+  }
+
+  // ── T2-03: Medicine explanation ──
+
+  async getMedicineExplanation(medicineName: string): Promise<MedicineExplanationResponse> {
+    if (!medicineName?.trim()) throw new ApiError(400, "Medicine name is required.");
+
+    // For the demo, we use the fallback explanation from MedlinePlus module.
+    // A real implementation would fetch from MedlinePlus Connect API by generic name.
+    // The model may only rephrase this text; if no trusted text exists, show pharmacist referral.
+    const baseInfo = { ...FALLBACK_EXPLANATION, medicineName: medicineName.trim() };
+
+    // If an LLM API key is configured, attempt to rephrase the trusted text
+    if (process.env.LLM_API_KEY && process.env.LLM_BASE_URL) {
+      try {
+        const rephrased = await this.rephraseWithModel(baseInfo.summary + " " + baseInfo.points.map((p) => p.text).join(" "), medicineName);
+        if (rephrased) {
+          const validation = validateRephrase(baseInfo.summary + " " + baseInfo.points.map((p) => p.text).join(" "), rephrased);
+          if (validation.valid) {
+            return {
+              ...baseInfo,
+              summary: rephrased,
+              spokenText: rephrased,
+              wordingSource: "model",
+            };
+          }
+          // Rephrase rejected — show trusted source text
+        }
+      } catch {
+        // Model failed — fall through to trusted text
+      }
+    }
+
+    return {
+      medicineName: baseInfo.medicineName,
+      summary: baseInfo.summary,
+      points: baseInfo.points,
+      spokenText: baseInfo.spokenText,
+      sourceCredit: baseInfo.sourceCredit,
+      ndfUrl: NDF_URL,
+      healthHubUrl: HEALTHHUB_MEDICATIONS_URL,
+      wordingSource: "fallback",
+    };
+  }
+
+  private async rephraseWithModel(sourceText: string, medicineName: string): Promise<string | null> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3_000);
+    try {
+      const response = await fetch(`${process.env.LLM_BASE_URL}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${process.env.LLM_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: process.env.LLM_MODEL ?? "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "You rephrase trusted medicine information into warm, simple language for seniors. Do not add new numbers, doses, medicine names, or medical advice. Do not diagnose." },
+            { role: "user", content: `Rephrase this in one or two short sentences: ${sourceText}` },
+          ],
+          max_tokens: 150,
+        }),
+        signal: controller.signal,
+      });
+      if (!response.ok) return null;
+      const payload = await response.json() as { choices?: { message?: { content?: string } }[] };
+      const text = payload.choices?.[0]?.message?.content?.trim();
+      return text || null;
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  // ── T2-09: Souvenirs ──
+
+  async getSouvenirs(): Promise<SouvenirResponse> {
+    const userId = await this.getDefaultUserId();
+    const walkResult = await this.pool.query(
+      "SELECT COALESCE(sum(distance_meters), 0)::int AS total FROM walk_sessions WHERE user_id = $1",
+      [userId],
+    );
+    const cumulative = walkResult.rows[0].total;
+    const unlockedRows = await this.pool.query(
+      "SELECT souvenir_key, unlocked_at FROM souvenirs WHERE user_id = $1 ORDER BY unlocked_at",
+      [userId],
+    );
+    const unlockedKeys = new Set(unlockedRows.rows.map((row) => row.souvenir_key));
+    // Include tiers that should be unlocked even if not yet persisted (e.g. from cumulative distance)
+    const allUnlocked = unlockedSouvenirs(cumulative);
+    for (const key of allUnlocked) unlockedKeys.add(key);
+
+    const unlocked = SOUVENIR_TIERS
+      .filter((tier) => unlockedKeys.has(tier.key))
+      .map((tier) => ({ key: tier.key, name: tier.name, note: tier.note }));
+
+    const next = nextSouvenir(cumulative);
+    const nextTarget = next
+      ? {
+          key: next.key,
+          name: next.name,
+          note: next.note,
+          cumulativeMeters: next.cumulativeMeters,
+          progress: cumulative / next.cumulativeMeters,
+        }
+      : null;
+
+    return { unlocked, nextTarget, cumulativeMeters: cumulative };
+  }
+
+  // ── T2-11: Caretaker treats ──
+
+  async getLatestTreat(): Promise<TreatResponse | null> {
+    const userId = await this.getDefaultUserId();
+    const result = await this.pool.query(
+      `SELECT id::text AS id, message, given_at, seen FROM treats
+       WHERE user_id = $1 ORDER BY given_at DESC LIMIT 1`,
+      [userId],
+    );
+    if (!result.rows[0]) return null;
+    return {
+      id: result.rows[0].id,
+      message: result.rows[0].message,
+      givenAt: iso(result.rows[0].given_at),
+      seen: result.rows[0].seen,
+    };
+  }
+
+  async sendTreat(message?: string): Promise<TreatResponse> {
+    return this.transaction(async (client) => {
+      const userId = await this.getDefaultUserId(client);
+      const caregiverResult = await client.query(
+        "SELECT caregiver_id FROM user_caregivers WHERE user_id = $1 ORDER BY caregiver_id LIMIT 1",
+        [userId],
+      );
+      const id = randomUUID();
+      const result = await client.query(
+        `INSERT INTO treats (id, user_id, caregiver_id, message)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id::text AS id, message, given_at, seen`,
+        [
+          id, userId,
+          caregiverResult.rows[0]?.caregiver_id ?? null,
+          message?.trim() || "A treat from your caretaker!",
+        ],
+      );
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        message: row.message,
+        givenAt: iso(row.given_at),
+        seen: row.seen,
+      };
+    });
+  }
+
+  async markTreatSeen(treatId: string): Promise<void> {
+    return this.transaction(async (client) => {
+      const userId = await this.getDefaultUserId(client);
+      await client.query(
+        "UPDATE treats SET seen = true WHERE id = $1 AND user_id = $2",
+        [treatId, userId],
+      );
+    });
+  }
+
+  // ── T2-12: Milestones derived from data ──
+
+  async getMilestones(): Promise<MilestonesResponse> {
+    const userId = await this.getDefaultUserId();
+    const identity = await this.pool.query(
+      `SELECT u.timezone, d.heart, d.streak
+       FROM users u JOIN dogs d ON d.user_id = u.id WHERE u.id = $1`,
+      [userId],
+    );
+    const person = identity.rows[0];
+
+    const caringResult = await this.pool.query(
+      `WITH first_dose AS (
+         SELECT MIN(de.occurred_at) AS first_at
+         FROM dose_events de
+         JOIN med_schedules ms ON ms.id = de.schedule_id
+         JOIN medications m ON m.id = ms.medication_id
+         WHERE m.user_id = $1 AND de.event = 'taken'
+       )
+       SELECT COALESCE(
+         GREATEST(EXTRACT(day FROM now() - first_at)::int, 0), 0
+       ) AS caring_days FROM first_dose`,
+      [userId],
+    );
+    const caringDays = caringResult.rows[0]?.caring_days ?? 0;
+
+    const walkResult = await this.pool.query(
+      "SELECT count(*)::int AS count, COALESCE(sum(distance_meters), 0)::int AS total FROM walk_sessions WHERE user_id = $1",
+      [userId],
+    );
+
+    const souvenirResult = await this.pool.query(
+      "SELECT souvenir_key FROM souvenirs WHERE user_id = $1 ORDER BY unlocked_at",
+      [userId],
+    );
+    const cumulativeWalk = walkResult.rows[0].total;
+    const unlockedKeys = new Set(souvenirResult.rows.map((row) => row.souvenir_key));
+    for (const key of unlockedSouvenirs(cumulativeWalk)) unlockedKeys.add(key);
+
+    const unlockedSouvenirsList = SOUVENIR_TIERS
+      .filter((tier) => unlockedKeys.has(tier.key))
+      .map((tier) => ({ key: tier.key, name: tier.name, note: tier.note }));
+
+    // Tricks derived from streak milestones
+    const streak = person.streak;
+    const trickDefs = [
+      { name: "Sit", threshold: 1, milestoneNote: "1 day streak" },
+      { name: "High five", threshold: 7, milestoneNote: "7 day streak" },
+      { name: "Roll over", threshold: 14, milestoneNote: "14 day streak" },
+      { name: "New trick", threshold: 30, milestoneNote: "30 day streak" },
+    ];
+    const tricks = trickDefs.map((def) => ({
+      name: def.name,
+      note: streak >= def.threshold ? def.milestoneNote : `${def.threshold - streak} days to go`,
+      earned: streak >= def.threshold,
+    }));
+
+    // World derived from cumulative walk distance
+    const worldThresholds = [
+      { id: "flat", label: "Our flat", levelText: "WORLD 1", description: "Where it all begins.", threshold: 0 },
+      { id: "garden", label: "Garden", levelText: "WORLD 2", description: "Unlocked at 1 km total walking.", threshold: 1_000 },
+      { id: "kampung", label: "Kampung", levelText: "WORLD 3", description: "Unlocked at 5 km total walking.", threshold: 5_000 },
+    ];
+    const currentWorldIdx = worldThresholds.reduce((best, w, idx) => cumulativeWalk >= w.threshold ? idx : best, 0);
+    const currentWorld = worldThresholds[currentWorldIdx];
+    const nextWorld = worldThresholds[currentWorldIdx + 1];
+    const progress = nextWorld
+      ? Math.min(1, cumulativeWalk / nextWorld.threshold)
+      : 1;
+
+    return {
+      caringDays,
+      streak,
+      cumulativeWalkMeters: cumulativeWalk,
+      walkCount: walkResult.rows[0].count,
+      unlockedSouvenirs: unlockedSouvenirsList,
+      nextSouvenirTarget: nextSouvenir(cumulativeWalk)
+        ? (() => {
+            const ns = nextSouvenir(cumulativeWalk)!;
+            return { key: ns.key, name: ns.name, note: ns.note, cumulativeMeters: ns.cumulativeMeters, progress: cumulativeWalk / ns.cumulativeMeters };
+          })()
+        : null,
+      tricks,
+      currentWorld: {
+        id: currentWorld.id,
+        label: currentWorld.label,
+        levelText: currentWorld.levelText,
+        description: currentWorld.description,
+        progress,
+      },
+    };
   }
 }

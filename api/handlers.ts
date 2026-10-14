@@ -1,5 +1,5 @@
 import { ApiError, PawtnerRepository } from "./repository.js";
-import type { AgentDecideRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, WalkSessionRequest } from "../shared/contract.js";
+import type { AgentDecideRequest, CreateMedicationRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, WalkSessionRequest } from "../shared/contract.js";
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 async function body<T>(request: Request): Promise<T> {
@@ -48,6 +48,47 @@ export function createApiHandler(repository: PawtnerRepository) {
         if (Date.parse(data.finishedAt) < Date.parse(data.startedAt)) throw new ApiError(400, "Walk finish must be after its start.");
         return json(await repository.recordWalkSession(data), 201);
       }
+      // ── T2-02/T2-06: Medication CRUD ──
+      if (request.method === "GET" && url.pathname === "/api/medications") return json(await repository.listMedications());
+      if (request.method === "POST" && url.pathname === "/api/medications") {
+        const data = await body<CreateMedicationRequest>(request);
+        if (!requiredString(data.name)) throw new ApiError(400, "name is required.");
+        return json(await repository.createMedication(data), 201);
+      }
+      if (request.method === "PUT" && url.pathname.startsWith("/api/medications/")) {
+        const medicationId = url.pathname.slice("/api/medications/".length);
+        if (!requiredString(medicationId)) throw new ApiError(400, "Medication id is required.");
+        const data = await body<Partial<CreateMedicationRequest>>(request);
+        return json(await repository.updateMedication(medicationId, data));
+      }
+      // ── T2-06: Schedule creation ──
+      if (request.method === "POST" && url.pathname === "/api/schedules") {
+        const data = await body<CreateScheduleRequest>(request);
+        if (!requiredString(data.medicationId) || !requiredString(data.scheduledTime) || !requiredString(data.startsOn)) throw new ApiError(400, "medicationId, scheduledTime and startsOn are required.");
+        return json(await repository.createSchedule(data), 201);
+      }
+      // ── T2-03: Medicine explanation ──
+      if (request.method === "GET" && url.pathname === "/api/medicine-explanation") {
+        const name = url.searchParams.get("name") ?? "";
+        if (!requiredString(name)) throw new ApiError(400, "name query parameter is required.");
+        return json(await repository.getMedicineExplanation(name));
+      }
+      // ── T2-09: Souvenirs ──
+      if (request.method === "GET" && url.pathname === "/api/souvenirs") return json(await repository.getSouvenirs());
+      // ── T2-11: Caretaker treats ──
+      if (request.method === "GET" && url.pathname === "/api/treats/latest") return json(await repository.getLatestTreat());
+      if (request.method === "POST" && url.pathname === "/api/treats") {
+        const data = await body<{ message?: string }>(request).catch(() => ({}) as { message?: string });
+        return json(await repository.sendTreat(data.message), 201);
+      }
+      if (request.method === "POST" && url.pathname.startsWith("/api/treats/") && url.pathname.endsWith("/seen")) {
+        const treatId = url.pathname.slice("/api/treats/".length, -"/seen".length);
+        if (!requiredString(treatId)) throw new ApiError(400, "Treat id is required.");
+        await repository.markTreatSeen(treatId);
+        return json({ ok: true });
+      }
+      // ── T2-12: Milestones derived from data ──
+      if (request.method === "GET" && url.pathname === "/api/milestones") return json(await repository.getMilestones());
       return json({ error: "Route not found." }, 404);
     } catch (error) {
       if (error instanceof ApiError) return json({ error: error.message }, error.status);
