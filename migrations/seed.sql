@@ -1,7 +1,7 @@
 BEGIN;
 
 INSERT INTO users (id, name, timezone) VALUES
-  ('00000000-0000-4000-8000-000000000001', 'Siew Lan', 'Asia/Singapore')
+  ('00000000-0000-4000-8000-000000000001', 'Rose', 'Asia/Singapore')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO caregivers (id, name) VALUES

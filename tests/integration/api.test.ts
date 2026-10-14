@@ -42,7 +42,7 @@ testApi("HTTP handlers persist events and return the shared response contract", 
     const todayResponse = await handler(new Request(`http://localhost/api/today?now=${encodeURIComponent(now)}`));
     expect(todayResponse.status).toBe(200);
     const today = await todayResponse.json();
-    expect(today).toMatchObject({ user: { name: "Siew Lan" }, dog: { name: "Max" } });
+    expect(today).toMatchObject({ user: { name: "Rose" }, dog: { name: "Max" } });
     expect(today.doses.length).toBeGreaterThan(0);
 
     const settingsResponse = await handler(new Request("http://localhost/api/escalation-settings"));
