@@ -31,6 +31,8 @@ import {
   pet,
   doses,
   todayDoses,
+  demoUser,
+  demoDog,
   medication,
   medicationExplanation,
   nudgeSettings,
@@ -76,6 +78,28 @@ export default function App() {
     window.setTimeout(() => setToast(""), 2400);
   };
 
+  async function handleLogBp(metric: HealthMetric) {
+    setHealthMetrics((prev) => [...prev, metric]);
+    setBpLogged(true);
+    const updatedMetrics = [...healthMetrics, metric];
+    const input = buildAgentInputFromState({
+      now: new Date().toISOString(),
+      userId: demoUser.id,
+      dogId: demoDog.id,
+      dogName: pet.name,
+      heart: heartCount,
+      streak: pet.streak,
+      doses: doseList,
+      healthMetrics: updatedMetrics,
+    });
+    const decision = await requestDecision(input);
+    setLatestDecision(decision);
+    // Emergency and see-GP moments stay calm: no playful toast.
+    if (decision.decision !== "emergency_995" && decision.decision !== "see_gp_soon") {
+      notify(t("toast.bpLogged", { name: dogName }));
+    }
+  }
+
   return (
     <>
     <DesktopBackdrop phase={phase} />
@@ -116,7 +140,7 @@ export default function App() {
         {screen === "proof" && <ProofScreen onBack={() => setScreen("home")} onVerified={() => { /* TODO(API): post a DoseEvent and refetch /today; status is derived, never set by the client. */ setDoseList((current) => current.map((d) => d.id === pendingDoseId ? { ...d, status: "taken" as const, eventAt: new Date().toISOString() } : d)); setScreen("home"); notify(t("toast.heartGained", { name: dogName })); }} medication={medication} petName={dogName} />}
         {screen === "walk" && <WalkScreen goHome={() => setScreen("home")} walkStats={walkStats} petName={dogName} />}
         {screen === "milestones" && <MilestonesScreen goHome={() => setScreen("home")} onWalk={() => setScreen("walk")} onCustomize={() => setScreen("customize")} pet={pet} currentWorld={currentWorld} tricks={tricks} souvenirs={souvenirs} petName={dogName} />}
-        {screen === "health" && <HealthScreen goHome={() => setScreen("home")} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={async (metric) => { setHealthMetrics((prev) => [...prev, metric]); setBpLogged(true); notify(t("toast.bpLogged", { name: dogName })); const input = buildAgentInputFromState({ now: new Date().toISOString(), userId: "user-demo", dogId: "dog-demo", dogName: pet.name, heart: Math.min(DEMO_RULES.heartMaximum, 1 + doseList.filter((d) => d.status === "taken").length + 1), streak: pet.streak, doses: doseList, healthMetrics: [...healthMetrics, metric] }); const decision = await requestDecision(input); setLatestDecision(decision); }} onScreening={() => setScreen("screening")} onSummary={() => setScreen("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
+        {screen === "health" && <HealthScreen goHome={() => setScreen("home")} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => setScreen("screening")} onSummary={() => setScreen("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen onBack={() => setScreen("health")} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen onBack={() => setScreen("health")} weekSummary={weekSummary} />}
         {screen === "settings" && <SettingsScreen goHome={() => setScreen("home")} addMedication={() => setScreen("prescription")} openCaretaker={() => setScreen("care")} openReminders={() => setScreen("reminders")} caregiver={caregiver} petName={dogName} />}

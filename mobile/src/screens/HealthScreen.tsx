@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { DecisionLogCard } from "../components/DecisionLogCard";
@@ -41,6 +41,7 @@ export function HealthScreen({
   const [diastolic, setDiastolic] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
 
   const lastMetric = healthMetrics.length > 0
     ? [...healthMetrics].sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))[0]
@@ -53,11 +54,16 @@ export function HealthScreen({
     const sys = Number(systolic);
     const dia = Number(diastolic);
     if (!Number.isInteger(sys) || !Number.isInteger(dia)) {
-      return { ok: false, msg: t("health.bpErrorRange", { min: BP_RANGE.systolic.min, max: BP_RANGE.diastolic.max }) };
+      return { ok: false, msg: t("health.bpErrorWhole", {
+        sysMin: BP_RANGE.systolic.min, sysMax: BP_RANGE.systolic.max,
+        diaMin: BP_RANGE.diastolic.min, diaMax: BP_RANGE.diastolic.max,
+      }) };
     }
-    if (sys < BP_RANGE.systolic.min || sys > BP_RANGE.systolic.max
-        || dia < BP_RANGE.diastolic.min || dia > BP_RANGE.diastolic.max) {
-      return { ok: false, msg: t("health.bpErrorRange", { min: BP_RANGE.systolic.min, max: BP_RANGE.diastolic.max }) };
+    if (sys < BP_RANGE.systolic.min || sys > BP_RANGE.systolic.max) {
+      return { ok: false, msg: t("health.bpErrorSystolic", { min: BP_RANGE.systolic.min, max: BP_RANGE.systolic.max }) };
+    }
+    if (dia < BP_RANGE.diastolic.min || dia > BP_RANGE.diastolic.max) {
+      return { ok: false, msg: t("health.bpErrorDiastolic", { min: BP_RANGE.diastolic.min, max: BP_RANGE.diastolic.max }) };
     }
     return { ok: true, sys, dia };
   }
@@ -88,6 +94,15 @@ export function HealthScreen({
   const isSeeGp = latestDecision?.decision === "see_gp_soon";
   const showResult = isEmergency || isSeeGp;
 
+  // Scroll the result card into view after the decision arrives, without smooth scroll under reduced motion.
+  if (showResult && resultRef.current) {
+    const prefersReduced = typeof window !== "undefined"
+      && typeof window.matchMedia === "function"
+      && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    resultRef.current.scrollIntoView({ behavior: prefersReduced ? "auto" : "smooth", block: "center" });
+    resultRef.current.focus({ preventScroll: true });
+  }
+
   return (
     <section className="content-card full-card">
       <button className="back-button" onClick={goHome}><Icon name="back" size={20} /> {t("common.home")}</button>
@@ -102,6 +117,31 @@ export function HealthScreen({
           <p>{lastMetric?.note ?? (bpLogged ? bloodPressureReading.note : bloodPressureReading.pendingNote)}</p>
         </div>
       </div>
+
+      {showResult && latestDecision && (
+        <div
+          ref={resultRef}
+          className={`bp-result ${isEmergency ? "bp-result--emergency" : "bp-result--gp"}`}
+          tabIndex={-1}
+        >
+          {isEmergency && (
+            <>
+              <p className="bp-result__number">{t("health.resultEmergencyNumber")}</p>
+              <p className="bp-result__wording">{latestDecision.wording}</p>
+            </>
+          )}
+          {isSeeGp && (
+            <>
+              <p className="bp-result__title">{t("health.resultSeeGpTitle")}</p>
+              <p className="bp-result__wording">{latestDecision.wording}</p>
+            </>
+          )}
+        </div>
+      )}
+
+      {showResult && latestDecision && (
+        <DecisionLogCard decision={latestDecision} />
+      )}
 
       <form className="bp-form" onSubmit={handleSubmit}>
         <p className="bp-form__title">{t("health.bpFormTitle")}</p>
@@ -143,27 +183,6 @@ export function HealthScreen({
         {error && <p className="bp-form__error" role="alert">{error}</p>}
         <button className="bp-form__submit" type="submit">{t("health.bpSubmit")}</button>
       </form>
-
-      {showResult && latestDecision && (
-        <div className={`bp-result ${isEmergency ? "bp-result--emergency" : "bp-result--gp"}`}>
-          {isEmergency && (
-            <>
-              <p className="bp-result__number">{t("health.resultEmergencyNumber")}</p>
-              <p className="bp-result__wording">{latestDecision.wording}</p>
-            </>
-          )}
-          {isSeeGp && (
-            <>
-              <p className="bp-result__title">{t("health.resultSeeGpTitle")}</p>
-              <p className="bp-result__wording">{latestDecision.wording}</p>
-            </>
-          )}
-        </div>
-      )}
-
-      {showResult && latestDecision && (
-        <DecisionLogCard decision={latestDecision} />
-      )}
 
       <button className="health-bubble" onClick={onSummary}><span className="feature-icon sage"><Icon name="book" /></span><div><strong>{t("health.weekSummary")}</strong><small>{t("health.weekSummarySub", { doses: weekSummary.metrics[0].value, walks: weekSummary.metrics[1].value })}</small></div><Icon name="chevron" /></button>
       <button className="health-bubble"><span className="feature-icon"><Icon name="camera" /></span><div><strong>{clinicTasks.title}</strong><small>{clinicTasks.subtitle}</small></div><Icon name="chevron" /></button>
