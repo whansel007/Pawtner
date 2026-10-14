@@ -1,0 +1,16 @@
+/*
+ * Spans from --stage-top down to the ground line published by useSceneGround.
+ * It may reach up under the top bar (which draws over it); the dog never reaches below the ground line,
+ * so it can't overlap the chips or a card. Above the screen content so it stays tappable; the empty layer lets taps through.
+ */
+.dog-layer {
+  position: absolute;
+  z-index: 3;
+  left: var(--side-gutter);
+  right: var(--side-gutter);
+  top: var(--stage-top);
+  height: max(0px, calc(var(--ground-y, var(--stage-top)) - var(--stage-top)));
+  pointer-events: none;
+}
+.dog-layer--hidden { display: none; }
+.dog-layer .dog-stage__pet { pointer-events: auto; }

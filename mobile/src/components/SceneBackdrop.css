@@ -1,0 +1,49 @@
+/* Fills the app column behind everything. Without the image, the shell colour shows through. */
+.scene-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  container-type: size;
+  /* Art size when covering the column (--art-aspect = width / height, from config). */
+  --art-w: max(100cqw, 100cqh * var(--art-aspect));
+  --art-h: calc(var(--art-w) / var(--art-aspect));
+}
+
+/*
+ * Ground-line alignment: put the art's lawn line (--art-ground, fraction of its height) on the dog's feet (--ground-y).
+ * Clamped so the art always covers the column: never a gap at the top (<= 0), never at the bottom (>= column - art).
+ * Without a ground line (no dog on this screen) it falls back to the top, showing the full sky.
+ */
+.scene-backdrop__image {
+  position: absolute;
+  left: 50%;
+  top: clamp(100cqh - var(--art-h), var(--ground-y, 100cqh) - var(--art-ground) * var(--art-h), 0px);
+  width: var(--art-w);
+  height: var(--art-h);
+  max-width: none;
+  transform: translateX(-50%);
+}
+
+/* World themes (flat / garden / kampung) set --world-tint on .app-shell. */
+.scene-backdrop__tint {
+  position: absolute;
+  inset: 0;
+  background: var(--world-tint, none);
+}
+
+.desktop-backdrop {
+  display: none;
+}
+
+@media (min-width: 500px) {
+  .desktop-backdrop {
+    display: block;
+    position: fixed;
+    inset: -48px; /* bleed past the edges so the blur has no pale rim */
+    z-index: 0;
+    background: var(--color-bg-base) center / cover no-repeat;
+    filter: blur(24px) brightness(0.65);
+  }
+}

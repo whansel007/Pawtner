@@ -1,0 +1,205 @@
+{
+  "intro": {
+    "coverAlt": "Pawtner cover image",
+    "coverHint": "Tap to begin",
+    "coverAria": "Tap anywhere to begin",
+    "dedicationText": "For Mom",
+    "dedicationAria": "Dedication. Continues to home automatically. Tap to skip."
+  },
+  "common": {
+    "back": "Back",
+    "home": "Home",
+    "done": "Done",
+    "viewAll": "View all",
+    "log": "Log",
+    "today": "Today",
+    "steps": "steps",
+    "calories": "calories",
+    "kmh": "km/h"
+  },
+  "nav": {
+    "home": "Home",
+    "milestones": "Milestones",
+    "health": "Health",
+    "aria": "Primary navigation"
+  },
+  "topZone": {
+    "heartsAria": "{{count}} out of four hearts",
+    "settingsAria": "Open care dashboard"
+  },
+  "home": {
+    "dailyCare": "Daily care",
+    "title": "Today's schedule",
+    "progress": "{{count}} of {{total}} done",
+    "progress_one": "{{count}} of {{total}} done",
+    "progress_other": "{{count}} of {{total}} done",
+    "walk": "Walk {{name}}",
+    "walkSub": "Earn a souvenir",
+    "bp": "Blood pressure",
+    "bpSub": "Fill a heart",
+    "treatAria": "Open caretaker treat",
+    "takeNow": "Take now",
+    "taken": "Taken",
+    "later": "Later",
+    "next": "Next",
+    "stillToTake": "Still to take",
+    "allDone": "All done for today",
+    "noDoses": "Nothing scheduled today",
+    "seeAll": "See all",
+    "takenAria": "Mark {{name}} as taken"
+  },
+  "care": {
+    "eyebrow": "Caregiver view",
+    "title": "{{name}} is doing great",
+    "supporting": "You and Mum share one dog. Celebrate the good moments without turning care into surveillance.",
+    "daysRemaining": "About {{count}} days remaining",
+    "daysRemaining_one": "About {{count}} day remaining",
+    "daysRemaining_other": "About {{count}} days remaining",
+    "careToday": "Care today",
+    "dosesTaken": "Doses taken",
+    "walkedToday": "Walked today",
+    "recentActivity": "Recent activity",
+    "sendTreat": "Send {{name}} a treat"
+  },
+  "reminders": {
+    "eyebrow": "Medication plan",
+    "title": "Gentle reminders",
+    "nextDose": "NEXT DOSE",
+    "nextDoseTime": "In 2 hr 34 min",
+    "nextDoseName": "Apoquel · 1:00 PM",
+    "today": "Today",
+    "todayDate": "Wednesday, May 14",
+    "statusDone": "Done",
+    "statusSoon": "Soon",
+    "statusLater": "Later",
+    "add": "Add a reminder"
+  },
+  "prescription": {
+    "eyebrow": "New medication",
+    "titleScan": "Scan the prescription",
+    "titleFound": "Prescription found",
+    "supportingScan": "Place the label inside the frame. We'll fill in the details for you.",
+    "supportingFound": "Please check these details before adding them to {{name}}'s plan.",
+    "tapCapture": "Tap to capture",
+    "keepLit": "Keep the label clear and well lit",
+    "enterManual": "Enter details manually",
+    "medication": "MEDICATION",
+    "dosage": "DOSAGE",
+    "frequency": "FREQUENCY",
+    "explain": "Explain this medicine"
+  },
+  "explanation": {
+    "eyebrow": "In plain words",
+    "title": "Here is what this does",
+    "readAria": "Read explanation aloud",
+    "readAloud": "Read this aloud",
+    "continue": "Looks clear · set my times"
+  },
+  "schedule": {
+    "eyebrow": "Suggested routine",
+    "title": "When should {{name}} nudge you?",
+    "supporting": "We made this from the label. Change it anytime.",
+    "noAlarm": "No loud alarm, and no scolding if you are late.",
+    "confirm": "Confirm {{name}}'s routine"
+  },
+  "proof": {
+    "eyebrowCheck": "A quick check",
+    "eyebrowFound": "{{name}} can see it",
+    "titleShow": "Show {{name}} the pill",
+    "titleFound": "That counts!",
+    "supportingShow": "Snap the pill before taking it. Nothing is saved to your gallery.",
+    "supportingFound": "The photo matches your saved medicine. {{name}} gained a little more energy.",
+    "tapPhoto": "Tap to take proof photo",
+    "onePill": "One pill in the frame",
+    "verified": "Medicine verified",
+    "giveHeart": "Give {{name}} a heart",
+    "notNow": "Not now"
+  },
+  "walk": {
+    "eyebrow": "Fresh air",
+    "titleReady": "Ready to explore?",
+    "titleWalking": "A lovely walk",
+    "startReady": "Start when {{name}} is ready",
+    "startWalk": "Start walk",
+    "finishWalk": "Finish walk"
+  },
+  "milestones": {
+    "eyebrow": "{{name}} is learning",
+    "title": "{{count}} caring days together",
+    "worldWardrobe": "World & wardrobe",
+    "worldWardrobeSub": "Revisit scenery and dress {{name}}",
+    "tricks": "Tricks",
+    "tricksSub": "Practice makes happy",
+    "souvenirs": "Souvenirs",
+    "souvenirsSub": "Earned on walks"
+  },
+  "customize": {
+    "eyebrow": "{{name}}'s collection",
+    "title": "World & wardrobe",
+    "supporting": "New levels never replace old memories. Visit any world you have earned.",
+    "scenery": "Scenery",
+    "scenerySub": "All unlocked",
+    "accessories": "Accessories",
+    "accessoriesSub": "Tap to wear",
+    "showMe": "Show me at home",
+    "back": "Milestones"
+  },
+  "health": {
+    "eyebrow": "This week",
+    "title": "Small steps, clearly told",
+    "bpLabel": "BLOOD PRESSURE",
+    "bpNeedsReading": "{{name}} needs one reading",
+    "weekSummary": "Your week in plain words",
+    "weekSummarySub": "{{doses}} doses · {{walks}} walks",
+    "annualCheck": "Annual check",
+    "screeningTitle": "Screen for Life",
+    "screeningSub": "One screening unlocks festival day",
+    "activities": "Activities near you",
+    "activitiesSub": "Open Healthy 365"
+  },
+  "summary": {
+    "eyebrow": "Sunday summary",
+    "title": "Your week in plain words",
+    "caringDays": "{{count}} of {{total}} caring days",
+    "caringDays_one": "{{count}} of {{total}} caring day",
+    "caringDays_other": "{{count}} of {{total}} caring days",
+    "askDoctor": "ASK YOUR DOCTOR",
+    "doneReading": "Done reading",
+    "back": "Health"
+  },
+  "screening": {
+    "eyebrow": "A once-a-year task",
+    "title": "Festival day is waiting",
+    "supporting": "Based on your age, it may be time for a health screening. When it is done, {{name}}'s kampung celebrates too.",
+    "checkHealthHub": "Check on HealthHub",
+    "remindLater": "Remind me another day",
+    "back": "Health"
+  },
+  "settings": {
+    "eyebrow": "{{name}}'s care",
+    "title": "Settings",
+    "addMed": "Add a medication",
+    "addMedSub": "Snap a label and set the routine",
+    "nudges": "{{name}}'s nudges",
+    "nudgesSub": "Times, sound and read-aloud",
+    "caretaker": "{{caretaker}}, caretaker",
+    "caretakerSub": "Connected to the same {{name}}",
+    "privacyTitle": "Your information stays yours.",
+    "privacyBody": "{{caretaker}} sees caring moments, not private medicine details."
+  },
+  "toast": {
+    "alreadyCounted": "Already counted. {{name}} remembers!",
+    "treatWaiting": "A treat from {{caretaker}} is waiting for {{name}}!",
+    "treatSent": "Treat sent. Mum will see {{name}} celebrate!",
+    "nudgeSet": "{{name}} knows when to nudge you.",
+    "heartGained": "{{name}} gained a heart!",
+    "bpLogged": "Reading logged. {{name}}'s heart is full!",
+    "worldFlat": "Our flat is now behind {{name}}.",
+    "worldGarden": "The garden is now behind {{name}}.",
+    "worldKampung": "The kampung is now behind {{name}}.",
+    "accessoryNone": "{{name}} is back to a fluffy self.",
+    "accessoryOn": "{{name}} put on a {{item}}.",
+    "hello": "Woof woof! {{name}} is happy you're here.",
+    "petAccessoryAria": "{{name}} is wearing {{item}}"
+  }
+}
