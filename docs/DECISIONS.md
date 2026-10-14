@@ -39,3 +39,10 @@
 | The bark plays only if a licence-free `mobile/public/assets/bark.mp3` exists; CodeBuddy must not download audio. | Unknown licences on downloaded sound files. | No bark until the user supplies a file. | Final |
 | Tap-the-dog is bundled with T1-10/12 in one branch. | User's choice: both touch `DogStage` and mood. | A bigger PR to review. | Final |
 
+## 2026-10-14 — Caretakers on `/care`
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| `/care` shows a list of caretakers (the database already allows many per senior via `user_caregivers`). Each person shows "Gets check-ins" or "Updates only", mapped to the existing per-row `opted_in`. | User: multiple caretakers is worth keeping; the schema already supports it. | The API contract (`shared/contract.ts`) and the seed still have one caretaker; P1 to add a list. `relationship` ("Neighbor", "Friend") isn't in the schema yet; mock-only slot until P1 adds it. | Final (front end); contract change pending P1 |
+| **One shared check-in threshold** for all caretakers ("send a check-in after N missed doses in a row", minimum 2). | User: the web page has one setting, so the data must match it. | The schema stores `threshold` per `user_caregivers` row; until P1 decides, saving writes the same value to every row. Per-person thresholds are not offered. | Final (user); implementation to agree with P1 |
+
