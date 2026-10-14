@@ -22,7 +22,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | — | Home fix: friendly one-time API notice, tap-through toasts, compact decision row | P2 / Claude Code | [#7](https://github.com/whansel007/Pawtner/pull/7) open, waiting for the user's review. |
 | T1-16 | "Simulate walk" (dizzy on the fast stretch) | P2 / CodeBuddy | Next CodeBuddy task. `main` posts a walk with `distanceMeters: 0, fastStretchOccurred: false`; recorded points, growing distance, fast stretch and dizzy dog still to build. |
 | T1-15 | `/care` web page from the Miro frame | P2 / CodeBuddy | Frame in progress. The phone's Care/Settings screens already use the API (summary, consent, threshold min 2). Web page needs P1's caretaker list (see Blocked). |
-| T1-17 | Public HTTPS URL | P2 (+ P1 API) | Production `pawtner-mobile-three.vercel.app` still serves the 13 Oct build. `main` now calls `/api` on load, so a front-end deploy needs a hosted API first (until then the app runs on the offline fallback and shows one notice). |
+| T1-17 | Public HTTPS URL | P2 (+ P1 API) | Preview of `main` @ `806cc66` (front end only, no API, offline fallback): `pawtner-mobile-3vgi0crkq-fresfrida.vercel.app` (14 Oct 15:02). Production `pawtner-mobile-three.vercel.app` still serves the 13 Oct build. `main` now calls `/api` on load, so a front-end deploy needs a hosted API first (until then the app runs on the offline fallback and shows one notice). |
 | T1-18 | Dog assets | Design | Base dog + garden day/night done. 4-mood sheet not started. |
 
 ## Backlog (Tier 1)
@@ -67,6 +67,7 @@ Today's plan (agreed 13 Oct evening), in order:
 |---|---|
 | Fixed names left in mock data | `mobile/src/mock/care.ts` has `names: "Mum + Jamie"`; `mobile/src/mock/milestones.ts` has `note: "From Jamie"`. Renaming the caretaker won't change these; derive them from the name fields. |
 | CodeBuddy credits below 5% (14 Oct) | Spend CodeBuddy only on judged features (T1-16, then T1-15). Claude Code does merges, structural fixes and screenshots. Ask organisers about a top-up. |
+| First load shows a plain green screen for ~3 s | Seen on the 14 Oct preview: `garden-day.webp` and `dog-base.webp` load after Home appears. Preload them during the cover/dedication. |
 | Toast says "heart is full!" at 3 of 4 hearts | `toast.bpLogged` text; pre-existing. |
 | Mock dog name `"max"` lowercase; mock medicines are veterinary (Apoquel, Gabapentin) | `mobile/src/mock/home.ts`; a judge may notice. |
 | BP inputs have no accessible name | Labels wrap a span and the input; the accessibility tree shows unnamed textboxes. Add `htmlFor`/`id` or `aria-label`. |

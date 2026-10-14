@@ -37,6 +37,7 @@ Config lives in `mobile/src/config/` (`scene.ts`: images, ground line, dog size 
 
 - Vercel project `pawtner-mobile` (account `fresfrida`), **Root Directory `mobile`**, not linked to GitHub, so pushing or merging deploys nothing. Deploys run from the **repo root** with the Vercel CLI (`vercel deploy` for previews, `--prod` for production).
 - Production URL: `pawtner-mobile-three.vercel.app`, serving deploy `pawtner-mobile-a8mx1lyw6` (13 Oct 23:16), from before PR #4 (names fix). Next production deploy: this evening, after the API connection (plan step 5). The Vercel connector returns 403 for this project; `vercel --scope fresfrida list pawtner-mobile` works. The final T1-17 host is undecided (EdgeOne Pages vs Vercel, P1).
+- Deploy without linking (no `.env.local` written): `VERCEL_ORG_ID=team_AokvQEnWfqJ0MfshVcCOkmCd VERCEL_PROJECT_ID=prj_9glM0SMVxwknF0DY3xsyMgQarwPT vercel deploy --yes` from the repo root (add `--prod` for production). Used for the 14 Oct preview.
 - `vercel link` writes `.env.local` with a `VERCEL_OIDC_TOKEN`; delete it and never commit it.
 - `mobile/.vercel` is an old link from `mobile/`; don't deploy from there.
 
