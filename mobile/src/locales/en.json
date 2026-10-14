@@ -91,16 +91,18 @@
   "explanation": {
     "eyebrow": "In plain words",
     "title": "Here is what this does",
+    "back": "Back",
     "readAria": "Read explanation aloud",
     "readAloud": "Read this aloud",
-    "continue": "Looks clear · set my times"
+    "continue": "Looks clear | set my times"
   },
   "schedule": {
     "eyebrow": "Suggested routine",
     "title": "When should {{name}} nudge you?",
     "supporting": "We made this from the label. Change it anytime.",
     "noAlarm": "No loud alarm, and no scolding if you are late.",
-    "confirm": "Confirm {{name}}'s routine"
+    "confirm": "Confirm {{name}}'s routine",
+    "back": "Back"
   },
   "proof": {
     "eyebrowCheck": "A quick check",

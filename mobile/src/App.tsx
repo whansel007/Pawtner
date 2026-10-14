@@ -21,7 +21,7 @@ import { DedicationScreen } from "./screens/DedicationScreen";
 import { BottomNav } from "./screens/BottomNav";
 import { DesktopBackdrop, SceneBackdrop } from "./components/SceneBackdrop";
 import { DogLayer } from "./components/DogLayer";
-import { DEFAULT_PHASE } from "./config/scene";
+import { DEFAULT_PHASE, phaseFromTime } from "./config/scene";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
 import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, EscalationSettingsResponse, HealthMetric, TodayResponse } from "../../shared/contract";
@@ -80,6 +80,8 @@ export default function App() {
   const [demoClockValue, setDemoClockValue] = useState(() => toDateTimeLocal(new Date()));
   const [agentBusy, setAgentBusy] = useState(false);
   const [escalationSettings, setEscalationSettings] = useState<EscalationSettingsResponse | null>(null);
+  const [savedMedicationId, setSavedMedicationId] = useState<string | undefined>(undefined);
+  const [savedMedicationName, setSavedMedicationName] = useState<string>("");
 
   const refreshToday = async (now?: string) => {
     try { const result = await api.today(now ?? demoNow ?? undefined); setToday(result); setDoseList(result.doses); setBpLogged(result.bloodPressureLoggedToday); setLatestDecision(result.latestDecision); apiWarned.current = false; }
@@ -94,7 +96,8 @@ export default function App() {
   const takenCount = doseList.filter((d) => d.status === "taken").length;
   const heartCount = today?.dog.heart ?? Math.min(DEMO_RULES.heartMaximum, 1 + takenCount + (bpLogged ? 1 : 0));
   const mood = today ? today.dog.mood : selectDogMood(heartCount, latestDecision);
-  const phase = DEFAULT_PHASE;
+  // T2-10: sun/moon by local time using shared helper
+  const phase = demoNow ? (() => { try { return phaseFromTime(demoNow, "Asia/Singapore"); } catch { return DEFAULT_PHASE; } })() : DEFAULT_PHASE;
 
   // Names come from data unchanged — no .toLowerCase().
   const dogName = today?.dog.name ?? pet.name;
@@ -262,14 +265,14 @@ export default function App() {
             decision={latestDecision}
           />
         )}
-        {screen === "care" && <CareScreen goHome={() => setScreen("home")} sendTreat={() => notify(t("toast.treatSent", { name: dogName }))} pet={livePet} caregiver={liveCaregiver} careActivity={liveCareActivity} restockAlert={restockAlert} />}
+        {screen === "care" && <CareScreen goHome={() => setScreen("home")} sendTreat={async () => { try { await api.sendTreat(); notify(t("toast.treatSent", { name: dogName })); } catch { notify(t("toast.treatSent", { name: dogName })); } }} pet={livePet} caregiver={liveCaregiver} careActivity={liveCareActivity} restockAlert={restockAlert} />}
         {screen === "reminders" && <RemindersScreen goHome={() => setScreen("home")} doses={doses} />}
-        {screen === "prescription" && <PrescriptionScreen goHome={() => setScreen("home")} onExplain={() => setScreen("explanation")} medication={medication} petName={dogName} />}
-        {screen === "explanation" && <ExplanationScreen onBack={() => setScreen("prescription")} onContinue={() => setScreen("schedule")} medicationExplanation={medicationExplanation} />}
-        {screen === "schedule" && <ScheduleScreen onBack={() => setScreen("explanation")} onConfirm={() => { setScreen("home"); notify(t("toast.nudgeSet", { name: dogName })); }} nudgeSettings={nudgeSettings} petName={dogName} />}
-        {screen === "proof" && <ProofScreen onBack={() => setScreen("home")} onVerified={async () => { const dose = doseList.find((item) => item.id === pendingDoseId); if (!dose) return; try { const result = await api.doseEvent({ scheduleId: dose.id, scheduledFor: dose.scheduledAt, event: "taken", occurredAt: demoNow ?? new Date().toISOString() }); setToday(result.today); setDoseList(result.today.doses); setScreen("home"); notify(t("toast.heartGained", { name: dogName })); } catch (error) { reportApiProblem(error, true); } }} medication={medication} petName={dogName} />}
+        {screen === "prescription" && <PrescriptionScreen goHome={() => setScreen("home")} onExplain={(medicineName) => { setSavedMedicationName(medicineName); setScreen("explanation"); }} onSaved={(medicationId) => { setSavedMedicationId(medicationId); void refreshToday(); }} petName={dogName} />}
+        {screen === "explanation" && <ExplanationScreen onBack={() => setScreen("prescription")} onContinue={() => setScreen("schedule")} medicineName={savedMedicationName} />}
+        {screen === "schedule" && <ScheduleScreen onBack={() => setScreen("explanation")} onConfirm={() => { setScreen("home"); notify(t("toast.nudgeSet", { name: dogName })); void refreshToday(); }} petName={dogName} medicationId={savedMedicationId} />}
+        {screen === "proof" && <ProofScreen onBack={() => setScreen("home")} onVerified={async () => { const dose = doseList.find((item) => item.id === pendingDoseId); if (!dose) return; try { const result = await api.doseEvent({ scheduleId: dose.id, scheduledFor: dose.scheduledAt, event: "taken", occurredAt: demoNow ?? new Date().toISOString() }); setToday(result.today); setDoseList(result.today.doses); setScreen("home"); notify(t("toast.heartGained", { name: dogName })); } catch (error) { reportApiProblem(error, true); } }} petName={dogName} medicationName={doseList.find((item) => item.id === pendingDoseId)?.medicationName} />}
         {screen === "walk" && <WalkScreen goHome={() => setScreen("home")} walkStats={walkStats} petName={dogName} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
-        {screen === "milestones" && <MilestonesScreen goHome={() => setScreen("home")} onWalk={() => setScreen("walk")} onCustomize={() => setScreen("customize")} pet={pet} currentWorld={currentWorld} tricks={tricks} souvenirs={souvenirs} petName={dogName} />}
+        {screen === "milestones" && <MilestonesScreen goHome={() => setScreen("home")} onWalk={() => setScreen("walk")} onCustomize={() => setScreen("customize")} pet={livePet} petName={dogName} />}
         {screen === "health" && <HealthScreen goHome={() => setScreen("home")} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => setScreen("screening")} onSummary={() => setScreen("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen onBack={() => setScreen("health")} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen onBack={() => setScreen("health")} weekSummary={careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }], doctorQuestion: careSummary.doctorQuestions[0]?.note ?? weekSummary.doctorQuestion } : weekSummary} />}

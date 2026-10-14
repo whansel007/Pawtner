@@ -186,3 +186,101 @@ export interface WalkSessionResponse {
   decision: AgentDecision;
   souvenirId: string | null;
 }
+
+// ── T2-02: Medication CRUD ──
+
+export interface MedicationDetail {
+  id: string;
+  name: string;
+  strength: string | null;
+  dosageForm: string | null;
+  routeOfAdministration: string | null;
+  activeIngredients: string | null;
+  genericName: string | null;
+  prescribedFor: string | null;
+  daysOfSupply: number | null;
+  photoUrl: string | null;
+  active: boolean;
+}
+
+export interface CreateMedicationRequest {
+  name: string;
+  strength?: string | null;
+  dosageForm?: string | null;
+  routeOfAdministration?: string | null;
+  activeIngredients?: string | null;
+  genericName?: string | null;
+  prescribedFor?: string | null;
+  daysOfSupply?: number | null;
+  photoUrl?: string | null;
+}
+
+export interface CreateMedicationResponse {
+  medication: MedicationDetail;
+}
+
+export interface CreateScheduleRequest {
+  medicationId: string;
+  scheduledTime: string;
+  startsOn: string;
+  endsOn?: string | null;
+}
+
+export interface CreateScheduleResponse {
+  schedule: { id: string; medicationId: string; scheduledTime: string; startsOn: string; endsOn: string | null };
+}
+
+export interface MedicationListResponse {
+  medications: MedicationDetail[];
+}
+
+// ── T2-03: Medicine explanation ──
+
+export interface MedicineExplanationRequest {
+  medicineName: string;
+}
+
+export interface MedicineExplanationResponse {
+  medicineName: string;
+  summary: string;
+  points: { label: string; text: string }[];
+  spokenText: string;
+  sourceCredit: string;
+  ndfUrl: string;
+  healthHubUrl: string;
+  wordingSource: "trusted" | "model" | "fallback";
+}
+
+// ── T2-09: Souvenirs ──
+
+export interface SouvenirResponse {
+  unlocked: { key: string; name: string; note: string }[];
+  nextTarget: { key: string; name: string; note: string; cumulativeMeters: number; progress: number } | null;
+  cumulativeMeters: number;
+}
+
+// ── T2-11: Caretaker treats ──
+
+export interface TreatResponse {
+  id: string;
+  message: string;
+  givenAt: string;
+  seen: boolean;
+}
+
+export interface SendTreatRequest {
+  message?: string;
+}
+
+// ── T2-12: Milestones derived from data ──
+
+export interface MilestonesResponse {
+  caringDays: number;
+  streak: number;
+  cumulativeWalkMeters: number;
+  walkCount: number;
+  unlockedSouvenirs: { key: string; name: string; note: string }[];
+  nextSouvenirTarget: { key: string; name: string; note: string; cumulativeMeters: number; progress: number } | null;
+  tricks: { name: string; note: string; earned: boolean }[];
+  currentWorld: { id: string; label: string; levelText: string; description: string; progress: number };
+}

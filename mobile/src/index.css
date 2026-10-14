@@ -620,6 +620,50 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .accessory-bandana { top: 39%; width: 94px; height: 58px; transform: translateX(-50%); background: #d95543; clip-path: polygon(0 0,100% 0,50% 100%); filter: var(--shadow-bandana); }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   T2: Search bar, HSA results, medication edit, explanation links
+   ═══════════════════════════════════════════════════════════════════════ */
+.search-bar { display: flex; gap: 8px; margin-top: 16px; }
+.search-bar input { flex: 1; min-height: 48px; padding: 8px 12px; border: 1px solid var(--color-border-card); border-radius: var(--radius-xl); color: var(--color-text-base); font: inherit; }
+.search-bar input:focus { outline: 2px solid var(--color-focus); outline-offset: 1px; }
+.hsa-results { display: grid; gap: 6px; margin-top: 14px; text-align: left; }
+.hsa-result-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; padding: 12px 14px; border: 0; border-radius: var(--radius-3xl); color: var(--color-text-heading); background: var(--color-surface-sage); text-align: left; cursor: pointer; }
+.hsa-result-row:hover { background: var(--color-surface-sage-dark); }
+.hsa-result-row strong { font-size: var(--font-size-lg); }
+.hsa-result-row small { display: block; color: var(--color-text-body); font-size: var(--font-size-sm); }
+.hsa-credit { margin-top: 12px; color: var(--color-text-faint); font-size: var(--font-size-xs); line-height: 1.4; text-align: left; }
+.no-results { text-align: center; margin-top: 18px; }
+.no-results p { color: var(--color-text-body); font-size: var(--font-size-lg); }
+.error-text { margin-top: 8px; color: var(--color-action-stop); font-size: var(--font-size-sm); font-weight: 700; }
+.field-hint { color: var(--color-text-faint) !important; font-size: var(--font-size-xs) !important; font-weight: 400 !important; letter-spacing: 0 !important; }
+.field input { min-height: 44px; padding: 6px 10px; border: 1px solid var(--color-border-card); border-radius: var(--radius-lg); color: var(--color-text-base); font: inherit; }
+.field input:focus { outline: 2px solid var(--color-focus); outline-offset: 1px; }
+
+/* Medication list and edit on /care */
+.medication-list { display: grid; gap: 6px; }
+.medication-edit-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-radius: var(--radius-3xl); background: var(--color-surface-sage); }
+.medication-edit-row strong { font-size: var(--font-size-lg); }
+.medication-edit-row small { color: var(--color-text-body); font-size: var(--font-size-sm); }
+.medication-edit-form { display: grid; gap: 6px; width: 100%; }
+.medication-edit-form label { color: var(--color-text-body); font-size: var(--font-size-sm); font-weight: 700; }
+.medication-edit-form input { min-height: 44px; padding: 6px 10px; border: 1px solid var(--color-border-card); border-radius: var(--radius-lg); color: var(--color-text-base); font: inherit; }
+.edit-actions { display: flex; gap: 8px; margin-top: 4px; }
+.edit-actions .primary-button { margin-top: 0; min-height: 40px; flex: 1; }
+.edit-actions .text-button { margin-top: 0; }
+
+/* Explanation links and credits */
+.explanation-links { margin-top: 16px; display: grid; gap: 8px; }
+.source-credit { color: var(--color-text-faint); font-size: var(--font-size-xs); margin: 0; }
+.external-link { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border: 1px solid var(--color-border-card); border-radius: var(--radius-xl); color: var(--color-text-heading); text-decoration: none; font-size: var(--font-size-sm); font-weight: 700; }
+.external-link:hover { background: var(--color-surface-sage); }
+
+/* Schedule choices with time inputs */
+.schedule-choice input[type="time"] { min-height: 44px; padding: 6px 8px; border: 0; border-radius: var(--radius-md); color: var(--color-text-heading); font: inherit; font-weight: 800; background: white; }
+.schedule-choice input[type="text"] { min-height: 44px; padding: 6px 8px; border: 0; border-radius: var(--radius-md); color: var(--color-text-body); font: inherit; background: rgba(255,255,255,.6); }
+
+/* World progress bar in milestones */
+.world-card small { color: rgba(255,255,255,.7); font-size: var(--font-size-sm); }
+
+/* ═══════════════════════════════════════════════════════════════════════
    Toast
    ═══════════════════════════════════════════════════════════════════════ */
 /* Toasts are information only, so taps pass through to the dog and buttons beneath. */
