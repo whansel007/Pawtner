@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import type { WalkStats } from "../types";
 import { useSimulatedWalk } from "../lib/simulatedWalk";
-import type { WalkCompletion } from "../lib/simulatedWalk";
+import type { WalkCompletion } from "../lib/walkState";
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);

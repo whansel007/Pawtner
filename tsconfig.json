@@ -8,5 +8,5 @@
     "skipLibCheck": true,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["shared/**/*.ts", "api/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts", "mobile/src/lib/simulatedWalk.ts"]
+  "include": ["shared/**/*.ts", "api/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts", "mobile/src/lib/walkState.ts"]
 }

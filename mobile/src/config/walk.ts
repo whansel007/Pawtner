@@ -1,6 +1,6 @@
 /**
  * Simulated walk demo configuration.
- * A ~15-minute walk with a 60-second bus ride at ~25 km/h in the middle.
+ * A ~15-minute walk with a 150-second bus ride at ~25 km/h in the middle.
  */
 
 export interface WalkPoint {
@@ -19,13 +19,17 @@ export const FAST_MIN_SECONDS = 30;
 /** Simulated seconds advanced per real second (900 s walk -> ~20 s demo). */
 export const PLAYBACK_RATE = 45;
 
+/** Real milliseconds between playback ticks (each tick advances PLAYBACK_RATE / 5 = 9 s). */
+export const TICK_MS = 200;
+
 /**
- * Demo track: ~7 min walk, 1 min bus, ~7 min walk.
- * Bus segment is fast, so the dog pauses distance and gets dizzy.
+ * Demo track: 375 s walk (~5 km/h), 150 s bus (~25 km/h), 375 s walk (~5 km/h).
+ * Bus segment is fast, so the dog pauses distance and gets dizzy
+ * from 30 s into the bus until it ends (~2.8 real seconds at 200 ms ticks).
  */
 export const DEMO_POINTS: WalkPoint[] = [
   { atSeconds: 0, meters: 0 },
-  { atSeconds: 420, meters: 583 },
-  { atSeconds: 480, meters: 1000 },
-  { atSeconds: 900, meters: 1583 },
+  { atSeconds: 375, meters: 521 },
+  { atSeconds: 525, meters: 1563 },
+  { atSeconds: 900, meters: 2084 },
 ];

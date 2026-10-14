@@ -28,7 +28,7 @@ import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, EscalationSe
 import { api } from "./lib/api";
 import { requestDecision, buildAgentInputFromState } from "./lib/agent";
 import type { Screen, World, Accessory } from "./types";
-import type { WalkCompletion } from "./lib/simulatedWalk";
+import type { WalkCompletion } from "./lib/walkState";
 import {
   pet,
   doses,
