@@ -21,6 +21,7 @@ import { DedicationScreen } from "./screens/DedicationScreen";
 import { BottomNav } from "./screens/BottomNav";
 import { DesktopBackdrop, SceneBackdrop } from "./components/SceneBackdrop";
 import { DogLayer } from "./components/DogLayer";
+import { PetAccessory } from "./components/PetAccessory";
 import { DEFAULT_PHASE, phaseFromTime } from "./config/scene";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
@@ -310,9 +311,18 @@ export default function App() {
         mood={mood}
         dogName={dogName}
         dizzy={dizzy}
-        accessory={accessory !== "none" && <span className={`pet-accessory accessory-${accessory}`} aria-label={t("toast.petAccessoryAria", { name: dogName, item: accessory })}><i /><i /></span>}
+        accessory={<PetAccessory accessory={accessory} dogName={dogName} />}
       />
       <TopZone onSettings={() => navigate("settings")} onHome={goHome} pet={livePet} />
+      <div className="scene-chips">
+        <button className="scene-chip" onClick={() => navigate("reminders")}><Icon name="calendar" size={19} />{t("common.today")}</button>
+        <div className="scene-actions">
+          <button className="scene-chip" onClick={() => navigate("milestones")}>{t("home.streakChip", { count: livePet.streak })}</button>
+          <button className="scene-chip gift-chip" onClick={() => notify(t("toast.treatWaiting", { name: dogName, caretaker: caretakerName }))} aria-label={t("home.treatAria")}>
+            <Icon name="gift" size={19} /><span className="badge-dot" />
+          </button>
+        </div>
+      </div>
       <div className={`screen-stage screen-${screen}`}>
         {screen === "home" && (
           <HomeScreen
@@ -342,7 +352,7 @@ export default function App() {
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }], doctorQuestion: careSummary.doctorQuestions[0]?.note ?? weekSummary.doctorQuestion } : weekSummary} />}
         {screen === "settings" && <SettingsScreen back={back} addMedication={() => navigate("prescription")} openCaretaker={() => navigate("care")} openReminders={() => navigate("reminders")} caregiver={caregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} />}
-        {screen === "customize" && <CustomizeScreen back={back} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(nextWorld === "flat" ? t("toast.worldFlat", { name: dogName }) : nextWorld === "garden" ? t("toast.worldGarden", { name: dogName }) : t("toast.worldKampung", { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: nextAccessory })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} />}
+        {screen === "customize" && <CustomizeScreen back={back} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(nextWorld === "flat" ? t("toast.worldFlat", { name: dogName }) : nextWorld === "garden" ? t("toast.worldGarden", { name: dogName }) : t("toast.worldKampung", { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: t(`accessory.${nextAccessory}`) })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} />}
       </div>
       <div className="bottom-dock" aria-hidden="true" />
       <BottomNav screen={screen} navigate={navigate} />

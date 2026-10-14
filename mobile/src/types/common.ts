@@ -17,4 +17,4 @@ export type Screen =
   | "customize";
 
 export type World = "flat" | "garden" | "kampung";
-export type Accessory = "none" | "glasses" | "hat" | "bandana";
+export type Accessory = "none" | "glasses" | "hat" | "flower";
