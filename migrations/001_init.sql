@@ -53,12 +53,13 @@ CREATE TABLE med_schedules (
 CREATE TABLE dose_events (
   id uuid PRIMARY KEY,
   schedule_id uuid NOT NULL REFERENCES med_schedules(id) ON DELETE CASCADE,
+  scheduled_for timestamptz NOT NULL,
   event text NOT NULL CHECK (event IN ('taken', 'skipped')),
   occurred_at timestamptz NOT NULL,
   proof_photo_url text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX dose_events_schedule_time_idx ON dose_events(schedule_id, occurred_at DESC);
+CREATE INDEX dose_events_occurrence_time_idx ON dose_events(schedule_id, scheduled_for, occurred_at DESC);
 
 CREATE TABLE health_metrics (
   id uuid PRIMARY KEY,
@@ -96,6 +97,7 @@ CREATE TABLE agent_decisions (
   schedule_id uuid REFERENCES med_schedules(id) ON DELETE SET NULL,
   decision text NOT NULL CHECK (decision IN ('nudge', 'celebrate', 'restock_reminder', 'doctor_question', 'see_gp_soon', 'emergency_995', 'stay_quiet')),
   rule_id text NOT NULL,
+  scheduled_for timestamptz,
   mood text NOT NULL CHECK (mood IN ('joyful', 'content', 'sleepy', 'attentive')),
   observations jsonb NOT NULL DEFAULT '{}'::jsonb,
   reasoning text NOT NULL,
@@ -104,10 +106,11 @@ CREATE TABLE agent_decisions (
   caretaker_ping boolean NOT NULL DEFAULT false,
   refused boolean NOT NULL DEFAULT false,
   refusal_kind text CHECK (refusal_kind IS NULL OR refusal_kind IN ('double_dose', 'change_medication', 'reading_reassurance', 'diagnosis', 'pill_identification', 'interaction_advice')),
-  created_at timestamptz NOT NULL
+  created_at timestamptz NOT NULL,
+  CHECK ((schedule_id IS NULL) = (scheduled_for IS NULL))
 );
 CREATE INDEX agent_decisions_user_time_idx ON agent_decisions(user_id, created_at DESC);
-CREATE INDEX agent_decisions_schedule_idx ON agent_decisions(schedule_id, created_at DESC);
+CREATE INDEX agent_decisions_schedule_idx ON agent_decisions(schedule_id, scheduled_for, created_at DESC);
 
 CREATE TABLE sg_registered_products (
   id uuid PRIMARY KEY,

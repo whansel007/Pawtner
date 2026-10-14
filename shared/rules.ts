@@ -32,6 +32,7 @@ function decision(
   reasoning: string,
   observations: AgentDecision["observations"],
   caretakerPing = false,
+  targetDose?: Pick<AgentDecision, "scheduleId" | "scheduledFor">,
 ): AgentDecision {
   const base = {
     id: `decision-${Date.parse(input.now)}`,
@@ -45,7 +46,7 @@ function decision(
     refused: false,
     createdAt: input.now,
   };
-  return { ...base, mood: selectDogMood(input.dog.heart, { decision: kind }) };
+  return { ...base, ...targetDose, mood: selectDogMood(input.dog.heart, { decision: kind }) };
 }
 
 export function decide(input: AgentInput): AgentDecision {
@@ -105,7 +106,8 @@ export function decide(input: AgentInput): AgentDecision {
     const second = missedDose.nudgeCount === 1;
     return decision(input, "nudge", second ? "dose_nudge_2" : "dose_nudge_1",
       second ? "The dose remains untaken at least 60 minutes after the first nudge." : "The dose remains untaken at least 60 minutes after its scheduled time.",
-      { scheduleId: missedDose.id, nudgeCount: missedDose.nudgeCount + 1 });
+      { scheduleId: missedDose.id, scheduledFor: missedDose.scheduledAt, nudgeCount: missedDose.nudgeCount + 1 }, false,
+      { scheduleId: missedDose.id, scheduledFor: missedDose.scheduledAt });
   }
 
   const supplyEntry = Object.entries(input.daysOfSupplyByMedicationId)
