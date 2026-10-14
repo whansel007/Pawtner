@@ -1,6 +1,6 @@
 # Pawtner
 
-Pawtner is a phone-first medication-adherence companion where a senior cares for a virtual dog and a caretaker can support the routine. This repository currently contains the provisional shared contract, deterministic backend rules, fictional seed data, and setup scripts.
+Pawtner is a phone-first medication-adherence companion where a senior cares for a virtual dog and a caretaker can support the routine. This repository contains a Vite mobile UI, a local PostgreSQL API, deterministic backend rules, and fictional seed data.
 
 Built for the Tencent Cloud AI CAN DO IT Hackathon Singapore 2026, healthcare track. **All sample data is fictional. The thresholds are demo values, not clinical advice.** The project is not ready for a deployed demo: API handlers and UI are pending design review and contract confirmation.
 
@@ -8,11 +8,13 @@ Built for the Tencent Cloud AI CAN DO IT Hackathon Singapore 2026, healthcare tr
 
 Rules decide; the model only words things. Every current decision has pre-written wording. Model wording is optional, has a timeout, and falls back to the template on missing keys, timeouts, or errors. `emergency_995` never calls the model. No model integration or network call is currently configured.
 
-Thresholds and symptom terms are in [`shared/config.ts`](shared/config.ts). The provisional contract is in [`shared/contract.ts`](shared/contract.ts). Check it against the Figma exports in `docs/design/` before treating it as final; that folder is not present yet. API handlers are intentionally pending contract confirmation.
+Thresholds and symptom terms are in [`shared/config.ts`](shared/config.ts). The API contract is in [`shared/contract.ts`](shared/contract.ts) and was reviewed against the exported UI. The mobile UI is now wired to the API for today's doses, dose events, blood pressure entry, walks, caregiver summary, and weekly summary. Other screens still use their existing prototype data.
 
 ## Architecture
 
 - `shared/` — provisional types, demo configuration, fixtures, selectors, rules, refusals, and wording fallback.
+- `api/` — host-agnostic route handlers, PostgreSQL repository, and local Node server.
+- `mobile/` — Vite/React prototype UI; core screens use the local API.
 - `migrations/` — plain PostgreSQL schema and fictional seed data.
 - `scripts/` — direct-connection migration and seed runners.
 - `tests/unit/` — deterministic tests without a database, model, or network.
@@ -31,9 +33,9 @@ npm install
 cp .env.example .env
 ```
 
-Fill the two database URLs only when Supabase credentials are available. Then run `npm run db:migrate` and `npm run db:seed`. Run `npm run typecheck` and `npm run test:unit` without a database. Set `DATABASE_URL` to run `npm run test:integration`; integration tests skip when it is empty.
+Set `DATABASE_URL` to the pooled PostgreSQL URL and `DATABASE_URL_DIRECT` for migration/seed commands. Apply the schema and fictional seed with `npm run db:migrate` and `npm run db:seed`. Run `npm run typecheck` and `npm run test:unit` without a database. Set `DATABASE_URL` to run `npm run test:integration`; integration tests skip when it is empty.
 
-The local API server and Vite app are not implemented yet. `npm run dev` reports that the server is pending contract confirmation; API handlers will be added only after the provisional contract has been checked against the design and approved. Do not present this checkout as a runnable end-to-end demo.
+Start the API with `npm run dev` and the UI in a second terminal with `npm run dev:mobile`. Vite proxies `/api` requests to `http://localhost:3001`. Seed the configured database before opening the UI. The proof scanner and walk tracking remain prototype interactions; no image is uploaded and no GPS distance is collected.
 
 ### Environment variables
 
@@ -81,11 +83,11 @@ npm exec vitest run tests/unit/fixtures.test.ts
 
 `demo:rules` prints each decision, rule ID, dog mood, caretaker-ping flag, and wording source. It stays on templates when `LLM_API_KEY` is blank.
 
-The demo script is not yet runnable because the API, UI, and deployed URL do not exist in this checkout. The required three beats remain: (1) pass 10:00 with a missed dose, show two gentle nudges and an opted-in caretaker check-in without a medicine name; (2) record fictional 185/120 with “bad headache” and show calm “Call 995 now” wording without a model call; (3) draft a weekly doctor question from “feel sleepy at night” and simulate a walk with a fast stretch.
+The local prototype is runnable after database setup. The required demo beats remain: (1) pass 10:00 with a missed dose, show two gentle nudges and an opted-in caretaker check-in without a medicine name; (2) record fictional 185/120 with “bad headache” and show calm “Call 995 now” wording without a model call; (3) draft a weekly doctor question from “feel sleepy at night” and simulate a walk with a fast stretch.
 
-### Planned API surface
+### API surface
 
-The provisional contract describes seven planned operations: today, dose event, health metric, agent decide, caretaker summary, escalation settings, and walk session. Routes and request/response shapes will be documented here after the handlers exist and the contract is approved. No API endpoint is currently implemented.
+The API implements seven operations: `GET /api/today`, `POST /api/dose-event`, `POST /api/health-metric`, `POST /api/agent/decide`, `GET /api/caretaker/summary`, `GET|PUT /api/escalation-settings`, and `POST /api/walk-session`. Model wording remains on templates unless a model client is explicitly configured; decision rules remain deterministic.
 
 ## Attributions
 
@@ -101,4 +103,4 @@ The hackathon team uses CodeBuddy and Miora. Add chat screenshots to [`proof/`](
 
 The PRD's Tier 3 roadmap includes push notifications, authentication and roles, background GPS, nightly score recomputation, in-app NDF content (requires permission), HealthHub integration, screening festival days, partnerships/premium, and multilingual support.
 
-Current limitations: no API handlers, UI, hosting configuration, deployment, real model client, HSA import, or design exports. The contract and all API payloads are provisional. Integration tests requiring Postgres were not run because credentials are not present.
+Current limitations: no authentication/roles, hosting configuration, deployment, real model client, HSA import, or automated proof photo/GPS capture. The contract and API payloads remain subject to design review. Database connection verification is pending because this environment could not resolve the configured Supabase hostname.

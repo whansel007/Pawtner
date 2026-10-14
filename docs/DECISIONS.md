@@ -15,10 +15,17 @@
 | One dog image (`dog-base.webp`, 1000×1300) for all four moods; mood shown only through motion and glow. `DOG_IMAGE_BY_MOOD` keeps a path per mood so mood images can be dropped in later. | No 4-mood sheet yet (T1-18); PRD §15 fallback. | The face never changes; moods are subtler. | Tentative until a mood sheet exists |
 | The dog renders in a shared `DogLayer` in the app shell, on every senior screen except `care`, `cover` and `dedication` (`SCREENS_WITHOUT_DOG`). On Home it stands above the chips; elsewhere it sits on the content card's top edge. | The old photo had the dog baked into the background, so moving it to a separate layer made it disappear from other screens. | The secondary-screen card starts a little lower to make room. | Final |
 | Dog size limits: Home min `clamp(120px, 26dvh, 320px)`, other screens min `clamp(80px, 14dvh, 140px)`, max `34dvh` (`DOG_PLACEMENTS`). | Dog was 45 px on a short phone and 390 px (pixelated) on a tall one. | Values are guesses, not design specs. | TENTATIVE |
-| Mood comes from one call, `selectDogMood(heartCount, null)` in `App.tsx`, imported from `shared/rules`. `latestDecision` is `null` until the API is wired. | One source of truth for mood. | Mood ignores agent decisions (e.g. emergency → attentive) until data wiring. | Tentative |
+| Mood comes from API dog state (updated when deterministic decisions are persisted) and is rendered through the shared dog layer. | One source of truth for mood. | The single base image still relies on motion/glow. | Tentative until a mood sheet exists |
 | Home uses a compact next-dose card (`NextDoseCard`), with helpers in `mobile/src/lib/doses.ts` and contract types (`DerivedDose`). The card's label comes from `dose.status`, never from its position in the list. | The old card took ~40% of a short screen and showed labels by row position. | Only the next dose is visible on Home; the full list is behind "See all". | Final |
 | The dedication screen ("For Mom", text from `intro.dedicationText` in `en.json`) auto-advances after `DEDICATION_HOLD_MS = 1100` (`mobile/src/config/intro.ts`), in Pinyon Script; tapping skips. | User: "just a glance". | A hard cut to Home, no fade. | Final; cross-fade kept in view (KIV) |
 | The Vite dev server may read `../shared` (`server.fs.allow: ['..']`), and Vercel builds from the repo root with Root Directory `mobile`. | The app imports `shared/` (contract, rules), which sits outside `mobile/`. | Deploys must run from the repo root, not from `mobile/`. | Final for previews |
+
+## 2026-10-14 — Integrate the pushed mobile screens
+
+- Reviewed `docs/DATA_CONTRACT.md` and the Home, Care, Health, Weekly Summary, and Walk screen props against the provisional shared API contract.
+- Added today health/BP fields and caretaker summary identity and ledger aggregates so the core screens can use backend data.
+- The user's integration request authorizes implementing the seven Tier 1 API operations. Non-Tier-1 screens remain on their existing mocks; label OCR and other Tier 2 work are excluded.
+- Verified the API on configured Supabase data and the mobile production build; the shared contract remains provisional pending product/design sign-off.
 
 ## 2026-10-13 — Ways of working
 

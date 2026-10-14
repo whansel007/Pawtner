@@ -103,6 +103,8 @@ export interface TodayResponse {
   user: { id: string; name: string };
   dog: { id: string; name: string; mood: DogMood; heart: number; streak: number };
   doses: DerivedDose[];
+  healthMetrics: HealthMetric[];
+  bloodPressureLoggedToday: boolean;
   latestDecision: AgentDecision | null;
 }
 
@@ -143,8 +145,17 @@ export interface AgentDecideResponse {
 
 export interface CaretakerSummaryResponse {
   period: { start: string; end: string };
+  senior: { id: string; name: string };
+  caregiver: { id: string; name: string } | null;
+  dog: { id: string; name: string; mood: DogMood; heart: number; streak: number };
+  careScore: number;
+  caringDays: number;
   dosesTaken: number;
   dosesDue: number;
+  walkCount: number;
+  walkDistanceMeters: number;
+  latestActivityAt: string | null;
+  latestBloodPressure: HealthMetric | null;
   caringMoments: Array<{ id: string; kind: "celebration" | "check_in"; message: string; occurredAt: string }>;
   doctorQuestions: Array<{ note: string; occurredAt: string }>;
 }
@@ -171,6 +182,7 @@ export interface WalkSessionResponse {
   startedAt: string;
   finishedAt: string;
   distanceMeters: number;
+  fastStretchOccurred: boolean;
   decision: AgentDecision;
   souvenirId: string | null;
 }
