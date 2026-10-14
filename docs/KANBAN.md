@@ -1,6 +1,6 @@
 # Kanban
 
-Updated 2026-10-14 (afternoon). Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**. IDs refer to `PRD.md` §9.
+Updated 2026-10-14 (evening). Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**. IDs refer to `PRD.md` §9.
 "Mock" = works on the phone against mock data in `mobile/src/mock`, not yet wired to the API.
 
 ## Doing
@@ -19,8 +19,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Posts dose event and derives status from ledger; scanner/photo is still a prototype. |
 | T1-11 | In-app nudge + demo clock | P2 | Settings demo clock runs the deterministic agent; dose nudges are capped at two per occurrence. |
 | T1-13 | Dog mood on Home | P2 | Shared dog mood fed from API state; visual moods remain motion/glow. |
-| — | Home fix: friendly one-time API notice, tap-through toasts, compact decision row | P2 / Claude Code | [#7](https://github.com/whansel007/Pawtner/pull/7) open, waiting for the user's review. |
-| T1-16 | "Simulate walk" (dizzy on the fast stretch) | P2 / CodeBuddy | Next CodeBuddy task. `main` posts a walk with `distanceMeters: 0, fastStretchOccurred: false`; recorded points, growing distance, fast stretch and dizzy dog still to build. |
+| — | UI tweaks: landscape two-column layout, shared back navigation, streak chip → Milestones, fixed card frames, tap bubble in the toast slot, stronger hearts, dizzy stars, walk end state | P2 / Claude Code | Branch `claude/ui-tweaks`, committed locally; push + PR waiting for the user's yes (team mode). |
 | T1-15 | `/care` web page from the Miro frame | P2 / CodeBuddy | Frame in progress. The phone's Care/Settings screens already use the API (summary, consent, threshold min 2). Web page needs P1's caretaker list (see Blocked). |
 | T1-17 | Public HTTPS URL | P2 (+ P1 API) | Preview of `main` @ `806cc66` (front end only, no API, offline fallback): `pawtner-mobile-3vgi0crkq-fresfrida.vercel.app` (14 Oct 15:02). Production `pawtner-mobile-three.vercel.app` still serves the 13 Oct build. `main` now calls `/api` on load, so a front-end deploy needs a hosted API first (until then the app runs on the offline fallback and shows one notice). |
 | T1-18 | Dog assets | Design | Base dog + garden day/night done. 4-mood sheet not started. |
@@ -53,6 +52,8 @@ Today's plan (agreed 13 Oct evening), in order:
 | T1-10 + T1-12 | BP form with note → `/api/health-metric` (offline fallback: `decide()` via `lib/agent.ts`) → calm 995 card above the form, no playful toast, attentive dog; one `DecisionLogCard` (en.json text, Yes/No, "Why?") on Health and Home; tap-the-dog rotation (hop, hearts, bubble; bark once `bark.mp3` exists). Built by CodeBuddy; merge with P1's API wiring resolved by CodeBuddy. Squash-merged. | [#6](https://github.com/whansel007/Pawtner/pull/6) |
 | — | Docs for 14 Oct (plan, caretakers decisions, docs push/merge rule) | [#5](https://github.com/whansel007/Pawtner/pull/5) |
 | T1-08 (part) | Names from data: dog and caretaker names via i18n interpolation; `en.json` has no hardcoded "Max", "Jamie" or "Siew" | [#4](https://github.com/whansel007/Pawtner/pull/4) |
+| — | Home fix: friendly one-time API notice, tap-through toasts, compact decision row | [#7](https://github.com/whansel007/Pawtner/pull/7) |
+| T1-16 | Simulated walk: growing distance, fast (bus) stretch pauses distance, dizzy dog, one walk session posted on finish | [#9](https://github.com/whansel007/Pawtner/pull/9) |
 
 ## Blocked
 
@@ -72,6 +73,9 @@ Today's plan (agreed 13 Oct evening), in order:
 | Mock dog name `"max"` lowercase; mock medicines are veterinary (Apoquel, Gabapentin) | `mobile/src/mock/home.ts`; a judge may notice. |
 | BP inputs have no accessible name | Labels wrap a span and the input; the accessibility tree shows unnamed textboxes. Add `htmlFor`/`id` or `aria-label`. |
 | Heart score computed inline | `App.tsx` computes `heartCount` itself instead of `computeHeart` from `shared/selectors`; two sources of truth. |
+| Tap bubble on cramped Home (360×640) | When the dog's head already reaches under the name/hearts, the bubble is lifted above the head and briefly covers the name. Alternative: a smaller Home dog on short phones. |
+| `viewport-fit=cover` not set | `mobile/index.html` lacks it, so the `env(safe-area-inset-*)` paddings are 0 on iPhones (the browser letterboxes instead). Adding it is a separate, all-screens change. |
+| "Show me at home" on World & wardrobe goes to Milestones | `CustomizeScreen` wires it to the back action; the label says Home. Pre-existing. |
 | Stale checkouts mislead tools | On 14 Oct the main folder was still on the merged `cb/names-from-data` (no KANBAN/HANDOFF) and CodeBuddy tried to restart T1-08. Main folder switched to `main` the same morning. Start new work from `origin/main` in a worktree. |
 | Dedication cross-fade into Home | Deferred by the user; needs Home rendered under the dedication overlay. |
 | `CLAUDE.md` paths | Points to `docs/PRD.md` and `docs/ARCHITECTURE.md`; the PRD is at the repo root and ARCHITECTURE.md doesn't exist. |
