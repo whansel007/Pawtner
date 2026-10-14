@@ -83,11 +83,17 @@ export const DOG_PLACEMENTS = {
 
 export type DogPlacement = keyof typeof DOG_PLACEMENTS;
 
-/** Screens without the dog: the caretaker view, and the full-screen intro which has no scene at all. */
-const SCREENS_WITHOUT_DOG: readonly Screen[] = ["care", "cover", "dedication"];
+/** Portrait: the caretaker view's card covers the scene, and the intro screens have no scene. */
+const SCREENS_WITHOUT_DOG_PORTRAIT: readonly Screen[] = ["care", "cover", "dedication"];
+
+/** Landscape: the dog joins the senior in the left column on every screen with a scene, including the caretaker view. */
+const SCREENS_WITHOUT_DOG_LANDSCAPE: readonly Screen[] = ["cover", "dedication"];
 
 export function dogPlacementFor(screen: Screen, layout: SceneLayout = "portrait"): DogPlacement | null {
-  if (SCREENS_WITHOUT_DOG.includes(screen)) return null;
-  if (layout === "landscape") return screen === "home" ? "homeWide" : "lawn";
+  if (layout === "landscape") {
+    if (SCREENS_WITHOUT_DOG_LANDSCAPE.includes(screen)) return null;
+    return screen === "home" ? "homeWide" : "lawn";
+  }
+  if (SCREENS_WITHOUT_DOG_PORTRAIT.includes(screen)) return null;
   return screen === "home" ? "home" : "ledge";
 }
