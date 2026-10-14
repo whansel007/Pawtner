@@ -1,7 +1,7 @@
 import { type CSSProperties, type ReactNode } from "react";
 import type { DogMood } from "../../../shared/contract";
-import { DOG_IMAGE_BY_MOOD, MOOD_LOOKS } from "../config/scene";
-import { useImageAvailable } from "../lib/useImageAvailable";
+import { DOG_BASE_IMAGE, DOG_IMAGE_BY_MOOD, MOOD_LOOKS } from "../config/scene";
+import { useImageWithFallback } from "../lib/useImageAvailable";
 import { HEART_BURST_COUNT, type PetReactionKind } from "../config/pet";
 import { Icon } from "./Icon";
 import "./DogStage.css";
@@ -26,8 +26,8 @@ export function DogStage({
   reaction?: PetReactionKind | null;
   accessory?: ReactNode;
 }) {
-  const src = DOG_IMAGE_BY_MOOD[mood];
-  const image = useImageAvailable(src);
+  // A missing mood image falls back to the base art; the dog hides only if the base art is missing too.
+  const image = useImageWithFallback(DOG_IMAGE_BY_MOOD[mood], DOG_BASE_IMAGE);
   const look = MOOD_LOOKS[mood];
 
   if (!image.available) return <div className="dog-stage" />;
@@ -67,7 +67,7 @@ export function DogStage({
           aria-label={dogName}
         >
           <span className="dog-stage__body">
-            <img className="dog-stage__image" src={src} alt="" onError={image.onError} draggable={false} />
+            <img className="dog-stage__image" src={image.src} alt="" onError={image.onError} draggable={false} />
             {accessory}
           </span>
         </button>

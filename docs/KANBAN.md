@@ -16,13 +16,12 @@ Today's plan (agreed 13 Oct evening), in order:
 | ID | Item | Owner | State |
 |---|---|---|---|
 | T1-08 | Home schedule card, names from data | P2 / CodeBuddy | Wired to `/api/today`; upcoming reminders remain mock. |
-| T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Posts dose event and derives status from ledger; scanner/photo is still a prototype. |
+| T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Posts dose event and derives status from ledger; offline fallback (local taken + local `celebrate`) on `claude/sleepy-taken-fallback`; scanner/photo is still a prototype. |
 | T1-11 | In-app nudge + demo clock | P2 | Settings demo clock runs the deterministic agent; dose nudges are capped at two per occurrence. |
 | T1-13 | Dog mood on Home | P2 | Shared dog mood fed from API state; visual moods remain motion/glow. |
-| — | UI tweaks: landscape two-column layout, shared back navigation, streak chip → Milestones, fixed card frames, tap bubble in the toast slot, stronger hearts, dizzy stars, walk end state | P2 / Claude Code | Branch `claude/ui-tweaks`, committed locally; push + PR waiting for the user's yes (team mode). |
 | T1-15 | `/care` web page from the Miro frame | P2 / CodeBuddy | Frame in progress. The phone's Care/Settings screens already use the API (summary, consent, threshold min 2). Web page needs P1's caretaker list (see Blocked). |
-| T1-17 | Public HTTPS URL | P2 (+ P1 API) | **Front end in production** on Vercel: `pawtner-mobile-three.vercel.app` = `main` @ `d318270` (deploy `pawtner-mobile-1fn80qgz0`, 14 Oct evening; checks passed first). No hosted API yet, so it runs on the offline fallback: beats 2 (emergency) and 3 (walk) work; beat 1 (Taken, demo clock) needs the API. P1 also has a static front-end copy on EdgeOne (`pawtner-dpyqrh9kdlee.edgeone.dev`, built before PR #10; its `/api/*` returns the HTML page, no backend). |
-| T1-18 | Dog assets | Design | Base dog + garden day/night done. 4-mood sheet not started. |
+| T1-17 | Public HTTPS URL | P2 (+ P1 API) | **Front end in production** on Vercel: `pawtner-mobile-three.vercel.app` = `main` @ `d318270` (deploy `pawtner-mobile-1fn80qgz0`, 14 Oct evening; checks passed first). No hosted API yet, so it runs on the offline fallback: beats 2 (emergency) and 3 (walk) work; beat 1 (Taken, demo clock) needs the API (`claude/sleepy-taken-fallback`, PR #12, adds an offline fallback for Taken; the demo clock still needs the API). P1 also has a static front-end copy on EdgeOne (`pawtner-dpyqrh9kdlee.edgeone.dev`, built before PR #10; its `/api/*` returns the HTML page, no backend). |
+| T1-18 | Dog assets | Design | Base dog + garden day/night done. Sleepy art (`dog-sleepy.webp`, same canvas) wired on `claude/sleepy-taken-fallback`; joyful, content, attentive still use the base art. |
 
 ## Backlog (Tier 1)
 
@@ -54,6 +53,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | T1-08 (part) | Names from data: dog and caretaker names via i18n interpolation; `en.json` has no hardcoded "Max", "Jamie" or "Siew" | [#4](https://github.com/whansel007/Pawtner/pull/4) |
 | — | Home fix: friendly one-time API notice, tap-through toasts, compact decision row | [#7](https://github.com/whansel007/Pawtner/pull/7) |
 | T1-16 | Simulated walk: growing distance, fast (bus) stretch pauses distance, dizzy dog, one walk session posted on finish | [#9](https://github.com/whansel007/Pawtner/pull/9) |
+| — | UI tweaks: landscape two-column layout, shared back navigation, streak chip → Milestones, fixed card frames, tap bubble in the toast slot, stronger hearts, dizzy stars, walk end state (merged into `main` @ `d318270`) | [#10](https://github.com/whansel007/Pawtner/pull/10) |
 
 ## Blocked
 
