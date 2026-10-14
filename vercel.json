@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm --prefix mobile install --no-audit --no-fund && npm --prefix mobile run build",
+  "outputDirectory": "mobile/dist",
+  "installCommand": "npm install",
+  "framework": null,
+  "functions": {
+    "api/[...path].ts": {
+      "maxDuration": 10,
+      "memory": 512
+    }
+  },
+  "rewrites": [
+    { "source": "/((?!api).*)", "destination": "/index.html" }
+  ]
+}
