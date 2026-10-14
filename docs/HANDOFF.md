@@ -41,6 +41,7 @@ Config lives in `mobile/src/config/` (`scene.ts`: images, ground line, dog size 
 ## Git and roles
 
 - Team mode: every push needs the user's yes, typed in the session that pushes. Only the user merges PRs. Never commit to `main`, never force-push.
+- Standing exception (user, 14 Oct): **docs-only** commits authored by the user (Frescylia Frida) may be pushed without asking, and the docs PR may be merged by Claude Code if GitHub reports no conflicts. Code PRs still need the user's yes and the user's merge.
 - Claude Code: `claude/*` branches, structural fixes. CodeBuddy: `cb/*` branches, features (its chats are the judging proof; screenshots go in `proof/`).
 - Several tools share one checkout. Use `git worktree` for parallel work instead of switching branches in the main folder. Create each worktree from `origin/main` (`git fetch && git worktree add ../pawtner-<task> -b <branch> origin/main`), then run `npm install` in the root and in `mobile/`.
 - Keep the main folder (`Pawtner-repo`) on `main` and pull. On 14 Oct it was still on the merged `cb/names-from-data` (no KANBAN/HANDOFF), and CodeBuddy tried to restart T1-08; a fresh chat with a context-reset message fixed it, and the folder was switched to `main`. Trust `git log origin/main` over a tool's memory.
