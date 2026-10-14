@@ -1,6 +1,6 @@
 import { decide } from "../../../shared/rules";
 import { buildAgentInput } from "../../../shared/selectors";
-import type { AgentDecision, AgentInput, DerivedDose, HealthMetric } from "../../../shared/contract";
+import type { AgentDecision, AgentInput, DerivedDose, DoseEvent, HealthMetric } from "../../../shared/contract";
 
 /**
  * Request an agent decision for the current app state.
@@ -27,6 +27,8 @@ export function buildAgentInputFromState(params: {
   daysOfSupplyByMedicationId?: Record<string, number | null>;
   consecutiveMissedDoses?: number;
   walkFinished?: boolean;
+  /** The dose event that triggered this decision; "taken" lets the rules celebrate. */
+  latestDoseEvent?: DoseEvent | null;
 }): AgentInput {
   return {
     now: params.now,
@@ -38,7 +40,7 @@ export function buildAgentInputFromState(params: {
       streak: params.streak,
     },
     doses: params.doses,
-    latestDoseEvent: null,
+    latestDoseEvent: params.latestDoseEvent ?? null,
     healthMetrics: params.healthMetrics,
     daysOfSupplyByMedicationId: params.daysOfSupplyByMedicationId ?? {},
     consecutiveMissedDoses: params.consecutiveMissedDoses ?? 0,

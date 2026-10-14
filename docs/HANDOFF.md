@@ -18,7 +18,7 @@ Updated 2026-10-14. Source of truth for scope: `PRD.md` (repo root), tiers in §
 3. Dose confirmation, BP entry, and walk completion write events through the API. Care and Weekly Summary use `/api/caretaker/summary`; caretaker consent and threshold save through `/api/escalation-settings`.
 4. Settings has a demo clock. It calls `/api/agent/decide` at the selected local time; Home shows the saved decision with its rule, observations, reasoning, and wording source.
 5. `SceneBackdrop` draws the garden; `lib/useSceneGround.ts` measures where the dog stands (portrait Home: top of the chips; other portrait screens: top of the content card; landscape: on the lawn in the left column, see `DOG_PLACEMENTS` and `LANDSCAPE_MEDIA_QUERY` in `config/scene.ts`) and publishes CSS variables so the art's lawn line and the dog's feet meet. It also publishes the dog's box (`--dog-top`, `--dog-height`) so the tap bubble (`PetBubble`, in the toast slot under the hearts) never covers the head.
-6. Home shows `NextDoseCard` (next due/missed dose, then upcoming). "Taken" → prototype proof screen → API event; status is re-derived from the ledger. The proof screen does not upload an image.
+6. Home shows `NextDoseCard` (next due/missed dose, then upcoming). "Taken" → prototype proof screen → API event; status is re-derived from the ledger. If the API call fails, `handleDoseVerified` marks the dose taken locally (not saved; the next successful `/api/today` replaces it) and gets a `celebrate` decision from local `decide()` via `lib/agent.ts`. The proof screen does not upload an image.
 7. Intro: cover → dedication (auto-advances after `DEDICATION_HOLD_MS`, `config/intro.ts`) → Home.
 8. Navigation: `lib/useNavigation.ts` keeps the screen and a short history (`lib/navigation.ts`). Top-level screens (home, health, milestones, walk, settings) show "Home"; drilled-down screens show "Back" and return to where they were opened from. Every non-Home screen uses `components/FullCard.tsx` (fixed frame, back button, inner scroll).
 
@@ -55,7 +55,7 @@ Config lives in `mobile/src/config/` (`scene.ts`: images incl. `DOG_IMAGE_BY_MOO
 ## Known risks
 
 1. The shared Supabase database currently has no Pawtner schema; local `/api/today` reports this until migrations and fictional seed are run with `DATABASE_URL_DIRECT`.
-2. API failures: `reportApiProblem()` in `App.tsx` logs the detail to the console; background loads show one `toast.apiOffline` per outage, failed user actions always show `toast.apiActionFailed` (PR #7). The BP form falls back to local `decide()` when the API is unreachable.
+2. API failures: `reportApiProblem()` in `App.tsx` logs the detail to the console; background loads show one `toast.apiOffline` per outage, failed user actions always show `toast.apiActionFailed` (PR #7). The BP form, simulated walk and "Taken" fall back to local `decide()` when the API is unreachable. On "Taken" the heart-gained toast replaces the "didn't save" notice in the single toast slot, so offline the senior sees only the heart. If `/api/today` loaded earlier and the API drops later, the stale `today` keeps supplying heart and mood, so the offline "Taken" does not change them.
 3. At 360×640 the Home decision row (~56 px) crops the top of the dog's head slightly once a decision exists.
 4. No authentication or roles exist; this API is for the fictional single-user demo only.
 5. Dog size limits and mood looks are TENTATIVE guesses.

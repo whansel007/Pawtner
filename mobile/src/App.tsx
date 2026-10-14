@@ -24,7 +24,7 @@ import { DogLayer } from "./components/DogLayer";
 import { DEFAULT_PHASE, phaseFromTime } from "./config/scene";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
-import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, EscalationSettingsResponse, HealthMetric, TodayResponse } from "../../shared/contract";
+import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, DoseEvent, EscalationSettingsResponse, HealthMetric, TodayResponse } from "../../shared/contract";
 import { api } from "./lib/api";
 import { requestDecision, buildAgentInputFromState } from "./lib/agent";
 import { useNavigation } from "./lib/useNavigation";
@@ -52,6 +52,11 @@ import {
 function toDateTimeLocal(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+/** Heart count from the local dose list; used only until /api/today has answered. */
+function localHeartCount(doses: DerivedDose[], bpLogged: boolean): number {
+  return Math.min(DEMO_RULES.heartMaximum, 1 + doses.filter((d) => d.status === "taken").length + (bpLogged ? 1 : 0));
 }
 
 export default function App() {
@@ -89,9 +94,8 @@ export default function App() {
     if (screen === "settings") void api.escalationSettings().then(setEscalationSettings).catch((error) => reportApiProblem(error));
   }, [screen]);
 
-  const takenCount = doseList.filter((d) => d.status === "taken").length;
   const pendingDose = doseList.find((item) => item.id === pendingDoseId);
-  const heartCount = today?.dog.heart ?? Math.min(DEMO_RULES.heartMaximum, 1 + takenCount + (bpLogged ? 1 : 0));
+  const heartCount = today?.dog.heart ?? localHeartCount(doseList, bpLogged);
   const mood = today ? today.dog.mood : selectDogMood(heartCount, latestDecision);
   // T2-10: sun/moon by local time using shared helper
   const phase = demoNow ? (() => { try { return phaseFromTime(demoNow, "Asia/Singapore"); } catch { return DEFAULT_PHASE; } })() : DEFAULT_PHASE;
@@ -232,18 +236,40 @@ export default function App() {
     void refreshToday();
   }
 
-  /** Proof verified: record the pending dose as taken, then return Home with a heart. */
+  /**
+   * Proof verified: record the pending dose as taken, then return Home with a heart.
+   * If the API call fails (no server), marks the dose taken locally and asks requestDecision()
+   * in lib/agent.ts for a celebrate decision, so the beat still works offline.
+   * The local change is not saved: the next successful /api/today replaces it.
+   */
   async function handleDoseVerified() {
     if (!pendingDose) return;
+    const occurredAt = demoNow ?? new Date().toISOString();
+    const doseEvent = { scheduleId: pendingDose.id, scheduledFor: pendingDose.scheduledAt, event: "taken" as const, occurredAt };
     try {
-      const result = await api.doseEvent({ scheduleId: pendingDose.id, scheduledFor: pendingDose.scheduledAt, event: "taken", occurredAt: demoNow ?? new Date().toISOString() });
+      const result = await api.doseEvent(doseEvent);
       setToday(result.today);
       setDoseList(result.today.doses);
-      navigate("home");
-      notify(t("toast.heartGained", { name: dogName }));
     } catch (error) {
       reportApiProblem(error, true);
+      const localDoses = doseList.map((d) => (d.id === pendingDose.id ? { ...d, status: "taken" as const, eventAt: occurredAt } : d));
+      setDoseList(localDoses);
+      const localEvent: DoseEvent = { id: `local-${pendingDose.id}-${occurredAt}`, ...doseEvent };
+      const input = buildAgentInputFromState({
+        now: occurredAt,
+        userId: demoUser.id,
+        dogId: demoDog.id,
+        dogName,
+        heart: today?.dog.heart ?? localHeartCount(localDoses, bpLogged),
+        streak: today?.dog.streak ?? pet.streak,
+        doses: localDoses,
+        healthMetrics,
+        latestDoseEvent: localEvent,
+      });
+      setLatestDecision(await requestDecision(input));
     }
+    navigate("home");
+    notify(t("toast.heartGained", { name: dogName }));
   }
 
   const runAgentAtDemoTime = async () => {

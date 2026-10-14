@@ -16,7 +16,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | ID | Item | Owner | State |
 |---|---|---|---|
 | T1-08 | Home schedule card, names from data | P2 / CodeBuddy | Wired to `/api/today`; upcoming reminders remain mock. |
-| T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Posts dose event and derives status from ledger; scanner/photo is still a prototype. |
+| T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Posts dose event and derives status from ledger; offline fallback (local taken + local `celebrate`) on `claude/sleepy-taken-fallback`; scanner/photo is still a prototype. |
 | T1-11 | In-app nudge + demo clock | P2 | Settings demo clock runs the deterministic agent; dose nudges are capped at two per occurrence. |
 | T1-13 | Dog mood on Home | P2 | Shared dog mood fed from API state; visual moods remain motion/glow. |
 | — | UI tweaks: landscape two-column layout, shared back navigation, streak chip → Milestones, fixed card frames, tap bubble in the toast slot, stronger hearts, dizzy stars, walk end state | P2 / Claude Code | Branch `claude/ui-tweaks`, committed locally; push + PR waiting for the user's yes (team mode). |
