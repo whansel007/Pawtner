@@ -116,10 +116,12 @@
 .dog-stage__bubble {
   position: absolute;
   left: 50%;
-  bottom: 78%;
+  bottom: 72%;
   transform: translateX(-50%);
-  max-width: 200px;
-  padding: 10px 16px;
+  width: max-content;
+  max-width: min(60cqw, 220px);
+  min-width: 120px;
+  padding: 10px 14px;
   border-radius: 16px 16px 16px 4px;
   background: white;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
@@ -131,9 +133,6 @@
   white-space: normal;
   z-index: 6;
   pointer-events: none;
-  /* Must not cover the top bar buttons — max-height keeps it below the top zone */
-  max-height: 80px;
-  overflow: hidden;
 }
 
 @keyframes dog-breathe {

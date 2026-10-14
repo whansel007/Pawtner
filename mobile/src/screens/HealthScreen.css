@@ -1,39 +1,43 @@
 .bp-form {
   margin-top: 16px;
-  padding: 16px;
+  padding: 14px;
   border-radius: var(--radius-5xl);
   background: var(--color-surface-cream);
 }
 
 .bp-form__title {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-black);
   color: var(--color-text-heading);
 }
 
 .bp-form__row {
-  display: flex;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .bp-form__field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  flex: 1;
+  gap: 5px;
+  min-width: 0;
 }
 
 .bp-form__label {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-black);
   letter-spacing: .5px;
   color: #6b7a6e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .bp-form__input {
   min-height: 48px;
-  padding: 0 14px;
+  padding: 0 12px;
   border: 2px solid #d8ddd6;
   border-radius: var(--radius-md);
   font-size: var(--font-size-3xl);
@@ -42,6 +46,7 @@
   background: white;
   outline: none;
   transition: border-color .15s;
+  min-width: 0;
 }
 
 .bp-form__input:focus {
@@ -63,7 +68,7 @@
 }
 
 .bp-form__submit {
-  margin-top: 14px;
+  margin-top: 12px;
   min-height: 48px;
   width: 100%;
   border: 0;
@@ -77,8 +82,8 @@
 
 /* ── Calm result card: no animation, no emoji, large readable text ── */
 .bp-result {
-  margin-top: 16px;
-  padding: 20px 16px;
+  margin-top: 14px;
+  padding: 16px 14px;
   border-radius: var(--radius-5xl);
   text-align: center;
 }
@@ -95,7 +100,7 @@
 
 .bp-result__number {
   margin: 0 0 8px;
-  font-size: 64px;
+  font-size: 56px;
   font-weight: var(--font-weight-black);
   line-height: 1;
   color: #b3261e;
@@ -104,7 +109,7 @@
 
 .bp-result__title {
   margin: 0 0 8px;
-  font-size: var(--font-size-6xl);
+  font-size: var(--font-size-5xl);
   font-weight: var(--font-weight-black);
   line-height: 1.15;
   color: var(--color-text-heading);
@@ -112,7 +117,7 @@
 
 .bp-result__wording {
   margin: 0;
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-xl);
   line-height: 1.4;
   color: #3a4a3e;
 }
