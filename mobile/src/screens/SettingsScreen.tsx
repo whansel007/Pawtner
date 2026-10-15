@@ -25,6 +25,7 @@ export function SettingsScreen({
   onToggleDemoUnlockAll,
   demoTimeActive,
   onDemoTime,
+  onResetDemo,
 }: {
   back: BackAction;
   /** "My medicines": the medicine list with Edit and the original pill photo (T2-08). */
@@ -45,6 +46,8 @@ export function SettingsScreen({
   demoTimeActive: boolean;
   /** Jump to a preset time today, or back to real time (null). Never runs the agent. */
   onDemoTime: (preset: DemoTimePreset | null) => void;
+  /** "Reset demo": clears this phone's demo choices and reloads the app. */
+  onResetDemo: () => void;
 }) {
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
@@ -100,6 +103,8 @@ export function SettingsScreen({
           })}
           <button type="button" className="secondary-button" disabled={!demoTimeActive} onClick={() => onDemoTime(null)}>{t("settings.demoTime.real")}</button>
         </div>
+        <p>{t("settings.demoResetHint")}</p>
+        <button type="button" className="secondary-button" onClick={onResetDemo}>{t("settings.demoReset")}</button>
       </div>
     </FullCard>
   );

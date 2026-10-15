@@ -2,11 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { RESTOCK_SOON_DAYS } from "../config/restock";
 import type { RestockAlert } from "../types";
 import {
-  clearRestockHelp,
-  dismissRestockForToday,
-  isRestockDismissed,
+  chooseRestockSelf,
   markRestockHelpHandled,
   readRestockHelp,
+  readRestockSelf,
   requestRestockHelp,
   shouldShowRestock,
   type RestockHelpEntry,
@@ -26,29 +25,35 @@ export function useRestockEntry() {
   return [entry, setEntry] as const;
 }
 
-export type RestockCardState = "offer" | "asked" | "handled";
+export type RestockCardState = "offer" | "asked" | "handled" | "self";
 
 /**
  * Phone side of restock help. `alert` is the low-supply medicine (`GET /api/medications`, mock offline; see App.tsx).
+ * The card stays while the supply is low; the choice only swaps the buttons for a status line.
  * - offer: "Ask {{caretaker}} to help" / "I'll get it myself"
  * - asked: the request is waiting on /care
- * - handled: a caretaker tapped "I'll handle it" on /care; "OK" hides the card for today
+ * - handled: a caretaker tapped "I'll handle it" on /care
+ * - self: the senior chose "I'll get it myself"
  */
 export function useRestockHelp(alert: RestockAlert | null) {
   const [entry, setEntry] = useRestockEntry();
-  const [dismissedToday, setDismissedToday] = useState(() => isRestockDismissed(new Date()));
+  // Kept in state too, so the choice holds for this session even when storage is blocked.
+  const [selfMedicationId, setSelfMedicationId] = useState(() => readRestockSelf());
   const [busy, setBusy] = useState(false);
 
   // Only a request about this medicine counts.
   const current = alert && entry?.medicationId === alert.medicationId ? entry : null;
-  const state: RestockCardState = current?.status === "handled" ? "handled" : current ? "asked" : "offer";
-  const visible = alert !== null && shouldShowRestock(alert.daysRemaining, RESTOCK_SOON_DAYS, dismissedToday);
+  const state: RestockCardState = current?.status === "handled" ? "handled"
+    : current ? "asked"
+    : alert && selfMedicationId === alert.medicationId ? "self"
+    : "offer";
+  const visible = alert !== null && shouldShowRestock(alert.daysRemaining, RESTOCK_SOON_DAYS);
 
-  const hideForToday = useCallback(() => {
-    dismissRestockForToday(new Date());
-    // Hidden for this session even when storage is blocked.
-    setDismissedToday(true);
-  }, []);
+  const getItMyself = useCallback(() => {
+    if (!alert) return;
+    chooseRestockSelf(alert.medicationId);
+    setSelfMedicationId(alert.medicationId);
+  }, [alert]);
 
   const askForHelp = useCallback(async () => {
     if (!alert || busy) return;
@@ -60,13 +65,7 @@ export function useRestockHelp(alert: RestockAlert | null) {
     }
   }, [alert, busy, setEntry]);
 
-  const acknowledgeHandled = useCallback(() => {
-    clearRestockHelp();
-    setEntry(null);
-    hideForToday();
-  }, [hideForToday, setEntry]);
-
-  return { visible, state, busy, askForHelp, getItMyself: hideForToday, acknowledgeHandled, needsAttention: visible && state === "offer" };
+  return { visible, state, busy, askForHelp, getItMyself, needsAttention: visible && state === "offer" };
 }
 
 /** /care side: the pending request (or null) and "I'll handle it". */

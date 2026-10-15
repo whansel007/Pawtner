@@ -263,7 +263,7 @@
     "getItMyself": "I'll get it myself",
     "asked": "{{caretaker}} has been asked to help.",
     "handled": "{{caretaker}} will help with the refill.",
-    "ok": "OK"
+    "self": "You'll get this one yourself."
   },
   "prescription": {
     "eyebrow": "New medication",
@@ -507,6 +507,8 @@
     "privacyBody": "{{caretaker}} sees caring moments, not private medicine details.",
     "demoEyebrow": "Demo",
     "demoUnlockAll": "Unlock all rewards (demo)",
+    "demoReset": "Reset demo",
+    "demoResetHint": "Clears this phone's demo choices: restock answer, clinic memo photo, rewards switch and garden time. Saved doses and readings stay.",
     "demoTimeHint": "Jump the garden to a time of day. Doesn't run the agent or save anything.",
     "demoTime": {
       "morning": "Morning ({{time}})",

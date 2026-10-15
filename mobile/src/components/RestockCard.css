@@ -27,5 +27,3 @@
 .restock-card__secondary:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 
 .restock-card__status { margin: 12px 0 0; color: var(--color-text-heading); font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); }
-.restock-card__done { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
-.restock-card__done .restock-card__secondary { margin-top: 12px; min-width: 72px; }
