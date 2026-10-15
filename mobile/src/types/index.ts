@@ -88,15 +88,10 @@ export interface WeekSummary {
   doctorQuestion: string;
 }
 
+/** Doctor's tiny tasks row: a photo of the clinic memo, kept on the phone (subtitles in en.json). */
 export interface ClinicTask {
-  /** Task title */
+  /** Row title */
   title: string;
-  /** Short description */
-  subtitle: string;
-  /** Completed count */
-  done: number;
-  /** Total count */
-  total: number;
 }
 
 export interface BloodPressureReading {
@@ -130,6 +125,10 @@ export interface ActivityLink {
   subtitle: string;
   /** External URL */
   url: string;
+  /** Partner logo shown in the row's icon box */
+  logoSrc: string;
+  /** Alt text for the logo */
+  logoAlt: string;
 }
 
 export interface MilestoneWorld {
@@ -182,28 +181,14 @@ export interface Caregiver {
   status: string;
 }
 
-export interface CareActivity {
-  /** Doses taken summary, e.g. "2 of 3" */
-  dosesTaken: string;
-  /** Doses taken count */
-  dosesTakenCount: number;
-  /** Doses total */
-  dosesTotal: number;
-  /** Walk distance today */
-  walkDistance: string;
-  /** Timestamp of latest activity */
-  timestamp: string;
-  /** Activity description */
-  description: string;
-}
-
+/** A medicine running low (mock until the API sends supply data). Label text lives in en.json ("restock"). */
 export interface RestockAlert {
-  /** Medicine name */
+  /** medications.id; the only medicine detail a restock help request carries */
+  medicationId: string;
+  /** Medicine name, shown to the senior only (never on /care) */
   name: string;
-  /** Days remaining */
+  /** Days of supply remaining */
   daysRemaining: number;
-  /** Label, e.g. "RESTOCK SOON" */
-  label: string;
 }
 
 export interface AccessoryOption {

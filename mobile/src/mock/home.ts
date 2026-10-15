@@ -122,20 +122,20 @@ export const bloodPressureReading: BloodPressureReading = {
 
 export const clinicTasks: ClinicTask = {
   title: "Doctor's tiny tasks",
-  subtitle: "1 of 2 done · from your clinic memo",
-  done: 1,
-  total: 2,
 };
 
 export const screeningInfo: ScreeningInfo = {
   title: "Complete a Screen for Life check",
   description: "See subsidised screenings you may be eligible for.",
-  url: "https://www.healthhub.sg/programmes/screen-for-life",
+  url: "https://www.healthhub.sg/programmes/screen_for_life",
   unlocksFestival: true,
 };
 
 export const activityLink: ActivityLink = {
-  title: "Activities near you",
-  subtitle: "Open Healthy 365",
-  url: "https://www.healthhub.sg/programmes/healthy365",
+  title: "Link to Healthy 365",
+  subtitle: "Activities near you",
+  url: "https://www.healthhub.sg/programmes/healthyliving",
+  /** User-supplied logo, 192×192 transparent WebP. */
+  logoSrc: "/assets/healthy365-logo.webp",
+  logoAlt: "Healthy 365",
 };

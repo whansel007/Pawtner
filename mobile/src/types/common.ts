@@ -2,7 +2,6 @@ export type Screen =
   | "cover"
   | "dedication"
   | "home"
-  | "care"
   | "reminders"
   | "prescription"
   | "explanation"
@@ -15,6 +14,7 @@ export type Screen =
   | "screening"
   | "summary"
   | "settings"
+  | "medicines"
   | "customize";
 
 export type World = "flat" | "garden" | "kampung";

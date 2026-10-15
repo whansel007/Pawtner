@@ -92,10 +92,10 @@ export const DOG_PLACEMENTS = {
 
 export type DogPlacement = keyof typeof DOG_PLACEMENTS;
 
-/** Portrait: the caretaker view's card covers the scene, and the intro screens have no scene. */
-const SCREENS_WITHOUT_DOG_PORTRAIT: readonly Screen[] = ["care", "cover", "dedication"];
+/** Portrait: the intro screens have no scene. */
+const SCREENS_WITHOUT_DOG_PORTRAIT: readonly Screen[] = ["cover", "dedication"];
 
-/** Landscape: the dog joins the senior in the left column on every screen with a scene, including the caretaker view. */
+/** Landscape: the dog joins the senior in the left column on every screen with a scene. */
 const SCREENS_WITHOUT_DOG_LANDSCAPE: readonly Screen[] = ["cover", "dedication"];
 
 export function dogPlacementFor(screen: Screen, layout: SceneLayout = "portrait"): DogPlacement | null {

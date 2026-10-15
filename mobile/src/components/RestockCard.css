@@ -1,0 +1,31 @@
+.restock-card {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: var(--radius-5xl);
+  background: var(--color-surface-cream-warm);
+}
+.restock-card__head { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; }
+.restock-card__head small { color: #9e664e; font-size: var(--font-size-xs); font-weight: var(--font-weight-black); letter-spacing: 1px; text-transform: uppercase; }
+.restock-card__head h3 { margin: 0; font-size: var(--font-size-xl); font-weight: var(--font-weight-black); }
+.restock-card__head p { margin: 1px 0 0; color: var(--color-text-muted); font-size: var(--font-size-md); }
+
+/* Stacked full-width buttons: big targets, and a long caretaker name never squeezes the text. */
+.restock-card__actions { display: grid; gap: 8px; margin-top: 12px; }
+.restock-card__primary,
+.restock-card__secondary {
+  min-height: 48px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-weight: var(--font-weight-black);
+  cursor: pointer;
+}
+.restock-card__primary { border: 0; color: white; background: var(--color-primary); }
+.restock-card__primary:disabled { opacity: .6; cursor: progress; }
+.restock-card__secondary { border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; }
+.restock-card__primary:focus-visible,
+.restock-card__secondary:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+
+.restock-card__status { margin: 12px 0 0; color: var(--color-text-heading); font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); }
+.restock-card__done { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.restock-card__done .restock-card__secondary { margin-top: 12px; min-width: 72px; }

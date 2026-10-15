@@ -7,6 +7,8 @@ import { buildCaretakers, buildPersonas, findCaretaker } from "./data/personas";
 import type { Persona } from "./data/types";
 import { useCareData } from "./hooks/useCareData";
 import { useCaretakerSlot } from "./hooks/useCaretakerSlot";
+import { useCareTreat } from "./hooks/useCareTreat";
+import { usePendingRestockRequest } from "../lib/useRestockHelp";
 import { Brand } from "./components/Brand";
 import { CareFooter } from "./components/CareFooter";
 import { CareHeader } from "./components/CareHeader";
@@ -38,6 +40,8 @@ export default function CareApp() {
   const pathname = usePathname();
   const { slot, signIn, signOut } = useCaretakerSlot();
   const { data, offline, saveStatus, pendingThreshold, saveThreshold } = useCareData();
+  const treat = useCareTreat(offline);
+  const restock = usePendingRestockRequest();
   const mainRef = useRef<HTMLElement>(null);
   const firstRoute = useRef(true);
 
@@ -109,7 +113,17 @@ export default function CareApp() {
           />
         )}
         {route === "signIn" && <SignInPage personas={buildPersonas(data.summary)} onChoose={choosePersona} onNavigate={go} />}
-        {signedInPage && route === "week" && <WeekPage data={data} viewer={viewer} />}
+        {signedInPage && route === "week" && (
+          <WeekPage
+            data={data}
+            viewer={viewer}
+            offline={offline}
+            treatStatus={treat.status}
+            onSendTreat={(message) => void treat.send(message)}
+            restockRequest={restock.pending}
+            onHandleRestock={restock.handle}
+          />
+        )}
         {signedInPage && route === "alerts" && (
           <AlertsPage
             data={data}

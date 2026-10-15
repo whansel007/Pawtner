@@ -165,6 +165,18 @@
   text-underline-offset: 2px;
 }
 
+.next-dose-card__see-all { position: relative; }
+.next-dose-card__see-all-dot {
+  position: absolute;
+  top: -1px;
+  right: -12px;
+  width: 9px;
+  height: 9px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent-badge);
+  border: 2px solid white;
+}
+
 .next-dose-card__see-all:focus-visible {
   outline: 2px solid var(--color-text-muted, #79867e);
   outline-offset: 2px;

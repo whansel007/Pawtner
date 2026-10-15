@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
+import { ActionRow } from "../components/ActionRow";
+import { ClinicMemoRow } from "../components/ClinicMemoRow";
 import type { BackAction } from "../lib/navigation";
 import { DecisionLogCard } from "../components/DecisionLogCard";
 import { BP_RANGE } from "../config/bp";
@@ -186,10 +188,10 @@ export function HealthScreen({
         <button className="bp-form__submit" type="submit">{t("health.bpSubmit")}</button>
       </form>
 
-      <button className="health-bubble" onClick={onSummary}><span className="feature-icon sage"><Icon name="book" /></span><div><strong>{t("health.weekSummary")}</strong><small>{t("health.weekSummarySub", { doses: weekSummary.metrics[0].value, walks: weekSummary.metrics[1].value })}</small></div><Icon name="chevron" /></button>
-      <button className="health-bubble"><span className="feature-icon"><Icon name="camera" /></span><div><strong>{clinicTasks.title}</strong><small>{clinicTasks.subtitle}</small></div><Icon name="chevron" /></button>
-      <button className="screening-card" onClick={onScreening}><span>{t("health.annualCheck")}</span><div><strong>{t("health.screeningTitle")}</strong><small>{t("health.screeningSub")}</small></div><Icon name="chevron" /></button>
-      <a className="activity-link" href={activityLink.url} target="_blank" rel="noreferrer"><span className="feature-icon sage"><Icon name="walk" /></span><div><strong>{activityLink.title}</strong><small>{activityLink.subtitle}</small></div><Icon name="chevron" /></a>
+      <ActionRow icon={<Icon name="book" />} title={t("health.weekSummary")} subtitle={t("health.weekSummarySub", { doses: weekSummary.metrics[0].value, walks: weekSummary.metrics[1].value })} onClick={onSummary} />
+      <ClinicMemoRow title={clinicTasks.title} />
+      <ActionRow icon={<Icon name="star" />} iconTone="peach" tone="warm" title={t("health.screeningTitle")} subtitle={t("health.screeningSub")} onClick={onScreening} />
+      <ActionRow icon={<img className="action-row__logo" src={activityLink.logoSrc} alt={activityLink.logoAlt} />} iconTone="white" title={activityLink.title} subtitle={activityLink.subtitle} href={activityLink.url} />
     </FullCard>
   );
 }

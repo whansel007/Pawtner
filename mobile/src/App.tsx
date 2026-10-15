@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "./components/Icon";
 import { TopZone } from "./screens/TopZone";
 import { HomeScreen } from "./screens/HomeScreen";
-import { CareScreen } from "./screens/CareScreen";
 import { RemindersScreen } from "./screens/RemindersScreen";
 import { PrescriptionScreen } from "./screens/PrescriptionScreen";
 import { ExplanationScreen } from "./screens/ExplanationScreen";
@@ -16,6 +15,7 @@ import { CustomizeScreen } from "./screens/CustomizeScreen";
 import { HealthScreen } from "./screens/HealthScreen";
 import { WeeklySummaryScreen } from "./screens/WeeklySummaryScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
+import { MedicinesScreen } from "./screens/MedicinesScreen";
 import { ScreeningScreen } from "./screens/ScreeningScreen";
 import { CoverScreen } from "./screens/CoverScreen";
 import { DedicationScreen } from "./screens/DedicationScreen";
@@ -24,6 +24,7 @@ import { DesktopBackdrop, SceneBackdrop } from "./components/SceneBackdrop";
 import { DogLayer } from "./components/DogLayer";
 import { PetAccessory } from "./components/PetAccessory";
 import { SceneChips } from "./components/SceneChips";
+import { RestockCard } from "./components/RestockCard";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
 import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, DoseEvent, EscalationSettingsResponse, HealthMetric, TodayResponse } from "../../shared/contract";
@@ -32,6 +33,7 @@ import { requestDecision, buildAgentInputFromState } from "./lib/agent";
 import { useNavigation } from "./lib/useNavigation";
 import { useBark } from "./lib/useBark";
 import { useDayPhase } from "./lib/useDayPhase";
+import { useRestockHelp } from "./lib/useRestockHelp";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
 import { DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset } from "./config/demo";
 import { SENIOR_TIMEZONE } from "./config/scene";
@@ -50,7 +52,6 @@ import {
   activityLink,
   clinicTasks,
   caregiver,
-  careActivity,
   restockAlert,
   worldOptions,
   accessoryOptions,
@@ -115,7 +116,7 @@ export default function App() {
   };
   useEffect(() => { void refreshToday(); }, []);
   useEffect(() => {
-    if (screen === "care" || screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
+    if (screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
     if (screen === "settings") void api.escalationSettings().then(setEscalationSettings).catch((error) => reportApiProblem(error));
   }, [screen]);
 
@@ -137,7 +138,8 @@ export default function App() {
   const liveCaregiver = careSummary?.caregiver
     ? { ...caregiver, seniorName: careSummary.senior.name, caretakerName: careSummary.caregiver.name, names: t("care.pairNames", { senior: careSummary.senior.name, caretaker: careSummary.caregiver.name }) }
     : { ...caregiver, names: t("care.pairNames", { senior: caregiver.seniorName, caretaker: caregiver.caretakerName }) };
-  const liveCareActivity = careSummary ? { ...careActivity, dosesTaken: `${careSummary.dosesTaken} of ${careSummary.dosesDue}`, dosesTakenCount: careSummary.dosesTaken, dosesTotal: careSummary.dosesDue, walkDistance: `${(careSummary.walkDistanceMeters / 1000).toFixed(1)} km`, description: careSummary.caringMoments[0]?.message ?? "Care routine activity", timestamp: careSummary.latestActivityAt ? new Date(careSummary.latestActivityAt).toLocaleString() : "No recent activity" } : careActivity;
+  // Restock help (demo only, lib/restockHelp.ts): the card lives on Reminders; "See all" on Home gets a dot while it waits.
+  const restock = useRestockHelp(restockAlert);
 
   const notify = (message: string) => {
     setToast(message);
@@ -243,10 +245,22 @@ export default function App() {
     }
   }
 
-  /** Caretaker treat: posts to the API; the toast shows either way so the demo beat never stalls. */
-  async function handleSendTreat() {
-    try { await api.sendTreat(); } catch { /* demo: still confirm the treat */ }
-    notify(t("toast.treatSent", { name: dogName }));
+  /**
+   * Gift chip: show the latest treat's message (written on /care, e.g. "Jamie sent Buddy a treat!") and mark it seen.
+   * No treat yet, or no API: the friendly "a treat from {{caretaker}} is waiting" line, so the beat never stalls.
+   */
+  async function handleTreatChip() {
+    try {
+      const treat = await api.latestTreat();
+      if (treat) {
+        notify(treat.message);
+        if (!treat.seen) void api.markTreatSeen(treat.id).catch((error) => console.warn("Pawtner API:", error));
+        return;
+      }
+    } catch (error) {
+      console.warn("Pawtner API:", error);
+    }
+    notify(t("toast.treatWaiting", { name: dogName, caretaker: caretakerName }));
   }
 
   /** Prescription "Explain this medicine": remember the name (and the saved id, if any), then drill into the explanation. */
@@ -378,7 +392,7 @@ export default function App() {
           streak={livePet.streak}
           onToday={() => navigate("reminders")}
           onStreak={() => navigate("milestones")}
-          onTreat={() => notify(t("toast.treatWaiting", { name: dogName, caretaker: caretakerName }))}
+          onTreat={() => void handleTreatChip()}
         />
       </div>
       <div className={`screen-stage screen-${screen}`}>
@@ -391,15 +405,21 @@ export default function App() {
               navigate("proof");
             }}
             onReminders={() => navigate("reminders")}
-            onTreat={() => notify(t("toast.treatWaiting", { name: dogName, caretaker: caretakerName }))}
+            onTreat={() => void handleTreatChip()}
+            seeAllBadge={restock.needsAttention}
             onWalk={() => navigate("walk")}
             onBloodPressure={() => navigate("health")}
             onStreak={() => navigate("milestones")}
             decision={homeDecision(latestDecision)}
           />
         )}
-        {screen === "care" && <CareScreen back={back} sendTreat={handleSendTreat} pet={livePet} caregiver={liveCaregiver} careActivity={liveCareActivity} restockAlert={restockAlert} />}
-        {screen === "reminders" && <RemindersScreen back={back} doses={doseList} />}
+        {screen === "reminders" && (
+          <RemindersScreen
+            back={back}
+            doses={doseList}
+            restockCard={restock.visible ? <RestockCard alert={restockAlert} caretakerName={caretakerName} state={restock.state} busy={restock.busy} onAsk={() => void restock.askForHelp()} onSelf={restock.getItMyself} onAcknowledge={restock.acknowledgeHandled} /> : null}
+          />
+        )}
         {screen === "prescription" && <PrescriptionScreen back={back} onSaved={handleMedicationSaved} onExplain={handleExplainMedicine} petName={dogName} />}
         {screen === "explanation" && <ExplanationScreen back={back} onContinue={() => navigate("schedule")} medicineName={savedMedicationName} />}
         {screen === "schedule" && <ScheduleScreen back={back} onConfirm={handleScheduleConfirmed} petName={dogName} medicationId={savedMedicationId} />}
@@ -410,7 +430,8 @@ export default function App() {
         {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }], doctorQuestion: careSummary.doctorQuestions[0]?.note ?? weekSummary.doctorQuestion } : weekSummary} />}
-        {screen === "settings" && <SettingsScreen back={back} addMedication={() => navigate("prescription")} openCaretaker={() => navigate("care")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} demoUnlockAll={demoUnlockAll} onToggleDemoUnlockAll={() => setDemoUnlockAll((v) => !v)} demoTimeActive={demoNow !== null} onDemoTime={setDemoTime} />}
+        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} demoUnlockAll={demoUnlockAll} onToggleDemoUnlockAll={() => setDemoUnlockAll((v) => !v)} demoTimeActive={demoNow !== null} onDemoTime={setDemoTime} />}
+        {screen === "medicines" && <MedicinesScreen back={back} petName={dogName} />}
         {screen === "customize" && <CustomizeScreen back={back} onHome={goHome} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(nextWorld === "flat" ? t("toast.worldFlat", { name: dogName }) : nextWorld === "garden" ? t("toast.worldGarden", { name: dogName }) : t("toast.worldKampung", { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: t(`accessory.${nextAccessory}`) })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} caretakerName={caretakerName} heartsTotal={heartsTotal} demoUnlockAll={demoUnlockAll} notify={notify} />}
       </div>
       <div className="bottom-dock" aria-hidden="true" />

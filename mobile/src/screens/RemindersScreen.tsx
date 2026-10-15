@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
@@ -8,15 +9,19 @@ import { formatDoseTime } from "../lib/doses";
 export function RemindersScreen({
   back,
   doses,
+  restockCard,
 }: {
   back: BackAction;
   doses: DerivedDose[];
+  /** "Restock soon" card (App decides when it shows). */
+  restockCard?: ReactNode;
 }) {
   const { t } = useTranslation();
   return (
     <FullCard back={back}>
       <p className="eyebrow green">{t("reminders.eyebrow")}</p>
       <h2>{t("reminders.title")}</h2>
+      {restockCard}
       <div className="next-dose">
         <span className="feature-icon sage"><Icon name="bell" /></span>
         <div><small>{t("reminders.nextDose")}</small><h3>{t("reminders.nextDoseTime")}</h3><p>{t("reminders.nextDoseName")}</p></div>

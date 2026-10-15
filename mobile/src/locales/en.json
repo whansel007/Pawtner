@@ -26,7 +26,7 @@
   "topZone": {
     "heartsAria": "{{count}} out of four hearts",
     "homeAria": "{{name}}, go to Home",
-    "settingsAria": "Open care dashboard"
+    "settingsAria": "Open settings"
   },
   "home": {
     "dailyCare": "Daily care",
@@ -47,34 +47,13 @@
     "allDone": "All done for today",
     "noDoses": "Nothing scheduled today",
     "seeAll": "See all",
+    "seeAllNew": "See all. Something new is waiting.",
     "takenAria": "Mark {{name}} as taken",
     "streakChip_one": "🔥 {{count}} day",
     "streakChip_other": "🔥 {{count}} days"
   },
   "care": {
-    "eyebrow": "Shared with your circle",
-    "title": "{{name}} is doing great",
-    "supporting": "You and {{caretaker}} look after {{name}} together. Good moments are shared; medicine details stay private.",
     "pairNames": "{{senior}} + {{caretaker}}",
-    "daysRemaining": "About {{count}} days remaining",
-    "daysRemaining_one": "About {{count}} day remaining",
-    "daysRemaining_other": "About {{count}} days remaining",
-    "careToday": "Care today",
-    "dosesTaken": "Doses taken",
-    "walkedToday": "Walked today",
-    "recentActivity": "Recent activity",
-    "sendTreat": "Send {{name}} a treat",
-    "pillRef": {
-      "set": "Set original pill photo",
-      "replace": "Replace original",
-      "setBadge": "Original photo set",
-      "hint": "Take a clear photo of ONE pill from the original pack. Every future check-in is compared to this photo.",
-      "capture": "Tap to take the pill photo",
-      "captured": "Photo ready",
-      "saving": "Saving…",
-      "save": "Save as original",
-      "saved": "Original pill photo saved."
-    },
     "web": {
       "brand": "Pawtner",
       "brandHome": "Pawtner care home",
@@ -173,7 +152,22 @@
         "questionsTitle": "Questions for the doctor",
         "questionsSaved": "Saved on {{day}} · Ready for the next visit",
         "questionsEarlier": "Also this week",
-        "questionsEmpty": "No questions saved this week."
+        "questionsEmpty": "No questions saved this week.",
+        "treatEyebrow": "A little joy",
+        "treatTitle": "Send {{dog}} a treat",
+        "treatBody": "It shows up on {{name}}'s phone, behind the little gift.",
+        "treatButton": "Send {{dog}} a treat",
+        "treatSending": "Sending…",
+        "treatSent": "Treat sent. {{name}} will see {{dog}} celebrate.",
+        "treatFailed": "That didn't send. Please try again in a moment.",
+        "treatOffline": "Treats can be sent once Pawtner is back online.",
+        "treatMessage": "{{caretaker}} sent {{dog}} a treat!",
+        "restockEyebrow": "A small favour",
+        "restockTitle_one": "{{name}} would like help with a medicine refill (about {{count}} day left)",
+        "restockTitle_other": "{{name}} would like help with a medicine refill (about {{count}} days left)",
+        "restockBody": "Asked on {{day}} from {{name}}'s phone.",
+        "restockHandle": "I'll handle it",
+        "restockHandled": "Thank you. {{name}}'s phone will say you're helping."
       },
       "alerts": {
         "eyebrow": "A trusted circle",
@@ -261,6 +255,16 @@
     "statusLater": "Later",
     "add": "Add a reminder"
   },
+  "restock": {
+    "label": "Restock soon",
+    "daysRemaining_one": "About {{count}} day remaining",
+    "daysRemaining_other": "About {{count}} days remaining",
+    "askHelp": "Ask {{caretaker}} to help",
+    "getItMyself": "I'll get it myself",
+    "asked": "{{caretaker}} has been asked to help.",
+    "handled": "{{caretaker}} will help with the refill.",
+    "ok": "OK"
+  },
   "prescription": {
     "eyebrow": "New medication",
     "titleScan": "Scan the prescription",
@@ -294,13 +298,15 @@
   "reference": {
     "eyebrow": "New medication",
     "title": "Show {{name}} the pill",
-    "supporting": "Snap one reference photo of the pill. Nothing is saved to your gallery.",
-    "tapCapture": "Tap to capture",
+    "supporting": "Take one clear photo of ONE pill from the original pack. This becomes the original pill photo; every future check-in is compared to it. Nothing is saved to your gallery.",
+    "tapCapture": "Tap to take the pill photo",
     "onePill": "One pill in the frame",
-    "describing": "{{name}} is looking…",
-    "describedTitle": "First photo saved",
-    "describedNote": "Next time, {{name}} will compare your photo with this one.",
-    "offline": "{{name}} can't describe the pill right now. You can still finish.",
+    "photoAlt": "Original pill photo",
+    "saving": "{{name}} is looking…",
+    "savedTitle": "Original pill photo saved",
+    "savedFallback": "Saved as {{name}}'s original photo.",
+    "savedNote": "Next time, {{name}} will compare your photo with this one. You can replace it later in Settings > My medicines.",
+    "offline": "{{name}} can't save the original pill photo right now. You can still finish and set it later in Settings > My medicines.",
     "skip": "Skip for now"
   },
   "proof": {
@@ -326,8 +332,8 @@
       },
       "error": "{{name}} can't compare photos right now. Your proof photo still counts.",
       "errorWarmup": "{{name}} is still warming up. Please tap Compare again in a moment.",
-      "noReference": "No original pill photo is set yet. Please set it in the medicine settings (Care screen) first.",
-      "disclosure": "{{name}} only compares this photo with the original pill photo set in the medicine settings. It can't tell you what a pill is. Always check the package and ask your pharmacist."
+      "noReference": "No original pill photo is set yet. Please set it first in Settings > My medicines. New medicines can get one right after you add them.",
+      "disclosure": "{{name}} only compares this photo with the original pill photo set in My medicines. It can't tell you what a pill is. Always check the package and ask your pharmacist."
     }
   },
   "walk": {
@@ -391,11 +397,15 @@
     "bpNeedsReading": "{{name}} needs one reading",
     "weekSummary": "Your week in plain words",
     "weekSummarySub": "{{doses}} doses · {{walks}} walks",
-    "annualCheck": "Annual check",
+    "memoEmpty": "Snap your clinic memo",
+    "memoSet": "Your clinic memo",
+    "memoSaving": "Saving your photo…",
+    "memoFailed": "Couldn't open that photo. Please try again.",
+    "memoAlt": "Photo of your clinic memo",
+    "memoClose": "Close",
+    "memoReplace": "Replace photo",
     "screeningTitle": "Screen for Life",
     "screeningSub": "One screening unlocks festival day",
-    "activities": "Activities near you",
-    "activitiesSub": "Open Healthy 365",
     "bpFormTitle": "Log blood pressure",
     "bpSystolicLabel": "Systolic (top number)",
     "bpDiastolicLabel": "Diastolic (bottom number)",
@@ -485,6 +495,8 @@
   "settings": {
     "eyebrow": "{{name}}'s care",
     "title": "Settings",
+    "myMeds": "My medicines",
+    "myMedsSub": "Edit details and set the original pill photo",
     "addMed": "Add a medication",
     "addMedSub": "Snap a label and set the routine",
     "nudges": "{{name}}'s nudges",
@@ -502,10 +514,43 @@
       "real": "Real time"
     }
   },
+  "medicines": {
+    "eyebrow": "{{name}}'s care",
+    "title": "My medicines",
+    "supporting": "Every proof photo is compared with each medicine's original pill photo. {{name}} never tells you what a pill is.",
+    "loading": "Loading…",
+    "empty": "No medications yet.",
+    "offline": "Can't load your medicines right now. Please try again in a moment.",
+    "doctorSaid": "Doctor said: {{reason}}",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
+    "cancel": "Cancel",
+    "edit": {
+      "button": "Edit",
+      "prescribedLabel": "What did your doctor say it's for?",
+      "prescribedPlaceholder": "Your doctor's reason",
+      "daysLabel": "Days of supply",
+      "daysPlaceholder": "e.g. 30",
+      "save": "Save",
+      "saving": "Saving…"
+    },
+    "pillRef": {
+      "set": "Set original pill photo",
+      "replace": "Replace original",
+      "setBadge": "Original photo set",
+      "hint": "Take a clear photo of ONE pill from the original pack. Every future check-in is compared to this photo.",
+      "capture": "Tap to take the pill photo",
+      "captured": "Photo ready",
+      "photoAlt": "Original pill",
+      "saving": "Saving…",
+      "save": "Save as original",
+      "saved": "Original pill photo saved.",
+      "failed": "{{name}} can't save the photo right now. Please try again in a moment."
+    }
+  },
   "toast": {
     "alreadyCounted": "Already counted. {{name}} remembers!",
     "treatWaiting": "A treat from {{caretaker}} is waiting for {{name}}!",
-    "treatSent": "Treat sent. Mum will see {{name}} celebrate!",
     "nudgeSet": "{{name}} knows when to nudge you.",
     "heartGained": "{{name}} gained a heart!",
     "bpLogged": "Reading logged. {{name}}'s heart is full!",

@@ -249,6 +249,21 @@ button.care-brand {
   transform: translateY(-3px);
 }
 
+/* Smaller call to action inside a card (treat, restock help). */
+.care-primary-button--card {
+  min-height: var(--care-touch);
+  margin-top: 16px;
+  padding: 0 22px;
+  font-size: var(--care-text-md);
+  box-shadow: none;
+}
+
+.care-primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .care-text-link {
   display: inline-flex;
   min-height: var(--care-touch);

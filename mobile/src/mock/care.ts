@@ -1,4 +1,4 @@
-import type { Caregiver, CareActivity, RestockAlert, WeekSummary, BloodPressureReading, ScreeningInfo, ActivityLink, ClinicTask } from "../types";
+import type { Caregiver, RestockAlert } from "../types";
 
 export const caregiver: Caregiver = {
   seniorName: "Rose",
@@ -8,19 +8,11 @@ export const caregiver: Caregiver = {
   status: "Connected",
 };
 
-export const careActivity: CareActivity = {
-  dosesTaken: "2 of 3",
-  dosesTakenCount: 2,
-  dosesTotal: 3,
-  walkDistance: "1.8 km",
-  timestamp: "12:42 PM",
-  description: "Mum took her lunchtime medicine and Buddy gained a heart.",
-};
-
+/** Low supply shown on the phone's Reminders screen (restock help, demo only). Same id as the mock Gabapentin doses. */
 export const restockAlert: RestockAlert = {
+  medicationId: "med-gaba",
   name: "Gabapentin",
   daysRemaining: 4,
-  label: "RESTOCK SOON",
 };
 
 export { weekSummary, bloodPressureReading, screeningInfo, activityLink, clinicTasks } from "./home";
