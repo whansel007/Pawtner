@@ -15,7 +15,7 @@ Updated 2026-10-15. Source of truth for scope: `PRD.md` (repo root), tiers in §
 ## Data flow on the phone (today)
 
 1. On launch, `App.tsx` requests `/api/today`; the server assembles scheduled occurrences and ledger events into `DerivedDose[]`.
-2. Heart and streak values come from shared selectors/rules; persisted decisions update the cached dog mood.
+2. Heart, streak and the lifetime hearts total (`dog.heartsTotal`, sum of every day's hearts since the first scheduled dose) come from shared selectors/rules, derived on read from the full dose history; only heart, streak and mood are cached in `dogs`. Persisted decisions update the cached dog mood. The phone does not show `heartsTotal` yet.
 3. Dose confirmation, BP entry, and walk completion write events through the API. Care and Weekly Summary use `/api/caretaker/summary`; caretaker consent and threshold save through `/api/escalation-settings`.
 4. Settings has a demo clock. It calls `/api/agent/decide` at the selected local time; Home shows the saved decision with its rule, observations, reasoning, and wording source.
 5. `SceneBackdrop` draws the garden; `lib/useSceneGround.ts` measures where the dog stands (portrait Home: top of the chips; other portrait screens: top of the content card; landscape: on the lawn in the left column, see `DOG_PLACEMENTS` and `LANDSCAPE_MEDIA_QUERY` in `config/scene.ts`) and publishes CSS variables so the art's lawn line and the dog's feet meet. It also publishes the dog's box (`--dog-top`, `--dog-height`) so the tap bubble (`PetBubble`, in the toast slot under the hearts) never covers the head.

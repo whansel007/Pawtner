@@ -8,6 +8,14 @@
 | The AI pill check stays, reworded as a comparison with her own first photo ("Looks like your usual pill"), no similarity %, raw errors never shown. | User: it's for verification, not identification; PRD §7.4 forbids identifying a pill. | Still an AI judgement; the disclosure says it can't tell what a pill is. | Final wording pending CodeBuddy PR |
 | Hibiscus drawn as an inline SVG; hat at top 3% of the dog image; compact dock below 430px landscape height. | `box-shadow` with % offsets was invalid CSS (petals never drew); hat brim sat on the eyes; card was 225px tall at 915×355. | The "woof!" bubble has ~1px slack in short landscape; "Show me at home" still needs a scroll there. | Final |
 
+## 2026-10-15 — Lifetime hearts total (`dog.heartsTotal`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| `dog.heartsTotal` on `TodayResponse` and `CaretakerSummaryResponse` (shared `DogView` type) = sum of each day's `computeHeart` from the first day with a scheduled dose through today. Computed on read in `computeHeartsTotal` / `selectHeartsTotal` (`shared/selectors.ts`), never stored (no column, no write to `dogs`). | Same pattern as `streak`: one source of truth, the dose ledger. | Recomputed on every `/api/today`; days are grouped by the UTC date of `scheduledAt`/`recordedAt`, the same way `heart` and `streak` already are. | Final |
+| Nothing-due rule: a day inside the range with no scheduled doses (or only upcoming ones later today) adds `DEMO_RULES.heartWhenNothingDue` (+ BP bonus if logged); days before the first scheduled dose, future days, and an empty history add 0. | A past day adds the heart the dog showed that day; today's share always equals `dog.heart`. | A gap between schedules still earns 2 hearts a day. | Tentative |
+| `loadSource` in `api/repository.ts` reads occurrences from each schedule's `starts_on` (365-day cap removed). | A lifetime total needs the full history. | Data grows with days × schedules; fine for the single-user demo. Inactive medications drop out of the history, as they already did for the streak. | Final |
+
 ## 2026-10-15 — P1 hosting review
 
 | Decision | Reason | Tradeoff | Status |

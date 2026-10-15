@@ -63,6 +63,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | — | Landscape chips row identical to Home: one shared `SceneChips` component (CodeBuddy) | [#23](https://github.com/whansel007/Pawtner/pull/23) |
 | — | Landscape caregiver view: Buddy and chips in the left column; portrait unchanged (CodeBuddy) | [#24](https://github.com/whansel007/Pawtner/pull/24) |
 | — | Caregiver view wording: "Shared with your circle", names from data ("Rose + Jamie") (CodeBuddy) | [#25](https://github.com/whansel007/Pawtner/pull/25) |
+| — | `dog.heartsTotal` (lifetime hearts, derived on read) in `/api/today` and `/api/caretaker/summary`; EdgeOne bundle regenerated. On branch `claude/hearts-total`, not merged, no UI yet | — |
 
 ## Blocked
 
