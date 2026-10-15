@@ -16,6 +16,12 @@
 | Nothing-due rule: a day inside the range with no scheduled doses (or only upcoming ones later today) adds `DEMO_RULES.heartWhenNothingDue` (+ BP bonus if logged); days before the first scheduled dose, future days, and an empty history add 0. | A past day adds the heart the dog showed that day; today's share always equals `dog.heart`. | A gap between schedules still earns 2 hearts a day. | Tentative |
 | `loadSource` in `api/repository.ts` reads occurrences from each schedule's `starts_on` (365-day cap removed). | A lifetime total needs the full history. | Data grows with days × schedules; fine for the single-user demo. Inactive medications drop out of the history, as they already did for the streak. | Final |
 
+## 2026-10-15 — EdgeOne API as a Node cloud function
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Serve the API on EdgeOne from `cloud-functions/api/[[default]].js` (Node runtime), a committed esbuild bundle of `cloud-functions-src/api-entry.mjs` + `api/` + `shared/` + `pg`, with a root `edgeone.json` (repo root as project root, Vite build only, SPA fallback, maxDuration 30). Missing `DATABASE_URL` returns a JSON 503 instead of a load-time crash. | EdgeOne ignores `functions/`/`.mjs` for Node functions; `pg` needs TCP, so not edge functions; bundling `pg` avoids depending on a runtime `node_modules` install; a prebuilt bundle keeps the EdgeOne build to the front end only. | The 245 KB bundle must be rebuilt and committed after any `api/`/`shared/` change; not yet verified on EdgeOne itself (local CLI needs a login); old `functions/` folder still in the repo. | Tentative until `/api/today` returns JSON on `pawtner.edgeone.dev` |
+
 ## 2026-10-15 — P1 hosting review
 
 | Decision | Reason | Tradeoff | Status |
