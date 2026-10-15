@@ -394,15 +394,12 @@
     "whyButtonExpanded": "Hide why",
     "emptyTitle": "Agent decision",
     "emptyBody": "No rule has triggered yet.",
-    "ruleLabel": "Rule",
     "observationsLabel": "What it noticed",
-    "reasoningLabel": "Reasoning",
     "wordingSourceLabel": "Wording",
     "wordingTemplate": "Fixed template, no AI",
     "wordingModel": "AI-worded",
     "booleanYes": "Yes",
     "booleanNo": "No",
-    "scheduledForLabel": "Scheduled for",
     "observation": {
       "symptomDetected": "Symptom detected",
       "highReading": "High reading",
@@ -420,7 +417,22 @@
       "doseTaken": "Dose taken",
       "walkFinished": "Walk finished",
       "streakMilestoneReached": "Streak milestone",
-      "heart": "Heart score"
+      "heart": "Heart score",
+      "scheduledFor": "Dose time"
+    },
+    "why": {
+      "emergency_symptom_note": "A note mentioned a symptom that can be serious, so the emergency number is shown.",
+      "bp_high_with_symptom": "The latest blood pressure reading was high and the note mentioned a symptom.",
+      "bp_high_without_symptom": "The latest blood pressure reading was higher than the level Pawtner watches for.",
+      "repeated_high_readings_7d": "Several readings this past week were higher than the level Pawtner watches for.",
+      "possible_side_effect_note": "A note may describe a side effect, so it was saved as a question for the doctor.",
+      "repeated_misses_caretaker_check_in": "A few doses in a row were missed, so the caretaker was asked to check in.",
+      "dose_nudge_1": "A dose was still not taken an hour after its time.",
+      "dose_nudge_2": "A dose was still not taken an hour after the first reminder.",
+      "low_days_of_supply": "One medicine is running low.",
+      "care_milestone_completed": "A dose was taken, a walk was finished or the streak grew.",
+      "nothing_needs_attention": "Nothing needs attention right now.",
+      "generic": "Pawtner chose this from today's care activity."
     }
   },
   "pet": {

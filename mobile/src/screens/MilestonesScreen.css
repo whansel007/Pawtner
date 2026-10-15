@@ -30,3 +30,6 @@
   font-weight: var(--font-weight-bold);
   line-height: 1.35;
 }
+
+/* The routine decision row sits on top of the Milestones card. */
+.full-card__scroll > .decision-log:first-child { margin-top: 0; margin-bottom: 16px; }

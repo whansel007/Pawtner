@@ -48,7 +48,7 @@ export function HomeScreen({
           onWalk={onWalk}
           onBloodPressure={onBloodPressure}
         />
-        {/* Only once the agent has decided something; an empty card would take the dog's space on short phones. */}
+        {/* Urgent / safety decisions only (App passes homeDecision); routine ones show on Milestones so Buddy gets the space. */}
         {decision && <DecisionLogCard decision={decision} summary={decision.wording} />}
       </div>
     </div>

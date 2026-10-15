@@ -2,16 +2,17 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
+import { DecisionLogCard } from "../components/DecisionLogCard";
 import type { BackAction } from "../lib/navigation";
 import { useMilestones } from "../lib/useMilestones";
 import { isPerformable, trickCardTap, type TrickLike } from "../lib/tricks";
 import type { TrickPerformance } from "../config/tricks";
-import type { DogMood } from "../../../shared/contract";
+import type { AgentDecision, DogMood } from "../../../shared/contract";
 import type { Pet } from "../types";
 import "./MilestonesScreen.css";
 
 /**
- * Milestones: Buddy's progress, Souvenirs, then Tricks.
+ * Milestones: the routine agent decision on top (urgent ones stay on Home), Buddy's progress, Souvenirs, then Tricks.
  * Earned trick cards are buttons: Buddy (standing above the card) performs the trick via onTrick; when he's too
  * sleepy to wave, the Wave card shows a gentle line instead (lib/tricks.ts trickCardTap). Locked tricks do nothing.
  */
@@ -24,6 +25,7 @@ export function MilestonesScreen({
   petName,
   heartsTotal,
   mood,
+  decision,
   onTrick,
 }: {
   back: BackAction;
@@ -33,6 +35,8 @@ export function MilestonesScreen({
   petName: string;
   heartsTotal: number;
   mood: DogMood;
+  /** The routine decision to show on top (App passes only non-urgent ones), or null. */
+  decision: AgentDecision | null;
   onTrick: (performance: TrickPerformance) => void;
 }) {
   const { t } = useTranslation();
@@ -55,6 +59,7 @@ export function MilestonesScreen({
 
   return (
     <FullCard back={back}>
+      {decision && <DecisionLogCard decision={decision} summary={decision.wording} />}
       <p className="eyebrow green">{t("milestones.eyebrow", { name: petName })}</p>
       <h2>{t("milestones.title", { count: caringDays })}</h2>
       <p className="streak-line">{t("milestones.streakLine", { count: pet.streak })}</p>
