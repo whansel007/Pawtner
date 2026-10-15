@@ -304,6 +304,12 @@ export interface PillVerifyResponse {
   similarity: number;
 }
 
+export interface PillWarmupResponse {
+  ok: boolean;
+  /** Whether the vision model responded (reachable and multimodal). */
+  warmed: boolean;
+}
+
 // ── T2-09: Souvenirs ──
 
 export interface SouvenirResponse {

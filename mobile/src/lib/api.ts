@@ -76,4 +76,6 @@ export const api = {
     request<PillDescribeResponse>("/pill-describe", { method: "POST", body: JSON.stringify({ medicationId, imageBase64, mimeType }) }),
   verifyPill: (medicationId: string, imageBase64: string, mimeType: string) =>
     request<PillVerifyResponse>("/pill-verify", { method: "POST", body: JSON.stringify({ medicationId, imageBase64, mimeType }) }),
+  // Warms the vision model in the background; safe to ignore failures.
+  warmupPill: () => request<{ ok: boolean; warmed: boolean }>("/pill-warmup", { method: "POST", body: "{}" }),
 };

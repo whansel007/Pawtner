@@ -319,6 +319,7 @@
         "newLabel": "This photo:"
       },
       "error": "{{name}} can't compare photos right now. Your proof photo still counts.",
+      "errorWarmup": "{{name}} is still warming up. Please tap Compare again in a moment.",
       "disclosure": "{{name}} only compares this photo with your earlier one. It can't tell you what a pill is. Always check the package and ask your pharmacist."
     }
   },
