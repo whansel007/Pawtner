@@ -44,6 +44,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | PR |
 |---|---|---|
+| T2-08 | Hotfix: the after-schedule "Show {{name}} the pill" step saves the original pill photo with `api.setPillReference` (main failed `tsc` after #43 used the removed `api.describePill`) | branch `claude/fix-reference-photo` |
 | T1-14 | Centred 430 px column on desktop, blurred garden at the sides, responsive 360–430 px including short screens (360×640, 412×730) | [#1](https://github.com/whansel007/Pawtner/pull/1) |
 | — | Layered scene: portrait garden, separate dog with shadow, ground-line alignment, dog on every senior screen | [#1](https://github.com/whansel007/Pawtner/pull/1) |
 | — | Compact next-dose card (mock), dedication screen auto-advance (1.1 s, Pinyon Script) | [#2](https://github.com/whansel007/Pawtner/pull/2) |
@@ -77,6 +78,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | Item | Blocked on |
 |---|---|
+| T2-08 original pill photo on the hosted API | P1: run migration 005 (`pill_reference_*`) on Supabase (data change). Until then the API's queries that read the new columns fail (`GET /api/medications` lists `pill_reference_set`; set and verify read/write the new columns), so the medication list, setting the original and the proof check all fail on the hosted API (the phone shows its friendly lines). |
 | T1-17 production URL | P1: host the API and run migrations + fictional seed on the hosted database (Supabase has no Pawtner schema yet). Message drafted for the user to send 14 Oct. |
 | T1-15 caretaker list on the web (real data) | P1: `caregivers: { id, name, receivesCheckIns }[]` in `CaretakerSummaryResponse`, 3–4 seeded caretakers, check-in template in `shared/templates.ts`. Until then `/care` shows the API caregiver (gets check-ins) plus the mock updates-only slot `MOCK_UPDATES_ONLY_CARETAKER` in `mobile/src/care/data/mock.ts`. Also wanted: the senior's time zone in the summary (moment times use the viewer's zone). |
 

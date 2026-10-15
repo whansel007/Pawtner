@@ -294,13 +294,15 @@
   "reference": {
     "eyebrow": "New medication",
     "title": "Show {{name}} the pill",
-    "supporting": "Snap one reference photo of the pill. Nothing is saved to your gallery.",
-    "tapCapture": "Tap to capture",
+    "supporting": "Take one clear photo of ONE pill from the original pack. This becomes the original pill photo; every future check-in is compared to it. Nothing is saved to your gallery.",
+    "tapCapture": "Tap to take the pill photo",
     "onePill": "One pill in the frame",
-    "describing": "{{name}} is looking…",
-    "describedTitle": "First photo saved",
-    "describedNote": "Next time, {{name}} will compare your photo with this one.",
-    "offline": "{{name}} can't describe the pill right now. You can still finish.",
+    "photoAlt": "Original pill photo",
+    "saving": "{{name}} is looking…",
+    "savedTitle": "Original pill photo saved",
+    "savedFallback": "Saved as {{name}}'s original photo.",
+    "savedNote": "Next time, {{name}} will compare your photo with this one. You can replace it later in the medicine settings.",
+    "offline": "{{name}} can't save the original pill photo right now. You can still finish and set it later in the medicine settings.",
     "skip": "Skip for now"
   },
   "proof": {
@@ -326,7 +328,7 @@
       },
       "error": "{{name}} can't compare photos right now. Your proof photo still counts.",
       "errorWarmup": "{{name}} is still warming up. Please tap Compare again in a moment.",
-      "noReference": "No original pill photo is set yet. Please set it in the medicine settings (Care screen) first.",
+      "noReference": "No original pill photo is set yet. Please set it first in the medicine settings (Care screen). New medicines can get one right after you add them.",
       "disclosure": "{{name}} only compares this photo with the original pill photo set in the medicine settings. It can't tell you what a pill is. Always check the package and ask your pharmacist."
     }
   },

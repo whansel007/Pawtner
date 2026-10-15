@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-15 — Original pill photo after adding a medicine (branch `claude/fix-reference-photo`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| The "Show {{name}} the pill" step after the schedule (`ReferenceScreen`, PR #43) saves the photo as the medicine's **original pill photo** with `api.setPillReference` (T2-08, `POST /api/pill-reference`, William's `eeea363`) instead of the removed `api.describePill`. It shows the returned `description`, or "Saved as {{name}}'s original photo." if the description is empty. Skip, Done and the friendly offline line stay. | `main` failed `tsc` (TS2339) after #43 merged on top of `eeea363`; one concept ("original pill photo") for both places that set it. | The same photo can be set in two places (after adding a medicine, and in the medicine settings). | Tentative (wording) |
+| The 422 line on the proof check keeps William's logic; its wording only adds that new medicines can get the photo right after they are added. | The original can now be set in the add-medicine flow too. | — | Tentative |
+
 ## 2026-10-15 — Tricks and decision placement
 
 | Decision | Reason | Tradeoff | Status |
