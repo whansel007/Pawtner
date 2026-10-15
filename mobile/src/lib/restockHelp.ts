@@ -99,6 +99,17 @@ export function isRestockDismissed(now: Date, store: KeyValueStore | null = brow
   return readItem(RESTOCK_STORAGE_KEYS.dismissedOn, store) === localDay(now);
 }
 
+/** The medicine with the fewest days of supply at or under `soonDays` (active ones only), or null when none is low. */
+export function pickRestockAlert(
+  medications: ReadonlyArray<{ id: string; name: string; daysOfSupply: number | null; active: boolean }>,
+  soonDays: number,
+): { medicationId: string; name: string; daysRemaining: number } | null {
+  const low = medications
+    .filter((med) => med.active && med.daysOfSupply !== null && med.daysOfSupply <= soonDays)
+    .sort((a, b) => (a.daysOfSupply ?? 0) - (b.daysOfSupply ?? 0))[0];
+  return low ? { medicationId: low.id, name: low.name, daysRemaining: low.daysOfSupply ?? 0 } : null;
+}
+
 /** Should the restock card show? Only for a low supply, and not after "I'll get it myself" today. */
 export function shouldShowRestock(daysRemaining: number | null, soonDays: number, dismissedToday: boolean): boolean {
   return daysRemaining !== null && daysRemaining <= soonDays && !dismissedToday;

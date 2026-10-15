@@ -9,6 +9,7 @@ import {
   markRestockHelpHandled,
   readRestockHelp,
   requestRestockHelp,
+  pickRestockAlert,
   shouldShowRestock,
 } from "../../mobile/src/lib/restockHelp.js";
 import { fitWithin, isImageDataUrl, readClinicMemo, writeClinicMemo } from "../../mobile/src/lib/clinicMemo.js";
@@ -123,5 +124,20 @@ describe("clinic memo photo helpers", () => {
     expect(readClinicMemo("memo", store)).toBeNull();
     expect(isImageDataUrl("data:text/html,hi")).toBe(false);
     expect(writeClinicMemo("memo", "data:image/jpeg;base64,AAAA", blockedStore)).toBe(false);
+  });
+});
+
+describe("pickRestockAlert", () => {
+  const med = (id: string, daysOfSupply: number | null, active = true) => ({ id, name: `Med ${id}`, daysOfSupply, active });
+
+  it("picks the active medicine with the fewest days at or under the threshold", () => {
+    expect(pickRestockAlert([med("a", 14), med("b", 4), med("c", 2), med("d", 1, false)], 5))
+      .toEqual({ medicationId: "c", name: "Med c", daysRemaining: 2 });
+    expect(pickRestockAlert([med("a", 5)], 5)?.medicationId).toBe("a");
+  });
+
+  it("returns null when nothing is low or supply is unknown", () => {
+    expect(pickRestockAlert([med("a", 14), med("b", null)], 5)).toBeNull();
+    expect(pickRestockAlert([], 5)).toBeNull();
   });
 });

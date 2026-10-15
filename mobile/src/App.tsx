@@ -27,13 +27,15 @@ import { SceneChips } from "./components/SceneChips";
 import { RestockCard } from "./components/RestockCard";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
-import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, DoseEvent, EscalationSettingsResponse, HealthMetric, TodayResponse } from "../../shared/contract";
+import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, DoseEvent, EscalationSettingsResponse, HealthMetric, MedicationDetail, TodayResponse } from "../../shared/contract";
 import { api } from "./lib/api";
 import { requestDecision, buildAgentInputFromState } from "./lib/agent";
 import { useNavigation } from "./lib/useNavigation";
 import { useBark } from "./lib/useBark";
 import { useDayPhase } from "./lib/useDayPhase";
 import { useRestockHelp } from "./lib/useRestockHelp";
+import { pickRestockAlert } from "./lib/restockHelp";
+import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
 import { DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset } from "./config/demo";
 import { SENIOR_TIMEZONE } from "./config/scene";
@@ -99,6 +101,8 @@ export default function App() {
   const [demoClockValue, setDemoClockValue] = useState(() => toDateTimeLocal(demoNow ? new Date(demoNow) : new Date()));
   const [agentBusy, setAgentBusy] = useState(false);
   const [escalationSettings, setEscalationSettings] = useState<EscalationSettingsResponse | null>(null);
+  // GET /api/medications (days of supply for restock help); null until loaded or while the API is offline.
+  const [medications, setMedications] = useState<MedicationDetail[] | null>(null);
   const [savedMedicationId, setSavedMedicationId] = useState<string | undefined>(undefined);
   const [savedMedicationName, setSavedMedicationName] = useState<string>("");
   const [demoUnlockAll, setDemoUnlockAll] = useState(false);
@@ -118,6 +122,8 @@ export default function App() {
   useEffect(() => {
     if (screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
     if (screen === "settings") void api.escalationSettings().then(setEscalationSettings).catch((error) => reportApiProblem(error));
+    // On launch (Home's "See all" dot) and each time Reminders opens (a medicine may have been added).
+    if (screen === "home" || screen === "reminders") void api.listMedications().then((result) => setMedications(result.medications)).catch((error) => reportApiProblem(error));
   }, [screen]);
 
   const pendingDose = doseList.find((item) => item.id === pendingDoseId);
@@ -139,7 +145,9 @@ export default function App() {
     ? { ...caregiver, seniorName: careSummary.senior.name, caretakerName: careSummary.caregiver.name, names: t("care.pairNames", { senior: careSummary.senior.name, caretaker: careSummary.caregiver.name }) }
     : { ...caregiver, names: t("care.pairNames", { senior: caregiver.seniorName, caretaker: caregiver.caretakerName }) };
   // Restock help (demo only, lib/restockHelp.ts): the card lives on Reminders; "See all" on Home gets a dot while it waits.
-  const restock = useRestockHelp(restockAlert);
+  // Live days of supply when the API answered; the mock alert offline.
+  const liveRestockAlert = medications ? pickRestockAlert(medications, RESTOCK_SOON_DAYS) : restockAlert;
+  const restock = useRestockHelp(liveRestockAlert);
 
   const notify = (message: string) => {
     setToast(message);
@@ -417,7 +425,7 @@ export default function App() {
           <RemindersScreen
             back={back}
             doses={doseList}
-            restockCard={restock.visible ? <RestockCard alert={restockAlert} caretakerName={caretakerName} state={restock.state} busy={restock.busy} onAsk={() => void restock.askForHelp()} onSelf={restock.getItMyself} onAcknowledge={restock.acknowledgeHandled} /> : null}
+            restockCard={restock.visible && liveRestockAlert ? <RestockCard alert={liveRestockAlert} caretakerName={caretakerName} state={restock.state} busy={restock.busy} onAsk={() => void restock.askForHelp()} onSelf={restock.getItMyself} onAcknowledge={restock.acknowledgeHandled} /> : null}
           />
         )}
         {screen === "prescription" && <PrescriptionScreen back={back} onSaved={handleMedicationSaved} onExplain={handleExplainMedicine} petName={dogName} />}
