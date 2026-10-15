@@ -29,7 +29,7 @@ export function useRestockEntry() {
 export type RestockCardState = "offer" | "asked" | "handled";
 
 /**
- * Phone side of restock help. `alert` is the low-supply medicine (mock until the API sends supply data).
+ * Phone side of restock help. `alert` is the low-supply medicine (`GET /api/medications`, mock offline; see App.tsx).
  * - offer: "Ask {{caretaker}} to help" / "I'll get it myself"
  * - asked: the request is waiting on /care
  * - handled: a caretaker tapped "I'll handle it" on /care; "OK" hides the card for today

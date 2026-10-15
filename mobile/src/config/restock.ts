@@ -1,9 +1,10 @@
 /**
  * Restock help (demo only, wire-ready). Logic in lib/restockHelp.ts; text in en.json under "restock".
  */
+import { DEMO_RULES } from "../../../shared/config.js";
 
-/** The restock card shows when a medicine has this many days of supply left, or fewer. */
-export const RESTOCK_SOON_DAYS = 5;
+/** The restock card shows when a medicine has this many days of supply left, or fewer (same threshold as the agent's restock rule). */
+export const RESTOCK_SOON_DAYS = DEMO_RULES.restockDaysOfSupply;
 
 /**
  * localStorage keys. The phone app and /care share one origin, so /care in the same browser sees the request.
