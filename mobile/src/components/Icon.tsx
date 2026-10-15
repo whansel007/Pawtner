@@ -22,6 +22,7 @@ export function Icon({
     camera: <><path d="M4 8h4l1.5-2h5L16 8h4a2 2 0 0 1 2 2v9H2v-9a2 2 0 0 1 2-2Z" /><circle cx="12" cy="13.5" r="3.5" /></>,
     bell: <><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" /><path d="M10 21h4" /></>,
     check: <path d="m5 12 4 4L19 6" />,
+    note: <><path d="M6 3h9l4 4v14H6V3Z" /><path d="M14 3v5h5M9 13h7M9 17h5" /></>,
     chevron: <path d="m9 18 6-6-6-6" />,
     scan: <><path d="M8 3H4a1 1 0 0 0-1 1v4M16 3h4a1 1 0 0 1 1 1v4M8 21H4a1 1 0 0 1-1-1v-4M16 21h4a1 1 0 0 0 1-1v-4" /><path d="M7 12h10" /></>,
     walk: <><circle cx="13" cy="4" r="2" /><path d="m10 22 2-7-3-3 2-5 5 3 3 1M5 22l4-6M15 22l-2-7" /></>,

@@ -476,13 +476,23 @@
       "happy4": "You and {{name}} make a great team."
     }
   },
+  "visitNotes": {
+    "title": "For my next visit",
+    "empty": "Jot down what to ask the doctor",
+    "inputLabel": "Your note",
+    "save": "Save note",
+    "saveEdit": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
   "summary": {
     "eyebrow": "Sunday summary",
     "title": "Your week in plain words",
     "caringDays": "{{count}} of {{total}} caring days",
     "caringDays_one": "{{count}} of {{total}} caring day",
     "caringDays_other": "{{count}} of {{total}} caring days",
-    "askDoctor": "ASK YOUR DOCTOR",
+    "askDoctor": "FOR MY NEXT VISIT",
     "doneReading": "Done reading"
   },
   "screening": {

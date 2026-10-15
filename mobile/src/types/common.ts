@@ -15,6 +15,7 @@ export type Screen =
   | "summary"
   | "settings"
   | "medicines"
+  | "visitNotes"
   | "customize";
 
 export type World = "flat" | "garden" | "kampung";

@@ -25,6 +25,8 @@ export function HealthScreen({
   clinicTasks,
   weekSummary,
   petName,
+  visitNoteLatest,
+  onVisitNotes,
 }: {
   back: BackAction;
   bpLogged: boolean;
@@ -39,6 +41,9 @@ export function HealthScreen({
   clinicTasks: ClinicTask;
   weekSummary: WeekSummary;
   petName: string;
+  /** Newest "For my next visit" note (her own words), or null. */
+  visitNoteLatest: string | null;
+  onVisitNotes: () => void;
 }) {
   const { t } = useTranslation();
   const [systolic, setSystolic] = useState("");
@@ -190,6 +195,7 @@ export function HealthScreen({
 
       <ActionRow icon={<Icon name="book" />} title={t("health.weekSummary")} subtitle={t("health.weekSummarySub", { doses: weekSummary.metrics[0].value, walks: weekSummary.metrics[1].value })} onClick={onSummary} />
       <ClinicMemoRow title={clinicTasks.title} />
+      <ActionRow icon={<Icon name="note" />} title={t("visitNotes.title")} subtitle={visitNoteLatest ?? t("visitNotes.empty")} onClick={onVisitNotes} />
       <ActionRow icon={<Icon name="star" />} iconTone="peach" tone="warm" title={t("health.screeningTitle")} subtitle={t("health.screeningSub")} onClick={onScreening} />
       <ActionRow icon={<img className="action-row__logo" src={activityLink.logoSrc} alt={activityLink.logoAlt} />} iconTone="white" title={activityLink.title} subtitle={activityLink.subtitle} href={activityLink.url} />
     </FullCard>
