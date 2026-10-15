@@ -66,11 +66,14 @@ function parseLabelFields(text: string): { name: string; strength: string | null
 export function PrescriptionScreen({
   back,
   onSaved,
+  onExplain,
   petName,
 }: {
   back: BackAction;
   /** Called after the medication is saved so the parent can continue the flow. */
   onSaved?: (medicationId?: string) => void;
+  /** Optional explain path: save and jump to the explanation screen with this medicine's name. */
+  onExplain?: (medicineName: string, medicationId?: string) => void;
   petName: string;
 }) {
   const { t } = useTranslation();
@@ -177,6 +180,34 @@ export function PrescriptionScreen({
       const res = await api.createMedication(payload);
       setSaving(false);
       onSaved?.(res.medication.id);
+    } catch (err) {
+      setSaving(false);
+      setSaveError(err instanceof Error ? err.message : "Could not save");
+    }
+  };
+
+  /**
+   * Save then jump to the explanation screen instead of schedule.
+   * Reuses the createMedication call so the medication id is available
+   * when ExplanationScreen's Continue reaches ScheduleScreen.
+   */
+  const saveAndExplain = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    setSaveError("");
+    const payload: CreateMedicationRequest = {
+      name: name.trim(),
+      strength: strength.trim() || null,
+      dosageForm: dosageForm.trim() || null,
+      activeIngredients: activeIngredients.trim() || null,
+      genericName: genericName.trim() || null,
+      prescribedFor: prescribedFor.trim() || null,
+      daysOfSupply: daysOfSupply ? Number(daysOfSupply) : null,
+    };
+    try {
+      const res = await api.createMedication(payload);
+      setSaving(false);
+      onExplain?.(name.trim(), res.medication.id);
     } catch (err) {
       setSaving(false);
       setSaveError(err instanceof Error ? err.message : "Could not save");
@@ -307,6 +338,11 @@ export function PrescriptionScreen({
           <button className="primary-button" disabled={!name.trim() || saving} onClick={save}>
             {saving ? "Saving…" : "Confirm and save"}
           </button>
+          {onExplain && (
+            <button className="text-button" disabled={!name.trim() || saving} onClick={saveAndExplain}>
+              {t("prescription.explain")}
+            </button>
+          )}
           {!showManual && (
             <button className="text-button" onClick={() => setStage("results")}>Back to results</button>
           )}

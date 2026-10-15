@@ -245,9 +245,10 @@ export default function App() {
     notify(t("toast.treatSent", { name: dogName }));
   }
 
-  /** Prescription "Explain this medicine": remember the name, then drill into the explanation. */
-  function handleExplainMedicine(medicineName: string) {
+  /** Prescription "Explain this medicine": remember the name (and the saved id, if any), then drill into the explanation. */
+  function handleExplainMedicine(medicineName: string, medicationId?: string) {
     setSavedMedicationName(medicineName);
+    if (medicationId) setSavedMedicationId(medicationId);
     navigate("explanation");
   }
 
@@ -394,7 +395,7 @@ export default function App() {
         )}
         {screen === "care" && <CareScreen back={back} sendTreat={handleSendTreat} pet={livePet} caregiver={liveCaregiver} careActivity={liveCareActivity} restockAlert={restockAlert} />}
         {screen === "reminders" && <RemindersScreen back={back} doses={doseList} />}
-        {screen === "prescription" && <PrescriptionScreen back={back} onSaved={handleMedicationSaved} petName={dogName} />}
+        {screen === "prescription" && <PrescriptionScreen back={back} onSaved={handleMedicationSaved} onExplain={handleExplainMedicine} petName={dogName} />}
         {screen === "explanation" && <ExplanationScreen back={back} onContinue={() => navigate("schedule")} medicineName={savedMedicationName} />}
         {screen === "schedule" && <ScheduleScreen back={back} onConfirm={handleScheduleConfirmed} petName={dogName} medicationId={savedMedicationId} />}
         {screen === "reference" && <ReferenceScreen back={back} onDone={handleReferenceDone} onSkip={handleReferenceDone} petName={dogName} medicationId={savedMedicationId} />}
