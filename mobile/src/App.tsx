@@ -8,6 +8,7 @@ import { RemindersScreen } from "./screens/RemindersScreen";
 import { PrescriptionScreen } from "./screens/PrescriptionScreen";
 import { ExplanationScreen } from "./screens/ExplanationScreen";
 import { ScheduleScreen } from "./screens/ScheduleScreen";
+import { ReferenceScreen } from "./screens/ReferenceScreen";
 import { ProofScreen } from "./screens/ProofScreen";
 import { WalkScreen } from "./screens/WalkScreen";
 import { MilestonesScreen } from "./screens/MilestonesScreen";
@@ -250,14 +251,26 @@ export default function App() {
     navigate("explanation");
   }
 
-  /** A medication was saved: keep its id for the schedule step and refresh today's doses. */
+  /** A medication was saved: keep its id, refresh today's doses, then continue to schedule. */
   function handleMedicationSaved(medicationId?: string) {
     setSavedMedicationId(medicationId);
     void refreshToday();
+    navigate("schedule");
   }
 
-  /** Schedule confirmed: back Home with a nudge toast, then refresh so new doses appear. */
+  /** Schedule confirmed: continue to the reference photo step, or home if there is no medication id. */
   function handleScheduleConfirmed() {
+    if (savedMedicationId) {
+      navigate("reference");
+    } else {
+      navigate("home");
+      notify(t("toast.nudgeSet", { name: dogName }));
+      void refreshToday();
+    }
+  }
+
+  /** Reference photo done (or skipped): back Home with a nudge toast, then refresh so new doses appear. */
+  function handleReferenceDone() {
     navigate("home");
     notify(t("toast.nudgeSet", { name: dogName }));
     void refreshToday();
@@ -381,9 +394,10 @@ export default function App() {
         )}
         {screen === "care" && <CareScreen back={back} sendTreat={handleSendTreat} pet={livePet} caregiver={liveCaregiver} careActivity={liveCareActivity} restockAlert={restockAlert} />}
         {screen === "reminders" && <RemindersScreen back={back} doses={doseList} />}
-        {screen === "prescription" && <PrescriptionScreen back={back} onHome={goHome} onExplain={handleExplainMedicine} onSaved={handleMedicationSaved} petName={dogName} />}
+        {screen === "prescription" && <PrescriptionScreen back={back} onSaved={handleMedicationSaved} petName={dogName} />}
         {screen === "explanation" && <ExplanationScreen back={back} onContinue={() => navigate("schedule")} medicineName={savedMedicationName} />}
         {screen === "schedule" && <ScheduleScreen back={back} onConfirm={handleScheduleConfirmed} petName={dogName} medicationId={savedMedicationId} />}
+        {screen === "reference" && <ReferenceScreen back={back} onDone={handleReferenceDone} onSkip={handleReferenceDone} petName={dogName} medicationId={savedMedicationId} />}
         {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} medicationId={pendingDose?.medicationId} />}
         {screen === "walk" && <WalkScreen back={back} walkStats={walkStats} petName={dogName} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
         {screen === "milestones" && <MilestonesScreen back={back} onWalk={() => navigate("walk")} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} heartsTotal={heartsTotal} />}
