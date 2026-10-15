@@ -14,6 +14,9 @@ export const pet: Pet = {
   caringDays: 12,
 };
 
+/** Mock lifetime hearts total until the API sends today.dog.heartsTotal. */
+export const heartsTotal = 30;
+
 export const doses: Dose[] = [
   { time: "9:00 AM", name: "Gabapentin", dose: "50 mg · 1 capsule", status: "Taken" },
   { time: "1:00 PM", name: "Apoquel", dose: "3.6 mg · with food", status: "Take now" },

@@ -13,12 +13,14 @@ export function MilestonesScreen({
   onCustomize,
   pet,
   petName,
+  heartsTotal,
 }: {
   back: BackAction;
   onWalk: () => void;
   onCustomize: () => void;
   pet: Pet;
   petName: string;
+  heartsTotal: number;
 }) {
   const { t } = useTranslation();
   const [data, setData] = useState<MilestonesResponse | null>(null);
@@ -41,6 +43,7 @@ export function MilestonesScreen({
       <p className="eyebrow green">{t("milestones.eyebrow", { name: petName })}</p>
       <h2>{t("milestones.title", { count: caringDays })}</h2>
       <p className="streak-line">{t("milestones.streakLine", { count: pet.streak })}</p>
+      <p className="streak-line">{t("milestones.hearts", { count: heartsTotal })}</p>
 
       {data && (
         <div className="world-card">

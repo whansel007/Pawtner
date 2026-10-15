@@ -19,6 +19,8 @@ export function SettingsScreen({
   agentBusy,
   escalationSettings,
   onSaveEscalationSettings,
+  demoUnlockAll,
+  onToggleDemoUnlockAll,
 }: {
   back: BackAction;
   addMedication: () => void;
@@ -32,6 +34,8 @@ export function SettingsScreen({
   agentBusy: boolean;
   escalationSettings: EscalationSettingsResponse | null;
   onSaveEscalationSettings: (settings: EscalationSettingsResponse) => void;
+  demoUnlockAll: boolean;
+  onToggleDemoUnlockAll: () => void;
 }) {
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
@@ -66,6 +70,14 @@ export function SettingsScreen({
         </select>
         <p>Check-ins never include medicine names. The minimum threshold is two missed doses.</p>
         <button className="primary-button" disabled={!escalationSettings || settingsBusy} onClick={async () => { setSettingsBusy(true); try { await onSaveEscalationSettings(escalationDraft); } finally { setSettingsBusy(false); } }}>{settingsBusy ? "Saving…" : "Save check-in settings"}</button>
+      </div>
+      <div className="demo-clock-card demo-unlock-card">
+        <p className="eyebrow green">{t("settings.demoEyebrow")}</p>
+        <h3>{t("settings.demoUnlockAll")}</h3>
+        <label className="consent-toggle">
+          <input type="checkbox" checked={demoUnlockAll} onChange={onToggleDemoUnlockAll} />
+          {t("settings.demoUnlockAll")}
+        </label>
       </div>
     </FullCard>
   );

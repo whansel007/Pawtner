@@ -31,6 +31,7 @@ export function Icon({
     users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8" /></>,
     book: <><path d="M4 4h6a2 2 0 0 1 2 2v15a3 3 0 0 0-3-3H4V4ZM20 4h-6a2 2 0 0 0-2 2v15a3 3 0 0 1 3-3h5V4Z" /></>,
     paw: <><path d="M12 21c-3.4 0-6-1.7-6-4.2 0-2.2 2.7-5.1 6-5.1s6 2.9 6 5.1C18 19.3 15.4 21 12 21Z" /><ellipse cx="5.2" cy="10.1" rx="2.2" ry="3" transform="rotate(-28 5.2 10.1)" /><ellipse cx="18.8" cy="10.1" rx="2.2" ry="3" transform="rotate(28 18.8 10.1)" /><ellipse cx="9.2" cy="5.8" rx="2.1" ry="3" transform="rotate(-8 9.2 5.8)" /><ellipse cx="14.8" cy="5.8" rx="2.1" ry="3" transform="rotate(8 14.8 5.8)" /></>,
+    lock: <><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>,
   };
 
   return (
