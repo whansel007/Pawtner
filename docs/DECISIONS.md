@@ -5,7 +5,7 @@
 | Decision | Reason | Tradeoff | Status |
 |---|---|---|---|
 | World & wardrobe rewards unlock when Buddy's lifetime hearts reach a threshold (`config/rewards.ts`); hearts are never spent. A Settings switch "Unlock all rewards (demo)" sits under "Caretaker check-ins". | User: one currency is easy to explain; spending hearts would feel like losing something. | Needs `dog.heartsTotal` from P1; mock value until then. Seed history caps the total near 48. | Tentative (thresholds) |
-| The AI pill check stays, reworded as a comparison with her own first photo ("Looks like your usual pill"), no similarity %, raw errors never shown. | User: it's for verification, not identification; PRD §7.4 forbids identifying a pill. | Still an AI judgement; the disclosure says it can't tell what a pill is. | Final wording pending CodeBuddy PR |
+| The AI pill check stays, reworded as a comparison with her own first photo ("Looks like your usual pill"), no similarity %, raw errors never shown. | User: it's for verification, not identification; PRD §7.4 forbids identifying a pill. | Still an AI judgement; the disclosure says it can't tell what a pill is. | Final (PR #28) |
 | Hibiscus drawn as an inline SVG; hat at top 3% of the dog image; compact dock below 430px landscape height. | `box-shadow` with % offsets was invalid CSS (petals never drew); hat brim sat on the eyes; card was 225px tall at 915×355. | The "woof!" bubble has ~1px slack in short landscape; "Show me at home" still needs a scroll there. | Final |
 
 ## 2026-10-15 — Lifetime hearts total (`dog.heartsTotal`)
