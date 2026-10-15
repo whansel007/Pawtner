@@ -55,29 +55,112 @@
   pointer-events: none;
 }
 
-.dog-stage__cast-shadow {
+/*
+ * Ground shadows sit outside the animated body, so they stay on the lawn while the dog moves.
+ * The ground layer has the dog art's canvas shape (1000x1300) and is bottom-aligned like the art, so every
+ * percentage below is a position on the art canvas, even when max-width narrows the image.
+ * Art geometry (all moods): front paws touch down at x 32–70%, ~2.4% above the canvas bottom;
+ * back paws at x 14–30% and 72–86%, ~8–9.5% above it (further back, so higher on screen).
+ * The shadows are drawn behind the dog and reach just under each paw's edge, so no lawn shows between paw and shadow.
+ */
+.dog-stage__ground {
+  --shadow-ink: 18, 32, 16;
   position: absolute;
-  left: 50%;
-  bottom: -3%;
-  width: 95%;
-  height: 11%;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(25, 40, 22, 0.32), rgba(25, 40, 22, 0));
-  transform: translateX(-62%);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  aspect-ratio: 1000 / 1300;
+  transform-origin: 50% 95%;
   pointer-events: none;
 }
 
-.dog-stage__contact-shadow {
+.dog-stage__ground > span {
   position: absolute;
-  left: 50%;
-  bottom: -2%;
-  width: 72%;
-  height: 7%;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(20, 35, 20, 0.45), rgba(20, 35, 20, 0));
-  transform: translateX(-50%);
+}
+
+/* Soft daylight shadow, falling away from the sun (up-right) toward the left. */
+.dog-stage__cast-shadow {
+  left: -6%;
+  bottom: -1.5%;
+  width: 92%;
+  height: 13%;
+  background: radial-gradient(closest-side, rgba(var(--shadow-ink), 0.3), rgba(var(--shadow-ink), 0.12) 60%, rgba(var(--shadow-ink), 0));
+}
+
+/* The footprint: the patch of lawn the sitting dog covers, from the front paws back to the rump. */
+.dog-stage__contact-shadow {
+  left: 9%;
+  bottom: 0.5%;
+  width: 82%;
+  height: 11%;
+  background: radial-gradient(closest-side, rgba(var(--shadow-ink), 0.5), rgba(var(--shadow-ink), 0.32) 55%, rgba(var(--shadow-ink), 0));
+}
+
+/* Tight ambient occlusion right at the feet line: a dark crease where each paw meets the felt. */
+.dog-stage__paw-shadow--front {
+  left: 27%;
+  bottom: 1%;
+  width: 46%;
+  height: 3.2%;
+  background: radial-gradient(closest-side, rgba(var(--shadow-ink), 0.6), rgba(var(--shadow-ink), 0.4) 50%, rgba(var(--shadow-ink), 0));
+}
+
+.dog-stage__paw-shadow--back {
+  left: 10%;
+  bottom: 6.6%;
+  width: 80%;
+  height: 3.6%;
+  border-radius: 0;
+  background:
+    radial-gradient(closest-side, rgba(var(--shadow-ink), 0.5), rgba(var(--shadow-ink), 0)) left / 28% 100% no-repeat,
+    radial-gradient(closest-side, rgba(var(--shadow-ink), 0.5), rgba(var(--shadow-ink), 0)) right / 28% 100% no-repeat;
+}
+
+/*
+ * Buddy clip: a transparent video over the still. Like the ground layer, the canvas box has the art's 1000x1300 shape
+ * and is bottom-aligned, so it matches the drawn art even when max-width narrows the image. The video frame is that
+ * canvas padded on the sides and top (config/clips.ts CLIP_CANVAS); the offsets arrive as --clip-* from DogStage.
+ * The video stays invisible until it is really playing; then the still hides under it (opacity only).
+ */
+.dog-stage__clip-canvas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  aspect-ratio: var(--clip-canvas-aspect, 1000 / 1300);
   pointer-events: none;
 }
+
+.dog-stage__clip {
+  position: absolute;
+  left: var(--clip-left);
+  top: var(--clip-top);
+  width: var(--clip-width);
+  height: var(--clip-height);
+  max-width: none;
+  display: block;
+  object-fit: fill;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dog-stage.is-clip-visible .dog-stage__clip { opacity: 1; }
+.dog-stage.is-clip-visible .dog-stage__image { opacity: 0; }
+
+/*
+ * The accessory (hat, glasses, flower) is placed on the still art and can't follow the clip's moving head,
+ * so it fades out when the clip shows and back in when the still returns. Same box as the dog image.
+ */
+.dog-stage__accessory {
+  --accessory-fade: 150ms;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity var(--accessory-fade) ease;
+}
+
+.dog-stage.is-clip-visible .dog-stage__accessory { opacity: 0; }
 
 /* ── Mood motion: transform and opacity only ── */
 .dog-stage--content .dog-stage__body { animation: dog-breathe 3.6s ease-in-out infinite; }
@@ -85,10 +168,22 @@
 .dog-stage--sleepy .dog-stage__body { animation: dog-droop 5s ease-in-out infinite; }
 /* attentive: still and upright, no playful motion */
 
+/* While the dog is in the air its shadow tightens and fades, and the paw creases lift off; same timing as the hop. */
+.dog-stage--joyful .dog-stage__ground { animation: ground-hop-mood 1.6s ease-in-out infinite; }
+.dog-stage--joyful .dog-stage__paw-shadow { animation: paw-shadow-hop-mood 1.6s ease-in-out infinite; }
+
+/* While a clip is on screen the still rests in its base pose (the clip's first and last frame), so they don't fight. */
+.dog-stage.has-clip .dog-stage__body,
+.dog-stage.has-clip .dog-stage__ground,
+.dog-stage.has-clip .dog-stage__paw-shadow { animation: none; }
+
 /* ── Tap reactions (transform + opacity only) ── */
 
 /* hop: a short jump with squash */
 .dog-stage__pet.is-hop .dog-stage__body { animation: pet-hop 0.6s ease-out; }
+/* The ground layer comes before the button, so it follows the tap hop through :has(). */
+.dog-stage__figure:has(.is-hop) .dog-stage__ground { animation: ground-pet-hop 0.6s ease-out; }
+.dog-stage__figure:has(.is-hop) .dog-stage__paw-shadow { animation: paw-shadow-pet-hop 0.6s ease-out; }
 
 /* hearts: a burst of 5 filled hearts pops above the head, rises and fades (decoration only) */
 .dog-stage__hearts {
@@ -138,6 +233,30 @@
 @keyframes dog-droop {
   0%, 100% { transform: rotate(0deg) translateY(0); }
   50% { transform: rotate(-2.5deg) translateY(1.5%); }
+}
+
+@keyframes ground-hop-mood {
+  0%, 55%, 100% { transform: scale(1); opacity: 1; }
+  62% { transform: scale(1.03, 1); opacity: 1; }
+  75% { transform: scale(0.86); opacity: 0.6; }
+  88% { transform: scale(1.02, 1); opacity: 1; }
+}
+
+@keyframes ground-pet-hop {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  20% { transform: scale(1.05, 1); opacity: 1; }
+  50% { transform: scale(0.8); opacity: 0.5; }
+  80% { transform: scale(1.03, 1); opacity: 1; }
+}
+
+@keyframes paw-shadow-hop-mood {
+  0%, 62%, 88%, 100% { opacity: 1; }
+  70%, 80% { opacity: 0; }
+}
+
+@keyframes paw-shadow-pet-hop {
+  0%, 20%, 80%, 100% { opacity: 1; }
+  35%, 65% { opacity: 0; }
 }
 
 @keyframes pet-hop {
@@ -232,6 +351,8 @@
 /* Same specificity as the mood rules above, and later in the file, so this wins. */
 @media (prefers-reduced-motion: reduce) {
   .dog-stage .dog-stage__body,
+  .dog-stage .dog-stage__ground,
+  .dog-stage .dog-stage__paw-shadow,
   .dog-stage__pet.is-hop .dog-stage__body,
   .dog-stage__heart,
   .dog-stage__pet.is-dizzy .dog-stage__body,
@@ -242,6 +363,16 @@
   }
   .dog-stage__heart {
     opacity: 0;
+  }
+  /* No clips under reduced motion (useBuddyClip never starts one); this is the still fallback if one slips through. */
+  .dog-stage__clip-canvas { display: none; }
+  .dog-stage.is-clip-visible .dog-stage__image,
+  .dog-stage.is-clip-visible .dog-stage__accessory { opacity: 1; }
+  .dog-stage__accessory { transition: none; }
+  /* Its own rule: a browser without :has() drops only this one. */
+  .dog-stage__figure:has(.is-hop) .dog-stage__ground,
+  .dog-stage__figure:has(.is-hop) .dog-stage__paw-shadow {
+    animation: none;
   }
   /* Still fallback: three stars resting in an arc above the head. */
   .dog-stage__orbit--1 { transform: translate(-38%, 10%); }

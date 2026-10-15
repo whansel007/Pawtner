@@ -23,7 +23,11 @@ export const PET_REACTIONS = {
     bubble: 2400,
     bark: 800,
   } as const,
-  /** Bark sound file path. Do not download or add this file yourself. */
+  /**
+   * Bark sound (dog tap rotation and the paw button, via lib/useBark.ts). The file is user-supplied
+   * (CC0, 0.95 s, 12 KB); its licence source is still to be recorded in docs/DECISIONS.md.
+   * Don't replace it with a downloaded sound.
+   */
   barkSoundPath: "/assets/bark.mp3",
   /** Whether sound is on by default. */
   soundOn: true,

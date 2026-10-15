@@ -24,12 +24,14 @@ export interface AccessoryLayout {
  * ears ~4-20% (outer edges ~x 6%-94% at 12-20%), eyes ~39%.
  */
 export const ACCESSORY_LAYOUTS: Record<Exclude<AccessoryId, "none">, AccessoryLayout> = {
-  /* Box spans 3-21%: the dome covers the crown between the ears, the brim rests on the forehead above the eyes. */
+  /* Box spans 3-26% of the height and 82% of the width. Crown (see .accessory-hat in index.css) ~49% wide, top at ~4%,
+     just above the crown of the head, so it covers the top of the head between the ears; brim ~18-25%, on the forehead
+     just above the ear bases and well clear of the eyes (~39%). Checked on the base, joyful and sleepy art. */
   hat: {
     top: "3%",
-    width: "55%",
-    height: "18%",
-    rotate: "3deg",
+    width: "82%",
+    height: "23%",
+    rotate: "2deg",
   },
   glasses: {
     top: "30%",
