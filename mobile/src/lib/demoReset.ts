@@ -1,5 +1,6 @@
 import { CLINIC_MEMO, VISIT_NOTES } from "../config/health.js";
 import { RESTOCK_STORAGE_KEYS } from "../config/restock.js";
+import { SHARING } from "../config/sharing.js";
 import { browserStore, removeItem, type KeyValueStore } from "./localStore.js";
 
 /**
@@ -10,6 +11,7 @@ export const DEMO_STORAGE_KEYS: readonly string[] = [
   ...Object.values(RESTOCK_STORAGE_KEYS),
   CLINIC_MEMO.storageKey,
   VISIT_NOTES.storageKey,
+  SHARING.bloodPressureKey,
   // Written by earlier builds ("I'll get it myself" used to hide the card for the day).
   "pawtner.restockDismissedOn",
 ];

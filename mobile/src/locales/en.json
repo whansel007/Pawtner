@@ -148,6 +148,10 @@
           "celebration": "Celebration",
           "check_in": "Check-in"
         },
+        "bpEyebrow": "Shared by {{name}}",
+        "bpTitle": "Latest blood pressure",
+        "bpValue": "{{systolic}} / {{diastolic}}",
+        "bpLogged": "Logged on {{day}}",
         "questionsEyebrow": "Added by {{name}}",
         "questionsTitle": "Questions for the doctor",
         "questionsSaved": "Saved on {{day}} · Ready for the next visit",
@@ -163,8 +167,8 @@
         "treatOffline": "Treats can be sent once Pawtner is back online.",
         "treatMessage": "{{caretaker}} sent {{dog}} a treat!",
         "restockEyebrow": "A small favour",
-        "restockTitle_one": "{{name}} would like help with a medicine refill (about {{count}} day left)",
-        "restockTitle_other": "{{name}} would like help with a medicine refill (about {{count}} days left)",
+        "restockTitle_one": "{{name}} would like help with a refill of {{medicine}} (about {{count}} day left)",
+        "restockTitle_other": "{{name}} would like help with a refill of {{medicine}} (about {{count}} days left)",
         "restockBody": "Asked on {{day}} from {{name}}'s phone.",
         "restockHandle": "I'll handle it",
         "restockHandled": "Thank you. {{name}}'s phone will say you're helping."
@@ -423,7 +427,7 @@
     "bpLastReading": "Last reading",
     "bpNoReadingYet": "No reading logged yet",
     "resultTitle": "What the app noticed",
-    "callEmergency": "Call {{number}}",
+    "callEmergency": "Call {{number}} (emergency purpose only)",
     "resultSeeGpTitle": "Please see your GP soon"
   },
   "decisionLog": {
@@ -500,8 +504,9 @@
     "nudgesSub": "Times, sound and read-aloud",
     "caretaker": "{{caretaker}}, caretaker",
     "caretakerSub": "Connected to the same {{name}}",
-    "privacyTitle": "Your information stays yours.",
-    "privacyBody": "{{caretaker}} sees caring moments, not private medicine details.",
+    "shareBp": "Share my blood pressure with {{caretaker}}",
+    "shareBpSub": "{{caretaker}} sees your latest reading and the notes you write with it.",
+    "privacyTitle": "Your information stays yours, unless specified otherwise.",
     "demoEyebrow": "Demo",
     "demoUnlockAll": "Unlock all rewards (demo)",
     "demoReset": "Reset demo",

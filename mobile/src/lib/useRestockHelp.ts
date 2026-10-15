@@ -59,7 +59,7 @@ export function useRestockHelp(alert: RestockAlert | null) {
     if (!alert || busy) return;
     setBusy(true);
     try {
-      setEntry(await requestRestockHelp({ medicationId: alert.medicationId, daysLeft: alert.daysRemaining, requestedAt: new Date().toISOString() }));
+      setEntry(await requestRestockHelp({ medicationId: alert.medicationId, medicationName: alert.name, daysLeft: alert.daysRemaining, requestedAt: new Date().toISOString() }));
     } finally {
       setBusy(false);
     }

@@ -23,9 +23,11 @@ interface WeekPageProps {
   onHandleRestock: () => void;
   /** "Questions for the doctor": the senior's shared notes plus the API's questions, newest first (doctorQuestionsForCare). */
   doctorQuestions: Array<{ note: string; occurredAt: string }>;
+  /** Latest reading, only when the senior shares her blood pressure (Settings on her phone); else null. */
+  latestBloodPressure: { systolic: number; diastolic: number; recordedAt: string } | null;
 }
 
-export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, restockRequest, onHandleRestock, doctorQuestions }: WeekPageProps) {
+export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, restockRequest, onHandleRestock, doctorQuestions, latestBloodPressure }: WeekPageProps) {
   const { t, i18n } = useTranslation();
   // Thank-you line after "I'll handle it", until the page changes.
   const [handledRestock, setHandledRestock] = useState(false);
@@ -64,7 +66,7 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
           <CareCard
             eyebrow={t("care.web.week.restockEyebrow")}
             title={restockRequest
-              ? t("care.web.week.restockTitle", { name: senior, count: restockRequest.daysLeft })
+              ? t("care.web.week.restockTitle", { name: senior, medicine: restockRequest.medicationName, count: restockRequest.daysLeft })
               : t("care.web.week.restockHandled", { name: senior })}
             stitched
             className="care-restock"
@@ -131,6 +133,13 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
             {!offline && treatStatus === "failed" && t("care.web.week.treatFailed")}
           </div>
         </CareCard>
+
+        {latestBloodPressure && (
+          <CareCard eyebrow={t("care.web.week.bpEyebrow", { name: senior })} title={t("care.web.week.bpTitle")} stitched className="care-bp">
+            <p className="care-bp__value">{t("care.web.week.bpValue", { systolic: latestBloodPressure.systolic, diastolic: latestBloodPressure.diastolic })}</p>
+            <p className="care-hint">{t("care.web.week.bpLogged", { day: formatWeekday(latestBloodPressure.recordedAt, locale) })}</p>
+          </CareCard>
+        )}
 
         <CareCard eyebrow={t("care.web.week.questionsEyebrow", { name: senior })} title={t("care.web.week.questionsTitle")} stitched className="care-questions">
           <span className="care-questions__pin" aria-hidden="true" />

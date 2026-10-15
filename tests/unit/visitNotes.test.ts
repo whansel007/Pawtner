@@ -90,3 +90,14 @@ describe("shared visit notes", () => {
     ]);
   });
 });
+
+describe("blood pressure sharing switch", () => {
+  it("is on by default for the demo, then follows what she chose", async () => {
+    const { readShareBloodPressure, writeShareBloodPressure } = await import("../../mobile/src/lib/sharing.js");
+    const store = memoryStore();
+    expect(readShareBloodPressure(store)).toBe(true);
+    expect(writeShareBloodPressure(false, store)).toBe(true);
+    expect(readShareBloodPressure(store)).toBe(false);
+    expect(writeShareBloodPressure(false, blockedStore)).toBe(false);
+  });
+});

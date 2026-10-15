@@ -620,6 +620,12 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .settings-group small { color: #78857c; font-size: var(--font-size-sm); }
 .settings-note { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 13px; border-radius: var(--radius-2xl); color: #65766b; background: var(--color-surface-stone-alt); }
 .settings-note p { margin: 0; font-size: var(--font-size-sm); line-height: 1.4; }
+/* "Share my blood pressure with {{caretaker}}": a plain checkbox row, last before the privacy line. */
+.settings-share { display: flex; align-items: flex-start; gap: 12px; margin-top: 14px; padding: 13px; border-radius: var(--radius-2xl); background: var(--color-surface-white); border: 1px solid var(--color-border-card); cursor: pointer; }
+.settings-share input { flex: 0 0 auto; width: 22px; height: 22px; margin: 2px 0 0; accent-color: #668b70; }
+.settings-share span { display: grid; gap: 2px; min-width: 0; }
+.settings-share strong { color: var(--color-text-heading); }
+.settings-share small { color: #7a847c; font-size: var(--font-size-sm); }
 
 /* ═══════════════════════════════════════════════════════════════════════
    World picker / wardrobe

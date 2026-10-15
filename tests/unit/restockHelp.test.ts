@@ -31,7 +31,7 @@ const blockedStore: KeyValueStore = {
   removeItem: () => { throw new Error("blocked"); },
 };
 
-const request = { medicationId: "med-gaba", daysLeft: 4, requestedAt: "2026-10-15T04:00:00.000Z" };
+const request = { medicationId: "med-rozevon", medicationName: "Rozevon", daysLeft: 4, requestedAt: "2026-10-15T04:00:00.000Z" };
 
 describe("restock help request (demo storage)", () => {
   it("stores a pending request and reads it back", async () => {
@@ -41,11 +41,12 @@ describe("restock help request (demo storage)", () => {
     expect(readRestockHelp(store)).toEqual(entry);
   });
 
-  it("never stores a medicine name, only the id", async () => {
+  it("stores the one medicine she asked help with (name included, so the caretaker knows what to buy), nothing else", async () => {
     const store = memoryStore();
     await requestRestockHelp(request, store);
     const raw = store.data.get(RESTOCK_STORAGE_KEYS.request) ?? "";
-    expect(Object.keys(JSON.parse(raw)).sort()).toEqual(["daysLeft", "handledAt", "medicationId", "requestedAt", "status"]);
+    expect(Object.keys(JSON.parse(raw)).sort()).toEqual(["daysLeft", "handledAt", "medicationId", "medicationName", "requestedAt", "status"]);
+    expect(JSON.parse(raw).medicationName).toBe("Rozevon");
   });
 
   it("marks a request handled, then clears it", async () => {
