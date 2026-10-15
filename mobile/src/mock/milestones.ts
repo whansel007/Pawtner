@@ -23,13 +23,13 @@ export const souvenirs: Souvenir[] = [
 export const worldOptions: WorldOption[] = [
   { id: "flat", label: "Our flat", note: "First home" },
   { id: "garden", label: "Garden", note: "Current world" },
-  { id: "kampung", label: "Kampung", note: "Level 3 reward" },
+  { id: "kampung", label: "Kampung", note: "" },
 ];
 
 export const accessoryOptions: AccessoryOption[] = [
   { id: "none", label: "Fluffy", note: "accessory.justPet" },
-  { id: "glasses", label: "Sunny specs", note: "3 walks" },
-  { id: "hat", label: "Sun hat", note: "7 day streak" },
+  { id: "glasses", label: "Sunny specs", note: "" },
+  { id: "hat", label: "Sun hat", note: "" },
   { id: "flower", label: "Hibiscus bloom", note: "accessory.fromCaretaker" },
 ];
 

@@ -73,7 +73,6 @@ export function SettingsScreen({
       </div>
       <div className="demo-clock-card demo-unlock-card">
         <p className="eyebrow green">{t("settings.demoEyebrow")}</p>
-        <h3>{t("settings.demoUnlockAll")}</h3>
         <label className="consent-toggle">
           <input type="checkbox" checked={demoUnlockAll} onChange={onToggleDemoUnlockAll} />
           {t("settings.demoUnlockAll")}

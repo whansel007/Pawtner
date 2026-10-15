@@ -35,10 +35,12 @@ export function CustomizeScreen({
 }) {
   const { t } = useTranslation();
 
+  const allWorldsUnlocked = worldOptions.every((w) => isUnlocked(w.id, heartsTotal, demoUnlockAll));
+
   function handleWorldClick(item: WorldOption) {
     if (!isUnlocked(item.id, heartsTotal, demoUnlockAll)) {
       const threshold = unlockThreshold(item.id);
-      notify(t("customize.lockedToast", { name: item.label, count: threshold }));
+      notify(t("customize.lockedToast", { name: petName, count: threshold }));
       return;
     }
     setWorld(item.id);
@@ -47,7 +49,7 @@ export function CustomizeScreen({
   function handleAccessoryClick(item: AccessoryOption) {
     if (!isUnlocked(item.id, heartsTotal, demoUnlockAll)) {
       const threshold = unlockThreshold(item.id);
-      notify(t("customize.lockedToast", { name: item.label, count: threshold }));
+      notify(t("customize.lockedToast", { name: petName, count: threshold }));
       return;
     }
     setAccessory(item.id);
@@ -55,7 +57,7 @@ export function CustomizeScreen({
 
   function itemNote(item: WorldOption | AccessoryOption): string {
     const threshold = unlockThreshold(item.id);
-    if (threshold !== undefined && !isUnlocked(item.id, heartsTotal, demoUnlockAll)) {
+    if (threshold !== undefined) {
       return t("customize.lockedNote", { count: threshold });
     }
     if (item.note === "accessory.justPet") {
@@ -72,7 +74,7 @@ export function CustomizeScreen({
       <p className="eyebrow green">{t("customize.eyebrow", { name: petName })}</p>
       <h2>{t("customize.title")}</h2>
       <p className="supporting">{t("customize.supporting")}</p>
-      <div className="section-title"><h3>{t("customize.scenery")}</h3><span>{t("customize.scenerySub")}</span></div>
+      <div className="section-title"><h3>{t("customize.scenery")}</h3><span>{allWorldsUnlocked ? t("customize.scenerySub") : t("customize.scenerySubLocked")}</span></div>
       <div className="world-picker">
         {worldOptions.map((item) => {
           const locked = !isUnlocked(item.id, heartsTotal, demoUnlockAll);
