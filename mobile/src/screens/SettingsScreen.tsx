@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 
 export function SettingsScreen({
   back,
+  openMedicines,
   addMedication,
   openReminders,
   caregiver,
@@ -26,6 +27,8 @@ export function SettingsScreen({
   onDemoTime,
 }: {
   back: BackAction;
+  /** "My medicines": the medicine list with Edit and the original pill photo (T2-08). */
+  openMedicines: () => void;
   addMedication: () => void;
   openReminders: () => void;
   caregiver: Caregiver;
@@ -53,7 +56,8 @@ export function SettingsScreen({
       <p className="eyebrow green">{t("settings.eyebrow", { name: petName })}</p>
       <h2>{t("settings.title")}</h2>
       <div className="settings-group">
-        <button onClick={addMedication}><span className="feature-icon"><Icon name="pill" /></span><div><strong>{t("settings.addMed")}</strong><small>{t("settings.addMedSub")}</small></div><Icon name="chevron" /></button>
+        <button onClick={openMedicines}><span className="feature-icon"><Icon name="pill" /></span><div><strong>{t("settings.myMeds")}</strong><small>{t("settings.myMedsSub")}</small></div><Icon name="chevron" /></button>
+        <button onClick={addMedication}><span className="feature-icon"><Icon name="plus" /></span><div><strong>{t("settings.addMed")}</strong><small>{t("settings.addMedSub")}</small></div><Icon name="chevron" /></button>
         <button onClick={openReminders}><span className="feature-icon sage"><Icon name="bell" /></span><div><strong>{t("settings.nudges", { name: petName })}</strong><small>{t("settings.nudgesSub")}</small></div><Icon name="chevron" /></button>
         {/* Information only: the caretaker's view lives on /care, not on the senior's phone. */}
         <div className="settings-info"><span className="feature-icon sage"><Icon name="users" /></span><div><strong>{t("settings.caretaker", { caretaker: caretakerName })}</strong><small>{t("settings.caretakerSub", { name: petName })}</small></div></div>

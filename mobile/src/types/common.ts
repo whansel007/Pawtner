@@ -6,6 +6,7 @@ export type Screen =
   | "prescription"
   | "explanation"
   | "schedule"
+  | "reference"
   | "proof"
   | "walk"
   | "milestones"
@@ -13,6 +14,7 @@ export type Screen =
   | "screening"
   | "summary"
   | "settings"
+  | "medicines"
   | "customize";
 
 export type World = "flat" | "garden" | "kampung";

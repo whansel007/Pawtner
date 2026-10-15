@@ -26,8 +26,8 @@ import type {
   MedicationListResponse,
   MedicineExplanationResponse,
   MilestonesResponse,
-  PillDescribeRequest,
-  PillDescribeResponse,
+  PillReferenceRequest,
+  PillReferenceResponse,
   PillVerifyRequest,
   PillVerifyResponse,
   SouvenirResponse,
@@ -130,6 +130,7 @@ function mapMedication(row: QueryResultRow): MedicationDetail {
     daysOfSupply: row.days_of_supply ?? null,
     photoUrl: row.photo_url ?? null,
     active: row.active,
+    pillReferenceSet: row.pill_reference_set ?? false,
   };
 }
 
@@ -621,7 +622,8 @@ export class PawtnerRepository {
     const result = await this.pool.query(
       `SELECT id::text, name, strength, dosage_form, route_of_administration,
               active_ingredients, generic_name, prescribed_for, days_of_supply,
-              photo_url, active
+              photo_url, active,
+              (pill_reference_description IS NOT NULL) AS pill_reference_set
        FROM medications WHERE user_id = $1 ORDER BY created_at`,
       [userId],
     );
@@ -953,7 +955,7 @@ export class PawtnerRepository {
     const streak = person.streak;
     const trickDefs = [
       { name: "Sit", threshold: 1, milestoneNote: "1 day streak" },
-      { name: "High five", threshold: 7, milestoneNote: "7 day streak" },
+      { name: "Wave", threshold: 7, milestoneNote: "7 day streak" },
       { name: "Roll over", threshold: 14, milestoneNote: "14 day streak" },
       { name: "New trick", threshold: 30, milestoneNote: "30 day streak" },
     ];
@@ -1000,27 +1002,32 @@ export class PawtnerRepository {
   }
 
   // ── T2-08: Pill photo recognition (demo only) ──
+  // The reference (original) photo is set once in medicine settings; every check-in compares
+  // against that reference. If no reference is set, verifyPill rejects with 422.
 
-  async describePill(request: PillDescribeRequest): Promise<PillDescribeResponse> {
+  /** Set the SETTINGS-defined original/reference pill photo for a medication.
+   *  Generates and stores a vision description used later to compare check-in photos. */
+  async setPillReference(request: PillReferenceRequest): Promise<PillReferenceResponse> {
     if (!process.env.LLM_API_KEY || !process.env.LLM_BASE_URL) {
       throw new ApiError(503, "LLM API is not configured. Set LLM_API_KEY and LLM_BASE_URL.");
     }
     const userId = await this.getDefaultUserId();
     const existing = await this.pool.query(
-      "SELECT pill_description FROM medications WHERE id = $1 AND user_id = $2",
+      "SELECT id FROM medications WHERE id = $1 AND user_id = $2",
       [request.medicationId, userId],
     );
     if (!existing.rowCount) throw new ApiError(404, "Medication not found.");
     const description = await this.describePillWithVision(request.imageBase64, request.mimeType);
     if (!description) throw new ApiError(502, "The vision model did not return a description.");
+    const dataUrl = `data:${request.mimeType};base64,${request.imageBase64}`;
     await this.pool.query(
-      "UPDATE medications SET pill_description = $2, pill_described_at = now() WHERE id = $1",
-      [request.medicationId, description],
+      "UPDATE medications SET pill_reference_image = $2, pill_reference_description = $3, pill_reference_set_at = now() WHERE id = $1",
+      [request.medicationId, dataUrl, description],
     );
     return {
       medicationId: request.medicationId,
       description,
-      isNew: !existing.rows[0].pill_description,
+      set: true,
     };
   }
 
@@ -1030,23 +1037,26 @@ export class PawtnerRepository {
     }
     const userId = await this.getDefaultUserId();
     const result = await this.pool.query(
-      "SELECT pill_description FROM medications WHERE id = $1 AND user_id = $2",
+      "SELECT pill_reference_description FROM medications WHERE id = $1 AND user_id = $2",
       [request.medicationId, userId],
     );
     if (!result.rowCount) throw new ApiError(404, "Medication not found.");
-    const savedDescription = result.rows[0].pill_description;
-    if (!savedDescription) throw new ApiError(409, "No saved description for this medication. Call /api/pill-describe first.");
+    const referenceDescription = result.rows[0].pill_reference_description;
+    // No original picture set in settings → the senior must set it before check-ins can compare.
+    if (!referenceDescription) {
+      throw new ApiError(422, "No reference pill photo is set for this medicine. Set the original picture in the medicine settings first.");
+    }
     const newDescription = await this.describePillWithVision(request.imageBase64, request.mimeType);
     if (!newDescription) throw new ApiError(502, "The vision model did not return a description.");
-    const savedKeywords = new Set(extractKeywords(savedDescription));
+    const referenceKeywords = new Set(extractKeywords(referenceDescription));
     const newKeywords = new Set(extractKeywords(newDescription));
-    const intersection = [...newKeywords].filter((k) => savedKeywords.has(k));
-    const union = new Set([...savedKeywords, ...newKeywords]);
+    const intersection = [...newKeywords].filter((k) => referenceKeywords.has(k));
+    const union = new Set([...referenceKeywords, ...newKeywords]);
     const similarity = union.size > 0 ? intersection.length / union.size : 0;
     return {
       medicationId: request.medicationId,
       match: similarity >= 0.5,
-      savedDescription,
+      referenceDescription,
       newDescription,
       similarity,
     };

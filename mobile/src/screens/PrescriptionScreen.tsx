@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
@@ -16,7 +16,7 @@ interface HsaProduct {
   activeIngredients: string | null;
 }
 
-type Stage = "scan" | "search" | "results" | "confirm" | "done";
+type Stage = "search" | "results" | "confirm";
 
 /**
  * Extract text from a label photo using the browser's TextDetector (Shape Detection API)
@@ -65,23 +65,22 @@ function parseLabelFields(text: string): { name: string; strength: string | null
 
 export function PrescriptionScreen({
   back,
-  onHome,
-  onExplain,
   onSaved,
+  onExplain,
   petName,
 }: {
   back: BackAction;
-  /** "Home" action on the saved state (a finish action, not the back button). */
-  onHome: () => void;
-  onExplain?: (medicineName: string) => void;
+  /** Called after the medication is saved so the parent can continue the flow. */
   onSaved?: (medicationId?: string) => void;
+  /** Optional explain path: save and jump to the explanation screen with this medicine's name. */
+  onExplain?: (medicineName: string, medicationId?: string) => void;
   petName: string;
 }) {
   const { t } = useTranslation();
-  const [stage, setStage] = useState<Stage>("scan");
+  const [stage, setStage] = useState<Stage>("search");
   const [scanning, setScanning] = useState(false);
-  const [scanError, setScanError] = useState("");
   const [extractedText, setExtractedText] = useState<string | null>(null);
+  const scanInputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<HsaProduct[]>([]);
   const [searching, setSearching] = useState(false);
@@ -138,8 +137,8 @@ export function PrescriptionScreen({
   const onScanFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    event.target.value = "";
     setScanning(true);
-    setScanError("");
     setExtractedText(null);
     try {
       const text = await extractLabelText(file);
@@ -155,12 +154,10 @@ export function PrescriptionScreen({
         setName(parsedName);
         setStrength(parsedStrength ?? "");
         setStage("results");
-      } else {
-        // OCR returned nothing useful — fall back to manual search
-        setStage("search");
       }
     } catch {
-      setScanError("Could not read the label. Try again or search manually.");
+      // Quiet fallback for optional scan — no error shown to the user
+      console.warn("Label scan failed");
     } finally {
       setScanning(false);
     }
@@ -181,69 +178,55 @@ export function PrescriptionScreen({
     };
     try {
       const res = await api.createMedication(payload);
-      setStage("done");
+      setSaving(false);
       onSaved?.(res.medication.id);
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Could not save");
-    } finally {
       setSaving(false);
+      setSaveError(err instanceof Error ? err.message : "Could not save");
+    }
+  };
+
+  /**
+   * Save then jump to the explanation screen instead of schedule.
+   * Reuses the createMedication call so the medication id is available
+   * when ExplanationScreen's Continue reaches ScheduleScreen.
+   */
+  const saveAndExplain = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    setSaveError("");
+    const payload: CreateMedicationRequest = {
+      name: name.trim(),
+      strength: strength.trim() || null,
+      dosageForm: dosageForm.trim() || null,
+      activeIngredients: activeIngredients.trim() || null,
+      genericName: genericName.trim() || null,
+      prescribedFor: prescribedFor.trim() || null,
+      daysOfSupply: daysOfSupply ? Number(daysOfSupply) : null,
+    };
+    try {
+      const res = await api.createMedication(payload);
+      setSaving(false);
+      onExplain?.(name.trim(), res.medication.id);
+    } catch (err) {
+      setSaving(false);
+      setSaveError(err instanceof Error ? err.message : "Could not save");
     }
   };
 
   return (
     <FullCard back={back} className="scan-card">
       <p className="eyebrow green">{t("prescription.eyebrow")}</p>
-      <h2>{stage === "done" ? "Medicine added" : stage === "confirm" ? "Confirm details" : stage === "scan" ? t("prescription.titleScan") : "Search medicines"}</h2>
+      <h2>{stage === "confirm" ? "Confirm details" : "Search medicines"}</h2>
       <p className="supporting">
-        {stage === "done"
-          ? `${name} is on ${petName}'s schedule.`
-          : stage === "confirm"
+        {stage === "confirm"
           ? t("prescription.supportingFound", { name: petName })
-          : stage === "scan"
-          ? t("prescription.supportingScan")
           : "Search the HSA register by medicine name or active ingredient."}
       </p>
 
-      {stage === "scan" && (
-        <>
-          <label className={`scanner ${scanning ? "scanning" : ""}`}>
-            {scanning ? (
-              <>
-                <span className="camera-orb"><Icon name="camera" size={30} /></span>
-                <strong>Reading label…</strong>
-                <small>Holding the bottle steady helps</small>
-              </>
-            ) : (
-              <>
-                <span className="camera-orb"><Icon name="camera" size={30} /></span>
-                <strong>{t("prescription.tapCapture")}</strong>
-                <small>{t("prescription.keepLit")}</small>
-              </>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={onScanFile}
-              style={{ display: "none" }}
-              aria-label={t("prescription.tapCapture")}
-            />
-          </label>
-          {scanError && <p className="error-text">{scanError}</p>}
-          {extractedText && (
-            <div className="ocr-preview">
-              <small>Text read from label:</small>
-              <p>{extractedText.slice(0, 200)}</p>
-            </div>
-          )}
-          <button className="text-button" onClick={() => setStage("search")}>Search or enter manually</button>
-          <p className="hsa-credit">A label scan helps fill in details. Always check the package and ask your pharmacist.</p>
-        </>
-      )}
-
       {stage === "search" && (
         <>
-          <div className="search-bar">
+          <div className="search-bar stack">
             <input
               type="text"
               placeholder="Search HSA register (e.g. paracetamol)"
@@ -257,7 +240,29 @@ export function PrescriptionScreen({
             </button>
           </div>
           {searchError && <p className="error-text">{searchError}</p>}
-          <button className="text-button" onClick={startManual}>{t("prescription.enterManual")}</button>
+          <button className="secondary-button" style={{ marginTop: 12 }} onClick={startManual}>
+            {t("prescription.enterManual")}
+          </button>
+
+          {/* Optional label scan — falls back quietly if TextDetector is unavailable */}
+          <input
+            ref={scanInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={onScanFile}
+            style={{ display: "none" }}
+          />
+          <button className="text-button" onClick={() => scanInputRef.current?.click()}>
+            {t("prescription.scanLabel")}
+          </button>
+          {scanning && <p className="supporting">{t("prescription.readingLabel")}</p>}
+          {extractedText && (
+            <div className="ocr-preview">
+              <small>Text read from label:</small>
+              <p>{extractedText.slice(0, 200)}</p>
+            </div>
+          )}
           <p className="hsa-credit">HSA Listing of Registered Therapeutic Products (Open Data Licence)</p>
         </>
       )}
@@ -333,20 +338,14 @@ export function PrescriptionScreen({
           <button className="primary-button" disabled={!name.trim() || saving} onClick={save}>
             {saving ? "Saving…" : "Confirm and save"}
           </button>
+          {onExplain && (
+            <button className="text-button" disabled={!name.trim() || saving} onClick={saveAndExplain}>
+              {t("prescription.explain")}
+            </button>
+          )}
           {!showManual && (
             <button className="text-button" onClick={() => setStage("results")}>Back to results</button>
           )}
-        </div>
-      )}
-
-      {stage === "done" && (
-        <div className="prescription-result">
-          <span className="feature-icon sage"><Icon name="check" /></span>
-          <div className="field"><small>{t("prescription.medication")}</small><strong>{name}</strong></div>
-          {strength && <div className="field"><small>{t("prescription.dosage")}</small><strong>{strength}</strong></div>}
-          {prescribedFor && <div className="field"><small>Your doctor said it's for</small><strong>{prescribedFor}</strong></div>}
-          <button className="primary-button" onClick={() => onExplain?.(name)}>Explain this medicine</button>
-          <button className="text-button" onClick={onHome}>{t("common.home")}</button>
         </div>
       )}
     </FullCard>

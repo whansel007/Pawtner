@@ -3,16 +3,16 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
 import { api, ApiRequestError } from "../lib/api";
-import type { PillDescribeResponse, PillVerifyResponse } from "../../../shared/contract";
+import type { PillVerifyResponse } from "../../../shared/contract";
 import type { BackAction } from "../lib/navigation";
 
 type CheckState =
   | { kind: "idle" }
   | { kind: "checking" }
-  | { kind: "described"; result: PillDescribeResponse }
   | { kind: "verified"; result: PillVerifyResponse }
   | { kind: "error" }
-  | { kind: "error-warmup" };
+  | { kind: "error-warmup" }
+  | { kind: "error-no-reference" };
 
 export function ProofScreen({
   back,
@@ -63,26 +63,24 @@ export function ProofScreen({
     setCheck({ kind: "checking" });
     try {
       const { imageBase64, mimeType } = await fileToBase64(photoFile);
-      // Try verify first — if it fails with 409 (no saved description), fall back to describe.
-      try {
-        const result = await api.verifyPill(medicationId, imageBase64, mimeType);
-        setCheck({ kind: "verified", result });
-      } catch (verifyError) {
-        // 409 = no saved description yet → this is the first time
-        if (verifyError instanceof ApiRequestError && verifyError.status === 409) {
-          const result = await api.describePill(medicationId, imageBase64, mimeType);
-          setCheck({ kind: "described", result });
-        } else {
-          throw verifyError;
-        }
-      }
+      // Compare the check-in photo against the SETTINGS-defined original reference picture.
+      const result = await api.verifyPill(medicationId, imageBase64, mimeType);
+      setCheck({ kind: "verified", result });
     } catch (error) {
       // Never show the raw error to the senior; log it for diagnosis instead.
       console.warn("Proof screen pill check failed:", error);
-      // 502/504 from the vision model usually means it is still warming up — ask for a retry
-      // rather than failing silently.
-      if (error instanceof ApiRequestError && (error.status === 502 || error.status === 504)) {
-        setCheck({ kind: "error-warmup" });
+      if (error instanceof ApiRequestError) {
+        // 422 = no original pill photo set in medicine settings yet.
+        if (error.status === 422) {
+          setCheck({ kind: "error-no-reference" });
+        }
+        // 502/504 from the vision model usually means it is still warming up — ask for a retry
+        // rather than failing silently.
+        else if (error.status === 502 || error.status === 504) {
+          setCheck({ kind: "error-warmup" });
+        } else {
+          setCheck({ kind: "error" });
+        }
       } else {
         setCheck({ kind: "error" });
       }
@@ -120,8 +118,8 @@ export function ProofScreen({
         />
       </label>
 
-      {/* T2-08: Pill comparison (demo only) — compares with the senior's own earlier photo,
-          per PRD 7.4 it never identifies a pill. */}
+      {/* T2-08: Pill comparison (demo only) — compares the check-in photo with the SETTINGS-defined
+          original reference picture, per PRD 7.4 it never identifies a pill. */}
       {captured && medicationId && (
         <div className="proof-check-block">
           {check.kind === "idle" && (
@@ -132,21 +130,14 @@ export function ProofScreen({
           {check.kind === "checking" && (
             <p className="supporting proof-checking-status">{t("proof.check.checking", { name: petName })}</p>
           )}
-          {check.kind === "described" && (
-            <div className="proof-check-card">
-              <small className="proof-check-card-title">{t("proof.check.described.title")}</small>
-              <p className="proof-check-card-line">{check.result.description}</p>
-              <p className="proof-check-card-note">{t("proof.check.described.note", { name: petName })}</p>
-            </div>
-          )}
           {check.kind === "verified" && (
             <div className="proof-check-card">
               <small className="proof-check-card-title">
                 {check.result.match ? t("proof.check.verified.match") : t("proof.check.verified.diff")}
               </small>
-              {check.result.savedDescription && (
+              {check.result.referenceDescription && (
                 <p className="proof-check-card-line">
-                  <strong>{t("proof.check.verified.savedLabel")}</strong> {check.result.savedDescription}
+                  <strong>{t("proof.check.verified.referenceLabel")}</strong> {check.result.referenceDescription}
                 </p>
               )}
               <p className="proof-check-card-line">
@@ -159,6 +150,9 @@ export function ProofScreen({
           )}
           {check.kind === "error-warmup" && (
             <p className="supporting proof-check-error">{t("proof.check.errorWarmup", { name: petName })}</p>
+          )}
+          {check.kind === "error-no-reference" && (
+            <p className="supporting proof-check-error">{t("proof.check.noReference", { name: petName })}</p>
           )}
         </div>
       )}

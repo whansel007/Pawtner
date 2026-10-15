@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { celebrationClipFor, clipMatchesMood, clipOverlayBox, pickClipSource, tapClipFor } from "../../mobile/src/lib/buddyClips.js";
+import { celebrationClipFor, clipMatchesMood, clipOverlayBox, pickClipSource, waveClipFor } from "../../mobile/src/lib/buddyClips.js";
 import { BUDDY_CLIPS, CLIP_CANVAS, CLIP_MEDIA_TYPES } from "../../mobile/src/config/clips.js";
 
 const SOURCES = BUDDY_CLIPS.wave;
@@ -53,10 +53,10 @@ describe("clip triggers", () => {
   const ok = { reducedMotion: false, canPlay: () => true };
 
   it("tap: content waves, joyful replays the joyful clip, sleepy and attentive never play a clip", () => {
-    expect(tapClipFor("content", ok)).toBe("wave");
-    expect(tapClipFor("joyful", ok)).toBe("joyful");
-    expect(tapClipFor("sleepy", ok)).toBeNull();
-    expect(tapClipFor("attentive", ok)).toBeNull();
+    expect(waveClipFor("content", ok)).toBe("wave");
+    expect(waveClipFor("joyful", ok)).toBe("joyful");
+    expect(waveClipFor("sleepy", ok)).toBeNull();
+    expect(waveClipFor("attentive", ok)).toBeNull();
   });
 
   it("fresh heart: only a joyful Home plays the joyful clip", () => {
@@ -65,10 +65,10 @@ describe("clip triggers", () => {
   });
 
   it("reduced motion or an unplayable clip → no clip", () => {
-    expect(tapClipFor("content", { reducedMotion: true, canPlay: () => true })).toBeNull();
+    expect(waveClipFor("content", { reducedMotion: true, canPlay: () => true })).toBeNull();
     expect(celebrationClipFor("joyful", { reducedMotion: true, canPlay: () => true })).toBeNull();
-    expect(tapClipFor("content", { reducedMotion: false, canPlay: () => false })).toBeNull();
-    expect(tapClipFor("joyful", { reducedMotion: false, canPlay: (kind) => kind === "wave" })).toBeNull();
+    expect(waveClipFor("content", { reducedMotion: false, canPlay: () => false })).toBeNull();
+    expect(waveClipFor("joyful", { reducedMotion: false, canPlay: (kind) => kind === "wave" })).toBeNull();
   });
 
   it("a clip keeps playing only while the mood has its face", () => {

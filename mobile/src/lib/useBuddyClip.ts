@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import type { DogMood } from "../../../shared/contract";
 import { BUDDY_CLIPS, CLIP_PRELOAD_FALLBACK_MS, CLIP_SAFETY_TIMEOUT_MS, type BuddyClipKind } from "../config/clips";
-import { celebrationClipFor, clipMatchesMood, pickClipSource, tapClipFor } from "./buddyClips";
+import { celebrationClipFor, clipMatchesMood, pickClipSource, waveClipFor } from "./buddyClips";
 import { useReducedMotion } from "./useReducedMotion";
 import type { Screen } from "../types";
 
@@ -20,8 +20,8 @@ export interface ClipView {
 export interface BuddyClip {
   /** The clip on screen, or null. */
   view: ClipView | null;
-  /** The clip a tap would play now, or null (no clip: wrong mood, reduced motion, unsupported browser). */
-  tapClip: BuddyClipKind | null;
+  /** The wave clip for this mood (content → wave, joyful → joyful), or null: sleepy, attentive, dizzy, reduced motion, unsupported browser. */
+  waveClip: BuddyClipKind | null;
   play: (kind: BuddyClipKind) => void;
 }
 
@@ -55,10 +55,10 @@ function preloadClips(sources: (string | null)[]) {
 
 /**
  * Owns Buddy's video clips: which file this browser gets, idle preloading after Home first renders,
- * starting a clip (tap or fresh heart), the 7 s safety stop, and handing back to the still.
+ * starting a clip (the Wave trick from a tap or trick card, or a fresh heart), the 7 s safety stop, and handing back to the still.
  *
  * Rules:
- * - Nothing plays on load; a clip starts only from play() (dog tap) or a new celebrateRequest.
+ * - Nothing plays on load; a clip starts only from play() (Wave: dog tap or the Wave card) or a new celebrateRequest.
  * - celebrateRequest: App bumps it after "Give Buddy a heart". The next time Home shows, the joyful clip plays once
  *   if the dog is joyful; otherwise the request is dropped.
  * - No clip under reduced motion, while dizzy, in a mood without a clip, or in a browser that can't draw it.
@@ -142,5 +142,5 @@ export function useBuddyClip({ mood, screen, dizzy, celebrateRequest }: { mood: 
       }
     : null;
 
-  return { view, tapClip: tapClipFor(mood, options), play };
+  return { view, waveClip: waveClipFor(mood, options), play };
 }

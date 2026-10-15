@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { DogMood } from "../../../shared/contract";
 import { dogPlacementFor } from "../config/scene";
@@ -7,6 +7,8 @@ import { useSceneGround } from "../lib/useSceneGround";
 import { useSceneLayout } from "../lib/useSceneLayout";
 import { usePetReaction } from "../lib/usePetReaction";
 import { useBuddyClip } from "../lib/useBuddyClip";
+import { useMilestones } from "../lib/useMilestones";
+import { earnedPerformances, type TrickRequest } from "../lib/tricks";
 import type { Screen } from "../types";
 import { DogStage } from "./DogStage";
 import { PetBubble } from "./PetBubble";
@@ -17,7 +19,9 @@ import "./DogLayer.css";
  * The layer spans from the top of the column down to the current screen's ground line; DogStage stands the dog on its floor.
  * Where it stands comes from config/scene.ts (portrait vs two-column landscape); this component only composes.
  * Also renders the lawn marker (ground for landscape screens without chips) and the tap speech bubble.
- * Buddy's video clips (useBuddyClip) play from a tap or, once, after a fresh heart (celebrateRequest from App).
+ * Buddy's video clips (useBuddyClip) play from the Wave trick (a tap or the Wave card) or, once, after a fresh heart
+ * (celebrateRequest from App). Which tricks the tap rotation includes comes from Milestones' earned tricks (useMilestones).
+ * `trickRequest` (from a trick card on Milestones, via App) makes Buddy perform that trick once.
  */
 export function DogLayer({
   screen,
@@ -26,6 +30,7 @@ export function DogLayer({
   dizzy,
   accessory,
   celebrateRequest = 0,
+  trickRequest = null,
 }: {
   screen: Screen;
   mood: DogMood;
@@ -34,6 +39,8 @@ export function DogLayer({
   accessory?: ReactNode;
   /** Bumped by App after "Give Buddy a heart"; Home then plays the joyful clip once. */
   celebrateRequest?: number;
+  /** Set by App when a trick card is tapped; a new id plays the trick once. */
+  trickRequest?: TrickRequest | null;
 }) {
   const { t } = useTranslation();
   const anchor = useRef<HTMLDivElement>(null);
@@ -41,7 +48,18 @@ export function DogLayer({
   const placement = dogPlacementFor(screen, layout);
   useSceneGround(anchor, placement, screen);
   const clip = useBuddyClip({ mood, screen, dizzy: Boolean(dizzy), celebrateRequest });
-  const reaction = usePetReaction(mood, { kind: clip.tapClip, busy: clip.view !== null, play: clip.play });
+  const { tricks } = useMilestones();
+  const earned = useMemo(() => earnedPerformances(tricks), [tricks]);
+  const reaction = usePetReaction(mood, earned, { kind: clip.waveClip, busy: clip.view !== null, play: clip.play });
+  const { perform } = reaction;
+  const handledTrick = useRef(trickRequest?.id ?? 0);
+
+  // A trick card was tapped: perform it once (only while the dog is on screen).
+  useEffect(() => {
+    if (!trickRequest || trickRequest.id === handledTrick.current) return;
+    handledTrick.current = trickRequest.id;
+    if (placement) perform(trickRequest.performance);
+  }, [trickRequest, placement, perform]);
   const bubbleText = placement && reaction.active === "bubble" ? t(bubbleLineKey(reaction.bubbleLineIndex), { name: dogName }) : "";
 
   return (

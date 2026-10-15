@@ -214,6 +214,8 @@ export interface MedicationDetail {
   daysOfSupply: number | null;
   photoUrl: string | null;
   active: boolean;
+  /** True once the user has set the original pill photo in medicine settings (T2-08). */
+  pillReferenceSet: boolean;
 }
 
 export interface CreateMedicationRequest {
@@ -265,9 +267,11 @@ export interface MedicineExplanationResponse {
 }
 
 // ── T2-08: Pill photo recognition (demo only) ──
+// Comparison is anchored to a SETTINGS-defined "original" picture, not to a previous photo.
+// The reference is set once via /api/pill-reference; every check-in compares against it.
 
-export interface PillDescribeRequest {
-  /** Medication ID to associate the description with. */
+export interface PillReferenceRequest {
+  /** Medication ID to associate the original/reference photo with. */
   medicationId: string;
   /** Base64-encoded image data (without the data: prefix). */
   imageBase64: string;
@@ -275,16 +279,16 @@ export interface PillDescribeRequest {
   mimeType: string;
 }
 
-export interface PillDescribeResponse {
+export interface PillReferenceResponse {
   medicationId: string;
-  /** The LLM-generated visual description of the pill. */
+  /** The LLM-generated visual description of the reference pill. */
   description: string;
-  /** Whether this is the first description or a re-description. */
-  isNew: boolean;
+  /** Always true — the reference was set. */
+  set: boolean;
 }
 
 export interface PillVerifyRequest {
-  /** Medication ID whose saved description to compare against. */
+  /** Medication ID whose reference photo to compare against. */
   medicationId: string;
   /** Base64-encoded image data (without the data: prefix). */
   imageBase64: string;
@@ -294,11 +298,11 @@ export interface PillVerifyRequest {
 
 export interface PillVerifyResponse {
   medicationId: string;
-  /** Whether the new description matches the saved one. */
+  /** Whether the new photo matches the settings-defined reference pill. */
   match: boolean;
-  /** The saved description from the first time. */
-  savedDescription: string | null;
-  /** The description generated from this photo. */
+  /** The stored description of the reference (original) pill photo. */
+  referenceDescription: string | null;
+  /** The description generated from this check-in photo. */
   newDescription: string;
   /** Similarity score 0–1 (fraction of matching keywords). */
   similarity: number;

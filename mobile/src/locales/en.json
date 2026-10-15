@@ -274,6 +274,8 @@
     "tapCapture": "Tap to capture",
     "keepLit": "Keep the label clear and well lit",
     "enterManual": "Enter details manually",
+    "scanLabel": "Scan the label",
+    "readingLabel": "Reading label…",
     "medication": "MEDICATION",
     "dosage": "DOSAGE",
     "frequency": "FREQUENCY",
@@ -293,6 +295,18 @@
     "noAlarm": "No loud alarm, and no scolding if you are late.",
     "confirm": "Confirm {{name}}'s routine"
   },
+  "reference": {
+    "eyebrow": "New medication",
+    "title": "Show {{name}} the pill",
+    "supporting": "Snap one reference photo of the pill. Nothing is saved to your gallery.",
+    "tapCapture": "Tap to capture",
+    "onePill": "One pill in the frame",
+    "describing": "{{name}} is looking…",
+    "describedTitle": "First photo saved",
+    "describedNote": "Next time, {{name}} will compare your photo with this one.",
+    "offline": "{{name}} can't describe the pill right now. You can still finish.",
+    "skip": "Skip for now"
+  },
   "proof": {
     "eyebrowCheck": "A quick check",
     "eyebrowFound": "{{name}} can see it",
@@ -306,21 +320,18 @@
     "giveHeart": "Give {{name}} a heart",
     "notNow": "Not now",
     "check": {
-      "button": "Compare with my first photo",
+      "button": "Compare with my pill",
       "checking": "{{name}} is looking…",
-      "described": {
-        "title": "First photo saved",
-        "note": "Next time, {{name}} will compare your photo with this one."
-      },
       "verified": {
         "match": "Looks like your usual pill",
         "diff": "This looks different from your usual pill. Please check the package before you take it.",
-        "savedLabel": "Your first photo:",
+        "referenceLabel": "Original pill:",
         "newLabel": "This photo:"
       },
       "error": "{{name}} can't compare photos right now. Your proof photo still counts.",
       "errorWarmup": "{{name}} is still warming up. Please tap Compare again in a moment.",
-      "disclosure": "{{name}} only compares this photo with your earlier one. It can't tell you what a pill is. Always check the package and ask your pharmacist."
+      "noReference": "No original pill photo is set yet. Please set it in the medicine settings (Care screen) first.",
+      "disclosure": "{{name}} only compares this photo with the original pill photo set in the medicine settings. It can't tell you what a pill is. Always check the package and ask your pharmacist."
     }
   },
   "walk": {
@@ -350,7 +361,8 @@
     "tricks": "Tricks",
     "tricksSub": "Practice makes happy",
     "souvenirs": "Souvenirs",
-    "souvenirsSub": "Earned on walks"
+    "souvenirsSub": "Earned on walks",
+    "waveSleepy": "{{name}} is too sleepy to wave. Give {{name}} a heart first."
   },
   "accessory": {
     "none": "Fluffy",
@@ -413,15 +425,12 @@
     "whyButtonExpanded": "Hide why",
     "emptyTitle": "Agent decision",
     "emptyBody": "No rule has triggered yet.",
-    "ruleLabel": "Rule",
     "observationsLabel": "What it noticed",
-    "reasoningLabel": "Reasoning",
     "wordingSourceLabel": "Wording",
     "wordingTemplate": "Fixed template, no AI",
     "wordingModel": "AI-worded",
     "booleanYes": "Yes",
     "booleanNo": "No",
-    "scheduledForLabel": "Scheduled for",
     "observation": {
       "symptomDetected": "Symptom detected",
       "highReading": "High reading",
@@ -439,7 +448,22 @@
       "doseTaken": "Dose taken",
       "walkFinished": "Walk finished",
       "streakMilestoneReached": "Streak milestone",
-      "heart": "Heart score"
+      "heart": "Heart score",
+      "scheduledFor": "Dose time"
+    },
+    "why": {
+      "emergency_symptom_note": "A note mentioned a symptom that can be serious, so the emergency number is shown.",
+      "bp_high_with_symptom": "The latest blood pressure reading was high and the note mentioned a symptom.",
+      "bp_high_without_symptom": "The latest blood pressure reading was higher than the level Pawtner watches for.",
+      "repeated_high_readings_7d": "Several readings this past week were higher than the level Pawtner watches for.",
+      "possible_side_effect_note": "A note may describe a side effect, so it was saved as a question for the doctor.",
+      "repeated_misses_caretaker_check_in": "A few doses in a row were missed, so the caretaker was asked to check in.",
+      "dose_nudge_1": "A dose was still not taken an hour after its time.",
+      "dose_nudge_2": "A dose was still not taken an hour after the first reminder.",
+      "low_days_of_supply": "One medicine is running low.",
+      "care_milestone_completed": "A dose was taken, a walk was finished or the streak grew.",
+      "nothing_needs_attention": "Nothing needs attention right now.",
+      "generic": "Pawtner chose this from today's care activity."
     }
   },
   "pet": {
@@ -469,6 +493,8 @@
   "settings": {
     "eyebrow": "{{name}}'s care",
     "title": "Settings",
+    "myMeds": "My medicines",
+    "myMedsSub": "Edit details and set the original pill photo",
     "addMed": "Add a medication",
     "addMedSub": "Snap a label and set the routine",
     "nudges": "{{name}}'s nudges",
@@ -484,6 +510,40 @@
       "morning": "Morning ({{time}})",
       "evening": "Evening ({{time}})",
       "real": "Real time"
+    }
+  },
+  "medicines": {
+    "eyebrow": "{{name}}'s care",
+    "title": "My medicines",
+    "supporting": "Every proof photo is compared with each medicine's original pill photo. {{name}} never tells you what a pill is.",
+    "loading": "Loading…",
+    "empty": "No medications yet.",
+    "offline": "Can't load your medicines right now. Please try again in a moment.",
+    "doctorSaid": "Doctor said: {{reason}}",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
+    "cancel": "Cancel",
+    "edit": {
+      "button": "Edit",
+      "prescribedLabel": "What did your doctor say it's for?",
+      "prescribedPlaceholder": "Your doctor's reason",
+      "daysLabel": "Days of supply",
+      "daysPlaceholder": "e.g. 30",
+      "save": "Save",
+      "saving": "Saving…"
+    },
+    "pillRef": {
+      "set": "Set original pill photo",
+      "replace": "Replace original",
+      "setBadge": "Original photo set",
+      "hint": "Take a clear photo of ONE pill from the original pack. Every future check-in is compared to this photo.",
+      "capture": "Tap to take the pill photo",
+      "captured": "Photo ready",
+      "photoAlt": "Original pill",
+      "saving": "Saving…",
+      "save": "Save as original",
+      "saved": "Original pill photo saved.",
+      "failed": "{{name}} can't save the photo right now. Please try again in a moment."
     }
   },
   "toast": {
