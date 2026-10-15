@@ -36,7 +36,7 @@ Updated 2026-10-15. Source of truth for scope: `PRD.md` (repo root), tiers in §
 
 Accessories on the dog (`components/PetAccessory.tsx`) are placed by `config/accessories.ts` in % of the dog image (crown ~8%, ears ~4–20%, eyes ~39% of `dog-base.webp`); the hibiscus is an inline SVG (colours as CSS custom properties on `.accessory-flower`). Short landscape (max-height 430px) uses a compact dock (68px) so the card keeps its height (`claude/accessory-landscape-fix`).
 
-Config lives in `mobile/src/config/` (`scene.ts`: images incl. `DOG_IMAGE_BY_MOOD` (sleepy has its own art; a mood image that fails to load falls back to `DOG_BASE_IMAGE`), ground line, dog size limits, screens without the dog; `intro.ts`: dedication timing). Text lives in `mobile/src/locales/en.json`; dog and caretaker names are interpolated from mock data (`{{name}}`, PR #4).
+Config lives in `mobile/src/config/` (`scene.ts`: images incl. `DOG_IMAGE_BY_MOOD` (sleepy and joyful have their own art; content and attentive use the base art; a mood image that fails to load falls back to `DOG_BASE_IMAGE`), ground line, dog size limits, screens without the dog; `intro.ts`: dedication timing). Text lives in `mobile/src/locales/en.json`; dog and caretaker names are interpolated from mock data (`{{name}}`, PR #4).
 
 ## Commands
 

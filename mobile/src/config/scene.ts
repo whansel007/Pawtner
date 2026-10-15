@@ -34,10 +34,10 @@ export const DOG_BASE_IMAGE = "/assets/dog-base.webp";
 
 /**
  * Dog art per mood. Every image shares the base art's canvas (1000x1300, transparent, same feet line),
- * so the ground line and accessory positions stay valid. Only sleepy has its own art today.
+ * so the ground line and accessory positions stay valid. Sleepy and joyful have their own art today.
  */
 export const DOG_IMAGE_BY_MOOD: Record<DogMood, string> = {
-  joyful: DOG_BASE_IMAGE,
+  joyful: "/assets/dog-joyful.webp",
   content: DOG_BASE_IMAGE,
   sleepy: "/assets/dog-sleepy.webp",
   attentive: DOG_BASE_IMAGE,
