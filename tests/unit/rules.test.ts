@@ -66,6 +66,11 @@ describe("deterministic decision rules", () => {
     expect(selectDogMood(2, null, base.now)).toBe("content");
     expect(selectDogMood(1, null, base.now)).toBe("sleepy");
     expect(selectDogMood(4, { decision: "emergency_995", createdAt: base.now }, base.now)).toBe("attentive");
+    // Low hearts win over every decision: the sad face (user, 16 Oct).
+    for (const decision of ["emergency_995", "see_gp_soon", "restock_reminder", "doctor_question", "celebrate"] as const) {
+      expect(selectDogMood(1, { decision, createdAt: base.now }, base.now)).toBe("sleepy");
+      expect(selectDogMood(0, { decision, createdAt: base.now }, base.now)).toBe("sleepy");
+    }
     for (const heart of [-2, 0, 1, 2, 3, 4, 9]) expect(["joyful", "content", "sleepy", "attentive"]).toContain(selectDogMood(heart, null, base.now));
   });
 
@@ -74,7 +79,8 @@ describe("deterministic decision rules", () => {
     const celebrate = { decision: "celebrate" as const, createdAt };
     // Within the 30-minute window — joyful
     expect(selectDogMood(3, celebrate, "2026-10-14T12:29:00+08:00")).toBe("joyful");
-    expect(selectDogMood(0, celebrate, "2026-10-14T12:29:00+08:00")).toBe("joyful");
+    // ...but low hearts always show the sad face, even inside the window (user, 16 Oct).
+    expect(selectDogMood(0, celebrate, "2026-10-14T12:29:00+08:00")).toBe("sleepy");
     // At exactly 30 minutes — window has elapsed, reverts to heart-based mood
     expect(selectDogMood(3, celebrate, "2026-10-14T12:30:00+08:00")).toBe("content");
     // After 30 minutes — reverts to heart-based mood

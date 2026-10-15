@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { earnedPerformances, isPerformable, resolveTrickRequest, tapRotation, trickCardTap, trickPerformance } from "../../mobile/src/lib/tricks.js";
-import { PET_REACTIONS, PET_REACTIONS_REDUCED_MOTION } from "../../mobile/src/config/pet.js";
+import { earnedPerformances, hasHeartsToPlay, isPerformable, resolveTrickRequest, tapRotation, trickCardTap, trickPerformance } from "../../mobile/src/lib/tricks.js";
+import { PET_REACTIONS, PET_REACTIONS_REDUCED_MOTION, PLAY_MIN_HEARTS } from "../../mobile/src/config/pet.js";
 
 const BASIC = PET_REACTIONS.order;
 const sit = { name: "Sit", note: "1 day streak", earned: true };
@@ -49,7 +49,7 @@ describe("tapRotation", () => {
     expect(tapRotation(BASIC, earnedPerformances([sit, wave]), true)).toEqual(["hop", "hearts", "bubble", "bark", "wave"]);
   });
 
-  it("Wave earned but can't play (sleepy, attentive, dizzy, reduced motion, no clip format): skipped", () => {
+  it("Wave earned but can't play (sleepy, dizzy, reduced motion, too few hearts, no clip format): skipped", () => {
     expect(tapRotation(BASIC, earnedPerformances([sit, wave]), false)).toEqual(["hop", "hearts", "bubble", "bark"]);
     expect(tapRotation(PET_REACTIONS_REDUCED_MOTION, earnedPerformances([sit, wave]), false)).toEqual(["bubble", "bark"]);
   });
@@ -60,16 +60,21 @@ describe("tapRotation", () => {
 });
 
 describe("trick cards", () => {
-  it("Sit card: a basic reaction in any mood but attentive", () => {
-    for (const mood of ["content", "joyful", "sleepy"] as const) expect(trickCardTap(sit, mood)).toBe("basic");
-    expect(trickCardTap(sit, "attentive")).toBe("none");
+  it("Sit card: a basic reaction in every mood (readings never stop play)", () => {
+    for (const mood of ["content", "joyful", "sleepy", "attentive"] as const) expect(trickCardTap(sit, mood)).toBe("basic");
   });
 
-  it("Wave card: waves when content or joyful, the gentle line when sleepy, nothing when attentive", () => {
+  it("Wave card: waves when content, joyful or attentive; the gentle line when sleepy", () => {
     expect(trickCardTap(wave, "content")).toBe("wave");
     expect(trickCardTap(wave, "joyful")).toBe("wave");
+    expect(trickCardTap(wave, "attentive")).toBe("wave");
     expect(trickCardTap(wave, "sleepy")).toBe("sleepyLine");
-    expect(trickCardTap(wave, "attentive")).toBe("none");
+  });
+
+  it("Buddy plays from PLAY_MIN_HEARTS hearts up; below it a tap asks for a heart", () => {
+    expect(PLAY_MIN_HEARTS).toBe(2);
+    for (const heart of [0, 1, Number.NaN]) expect(hasHeartsToPlay(heart)).toBe(false);
+    for (const heart of [2, 3, 4]) expect(hasHeartsToPlay(heart)).toBe(true);
   });
 
   it("locked tricks do nothing", () => {

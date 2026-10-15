@@ -8,7 +8,7 @@ import { useSceneLayout } from "../lib/useSceneLayout";
 import { usePetReaction } from "../lib/usePetReaction";
 import { useBuddyClip } from "../lib/useBuddyClip";
 import { useMilestones } from "../lib/useMilestones";
-import { earnedPerformances, type TrickRequest } from "../lib/tricks";
+import { earnedPerformances, hasHeartsToPlay, type TrickRequest } from "../lib/tricks";
 import type { Screen } from "../types";
 import { DogStage } from "./DogStage";
 import { PetBubble } from "./PetBubble";
@@ -31,6 +31,7 @@ export function DogLayer({
   accessory,
   celebrateRequest = 0,
   trickRequest = null,
+  heartCount,
 }: {
   screen: Screen;
   mood: DogMood;
@@ -41,6 +42,8 @@ export function DogLayer({
   celebrateRequest?: number;
   /** Set by App when a trick card is tapped; a new id plays the trick once. */
   trickRequest?: TrickRequest | null;
+  /** Today's hearts (0–4): Buddy plays from PLAY_MIN_HEARTS up. */
+  heartCount: number;
 }) {
   const { t } = useTranslation();
   const anchor = useRef<HTMLDivElement>(null);
@@ -50,7 +53,9 @@ export function DogLayer({
   const clip = useBuddyClip({ mood, screen, dizzy: Boolean(dizzy), celebrateRequest });
   const { tricks } = useMilestones();
   const earned = useMemo(() => earnedPerformances(tricks), [tricks]);
-  const reaction = usePetReaction(mood, earned, { kind: clip.waveClip, busy: clip.view !== null, play: clip.play });
+  // Hearts decide play (config/pet.ts PLAY_MIN_HEARTS); mood from readings never does.
+  const canPlay = hasHeartsToPlay(heartCount);
+  const reaction = usePetReaction(earned, canPlay, { kind: canPlay ? clip.waveClip : null, busy: clip.view !== null, play: clip.play });
   const { perform } = reaction;
   const handledTrick = useRef(trickRequest?.id ?? 0);
 
@@ -60,7 +65,9 @@ export function DogLayer({
     handledTrick.current = trickRequest.id;
     if (placement) perform(trickRequest.performance);
   }, [trickRequest, placement, perform]);
-  const bubbleText = placement && reaction.active === "bubble" ? t(bubbleLineKey(reaction.bubbleLineIndex), { name: dogName }) : "";
+  const bubbleText = !placement || reaction.active !== "bubble" ? ""
+    : reaction.prompt ? t("pet.lowHeart", { name: dogName })
+    : t(bubbleLineKey(reaction.bubbleLineIndex), { name: dogName });
 
   return (
     <>

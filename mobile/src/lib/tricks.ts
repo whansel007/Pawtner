@@ -1,3 +1,4 @@
+import { PLAY_MIN_HEARTS } from "../config/pet.js";
 import type { DogMood } from "../../../shared/contract.js";
 import type { PetReactionKind } from "../config/pet.js";
 import { TRICK_PERFORMANCE_BY_NAME, TRICK_ROTATION_ORDER, type TrickPerformance } from "../config/tricks.js";
@@ -37,7 +38,7 @@ export function earnedPerformances(tricks: readonly TrickLike[] | null): Set<Tri
 
 /**
  * The dog-tap rotation: the basic reactions first, then each earned trick that can play right now
- * (TRICK_ROTATION_ORDER). `waveCanPlay` is false when sleepy, attentive, dizzy, under reduced motion or
+ * (TRICK_ROTATION_ORDER). `waveCanPlay` is false when sleepy, dizzy, under reduced motion, with too few hearts, or
  * when the browser can't draw the clip, so the wave is skipped then.
  */
 export function tapRotation(basic: readonly PetReactionKind[], earned: ReadonlySet<TrickPerformance>, waveCanPlay: boolean): TapStep[] {
@@ -54,12 +55,12 @@ export type TrickCardTap =
   | "wave"
   /** Buddy is too sleepy to wave: show the gentle line instead. */
   | "sleepyLine"
-  /** Nothing: locked trick, a trick without a performance, or a calm (attentive) moment. */
+  /** Nothing: locked trick or a trick without a performance. */
   | "none";
 
 export function trickCardTap(trick: TrickLike, mood: DogMood): TrickCardTap {
   const performance = trickPerformance(trick);
-  if (!trick.earned || !performance || mood === "attentive") return "none";
+  if (!trick.earned || !performance) return "none";
   if (performance === "wave" && mood === "sleepy") return "sleepyLine";
   return performance;
 }
@@ -77,4 +78,9 @@ export function resolveTrickRequest(performance: TrickPerformance, waveCanPlay: 
 export interface TrickRequest {
   id: number;
   performance: TrickPerformance;
+}
+
+/** Does Buddy have enough hearts to play? Below PLAY_MIN_HEARTS a tap asks for a heart instead (config/pet.ts). */
+export function hasHeartsToPlay(heart: number): boolean {
+  return Number.isFinite(heart) && heart >= PLAY_MIN_HEARTS;
 }

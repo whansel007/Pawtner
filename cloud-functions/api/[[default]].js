@@ -5374,6 +5374,11 @@ var DEMO_RULES = {
   heartScale: 4,
   heartWhenNothingDue: 2,
   heartBloodPressureBonus: 1,
+  /**
+   * At or below this many hearts Buddy is sad (sleepy face) whatever the latest decision, and doesn't play
+   * (the phone asks for a heart instead). User, 16 Oct. One source for shared/rules.ts and mobile/src/config/pet.ts.
+   */
+  lowHeartMaximum: 1,
   streakMilestones: [3, 7, 14, 30],
   /** Minutes the dog stays joyful after a celebrate decision before reverting to heart-based mood. */
   celebrateJoyfulMinutes: 30
@@ -5417,6 +5422,7 @@ function isHighReading(systolic, diastolic) {
   return systolic >= DEMO_RULES.highSystolic || diastolic >= DEMO_RULES.highDiastolic;
 }
 function selectDogMood(heart, latestDecision, now) {
+  if (heart <= DEMO_RULES.lowHeartMaximum) return "sleepy";
   if (latestDecision?.decision === "emergency_995" || latestDecision?.decision === "see_gp_soon") return "attentive";
   if (latestDecision?.decision === "nudge") return "sleepy";
   if (latestDecision?.decision === "celebrate") {
@@ -5426,7 +5432,6 @@ function selectDogMood(heart, latestDecision, now) {
     return "joyful";
   }
   if (latestDecision?.decision === "restock_reminder" || latestDecision?.decision === "doctor_question") return "content";
-  if (heart <= 1) return "sleepy";
   return "content";
 }
 function decision(input, kind, ruleId, reasoning, observations, caretakerPing = false, targetDose) {

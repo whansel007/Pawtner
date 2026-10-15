@@ -17,6 +17,11 @@ export const DEMO_RULES = {
   heartScale: 4,
   heartWhenNothingDue: 2,
   heartBloodPressureBonus: 1,
+  /**
+   * At or below this many hearts Buddy is sad (sleepy face) whatever the latest decision, and doesn't play
+   * (the phone asks for a heart instead). User, 16 Oct. One source for shared/rules.ts and mobile/src/config/pet.ts.
+   */
+  lowHeartMaximum: 1,
   streakMilestones: [3, 7, 14, 30] as const,
   /** Minutes the dog stays joyful after a celebrate decision before reverting to heart-based mood. */
   celebrateJoyfulMinutes: 30,

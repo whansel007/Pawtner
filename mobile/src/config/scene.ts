@@ -61,7 +61,7 @@ export const MOOD_LOOKS: Record<DogMood, { glow: number; playful: boolean }> = {
   joyful: { glow: 0.85, playful: true },
   content: { glow: 0.6, playful: true },
   sleepy: { glow: 0.35, playful: true },
-  attentive: { glow: 0.25, playful: false },
+  attentive: { glow: 0.25, playful: true },
 };
 
 /**
