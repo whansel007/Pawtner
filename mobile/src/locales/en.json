@@ -137,9 +137,9 @@
         "streakTitle_one": "{{count}}-day streak",
         "streakTitle_other": "{{count}}-day streak",
         "streakBadge": "All week",
-        "streakLabel_zero": "Hearts for the last {{days}} days. A new streak starts with the next day of every dose.",
-        "streakLabel_one": "Hearts for the last {{days}} days. {{count}} day in a row with every dose taken.",
-        "streakLabel_other": "Hearts for the last {{days}} days. {{count}} days in a row with every dose taken.",
+        "streakLabel_zero": "Hearts for the {{days}} days before today. A new streak starts with the next day of every dose.",
+        "streakLabel_one": "Hearts for the {{days}} days before today. {{count}} day in a row with every dose taken.",
+        "streakLabel_other": "Hearts for the {{days}} days before today. {{count}} days in a row with every dose taken.",
         "momentsEyebrow": "Shared with care",
         "momentsTitle": "Caring moments",
         "momentsWhen": "This week",
@@ -427,7 +427,8 @@
     "bpLastReading": "Last reading",
     "bpNoReadingYet": "No reading logged yet",
     "resultTitle": "What the app noticed",
-    "callEmergency": "Call {{number}} (emergency purpose only)",
+    "warning": "Warning",
+    "callEmergencyNow": "Call 995 now.",
     "resultSeeGpTitle": "Please see your GP soon"
   },
   "decisionLog": {
@@ -435,9 +436,6 @@
     "whyButtonExpanded": "Hide why",
     "emptyTitle": "Agent decision",
     "emptyBody": "No rule has triggered yet.",
-    "wordingSourceLabel": "Wording",
-    "wordingTemplate": "Fixed template, no AI",
-    "wordingModel": "AI-worded",
     "why": {
       "emergency_symptom_note": "A note mentioned a symptom that can be serious, so the emergency number is shown.",
       "bp_high_with_symptom": "The latest blood pressure reading was high and the note mentioned a symptom.",

@@ -1,7 +1,7 @@
 import { useId, type ReactNode } from "react";
 
 interface CareCardProps {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   badge?: ReactNode;
   stitched?: boolean;
@@ -16,7 +16,7 @@ export function CareCard({ eyebrow, title, badge, stitched = false, className = 
     <section className={`care-card ${stitched ? "care-stitched" : ""} ${className}`} aria-labelledby={headingId}>
       <div className="care-card__heading">
         <div>
-          <p className="care-eyebrow">{eyebrow}</p>
+          {eyebrow && <p className="care-eyebrow">{eyebrow}</p>}
           <h2 id={headingId}>{title}</h2>
         </div>
         {badge}

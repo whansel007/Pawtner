@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-16 (later) — Warning card, Why? without wording source, streak hearts match (branch `claude/visit-notes`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Health's urgent card says only "Warning", the plain reason (`decisionLog.why.<ruleId>`), and one calm action line: "Call 995 now." (995) or "Please see your GP soon" (GP). No call button, no "Why?", no model wording. Supersedes the "Call 995 (emergency purpose only)" button. | User: the whole card should just say Warning + reason; user chose to keep the calm "Call 995 now." line (PRD T1-10 / demo beat 2 expect it). | The decision's own wording (template) is no longer shown on Health. | Final (user's choice) |
+| The "Wording: Fixed template, no AI" row is removed from "Why?" everywhere. | User: meaningless to Rose. | Judges can't see from the UI that safety wording uses no model (still in the decision record and docs). | Final |
+| `/care` streak card: title "A lovely rhythm", then "N-day streak", then seven hearts for the **seven days before today** (`recentDays`), so filled hearts always equal the streak. | User: heart count should match. The streak (`computeStreak`) counts finished days only, but the hearts row ended on today, so today's heart showed filled before today was done. | Today has no heart on this card (it has the Today ring). | Final |
+
 ## 2026-10-16 — Calm urgent card on Health, memos and notes keep history (branch `claude/visit-notes`)
 
 | Decision | Reason | Tradeoff | Status |

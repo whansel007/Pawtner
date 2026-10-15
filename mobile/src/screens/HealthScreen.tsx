@@ -5,9 +5,8 @@ import { FullCard } from "../components/FullCard";
 import { ActionRow } from "../components/ActionRow";
 import { ClinicMemoRow } from "../components/ClinicMemoRow";
 import type { BackAction } from "../lib/navigation";
-import { DecisionLogCard } from "../components/DecisionLogCard";
+import { explainDecision } from "../lib/decisions";
 import { BP_RANGE } from "../config/bp";
-import { EMERGENCY_PHONE } from "../config/health";
 import type { AgentDecision, HealthMetric } from "../../../shared/contract";
 import type { BloodPressureReading, ScreeningInfo, ActivityLink, ClinicTask, WeekSummary } from "../types";
 import "./HealthScreen.css";
@@ -134,15 +133,11 @@ export function HealthScreen({
           className={`bp-result ${isEmergency ? "bp-result--emergency" : "bp-result--gp"}`}
           tabIndex={-1}
         >
-          {isSeeGp && <p className="bp-result__title">{t("health.resultSeeGpTitle")}</p>}
-          <p className="bp-result__wording">{latestDecision.wording}</p>
-          {isEmergency && (
-            <a className="secondary-button bp-result__call" href={`tel:${EMERGENCY_PHONE}`}>
-              <Icon name="phone" size={20} /> {t("health.callEmergency", { number: EMERGENCY_PHONE })}
-            </a>
-          )}
-          {/* Urgent decisions (995, see a GP) live here, not on Home; "Why?" sits in the same calm card. Routine ones are on Milestones. */}
-          <DecisionLogCard decision={latestDecision} />
+          {/* Urgent decisions (995, see a GP) live here, not on Home (routine ones are on Milestones). User, 16 Oct:
+              just "Warning", the plain reason, and one calm action line; no button, no "Why?". */}
+          <p className="bp-result__title">{t("health.warning")}</p>
+          <p className="bp-result__wording">{t(explainDecision(latestDecision).reasonKey)}</p>
+          <p className="bp-result__action">{isEmergency ? t("health.callEmergencyNow") : t("health.resultSeeGpTitle")}</p>
         </div>
       )}
 

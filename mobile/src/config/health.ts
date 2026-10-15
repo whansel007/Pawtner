@@ -15,9 +15,6 @@ export const CLINIC_MEMO = {
   jpegQuality: 0.8,
 } as const;
 
-/** Singapore emergency number, dialled by the "Call 995" button on Health's emergency card (`tel:` link: the phone asks before calling). */
-export const EMERGENCY_PHONE = "995";
-
 /**
  * "For my next visit": the senior's own notes to bring to the doctor. Kept on this phone only (no API,
  * not shown on /care); text in en.json under "visitNotes".

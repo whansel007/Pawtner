@@ -1393,3 +1393,4 @@ button.care-brand {
 
 /* Shared blood pressure (only when the senior turns sharing on). */
 .care-root .care-bp__value { margin: 4px 0 2px; font-size: 2rem; font-weight: 800; color: var(--care-ink); }
+.care-root .care-streak__count { margin: 2px 0 6px; font-size: 1rem; font-weight: 600; color: var(--care-muted); }

@@ -108,13 +108,17 @@
   color: var(--color-text-heading);
 }
 
-.bp-result .bp-result__call { display: inline-flex; width: auto; min-height: 44px; margin-top: 10px; padding: 0 18px; font-size: var(--font-size-sm); }
-.bp-result .decision-log { margin-top: 10px; }
-.bp-result .decision-log__body { text-align: left; }
 
 .bp-result__wording {
   margin: 0;
   font-size: var(--font-size-xl);
   line-height: 1.4;
   color: #3a4a3e;
+}
+
+.bp-result__action {
+  margin: 10px 0 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-black);
+  color: var(--color-primary);
 }

@@ -6,10 +6,10 @@ import { useRevealWhenOpen } from "../lib/useRevealWhenOpen";
 import "./DecisionLogCard.css";
 
 /**
- * One DecisionLogCard for Health (urgent decisions) and Milestones (routine decisions).
+ * DecisionLogCard for Milestones (routine decisions). Health's urgent card shows its reason directly.
  * - When `decision` is null, shows an en.json empty state.
  * - When `decision` is present, shows the "Why?" toggle with a plain-language reason sentence from en.json
- *   (lib/decisions.ts explainDecision) and whether the wording came from a template or the model.
+ *   (lib/decisions.ts explainDecision).
  *   Rule ids, machine field names and ids are never shown.
  * - `summary` puts the decision's wording on the same row as the toggle.
  * - Opening "Why?" scrolls the details into view inside the card's scroll area, clear of the bottom nav.
@@ -30,9 +30,6 @@ export function DecisionLogCard({ decision, summary }: { decision: AgentDecision
   }
 
   const why = explainDecision(decision);
-  const wordingLabel = decision.wordingSource === "template"
-    ? t("decisionLog.wordingTemplate")
-    : t("decisionLog.wordingModel");
 
   return (
     <div className={`decision-log${summary ? " decision-log--summary" : ""}`}>
@@ -48,12 +45,6 @@ export function DecisionLogCard({ decision, summary }: { decision: AgentDecision
       {open && (
         <div className="decision-log__body" ref={body}>
           <p className="decision-log__reason">{t(why.reasonKey)}</p>
-          <dl>
-            <div className="decision-log__row">
-              <dt>{t("decisionLog.wordingSourceLabel")}</dt>
-              <dd>{wordingLabel}</dd>
-            </div>
-          </dl>
         </div>
       )}
     </div>

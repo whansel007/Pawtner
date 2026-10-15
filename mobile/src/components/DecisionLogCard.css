@@ -57,7 +57,7 @@
 
 
 .decision-log__reason {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: var(--font-size-base);
   line-height: 1.4;
   color: var(--color-text-heading);

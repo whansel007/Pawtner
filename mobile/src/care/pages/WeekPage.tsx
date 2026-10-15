@@ -102,10 +102,11 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
         </CareCard>
 
         <CareCard
-          eyebrow={t("care.web.week.streakEyebrow")}
-          title={t("care.web.week.streakTitle", { count: dog.streak })}
+          title={t("care.web.week.streakEyebrow")}
           badge={dog.streak >= hearts.length ? <CareBadge tone="rose">{t("care.web.week.streakBadge")}</CareBadge> : null}
         >
+          {/* "7-day streak" under the title; the hearts below are the same days, so they always match. */}
+          <p className="care-streak__count">{t("care.web.week.streakTitle", { count: dog.streak })}</p>
           <StreakHearts days={streakDays} label={t("care.web.week.streakLabel", { count: dog.streak, days: hearts.length })} />
         </CareCard>
 

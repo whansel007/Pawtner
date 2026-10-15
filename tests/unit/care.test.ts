@@ -29,12 +29,13 @@ describe("care streak hearts", () => {
     expect(streakHearts(Number.NaN).some(Boolean)).toBe(false);
   });
 
-  it("lists seven days ending today", () => {
+  it("lists the seven days before today (the streak never counts today), so filled hearts = streak", () => {
     const now = new Date(2026, 9, 14, 9, 30);
     const days = recentDays(now);
     expect(days).toHaveLength(7);
-    expect(days[6].getDate()).toBe(14);
-    expect(days[0].getDate()).toBe(8);
+    expect(days[6].getDate()).toBe(13);
+    expect(days[0].getDate()).toBe(7);
+    expect(streakHearts(3).filter(Boolean)).toHaveLength(3);
   });
 });
 
