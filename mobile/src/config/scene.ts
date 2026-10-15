@@ -25,6 +25,9 @@ export const SENIOR_TIMEZONE = "Asia/Singapore";
 /** How often the real clock is re-checked for the day/night switch (lib/useDayPhase.ts). */
 export const PHASE_RECHECK_MS = 60_000;
 
+/** Day ↔ night cross-fade of the garden when the phase changes (SceneBackdrop; instant under reduced motion, none on first load). */
+export const PHASE_FADE_MS = 2000;
+
 /**
  * Backdrop art per phase.
  * aspect: art width / height. groundLine: where the open lawn starts, as a fraction of the art height from the top.
