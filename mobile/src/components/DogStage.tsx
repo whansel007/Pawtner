@@ -8,7 +8,7 @@ import "./DogStage.css";
 
 /**
  * Presentational: receives the current reaction as a prop and renders it.
- * Layers, back to front: glow → cast shadow → contact shadow → dog (+ accessory overlay)
+ * Layers, back to front: glow → ground shadows (cast, contact, paw) → dog (+ accessory overlay)
  * → reaction overlay (hearts, dizzy stars). The speech bubble lives outside the dog (PetBubble), so it never covers the head.
  */
 export function DogStage({
@@ -39,8 +39,12 @@ export function DogStage({
     <div className={`dog-stage dog-stage--${mood}`} style={{ "--dog-glow": look.glow } as CSSProperties}>
       <div className="dog-stage__figure">
         <span className="dog-stage__glow" aria-hidden="true" />
-        <span className="dog-stage__cast-shadow" aria-hidden="true" />
-        <span className="dog-stage__contact-shadow" aria-hidden="true" />
+        <span className="dog-stage__ground" aria-hidden="true">
+          <span className="dog-stage__cast-shadow" />
+          <span className="dog-stage__contact-shadow" />
+          <span className="dog-stage__paw-shadow dog-stage__paw-shadow--back" />
+          <span className="dog-stage__paw-shadow dog-stage__paw-shadow--front" />
+        </span>
         {reaction === "hearts" && (
           <span className="dog-stage__hearts" aria-hidden="true">
             {Array.from({ length: HEART_BURST_COUNT }, (_, index) => (
