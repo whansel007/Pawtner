@@ -7,6 +7,7 @@ export type Screen =
   | "prescription"
   | "explanation"
   | "schedule"
+  | "reference"
   | "proof"
   | "walk"
   | "milestones"

@@ -270,6 +270,8 @@
     "tapCapture": "Tap to capture",
     "keepLit": "Keep the label clear and well lit",
     "enterManual": "Enter details manually",
+    "scanLabel": "Scan the label",
+    "readingLabel": "Reading label…",
     "medication": "MEDICATION",
     "dosage": "DOSAGE",
     "frequency": "FREQUENCY",
@@ -288,6 +290,18 @@
     "supporting": "We made this from the label. Change it anytime.",
     "noAlarm": "No loud alarm, and no scolding if you are late.",
     "confirm": "Confirm {{name}}'s routine"
+  },
+  "reference": {
+    "eyebrow": "New medication",
+    "title": "Show {{name}} the pill",
+    "supporting": "Snap one reference photo of the pill. Nothing is saved to your gallery.",
+    "tapCapture": "Tap to capture",
+    "onePill": "One pill in the frame",
+    "describing": "{{name}} is looking…",
+    "describedTitle": "First photo saved",
+    "describedNote": "Next time, {{name}} will compare your photo with this one.",
+    "offline": "{{name}} can't describe the pill right now. You can still finish.",
+    "skip": "Skip for now"
   },
   "proof": {
     "eyebrowCheck": "A quick check",
