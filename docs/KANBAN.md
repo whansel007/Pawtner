@@ -11,7 +11,7 @@ Today's plan (agreed 13 Oct evening), in order:
 3. T1-15 `/care` from the Figma Make export, wired to the API with a mock fallback (PR from `claude/care-web`).
 4. Afternoon: T1-16 simulated walk.
 5. Evening: connect to the API if it's ready, then deploy to production.
-6. Later, if there's time: T2-10 morning/night from one shared helper.
+6. Later, if there's time: T2-10 morning/night from one shared helper (done on `claude/night-stars`, see Done).
 
 | ID | Item | Owner | State |
 |---|---|---|---|
@@ -67,6 +67,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | — | Hat on the crown, hibiscus as SVG, compact dock in short landscape, "Show me at home" → Home, tricks offline | [#29](https://github.com/whansel007/Pawtner/pull/29) |
 | — | `dog.heartsTotal` (lifetime hearts, derived on read) in `/api/today` and `/api/caretaker/summary`; EdgeOne bundle regenerated (Claude Code, P1 files, P1 OK'd) | [#30](https://github.com/whansel007/Pawtner/pull/30) |
 | — | Wardrobe & world unlock by lifetime hearts, "N hearts together" on Milestones, demo switch in Settings (CodeBuddy) | [#31](https://github.com/whansel007/Pawtner/pull/31) |
+| T2-10 | Day/night follows the real clock (`lib/useDayPhase.ts`, re-checked every minute, demo clock overrides); twinkling knitted stars at night (`NightStars`, `config/stars.ts`, tentative positions) | Branch `claude/night-stars`, PR pending |
 
 ## Blocked
 
