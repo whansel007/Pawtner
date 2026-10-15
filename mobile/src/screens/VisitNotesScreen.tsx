@@ -6,18 +6,63 @@ import type { VisitNote } from "../lib/visitNotes";
 import "./VisitNotesScreen.css";
 
 /**
- * "For my next visit": the senior's own notes for the doctor, newest first. Add, edit, delete.
- * Presentational: notes and actions come from useVisitNotes (App.tsx). Kept on this phone only.
+ * "For my next visit": the senior's own notes for the doctor, in two sections: shared with her caretaker
+ * (shown on /care) and just for her. Newest first; add, edit, delete.
+ * Presentational: notes and actions come from useVisitNotes (App.tsx).
  */
 export function VisitNotesScreen({
   back,
   notes,
+  caretakerName,
   maxLength,
   onAdd,
   onEdit,
   onRemove,
 }: {
   back: BackAction;
+  notes: VisitNote[];
+  caretakerName: string;
+  maxLength: number;
+  onAdd: (text: string, shared: boolean) => void;
+  onEdit: (id: string, text: string) => void;
+  onRemove: (id: string) => void;
+}) {
+  const { t } = useTranslation();
+  const section = (shared: boolean) => (
+    <NotesSection
+      title={shared ? t("visitNotes.sharedTitle", { caretaker: caretakerName }) : t("visitNotes.privateTitle")}
+      hint={shared ? t("visitNotes.sharedHint", { caretaker: caretakerName }) : t("visitNotes.privateHint")}
+      tone={shared ? "shared" : "private"}
+      notes={notes.filter((note) => note.shared === shared)}
+      maxLength={maxLength}
+      onAdd={(text) => onAdd(text, shared)}
+      onEdit={onEdit}
+      onRemove={onRemove}
+    />
+  );
+  return (
+    <FullCard back={back}>
+      <h2>{t("visitNotes.title")}</h2>
+      <p className="supporting">{t("visitNotes.empty")}</p>
+      {section(true)}
+      {section(false)}
+    </FullCard>
+  );
+}
+
+function NotesSection({
+  title,
+  hint,
+  tone,
+  notes,
+  maxLength,
+  onAdd,
+  onEdit,
+  onRemove,
+}: {
+  title: string;
+  hint: string;
+  tone: "shared" | "private";
   notes: VisitNote[];
   maxLength: number;
   onAdd: (text: string) => void;
@@ -29,15 +74,10 @@ export function VisitNotesScreen({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
 
-  const startEdit = (note: VisitNote) => {
-    setEditingId(note.id);
-    setEditDraft(note.text);
-  };
-
   return (
-    <FullCard back={back}>
-      <h2>{t("visitNotes.title")}</h2>
-      <p className="supporting">{t("visitNotes.empty")}</p>
+    <section className={`visit-notes__section visit-notes__section--${tone}`} aria-label={title}>
+      <h3>{title}</h3>
+      <p className="visit-notes__hint">{hint}</p>
       <form
         className="visit-notes__new"
         onSubmit={(event) => {
@@ -46,50 +86,40 @@ export function VisitNotesScreen({
           setDraft("");
         }}
       >
-        <textarea
-          value={draft}
-          maxLength={maxLength}
-          rows={3}
-          aria-label={t("visitNotes.inputLabel")}
-          onChange={(event) => setDraft(event.target.value)}
-        />
+        <textarea value={draft} maxLength={maxLength} rows={2} aria-label={t("visitNotes.inputLabel")} onChange={(event) => setDraft(event.target.value)} />
         <button type="submit" className="primary-button" disabled={!draft.trim()}>{t("visitNotes.save")}</button>
       </form>
-      <ul className="visit-notes__list">
-        {notes.map((note) => (
-          <li key={note.id} className="visit-notes__item">
-            {editingId === note.id ? (
-              <form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  onEdit(note.id, editDraft);
-                  setEditingId(null);
-                }}
-              >
-                <textarea
-                  value={editDraft}
-                  maxLength={maxLength}
-                  rows={3}
-                  aria-label={t("visitNotes.inputLabel")}
-                  onChange={(event) => setEditDraft(event.target.value)}
-                />
-                <div className="visit-notes__actions">
-                  <button type="submit" className="secondary-button" disabled={!editDraft.trim()}>{t("visitNotes.saveEdit")}</button>
-                  <button type="button" className="text-button" onClick={() => setEditingId(null)}>{t("visitNotes.cancel")}</button>
-                </div>
-              </form>
-            ) : (
-              <>
-                <p>{note.text}</p>
-                <div className="visit-notes__actions">
-                  <button type="button" className="secondary-button" onClick={() => startEdit(note)}>{t("visitNotes.edit")}</button>
-                  <button type="button" className="text-button" onClick={() => onRemove(note.id)}>{t("visitNotes.delete")}</button>
-                </div>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
-    </FullCard>
+      {notes.length > 0 && (
+        <ul className="visit-notes__list">
+          {notes.map((note) => (
+            <li key={note.id} className="visit-notes__item">
+              {editingId === note.id ? (
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    onEdit(note.id, editDraft);
+                    setEditingId(null);
+                  }}
+                >
+                  <textarea value={editDraft} maxLength={maxLength} rows={3} aria-label={t("visitNotes.inputLabel")} onChange={(event) => setEditDraft(event.target.value)} />
+                  <div className="visit-notes__actions">
+                    <button type="submit" className="secondary-button" disabled={!editDraft.trim()}>{t("visitNotes.saveEdit")}</button>
+                    <button type="button" className="text-button" onClick={() => setEditingId(null)}>{t("visitNotes.cancel")}</button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <p>{note.text}</p>
+                  <div className="visit-notes__actions">
+                    <button type="button" className="secondary-button" onClick={() => { setEditingId(note.id); setEditDraft(note.text); }}>{t("visitNotes.edit")}</button>
+                    <button type="button" className="text-button" onClick={() => onRemove(note.id)}>{t("visitNotes.delete")}</button>
+                  </div>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

@@ -479,6 +479,10 @@
   "visitNotes": {
     "title": "For my next visit",
     "empty": "Jot down what to ask the doctor",
+    "sharedTitle": "Shared with {{caretaker}}",
+    "sharedHint": "{{caretaker}} can see these.",
+    "privateTitle": "Just for me",
+    "privateHint": "Only you can see these.",
     "inputLabel": "Your note",
     "save": "Save note",
     "saveEdit": "Save",

@@ -9,6 +9,8 @@ import { useCareData } from "./hooks/useCareData";
 import { useCaretakerSlot } from "./hooks/useCaretakerSlot";
 import { useCareTreat } from "./hooks/useCareTreat";
 import { usePendingRestockRequest } from "../lib/useRestockHelp";
+import { useCareVisitNotes } from "../lib/useVisitNotes";
+import { doctorQuestionsForCare } from "../lib/visitNotes";
 import { Brand } from "./components/Brand";
 import { CareFooter } from "./components/CareFooter";
 import { CareHeader } from "./components/CareHeader";
@@ -42,6 +44,8 @@ export default function CareApp() {
   const { data, offline, saveStatus, pendingThreshold, saveThreshold } = useCareData();
   const treat = useCareTreat(offline);
   const restock = usePendingRestockRequest();
+  // Rose's "For my next visit" notes she shared (demo: same browser, lib/visitNotes.ts).
+  const visitNotes = useCareVisitNotes();
   const mainRef = useRef<HTMLElement>(null);
   const firstRoute = useRef(true);
 
@@ -122,6 +126,7 @@ export default function CareApp() {
             onSendTreat={(message) => void treat.send(message)}
             restockRequest={restock.pending}
             onHandleRestock={restock.handle}
+            doctorQuestions={doctorQuestionsForCare(visitNotes, data.summary.doctorQuestions)}
           />
         )}
         {signedInPage && route === "alerts" && (

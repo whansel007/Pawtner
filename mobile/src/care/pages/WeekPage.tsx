@@ -21,9 +21,11 @@ interface WeekPageProps {
   /** The senior's pending "help with a refill" request (demo: lib/restockHelp.ts). Never names the medicine. */
   restockRequest: RestockHelpEntry | null;
   onHandleRestock: () => void;
+  /** "Questions for the doctor": the senior's shared notes plus the API's questions, newest first (doctorQuestionsForCare). */
+  doctorQuestions: Array<{ note: string; occurredAt: string }>;
 }
 
-export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, restockRequest, onHandleRestock }: WeekPageProps) {
+export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, restockRequest, onHandleRestock, doctorQuestions }: WeekPageProps) {
   const { t, i18n } = useTranslation();
   // Thank-you line after "I'll handle it", until the page changes.
   const [handledRestock, setHandledRestock] = useState(false);
@@ -46,7 +48,7 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
     time: formatMomentTime(moment.occurredAt, locale),
   }));
 
-  const [latestQuestion, ...earlierQuestions] = data.summary.doctorQuestions;
+  const [latestQuestion, ...earlierQuestions] = doctorQuestions;
 
   return (
     <div className="care-content care-page-enter">

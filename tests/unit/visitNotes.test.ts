@@ -3,6 +3,7 @@ import type { KeyValueStore } from "../../mobile/src/lib/localStore.js";
 import {
   addVisitNote,
   cleanNoteText,
+  doctorQuestionsForCare,
   editVisitNote,
   readVisitNotes,
   removeVisitNote,
@@ -20,18 +21,18 @@ const blockedStore: KeyValueStore = {
   removeItem: () => { throw new Error("blocked"); },
 };
 
-const a: VisitNote = { id: "a", text: "Sleepy after dinner", updatedAt: "2026-10-14T10:00:00.000Z" };
-const b: VisitNote = { id: "b", text: "Ask about the dry cough", updatedAt: "2026-10-15T10:00:00.000Z" };
+const a: VisitNote = { id: "a", text: "Sleepy after dinner", updatedAt: "2026-10-14T10:00:00.000Z", shared: false };
+const b: VisitNote = { id: "b", text: "Ask about the dry cough", updatedAt: "2026-10-15T10:00:00.000Z", shared: false };
 
 describe("visit notes", () => {
   it("adds new notes on top and ignores empty text", () => {
-    expect(addVisitNote([a], "Ask about the dry cough", b.updatedAt, "b")).toEqual([b, a]);
-    expect(addVisitNote([a], "", b.updatedAt, "b")).toEqual([a]);
+    expect(addVisitNote([a], "Ask about the dry cough", b.updatedAt, "b", false)).toEqual([b, a]);
+    expect(addVisitNote([a], "", b.updatedAt, "b", false)).toEqual([a]);
   });
 
   it("moves an edited note to the top; an emptied note is removed", () => {
     expect(editVisitNote([b, a], "a", "Sleepy after dinner, most days", "2026-10-16T09:00:00.000Z"))
-      .toEqual([{ id: "a", text: "Sleepy after dinner, most days", updatedAt: "2026-10-16T09:00:00.000Z" }, b]);
+      .toEqual([{ id: "a", text: "Sleepy after dinner, most days", updatedAt: "2026-10-16T09:00:00.000Z", shared: false }, b]);
     expect(editVisitNote([b, a], "a", "", "2026-10-16T09:00:00.000Z")).toEqual([b]);
   });
 
@@ -58,5 +59,29 @@ describe("visit notes", () => {
   it("reports blocked storage so the caller keeps notes in memory", () => {
     expect(writeVisitNotes("k", [a], blockedStore)).toBe(false);
     expect(readVisitNotes("k", blockedStore)).toEqual([]);
+  });
+});
+
+describe("shared visit notes", () => {
+  const shared: VisitNote = { id: "s", text: "Ask about the cough", updatedAt: "2026-10-15T09:00:00.000Z", shared: true };
+  const mine: VisitNote = { id: "p", text: "Feeling low some evenings", updatedAt: "2026-10-15T12:00:00.000Z", shared: false };
+
+  it("keeps who can see a note when it is edited", () => {
+    expect(editVisitNote([shared, mine], "s", "Ask about the dry cough", "2026-10-16T08:00:00.000Z")[0])
+      .toEqual({ id: "s", text: "Ask about the dry cough", updatedAt: "2026-10-16T08:00:00.000Z", shared: true });
+  });
+
+  it("treats notes saved before sharing existed as private", () => {
+    const store = memoryStore();
+    store.setItem("k", JSON.stringify([{ id: "old", text: "Old note", updatedAt: "2026-10-14T10:00:00.000Z" }]));
+    expect(readVisitNotes("k", store)[0].shared).toBe(false);
+  });
+
+  it("gives /care only shared notes, merged with the API's questions, newest first", () => {
+    const api = [{ note: "Ask a healthcare professional about: dizzy", occurredAt: "2026-10-15T10:00:00.000Z" }];
+    expect(doctorQuestionsForCare([mine, shared], api)).toEqual([
+      api[0],
+      { note: "Ask about the cough", occurredAt: "2026-10-15T09:00:00.000Z" },
+    ]);
   });
 });
