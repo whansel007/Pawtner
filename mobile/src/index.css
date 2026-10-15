@@ -644,6 +644,12 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .wardrobe-grid strong { font-size: var(--font-size-sm); }
 .wardrobe-grid small { color: var(--color-text-faint); font-size: var(--font-size-2xs); }
 
+.world-picker > button.locked,
+.wardrobe-grid button.locked { opacity: .55; background: var(--color-surface-stone-alt); cursor: default; }
+.world-picker > button.locked .world-thumb,
+.wardrobe-grid button.locked > span { filter: grayscale(.6); }
+.lock-icon { display: inline-block; margin-left: 4px; vertical-align: middle; color: var(--color-text-faint); }
+
 /* ═══════════════════════════════════════════════════════════════════════
    Accessory marks (mini icons in wardrobe)
    ═══════════════════════════════════════════════════════════════════════ */

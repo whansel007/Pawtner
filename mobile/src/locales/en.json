@@ -326,6 +326,9 @@
     "title": "{{count}} caring days together",
     "streakLine_one": "{{count}} day in a row with every dose taken.",
     "streakLine_other": "{{count}} days in a row with every dose taken.",
+    "hearts": "{{count}} hearts together",
+    "hearts_one": "{{count}} heart together",
+    "hearts_other": "{{count}} hearts together",
     "worldWardrobe": "World & wardrobe",
     "worldWardrobeSub": "Revisit scenery and dress {{name}}",
     "tricks": "Tricks",
@@ -338,7 +341,8 @@
     "glasses": "Sunny specs",
     "hat": "Sun hat",
     "flower": "Hibiscus bloom",
-    "justPet": "Just {{name}}"
+    "justPet": "Just {{name}}",
+    "fromCaretaker": "From {{name}}"
   },
   "customize": {
     "eyebrow": "{{name}}'s collection",
@@ -346,9 +350,15 @@
     "supporting": "New levels never replace old memories. Visit any world you have earned.",
     "scenery": "Scenery",
     "scenerySub": "All unlocked",
+    "scenerySubLocked": "Earn hearts to unlock",
     "accessories": "Accessories",
     "accessoriesSub": "Tap to wear",
-    "showMe": "Show me at home"
+    "showMe": "Show me at home",
+    "lockedNote": "{{count}} hearts",
+    "lockedNote_one": "{{count}} heart",
+    "lockedNote_other": "{{count}} hearts",
+    "lockedToast": "{{name}} unlocks this at {{count}} hearts.",
+    "lockedToast_one": "{{name}} unlocks this at {{count}} heart."
   },
   "health": {
     "eyebrow": "This week",
@@ -446,7 +456,9 @@
     "caretaker": "{{caretaker}}, caretaker",
     "caretakerSub": "Connected to the same {{name}}",
     "privacyTitle": "Your information stays yours.",
-    "privacyBody": "{{caretaker}} sees caring moments, not private medicine details."
+    "privacyBody": "{{caretaker}} sees caring moments, not private medicine details.",
+    "demoEyebrow": "Demo",
+    "demoUnlockAll": "Unlock all rewards (demo)"
   },
   "toast": {
     "alreadyCounted": "Already counted. {{name}} remembers!",
