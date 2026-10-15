@@ -148,6 +148,20 @@
 .dog-stage.is-clip-visible .dog-stage__clip { opacity: 1; }
 .dog-stage.is-clip-visible .dog-stage__image { opacity: 0; }
 
+/*
+ * The accessory (hat, glasses, flower) is placed on the still art and can't follow the clip's moving head,
+ * so it fades out when the clip shows and back in when the still returns. Same box as the dog image.
+ */
+.dog-stage__accessory {
+  --accessory-fade: 150ms;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity var(--accessory-fade) ease;
+}
+
+.dog-stage.is-clip-visible .dog-stage__accessory { opacity: 0; }
+
 /* ── Mood motion: transform and opacity only ── */
 .dog-stage--content .dog-stage__body { animation: dog-breathe 3.6s ease-in-out infinite; }
 .dog-stage--joyful .dog-stage__body { animation: dog-hop-mood 1.6s ease-in-out infinite; }
@@ -352,7 +366,9 @@
   }
   /* No clips under reduced motion (useBuddyClip never starts one); this is the still fallback if one slips through. */
   .dog-stage__clip-canvas { display: none; }
-  .dog-stage.is-clip-visible .dog-stage__image { opacity: 1; }
+  .dog-stage.is-clip-visible .dog-stage__image,
+  .dog-stage.is-clip-visible .dog-stage__accessory { opacity: 1; }
+  .dog-stage__accessory { transition: none; }
   /* Its own rule: a browser without :has() drops only this one. */
   .dog-stage__figure:has(.is-hop) .dog-stage__ground,
   .dog-stage__figure:has(.is-hop) .dog-stage__paw-shadow {

@@ -14,7 +14,8 @@ import "./DogStage.css";
  * Layers, back to front: glow → ground shadows (cast, contact, paw) → dog (+ accessory overlay)
  * → reaction overlay (hearts, dizzy stars). The speech bubble lives outside the dog (PetBubble), so it never covers the head.
  * A Buddy clip (when `clip` is set) lies over the still in the art's canvas box; the still hides only once the clip
- * is really playing, and mood motion pauses while a clip is on screen. useBuddyClip owns starting and stopping it.
+ * is really playing, and mood motion pauses while a clip is on screen. The accessory fades out with the still (it can't
+ * follow the clip's moving head) and back in when the still returns. useBuddyClip owns starting and stopping the clip.
  */
 
 /** Overlay box of a clip frame on the art canvas (config/clips.ts CLIP_CANVAS), as CSS variables. */
@@ -107,7 +108,7 @@ export function DogStage({
                 />
               </span>
             )}
-            {accessory}
+            {accessory && <span className="dog-stage__accessory">{accessory}</span>}
           </span>
         </button>
       </div>

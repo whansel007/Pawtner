@@ -83,7 +83,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | Item | Note |
 |---|---|
-| Buddy clips: Safari/WebKit check | The `.mov` (HEVC-alpha) path is untested: Playwright WebKit isn't installed here. Check on an iPhone (Safari) and macOS Safari that the wave plays with no black box and lines up with the still. Also: an accessory (hat, glasses) stays still while the clip moves the head; bark licence source to record. |
+| Buddy clips: Safari/WebKit check | The `.mov` (HEVC-alpha) path is untested: Playwright WebKit isn't installed here. Check on an iPhone (Safari) and macOS Safari that the wave plays with no black box and lines up with the still. Also: bark licence source to record. |
 | P1 hosting landed on `main` without a PR (15 Oct) | `cb/api-hosting-edgeone` is fully in `main` (`1fc0b53`); nothing left to merge. Reviewed: checks pass (typecheck, 73/73, build); Vercel preview and `pawtner.edgeone.dev` still front end only. Also touched P2-owned screens (Proof, Reminders, Settings via `App.tsx`) — agreed split says screen changes go through P2. Reminders now lists `DerivedDose[]` (mock offline); Settings caretaker name from the summary. |
 | Offline sample text still names people | `mobile/src/mock/care.ts`: "Two people, one Buddy"; activity "Mum took her lunchtime medicine and Buddy gained a heart." Shown only without the API. |
 | Seed has no taken-dose events | Live API would show 0 hearts and a 0-day streak, so rewards stay locked without the demo switch. Fictional taken events in `migrations/seed.sql` are a data change (P1, user OK needed). |
