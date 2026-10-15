@@ -50,6 +50,12 @@ ON CONFLICT (id) DO UPDATE SET starts_on = EXCLUDED.starts_on;
 DELETE FROM dose_events
 WHERE schedule_id IN ('00000000-0000-4000-8000-000000000006', '00000000-0000-4000-8000-000000000007');
 
+-- Clear the demo user's prior agent decisions (e.g. a stale emergency_995 left over from testing)
+-- so the dog's mood isn't pinned to an old decision after reseeding. Fictional demo data only;
+-- decisions are regenerated as the presenter records new events. No other user's data is touched.
+DELETE FROM agent_decisions
+WHERE user_id = '00000000-0000-4000-8000-000000000001';
+
 -- One "taken" event per seed schedule per day from starts_on to yesterday, except Tablet B on the
 -- first three days (missed: no event). scheduled_for is built exactly like the API's occurrences
 -- ((local day + scheduled_time) AT TIME ZONE the user's zone) so the events match them.
