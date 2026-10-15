@@ -955,7 +955,7 @@ export class PawtnerRepository {
     const streak = person.streak;
     const trickDefs = [
       { name: "Sit", threshold: 1, milestoneNote: "1 day streak" },
-      { name: "High five", threshold: 7, milestoneNote: "7 day streak" },
+      { name: "Wave", threshold: 7, milestoneNote: "7 day streak" },
       { name: "Roll over", threshold: 14, milestoneNote: "14 day streak" },
       { name: "New trick", threshold: 30, milestoneNote: "30 day streak" },
     ];

@@ -1,0 +1,35 @@
+/* Earned trick cards are buttons (Buddy performs the trick); they keep the earned card's look from index.css. */
+.trick-grid .trick-card--perform {
+  display: grid;
+  gap: 5px;
+  padding: 15px;
+  border: 0;
+  border-radius: var(--radius-5xl);
+  color: #57735f;
+  background: #e7efdf;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+.trick-grid .trick-card--perform:active { transform: scale(.97); }
+.trick-grid .trick-card--perform:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .trick-grid .trick-card--perform { transition: none; }
+  .trick-grid .trick-card--perform:active { transform: none; }
+}
+
+/* The gentle "too sleepy to wave" line under the tricks. */
+.trick-note {
+  margin: 10px 2px 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-4xl);
+  color: var(--color-text-heading);
+  background: var(--color-surface-stone);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.35;
+}
+
+/* The routine decision row sits on top of the Milestones card. */
+.full-card__scroll > .decision-log:first-child { margin-top: 0; margin-bottom: 16px; }
