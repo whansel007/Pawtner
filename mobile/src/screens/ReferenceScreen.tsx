@@ -3,9 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
 import { api } from "../lib/api";
+import { fileToBase64 } from "../lib/imageBase64";
 import type { BackAction } from "../lib/navigation";
 
-type Stage = "capture" | "describing" | "described" | "error";
+type Stage = "capture" | "saving" | "saved" | "error";
 
 export function ReferenceScreen({
   back,
@@ -31,19 +32,15 @@ export function ReferenceScreen({
     if (!file || !medicationId) return;
     event.target.value = "";
     setPhotoUrl(URL.createObjectURL(file));
-    setStage("describing");
+    setStage("saving");
 
     try {
-      const buffer = await file.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
-      let binary = "";
-      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-      const imageBase64 = btoa(binary);
-      const mimeType = file.type || "image/jpeg";
+      const { imageBase64, mimeType } = await fileToBase64(file);
 
-      const result = await api.describePill(medicationId, imageBase64, mimeType);
-      setDescription(result.description);
-      setStage("described");
+      // Saves this photo as the medicine's original pill photo (T2-08); every later check-in is compared to it.
+      const result = await api.setPillReference(medicationId, imageBase64, mimeType);
+      setDescription(result.description?.trim() ?? "");
+      setStage("saved");
     } catch {
       setStage("error");
     }
@@ -74,13 +71,13 @@ export function ReferenceScreen({
 
       {stage !== "capture" && photoUrl && (
         <>
-          <img src={photoUrl} alt="Pill reference" className="proof-photo-preview" style={{ marginBottom: 12 }} />
-          {stage === "describing" && <p className="supporting">{t("reference.describing", { name: petName })}</p>}
-          {stage === "described" && (
+          <img src={photoUrl} alt={t("reference.photoAlt")} className="proof-photo-preview" style={{ marginBottom: 12 }} />
+          {stage === "saving" && <p className="supporting">{t("reference.saving", { name: petName })}</p>}
+          {stage === "saved" && (
             <div className="proof-check-card">
-              <small className="proof-check-card-title">{t("reference.describedTitle")}</small>
-              <p className="proof-check-card-line">{description}</p>
-              <p className="proof-check-card-note">{t("reference.describedNote", { name: petName })}</p>
+              <small className="proof-check-card-title">{t("reference.savedTitle")}</small>
+              <p className="proof-check-card-line">{description || t("reference.savedFallback", { name: petName })}</p>
+              <p className="proof-check-card-note">{t("reference.savedNote", { name: petName })}</p>
             </div>
           )}
           {stage === "error" && (

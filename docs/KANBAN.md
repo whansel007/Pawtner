@@ -44,6 +44,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | PR |
 |---|---|---|
+| T2-08 | Hotfix: the after-schedule "Show {{name}} the pill" step saves the original pill photo with `api.setPillReference` (main failed `tsc` after #43 used the removed `api.describePill`) | branch `claude/fix-reference-photo` |
 | T1-14 | Centred 430 px column on desktop, blurred garden at the sides, responsive 360–430 px including short screens (360×640, 412×730) | [#1](https://github.com/whansel007/Pawtner/pull/1) |
 | — | Layered scene: portrait garden, separate dog with shadow, ground-line alignment, dog on every senior screen | [#1](https://github.com/whansel007/Pawtner/pull/1) |
 | — | Compact next-dose card (mock), dedication screen auto-advance (1.1 s, Pinyon Script) | [#2](https://github.com/whansel007/Pawtner/pull/2) |
@@ -71,6 +72,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | T2-10 | Day/night follows the real clock (`lib/useDayPhase.ts`, re-checked every minute, demo clock overrides); twinkling knitted stars at night (`NightStars`, `config/stars.ts`, tentative positions) | Branch `claude/night-stars`, PR pending |
 | — | Demo time for filming: `?time=HH:MM` / `morning` / `evening` link and Settings > Demo "Morning (9:00)", "Evening (21:00)", "Real time" buttons (no agent run, no writes); 2 s day ↔ night cross-fade of the garden | Branch `claude/demo-time` (on top of `claude/night-stars`), PR pending |
 | — | Health rows on one `ActionRow` primitive; HealthHub links fixed (`screen_for_life`, `healthyliving`); "Link to Healthy 365" with logo; clinic memo photo (local only). Caretaker dashboard removed from the phone (Settings row is info only); "Send Buddy a treat" moved to `/care` This week; gift chip shows who sent the latest treat. Restock help (demo only): card on Reminders + dot on "See all", request to `/care` without the medicine name | Branch `claude/health-care` (on top of `claude/buddy-clips`), PR pending |
+| T2-08 | "My medicines" (Settings): William's medicine list, Edit and Set / Replace original pill photo moved from the deleted phone `CareScreen` to `MedicinesScreen` | branch `claude/health-care` (PR #44) |
 | — | Buddy video in-app: content Buddy waves on tap (`buddy-wave`), joyful Buddy waves once after "Give Buddy a heart" and on tap (`buddy-joyful`); transparent clips over the still (HEVC-alpha `.mov` on Safari, VP9-alpha `.webm` elsewhere), preloaded when Home is idle; no clip when sleepy/attentive or with reduced motion. Paw button barks (`bark.mp3`, user-supplied) and keeps its toast | Branch `claude/buddy-clips` (on top of `claude/hat-fit-landscape`), PR pending |
 | — | Tricks and decisions: "High five" renamed "Wave" (API, EdgeOne bundle, mock); tapping Buddy cycles hop → hearts → bubble → bark → wave once Wave is earned (wave skipped when sleepy/attentive/dizzy/reduced motion); earned trick cards on Milestones make Buddy perform (sleepy Wave shows a gentle line); Souvenirs above Tricks. Routine decisions leave Home for the top of Milestones (995 and see-GP stay on Home); "Why?" in plain language, no rule ids | Branch `claude/tricks-decisions` (on top of `claude/buddy-clips`), PR pending |
 
@@ -78,6 +80,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | Item | Blocked on |
 |---|---|
+| T2-08 original pill photo on the hosted API | P1: run migration 005 (`pill_reference_*`) on Supabase (data change). Until then the API's queries that read the new columns fail (`GET /api/medications` lists `pill_reference_set`; set and verify read/write the new columns), so the medication list, setting the original and the proof check all fail on the hosted API (the phone shows its friendly lines). |
 | T1-17 production URL | P1: host the API and run migrations + fictional seed on the hosted database (Supabase has no Pawtner schema yet). Message drafted for the user to send 14 Oct. |
 | T1-15 caretaker list on the web (real data) | P1: `caregivers: { id, name, receivesCheckIns }[]` in `CaretakerSummaryResponse`, 3–4 seeded caretakers, check-in template in `shared/templates.ts`. Until then `/care` shows the API caregiver (gets check-ins) plus the mock updates-only slot `MOCK_UPDATES_ONLY_CARETAKER` in `mobile/src/care/data/mock.ts`. Also wanted: the senior's time zone in the summary (moment times use the viewer's zone). |
 

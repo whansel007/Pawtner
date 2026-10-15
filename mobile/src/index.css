@@ -772,7 +772,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 
 /* Medication list and edit on /care */
 .medication-list { display: grid; gap: 6px; }
-.medication-edit-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-radius: var(--radius-3xl); background: var(--color-surface-sage); }
+.medication-edit-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-radius: var(--radius-3xl); background: var(--color-surface-sage); }
 .medication-edit-row strong { font-size: var(--font-size-lg); }
 .medication-edit-row small { color: var(--color-text-body); font-size: var(--font-size-sm); }
 .medication-edit-form { display: grid; gap: 6px; width: 100%; }
