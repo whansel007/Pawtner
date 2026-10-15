@@ -70,6 +70,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | — | Sun hat worn over the head (wider crown, brim on the forehead); landscape Home cards rest above the dock | Branch `claude/hat-fit-landscape` |
 | T2-10 | Day/night follows the real clock (`lib/useDayPhase.ts`, re-checked every minute, demo clock overrides); twinkling knitted stars at night (`NightStars`, `config/stars.ts`, tentative positions) | Branch `claude/night-stars`, PR pending |
 | — | Demo time for filming: `?time=HH:MM` / `morning` / `evening` link and Settings > Demo "Morning (9:00)", "Evening (21:00)", "Real time" buttons (no agent run, no writes); 2 s day ↔ night cross-fade of the garden | Branch `claude/demo-time` (on top of `claude/night-stars`), PR pending |
+| — | Buddy video in-app: content Buddy waves on tap (`buddy-wave`), joyful Buddy waves once after "Give Buddy a heart" and on tap (`buddy-joyful`); transparent clips over the still (HEVC-alpha `.mov` on Safari, VP9-alpha `.webm` elsewhere), preloaded when Home is idle; no clip when sleepy/attentive or with reduced motion. Paw button barks (`bark.mp3`, user-supplied) and keeps its toast | Branch `claude/buddy-clips` (on top of `claude/hat-fit-landscape`), PR pending |
 
 ## Blocked
 
@@ -82,7 +83,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | Item | Note |
 |---|---|
-| Buddy video (KIV, resume 15 Oct) | User has ~1000 Miora credits. Plan: pitch/demo video clip first; optional in-app celebration card (MP4 with its own background, muted, plays once, still fallback). No transparent in-app dog video (iPhone Safari format issues). |
+| Buddy clips: Safari/WebKit check | The `.mov` (HEVC-alpha) path is untested: Playwright WebKit isn't installed here. Check on an iPhone (Safari) and macOS Safari that the wave plays with no black box and lines up with the still. Also: bark licence source to record. |
 | P1 hosting landed on `main` without a PR (15 Oct) | `cb/api-hosting-edgeone` is fully in `main` (`1fc0b53`); nothing left to merge. Reviewed: checks pass (typecheck, 73/73, build); Vercel preview and `pawtner.edgeone.dev` still front end only. Also touched P2-owned screens (Proof, Reminders, Settings via `App.tsx`) — agreed split says screen changes go through P2. Reminders now lists `DerivedDose[]` (mock offline); Settings caretaker name from the summary. |
 | Offline sample text still names people | `mobile/src/mock/care.ts`: "Two people, one Buddy"; activity "Mum took her lunchtime medicine and Buddy gained a heart." Shown only without the API. |
 | Seed history (merged #34, 15 Oct) | `migrations/seed.sql` now writes 10 days of fictional history relative to the run day (streak 7, 34 hearts before today). P1 must re-run `npm run db:seed` on the hosted DB **on the demo day** (it deletes and rewrites the two seed schedules' dose events; user told). |

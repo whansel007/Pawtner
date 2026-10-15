@@ -29,6 +29,7 @@ import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, DoseEvent, E
 import { api } from "./lib/api";
 import { requestDecision, buildAgentInputFromState } from "./lib/agent";
 import { useNavigation } from "./lib/useNavigation";
+import { useBark } from "./lib/useBark";
 import { useDayPhase } from "./lib/useDayPhase";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
 import { DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset } from "./config/demo";
@@ -97,6 +98,9 @@ export default function App() {
   const [savedMedicationId, setSavedMedicationId] = useState<string | undefined>(undefined);
   const [savedMedicationName, setSavedMedicationName] = useState<string>("");
   const [demoUnlockAll, setDemoUnlockAll] = useState(false);
+  // Bumped after each "Give Buddy a heart"; DogLayer then plays the joyful clip once on Home (if Buddy is joyful).
+  const [celebrateRequest, setCelebrateRequest] = useState(0);
+  const { bark } = useBark();
 
   /** GET /api/today. `now`: undefined = the current demo clock; null = real time; a string = that instant. */
   const refreshToday = async (now?: string | null) => {
@@ -293,6 +297,7 @@ export default function App() {
       setLatestDecision(await requestDecision(input));
     }
     navigate("home");
+    setCelebrateRequest((n) => n + 1);
     notify(t("toast.heartGained", { name: dogName }));
   }
 
@@ -346,6 +351,7 @@ export default function App() {
         dogName={dogName}
         dizzy={dizzy}
         accessory={<PetAccessory accessory={accessory} dogName={dogName} />}
+        celebrateRequest={celebrateRequest}
       />
       <TopZone onSettings={() => navigate("settings")} onHome={goHome} pet={livePet} />
       <div className="scene-chips">
@@ -390,7 +396,7 @@ export default function App() {
       <div className="bottom-dock" aria-hidden="true" />
       <BottomNav screen={screen} navigate={navigate} />
       <span className="woof-bubble">woof!</span>
-      <button className="add-button companion-button" onClick={() => notify(t("toast.hello", { name: dogName }))} aria-label={t("toast.hello", { name: dogName })}><Icon name="paw" size={29} /></button>
+      <button className="add-button companion-button" onClick={() => { bark(); notify(t("toast.hello", { name: dogName })); }} aria-label={t("toast.hello", { name: dogName })}><Icon name="paw" size={29} /></button>
       {toast && <div className="toast">{toast}</div>}
         </>
       )}

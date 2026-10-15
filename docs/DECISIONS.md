@@ -1,5 +1,14 @@
 # Decisions
 
+## 2026-10-15 — Buddy clips and bark
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Buddy's video clips are transparent videos laid over the still dog art, not a card with its own background. The browser gets ONE file: Apple WebKit (`navigator.vendor` has "Apple") with `canPlayType('video/mp4; codecs="hvc1"')` → HEVC-alpha `.mov`; otherwise `canPlayType('video/webm; codecs="vp9"')` → VP9-alpha `.webm`; neither → no clip (the still stays). `pickClipSource` in `mobile/src/lib/buddyClips.ts`, unit-tested. | Safari can't draw VP9 alpha and Chrome can't draw HEVC alpha (black box), so `<source>` fallbacks would pick the wrong one. Replaces the 15 Oct KIV plan's "no transparent in-app dog video". | Two files per clip (~1.6 MB webm, ~2.5 MB mov). The `.mov` path is not tested yet (no WebKit here). | Tentative |
+| Clip triggers: a tap while **content** plays the wave; while **joyful** a tap replays the joyful clip; after "Give Buddy a heart" Home plays the joyful clip once if it shows the joyful mood (otherwise the request is dropped). Never when sleepy (other face) or attentive (calm), never under reduced motion or while dizzy, never on load. Each tap still advances the reaction rotation: the clip replaces hop and hearts (they move or cover the dog), while the bubble line and the bark sound still come with it. Taps during a clip are ignored (cooldown). | Least surprising: Buddy always answers a tap the same way in a mood, and the bubble text and bark stay part of the rotation. | A content tap no longer shows hop or hearts (they still play when no clip can play, e.g. reduced motion or an unsupported browser). | Tentative |
+| Clip playback: the `<video>` mounts only on a trigger, sits in the art's canvas box (`CLIP_CANVAS` in `config/clips.ts`: 1000×1300 art padded 100 left/right, 30 top → left −10%, width 120%, top −2.31%, height 102.31%), stays invisible until `playing`, then the still hides (opacity) and mood motion pauses; the accessory fades out over 150 ms (it can't follow the clip's head) and back in with the still; on `ended`, error, a rejected `play()` or a 7 s safety timeout the still returns and the video unmounts. Both clips preload (detached `<video preload="auto">`) when Home is idle. | No blank flash, no fight between breathe/hop and the clip, nothing blocks first paint. | Preloading fetches ~3.2 MB (Chromium) on every Home visit's first idle moment, even if Buddy is never tapped. | Tentative |
+| The bark is on: `mobile/public/assets/bark.mp3` (0.95 s, 12 KB) is supplied by the user as CC0. One shared hook, `lib/useBark.ts` (one Audio element), serves the tap rotation and the round paw button (which keeps its hello toast). `PET_REACTIONS.soundOn` stays `true`; a file that fails to load drops the bark; `play()` rejections are ignored. | User asked for the paw button to bark. | Licence source not recorded yet. | Tentative (licence source pending) |
+
 ## 2026-10-15 — Fictional seed history
 
 | Decision | Reason | Tradeoff | Status |
@@ -101,7 +110,7 @@
 | The 995 message shows "995" in large text but is **not** a `tel:` link. | Demo safety: no accidental real emergency calls on stage. | A real user would want tap-to-call; revisit before any real use. | Tentative |
 | The 995 and GP wording comes from `decision.wording` (`shared/templates.ts`), never from components or `en.json`. | One source of truth; the emergency path never calls the model. | That wording isn't translated through i18n yet. | Final |
 | Tapping the dog plays reactions in turn: hop → hearts → speech bubble → bark. No playful reaction when mood is attentive; with reduced motion, only the bubble and bark. Order, timings and sound path in `mobile/src/config/pet.ts`. | User request: "alternation of all the above"; PRD §7.6 keeps attentive moments calm. | Hearts are decoration only and don't change the heart score. | Tentative until built |
-| The bark plays only if a licence-free `mobile/public/assets/bark.mp3` exists; CodeBuddy must not download audio. | Unknown licences on downloaded sound files. | No bark until the user supplies a file. | Final |
+| The bark plays only if a licence-free `mobile/public/assets/bark.mp3` exists; CodeBuddy must not download audio. | Unknown licences on downloaded sound files. | No bark until the user supplies a file. | Final (file supplied by the user 15 Oct, see "Buddy clips and bark") |
 | Tap-the-dog is bundled with T1-10/12 in one branch. | User's choice: both touch `DogStage` and mood. | A bigger PR to review. | Final |
 
 ## 2026-10-14 — Caretakers on `/care`

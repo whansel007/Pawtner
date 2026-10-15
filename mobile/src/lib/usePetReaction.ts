@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PET_REACTIONS, PET_REACTIONS_REDUCED_MOTION, type PetReactionKind } from "../config/pet";
+import type { BuddyClipKind } from "../config/clips";
 import type { DogMood } from "../../../shared/contract";
+import { useBark } from "./useBark";
+import { useReducedMotion } from "./useReducedMotion";
 
 export interface PetReactionState {
   /** The current reaction being played, or null when idle. */
@@ -11,55 +14,38 @@ export interface PetReactionState {
   bubbleLineIndex: number;
 }
 
+/** The clip side of a tap, from useBuddyClip. */
+export interface TapClip {
+  /** The clip a tap plays now, or null (the tap uses the normal rotation only). */
+  kind: BuddyClipKind | null;
+  /** true while a clip is on screen: taps wait, like the reaction cooldown. */
+  busy: boolean;
+  play: (kind: BuddyClipKind) => void;
+}
+
+/** Reactions a clip replaces: both move or cover the dog, which would fight the clip. */
+const CLIP_REPLACES: readonly PetReactionKind[] = ["hop", "hearts"];
+
 /**
- * Owns the pet-reaction rotation index, cooldown (ignore taps while a reaction
- * is playing), and the bark audio side effect.
+ * Owns the pet-reaction rotation index and cooldown (ignore taps while a reaction or clip is playing).
+ * The bark sound comes from useBark (shared with the paw button).
  *
  * Rules:
  * - mood "attentive" → tapping does nothing playful (no reaction at all).
  * - prefers-reduced-motion → rotate only through bubble and bark.
- * - bark is dropped from the rotation up front when sound is off or the file
- *   failed to load; never throws.
+ * - bark is dropped from the rotation when sound is off or the file failed to load; never throws.
  * - Each tap plays exactly the next reaction with its own duration.
+ * - When a clip can play (content → wave, joyful → joyful), every tap plays it; the rotation still advances:
+ *   hop and hearts are replaced by the clip, the bubble line and the bark sound still come with it.
  * - The bubble line advances on every bubble; the first bubble shows line 1.
- *
- * Effects are split: the audio setup effect never clears the reaction timer.
- * The reaction timer is cleared only in a separate unmount effect, so when
- * audio fails mid-bark the reaction still ends after its own duration.
  */
-export function usePetReaction(mood: DogMood, dogName: string): PetReactionState {
+export function usePetReaction(mood: DogMood, clip?: TapClip): PetReactionState {
   const [active, setActive] = useState<PetReactionKind | null>(null);
   const [bubbleLineIndex, setBubbleLineIndex] = useState(0);
-  const [audioFailed, setAudioFailed] = useState(!PET_REACTIONS.soundOn);
   const indexRef = useRef(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Check reduced-motion preference.
-  const reducedMotion = typeof window !== "undefined"
-    && typeof window.matchMedia === "function"
-    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  // Audio setup effect: creates the Audio element for bark. Never throws.
-  // Does NOT clear the reaction timer — that is handled by a separate effect.
-  useEffect(() => {
-    if (audioRef.current || audioFailed || !PET_REACTIONS.soundOn) return;
-    if (typeof Audio === "undefined") {
-      setAudioFailed(true);
-      return;
-    }
-    try {
-      const audio = new Audio(PET_REACTIONS.barkSoundPath);
-      audio.preload = "auto";
-      const onError = () => setAudioFailed(true);
-      audio.addEventListener("error", onError);
-      // If the browser has already set an error (e.g. from a previous cached failure), mark it now.
-      if (audio.error) onError();
-      audioRef.current = audio;
-    } catch {
-      setAudioFailed(true);
-    }
-  }, [audioFailed]);
+  const reducedMotion = useReducedMotion();
+  const { available: barkAvailable, bark } = useBark();
 
   // Unmount-only cleanup: clear the reaction timer so it does not fire after unmount.
   useEffect(() => {
@@ -68,50 +54,37 @@ export function usePetReaction(mood: DogMood, dogName: string): PetReactionState
     };
   }, []);
 
-  // Build the available rotation up front: drop "bark" when sound is off or
-  // the file failed to load.
+  // Build the available rotation up front: drop "bark" when sound is off or the file failed to load.
   const rotation = useMemo(() => {
-    const base = reducedMotion
-      ? PET_REACTIONS_REDUCED_MOTION
-      : PET_REACTIONS.order;
-    return PET_REACTIONS.soundOn && !audioFailed
-      ? base
-      : base.filter((r) => r !== "bark");
-  }, [reducedMotion, audioFailed]);
+    const base = reducedMotion ? PET_REACTIONS_REDUCED_MOTION : PET_REACTIONS.order;
+    return barkAvailable ? base : base.filter((r) => r !== "bark");
+  }, [reducedMotion, barkAvailable]);
 
   const onTap = useCallback(() => {
     // Attentive mood: no playful reactions at all.
     if (mood === "attentive") return;
-    // Cooldown: ignore taps while a reaction is playing.
-    if (active !== null) return;
+    // Cooldown: ignore taps while a reaction or a clip is playing.
+    if (active !== null || clip?.busy) return;
     if (rotation.length === 0) return;
 
     const kind = rotation[indexRef.current % rotation.length];
     indexRef.current += 1;
 
-    if (kind === "bubble") {
-      // bubbleLineIndex is the line to show on THIS bubble (0-based).
-      // It advances for the next bubble when this reaction ends.
-      setActive("bubble");
-    } else {
-      if (kind === "bark") {
-        const audio = audioRef.current;
-        if (audio) {
-          audio.currentTime = 0;
-          audio.play().catch(() => {
-            setAudioFailed(true);
-          });
-        }
-      }
-      setActive(kind);
+    if (clip?.kind) {
+      clip.play(clip.kind);
+      // The clip is the visual; its own end (or safety stop) is the cooldown.
+      if (CLIP_REPLACES.includes(kind)) return;
     }
 
-    const duration = PET_REACTIONS.duration[kind];
+    if (kind === "bark") bark();
+    // bubbleLineIndex is the line to show on THIS bubble (0-based); it advances when the bubble ends.
+    setActive(kind);
+
     timerRef.current = setTimeout(() => {
       setActive(null);
       if (kind === "bubble") setBubbleLineIndex((prev) => prev + 1);
-    }, duration);
-  }, [mood, active, rotation]);
+    }, PET_REACTIONS.duration[kind]);
+  }, [mood, active, rotation, clip, bark]);
 
   return { active, onTap, bubbleLineIndex };
 }

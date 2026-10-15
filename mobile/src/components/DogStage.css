@@ -117,6 +117,51 @@
     radial-gradient(closest-side, rgba(var(--shadow-ink), 0.5), rgba(var(--shadow-ink), 0)) right / 28% 100% no-repeat;
 }
 
+/*
+ * Buddy clip: a transparent video over the still. Like the ground layer, the canvas box has the art's 1000x1300 shape
+ * and is bottom-aligned, so it matches the drawn art even when max-width narrows the image. The video frame is that
+ * canvas padded on the sides and top (config/clips.ts CLIP_CANVAS); the offsets arrive as --clip-* from DogStage.
+ * The video stays invisible until it is really playing; then the still hides under it (opacity only).
+ */
+.dog-stage__clip-canvas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  aspect-ratio: var(--clip-canvas-aspect, 1000 / 1300);
+  pointer-events: none;
+}
+
+.dog-stage__clip {
+  position: absolute;
+  left: var(--clip-left);
+  top: var(--clip-top);
+  width: var(--clip-width);
+  height: var(--clip-height);
+  max-width: none;
+  display: block;
+  object-fit: fill;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dog-stage.is-clip-visible .dog-stage__clip { opacity: 1; }
+.dog-stage.is-clip-visible .dog-stage__image { opacity: 0; }
+
+/*
+ * The accessory (hat, glasses, flower) is placed on the still art and can't follow the clip's moving head,
+ * so it fades out when the clip shows and back in when the still returns. Same box as the dog image.
+ */
+.dog-stage__accessory {
+  --accessory-fade: 150ms;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity var(--accessory-fade) ease;
+}
+
+.dog-stage.is-clip-visible .dog-stage__accessory { opacity: 0; }
+
 /* ── Mood motion: transform and opacity only ── */
 .dog-stage--content .dog-stage__body { animation: dog-breathe 3.6s ease-in-out infinite; }
 .dog-stage--joyful .dog-stage__body { animation: dog-hop-mood 1.6s ease-in-out infinite; }
@@ -126,6 +171,11 @@
 /* While the dog is in the air its shadow tightens and fades, and the paw creases lift off; same timing as the hop. */
 .dog-stage--joyful .dog-stage__ground { animation: ground-hop-mood 1.6s ease-in-out infinite; }
 .dog-stage--joyful .dog-stage__paw-shadow { animation: paw-shadow-hop-mood 1.6s ease-in-out infinite; }
+
+/* While a clip is on screen the still rests in its base pose (the clip's first and last frame), so they don't fight. */
+.dog-stage.has-clip .dog-stage__body,
+.dog-stage.has-clip .dog-stage__ground,
+.dog-stage.has-clip .dog-stage__paw-shadow { animation: none; }
 
 /* ── Tap reactions (transform + opacity only) ── */
 
@@ -314,6 +364,11 @@
   .dog-stage__heart {
     opacity: 0;
   }
+  /* No clips under reduced motion (useBuddyClip never starts one); this is the still fallback if one slips through. */
+  .dog-stage__clip-canvas { display: none; }
+  .dog-stage.is-clip-visible .dog-stage__image,
+  .dog-stage.is-clip-visible .dog-stage__accessory { opacity: 1; }
+  .dog-stage__accessory { transition: none; }
   /* Its own rule: a browser without :has() drops only this one. */
   .dog-stage__figure:has(.is-hop) .dog-stage__ground,
   .dog-stage__figure:has(.is-hop) .dog-stage__paw-shadow {
