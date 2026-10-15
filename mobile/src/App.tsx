@@ -30,6 +30,9 @@ import { api } from "./lib/api";
 import { requestDecision, buildAgentInputFromState } from "./lib/agent";
 import { useNavigation } from "./lib/useNavigation";
 import { useDayPhase } from "./lib/useDayPhase";
+import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
+import { DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset } from "./config/demo";
+import { SENIOR_TIMEZONE } from "./config/scene";
 import type { World, Accessory } from "./types";
 import type { WalkCompletion } from "./lib/walkState";
 import {
@@ -51,9 +54,16 @@ import {
   heartsTotal as mockHeartsTotal,
 } from "./mock";
 
-function toDateTimeLocal(date: Date): string {
-  const pad = (value: number) => String(value).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+let demoParamWarned = false;
+
+/** `?time=HH:MM|morning|evening` → demo clock instant (today in the senior's timezone). Read once, on load. */
+function initialDemoNow(): string | null {
+  const { demoNow, rejected } = demoNowFromSearch(window.location.search, DEMO_TIME_PARAM, DEMO_TIME_PRESETS, new Date(), SENIOR_TIMEZONE);
+  if (rejected !== null && !demoParamWarned) {
+    demoParamWarned = true;
+    console.warn(`Pawtner: ignoring ?${DEMO_TIME_PARAM}=${rejected} (use HH:MM in 24-hour time, or ${Object.keys(DEMO_TIME_PRESETS).join(" / ")}).`);
+  }
+  return demoNow;
 }
 
 /** Heart count from the local dose list; used only until /api/today has answered. */
@@ -79,16 +89,19 @@ export default function App() {
   const [dizzy, setDizzy] = useState(false);
   // One friendly notice per outage; the technical error goes to the console, never to the senior.
   const apiWarned = useRef(false);
-  const [demoNow, setDemoNow] = useState<string | null>(null);
-  const [demoClockValue, setDemoClockValue] = useState(() => toDateTimeLocal(new Date()));
+  // Demo clock: null = real time. `?time=` sets it on load (no agent run, no writes); see config/demo.ts.
+  const [demoNow, setDemoNow] = useState<string | null>(initialDemoNow);
+  const [demoClockValue, setDemoClockValue] = useState(() => toDateTimeLocal(demoNow ? new Date(demoNow) : new Date()));
   const [agentBusy, setAgentBusy] = useState(false);
   const [escalationSettings, setEscalationSettings] = useState<EscalationSettingsResponse | null>(null);
   const [savedMedicationId, setSavedMedicationId] = useState<string | undefined>(undefined);
   const [savedMedicationName, setSavedMedicationName] = useState<string>("");
   const [demoUnlockAll, setDemoUnlockAll] = useState(false);
 
-  const refreshToday = async (now?: string) => {
-    try { const result = await api.today(now ?? demoNow ?? undefined); setToday(result); setDoseList(result.doses); setBpLogged(result.bloodPressureLoggedToday); setLatestDecision(result.latestDecision); apiWarned.current = false; }
+  /** GET /api/today. `now`: undefined = the current demo clock; null = real time; a string = that instant. */
+  const refreshToday = async (now?: string | null) => {
+    const at = now === undefined ? demoNow : now;
+    try { const result = await api.today(at ?? undefined); setToday(result); setDoseList(result.doses); setBpLogged(result.bloodPressureLoggedToday); setLatestDecision(result.latestDecision); apiWarned.current = false; }
     catch (error) { reportApiProblem(error); }
   };
   useEffect(() => { void refreshToday(); }, []);
@@ -304,6 +317,19 @@ export default function App() {
     }
   };
 
+  /**
+   * Settings > Demo quick buttons: jump the scene to a preset time today (senior's timezone), or back to real time (null).
+   * Only reads (GET /api/today); unlike runAgentAtDemoTime it never runs the agent or writes a decision.
+   */
+  const setDemoTime = (preset: DemoTimePreset | null) => {
+    const time = preset ? parseDemoTime(DEMO_TIME_PRESETS[preset], DEMO_TIME_PRESETS) : null;
+    const now = time ? demoInstantToday(time, new Date(), SENIOR_TIMEZONE) : null;
+    setDemoNow(now);
+    setDemoClockValue(toDateTimeLocal(now ? new Date(now) : new Date()));
+    void refreshToday(now);
+    navigate("home");
+  };
+
   return (
     <>
     <DesktopBackdrop phase={phase} />
@@ -358,7 +384,7 @@ export default function App() {
         {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }], doctorQuestion: careSummary.doctorQuestions[0]?.note ?? weekSummary.doctorQuestion } : weekSummary} />}
-        {screen === "settings" && <SettingsScreen back={back} addMedication={() => navigate("prescription")} openCaretaker={() => navigate("care")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} demoUnlockAll={demoUnlockAll} onToggleDemoUnlockAll={() => setDemoUnlockAll((v) => !v)} />}
+        {screen === "settings" && <SettingsScreen back={back} addMedication={() => navigate("prescription")} openCaretaker={() => navigate("care")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} demoUnlockAll={demoUnlockAll} onToggleDemoUnlockAll={() => setDemoUnlockAll((v) => !v)} demoTimeActive={demoNow !== null} onDemoTime={setDemoTime} />}
         {screen === "customize" && <CustomizeScreen back={back} onHome={goHome} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(nextWorld === "flat" ? t("toast.worldFlat", { name: dogName }) : nextWorld === "garden" ? t("toast.worldGarden", { name: dogName }) : t("toast.worldKampung", { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: t(`accessory.${nextAccessory}`) })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} caretakerName={caretakerName} heartsTotal={heartsTotal} demoUnlockAll={demoUnlockAll} notify={notify} />}
       </div>
       <div className="bottom-dock" aria-hidden="true" />

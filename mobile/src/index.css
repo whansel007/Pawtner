@@ -417,6 +417,10 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .demo-clock-card .consent-toggle { display: flex; align-items: flex-start; gap: 10px; line-height: 1.35; }
 .demo-clock-card .consent-toggle input { width: 22px; min-height: 22px; margin: 0; accent-color: #668b70; }
 .demo-clock-card .primary-button { margin-top: 2px; }
+/* Settings > Demo time buttons: share the row, wrap onto a second line on narrow phones. */
+.demo-time-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.demo-time-buttons .secondary-button { flex: 1 1 auto; width: auto; min-height: 48px; padding: 0 12px; font-size: var(--font-size-sm); white-space: nowrap; }
+.demo-time-buttons .secondary-button:disabled { opacity: .45; cursor: default; }
 .role-strip { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-bottom: 12px; padding: 12px 14px; border-radius: var(--radius-3xl); color: #426653; background: var(--color-surface-sage-light); }
 .role-strip div { display: grid; }
 .role-strip small { color: #76847b; font-size: var(--font-size-sm); }
