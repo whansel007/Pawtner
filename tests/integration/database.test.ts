@@ -39,7 +39,7 @@ dbDescribe("Postgres migrations and seed", () => {
     await client.query(migrationSql);
     await client.query(seedSql);
     const result = await client.query("SELECT name FROM users");
-    expect(result.rows).toEqual([{ name: "Siew Lan" }]);
+    expect(result.rows).toEqual([{ name: "Rose" }]);
   });
 
   it("rejects caretaker thresholds below two in the database", async () => {

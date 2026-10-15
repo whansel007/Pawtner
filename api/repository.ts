@@ -26,6 +26,10 @@ import type {
   MedicationListResponse,
   MedicineExplanationResponse,
   MilestonesResponse,
+  PillDescribeRequest,
+  PillDescribeResponse,
+  PillVerifyRequest,
+  PillVerifyResponse,
   SouvenirResponse,
   TodayResponse,
   TreatResponse,
@@ -766,7 +770,7 @@ export class PawtnerRepository {
 
   private async rephraseWithModel(sourceText: string, medicineName: string): Promise<string | null> {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3_000);
+    const timeout = setTimeout(() => controller.abort(), 15_000);
     try {
       const response = await fetch(`${process.env.LLM_BASE_URL}/chat/completions`, {
         method: "POST",
@@ -780,7 +784,7 @@ export class PawtnerRepository {
             { role: "system", content: "You rephrase trusted medicine information into warm, simple language for seniors. Do not add new numbers, doses, medicine names, or medical advice. Do not diagnose." },
             { role: "user", content: `Rephrase this in one or two short sentences: ${sourceText}` },
           ],
-          max_tokens: 150,
+          max_tokens: 2000,
         }),
         signal: controller.signal,
       });
@@ -979,4 +983,107 @@ export class PawtnerRepository {
       },
     };
   }
+
+  // ── T2-08: Pill photo recognition (demo only) ──
+
+  async describePill(request: PillDescribeRequest): Promise<PillDescribeResponse> {
+    if (!process.env.LLM_API_KEY || !process.env.LLM_BASE_URL) {
+      throw new ApiError(503, "LLM API is not configured. Set LLM_API_KEY and LLM_BASE_URL.");
+    }
+    const userId = await this.getDefaultUserId();
+    const existing = await this.pool.query(
+      "SELECT pill_description FROM medications WHERE id = $1 AND user_id = $2",
+      [request.medicationId, userId],
+    );
+    if (!existing.rowCount) throw new ApiError(404, "Medication not found.");
+    const description = await this.describePillWithVision(request.imageBase64, request.mimeType);
+    if (!description) throw new ApiError(502, "The vision model did not return a description.");
+    await this.pool.query(
+      "UPDATE medications SET pill_description = $2, pill_described_at = now() WHERE id = $1",
+      [request.medicationId, description],
+    );
+    return {
+      medicationId: request.medicationId,
+      description,
+      isNew: !existing.rows[0].pill_description,
+    };
+  }
+
+  async verifyPill(request: PillVerifyRequest): Promise<PillVerifyResponse> {
+    if (!process.env.LLM_API_KEY || !process.env.LLM_BASE_URL) {
+      throw new ApiError(503, "LLM API is not configured. Set LLM_API_KEY and LLM_BASE_URL.");
+    }
+    const userId = await this.getDefaultUserId();
+    const result = await this.pool.query(
+      "SELECT pill_description FROM medications WHERE id = $1 AND user_id = $2",
+      [request.medicationId, userId],
+    );
+    if (!result.rowCount) throw new ApiError(404, "Medication not found.");
+    const savedDescription = result.rows[0].pill_description;
+    if (!savedDescription) throw new ApiError(409, "No saved description for this medication. Call /api/pill-describe first.");
+    const newDescription = await this.describePillWithVision(request.imageBase64, request.mimeType);
+    if (!newDescription) throw new ApiError(502, "The vision model did not return a description.");
+    const savedKeywords = new Set(extractKeywords(savedDescription));
+    const newKeywords = new Set(extractKeywords(newDescription));
+    const intersection = [...newKeywords].filter((k) => savedKeywords.has(k));
+    const union = new Set([...savedKeywords, ...newKeywords]);
+    const similarity = union.size > 0 ? intersection.length / union.size : 0;
+    return {
+      medicationId: request.medicationId,
+      match: similarity >= 0.5,
+      savedDescription,
+      newDescription,
+      similarity,
+    };
+  }
+
+  private async describePillWithVision(imageBase64: string, mimeType: string): Promise<string | null> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
+    try {
+      const dataUrl = `data:${mimeType};base64,${imageBase64}`;
+      const response = await fetch(`${process.env.LLM_BASE_URL}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${process.env.LLM_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: process.env.LLM_VISION_MODEL ?? process.env.LLM_MODEL ?? "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: "You describe a pill or medicine in a photo for a medication safety demo. List key visual characteristics: colour, shape, markings, imprint text, size, coating, score line. Be concise (2-3 short sentences). Do not identify the drug or give medical advice.",
+            },
+            {
+              role: "user",
+              content: [
+                { type: "text", text: "Describe the key visual characteristics of the medicine in this photo." },
+                { type: "image_url", image_url: { url: dataUrl } },
+              ],
+            },
+          ],
+          max_tokens: 2000,
+        }),
+        signal: controller.signal,
+      });
+      if (!response.ok) return null;
+      const payload = await response.json() as { choices?: { message?: { content?: string } }[] };
+      const text = payload.choices?.[0]?.message?.content?.trim();
+      return text || null;
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+}
+
+/** Extract lowercase keywords from a pill description for fuzzy comparison. */
+function extractKeywords(text: string): string[] {
+  const stopWords = new Set(["the", "a", "an", "is", "are", "with", "and", "of", "to", "in", "on", "it", "this", "that", "pill", "medicine", "tablet", "capsule", "photo"]);
+  return text.toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word.length >= 3 && !stopWords.has(word));
 }

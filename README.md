@@ -47,9 +47,10 @@ All values in `.env.example` are blank. Never commit a real `.env` or a credenti
 |---|---|
 | `DATABASE_URL` | Pooled Supabase Postgres connection for the deployed API and optional integration tests. |
 | `DATABASE_URL_DIRECT` | Direct Supabase Postgres connection for migrations and seeding. |
-| `LLM_BASE_URL` | OpenAI-compatible TokenHub API base URL. |
-| `LLM_MODEL` | Selected TokenHub model identifier. |
-| `LLM_API_KEY` | TokenHub credential; optional for deterministic rules and templates. |
+| `LLM_BASE_URL` | OpenAI-compatible LLM API base URL. NVIDIA free endpoint: `https://integrate.api.nvidia.com/v1` (get a key at [build.nvidia.com](https://build.nvidia.com)). |
+| `LLM_MODEL` | Text model identifier for rephrasing/wording. NVIDIA recommendation: `nvidia/nemotron-3-ultra-550b-a55b` (high quality) or `nvidia/nemotron-3.5-lightning-30b-a3b` (reasoning, fast). |
+| `LLM_VISION_MODEL` | Vision model identifier for pill description/verification. Falls back to `LLM_MODEL`. NVIDIA recommendation: `meta/muse-glimmer-30b` (multimodal reasoning). |
+| `LLM_API_KEY` | LLM API key; optional for deterministic rules and templates. |
 | `VITE_API_BASE_URL` | API base URL used by the Vite application. |
 
 ## Demo thresholds and decisions

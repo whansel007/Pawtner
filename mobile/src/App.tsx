@@ -32,7 +32,6 @@ import type { World, Accessory } from "./types";
 import type { WalkCompletion } from "./lib/walkState";
 import {
   pet,
-  doses,
   todayDoses,
   demoUser,
   demoDog,
@@ -331,17 +330,17 @@ export default function App() {
           />
         )}
         {screen === "care" && <CareScreen back={back} sendTreat={handleSendTreat} pet={livePet} caregiver={liveCaregiver} careActivity={liveCareActivity} restockAlert={restockAlert} />}
-        {screen === "reminders" && <RemindersScreen back={back} doses={doses} />}
+        {screen === "reminders" && <RemindersScreen back={back} doses={doseList} />}
         {screen === "prescription" && <PrescriptionScreen back={back} onHome={goHome} onExplain={handleExplainMedicine} onSaved={handleMedicationSaved} petName={dogName} />}
         {screen === "explanation" && <ExplanationScreen back={back} onContinue={() => navigate("schedule")} medicineName={savedMedicationName} />}
         {screen === "schedule" && <ScheduleScreen back={back} onConfirm={handleScheduleConfirmed} petName={dogName} medicationId={savedMedicationId} />}
-        {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} />}
+        {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} medicationId={pendingDose?.medicationId} />}
         {screen === "walk" && <WalkScreen back={back} walkStats={walkStats} petName={dogName} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
         {screen === "milestones" && <MilestonesScreen back={back} onWalk={() => navigate("walk")} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} />}
         {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }], doctorQuestion: careSummary.doctorQuestions[0]?.note ?? weekSummary.doctorQuestion } : weekSummary} />}
-        {screen === "settings" && <SettingsScreen back={back} addMedication={() => navigate("prescription")} openCaretaker={() => navigate("care")} openReminders={() => navigate("reminders")} caregiver={caregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} />}
+        {screen === "settings" && <SettingsScreen back={back} addMedication={() => navigate("prescription")} openCaretaker={() => navigate("care")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} />}
         {screen === "customize" && <CustomizeScreen back={back} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(nextWorld === "flat" ? t("toast.worldFlat", { name: dogName }) : nextWorld === "garden" ? t("toast.worldGarden", { name: dogName }) : t("toast.worldKampung", { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: nextAccessory })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} />}
       </div>
       <div className="bottom-dock" aria-hidden="true" />

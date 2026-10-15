@@ -10,14 +10,18 @@ import type {
   MedicationListResponse,
   MedicineExplanationResponse,
   MilestonesResponse,
+  PillDescribeResponse,
+  PillVerifyResponse,
   SouvenirResponse,
   TodayResponse,
   TreatResponse,
   WalkSessionResponse,
 } from "../../../shared/contract";
 
+const BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`/api${path}`, { ...init, headers: { "content-type": "application/json", ...init?.headers } });
+  const response = await fetch(`${BASE}/api${path}`, { ...init, headers: { "content-type": "application/json", ...init?.headers } });
   const payload = await response.json();
   if (!response.ok) throw new Error(payload.error ?? `Request failed (${response.status})`);
   return payload as T;
@@ -56,4 +60,10 @@ export const api = {
 
   // T2-12: Milestones
   milestones: () => request<MilestonesResponse>("/milestones"),
+
+  // T2-08: Pill photo recognition (demo only)
+  describePill: (medicationId: string, imageBase64: string, mimeType: string) =>
+    request<PillDescribeResponse>("/pill-describe", { method: "POST", body: JSON.stringify({ medicationId, imageBase64, mimeType }) }),
+  verifyPill: (medicationId: string, imageBase64: string, mimeType: string) =>
+    request<PillVerifyResponse>("/pill-verify", { method: "POST", body: JSON.stringify({ medicationId, imageBase64, mimeType }) }),
 };

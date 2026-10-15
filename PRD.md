@@ -30,7 +30,7 @@ Behind the dog is an agent that checks the routine, decides when to nudge, refus
 | **Senior** (primary) | Phone only | Remember doses, understand medicines, feel encouraged, never scolded | Big type, touch targets of at least 48 px, minimal words, read-aloud, warm tone |
 | **Caretaker** (secondary) | Web | Know things are OK, edit the routine, be told only when it matters | Weekly summaries, escalation settings, no medicine details in alerts |
 
-Names are always data, never code: the senior may be "Mum" or "Dad", the dog and caretaker can have any name. The demo uses fictional people: senior "Siew Lan" ("Mum"), caretaker "Jamie", dog "Max".
+Names are always data, never code: the senior may be "Mum" or "Dad", the dog and caretaker can have any name. The demo uses fictional people: senior "Rose" ("Mum"), caretaker "Jamie", dog "Buddy".
 
 ## 4. Goals and non-goals
 

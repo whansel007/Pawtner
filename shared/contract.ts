@@ -251,6 +251,46 @@ export interface MedicineExplanationResponse {
   wordingSource: "trusted" | "model" | "fallback";
 }
 
+// ── T2-08: Pill photo recognition (demo only) ──
+
+export interface PillDescribeRequest {
+  /** Medication ID to associate the description with. */
+  medicationId: string;
+  /** Base64-encoded image data (without the data: prefix). */
+  imageBase64: string;
+  /** MIME type of the image, e.g. "image/jpeg". */
+  mimeType: string;
+}
+
+export interface PillDescribeResponse {
+  medicationId: string;
+  /** The LLM-generated visual description of the pill. */
+  description: string;
+  /** Whether this is the first description or a re-description. */
+  isNew: boolean;
+}
+
+export interface PillVerifyRequest {
+  /** Medication ID whose saved description to compare against. */
+  medicationId: string;
+  /** Base64-encoded image data (without the data: prefix). */
+  imageBase64: string;
+  /** MIME type of the image, e.g. "image/jpeg". */
+  mimeType: string;
+}
+
+export interface PillVerifyResponse {
+  medicationId: string;
+  /** Whether the new description matches the saved one. */
+  match: boolean;
+  /** The saved description from the first time. */
+  savedDescription: string | null;
+  /** The description generated from this photo. */
+  newDescription: string;
+  /** Similarity score 0–1 (fraction of matching keywords). */
+  similarity: number;
+}
+
 // ── T2-09: Souvenirs ──
 
 export interface SouvenirResponse {

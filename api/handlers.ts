@@ -1,5 +1,5 @@
 import { ApiError, PawtnerRepository } from "./repository.js";
-import type { AgentDecideRequest, CreateMedicationRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, WalkSessionRequest } from "../shared/contract.js";
+import type { AgentDecideRequest, CreateMedicationRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, PillDescribeRequest, PillVerifyRequest, WalkSessionRequest } from "../shared/contract.js";
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 async function body<T>(request: Request): Promise<T> {
@@ -89,6 +89,17 @@ export function createApiHandler(repository: PawtnerRepository) {
       }
       // ── T2-12: Milestones derived from data ──
       if (request.method === "GET" && url.pathname === "/api/milestones") return json(await repository.getMilestones());
+      // ── T2-08: Pill photo recognition (demo only) ──
+      if (request.method === "POST" && url.pathname === "/api/pill-describe") {
+        const data = await body<PillDescribeRequest>(request);
+        if (!requiredString(data.medicationId) || !requiredString(data.imageBase64) || !requiredString(data.mimeType)) throw new ApiError(400, "medicationId, imageBase64 and mimeType are required.");
+        return json(await repository.describePill(data), 201);
+      }
+      if (request.method === "POST" && url.pathname === "/api/pill-verify") {
+        const data = await body<PillVerifyRequest>(request);
+        if (!requiredString(data.medicationId) || !requiredString(data.imageBase64) || !requiredString(data.mimeType)) throw new ApiError(400, "medicationId, imageBase64 and mimeType are required.");
+        return json(await repository.verifyPill(data));
+      }
       return json({ error: "Route not found." }, 404);
     } catch (error) {
       if (error instanceof ApiError) return json({ error: error.message }, error.status);

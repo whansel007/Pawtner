@@ -1,7 +1,7 @@
 BEGIN;
 
 INSERT INTO users (id, name, timezone) VALUES
-  ('00000000-0000-4000-8000-000000000001', 'Siew Lan', 'Asia/Singapore')
+  ('00000000-0000-4000-8000-000000000001', 'Rose', 'Asia/Singapore')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO caregivers (id, name) VALUES
@@ -15,7 +15,7 @@ INSERT INTO user_caregivers (user_id, caregiver_id, opted_in, threshold) VALUES
 ON CONFLICT (user_id, caregiver_id) DO NOTHING;
 
 INSERT INTO dogs (id, user_id, name, heart, streak, mood) VALUES
-  ('00000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-000000000001', 'Max', 2, 0, 'content')
+  ('00000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-000000000001', 'Buddy', 2, 0, 'content')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO medications (id, user_id, name, strength, days_of_supply) VALUES
