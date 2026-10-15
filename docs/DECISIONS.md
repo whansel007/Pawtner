@@ -22,6 +22,13 @@
 |---|---|---|---|
 | Vercel project `pawtner-mobile` stays on Root Directory `mobile` (front end only) after P1's root `vercel.json` landed on `main`. Switching to the repo root, to serve `api/[...path].ts` from the same origin, waits for the hosted database to be migrated and `DATABASE_URL` to be set. | The root config is ignored today, so production and `/care` deep links keep working (preview from `1fc0b53` checked); switching early would only turn offline mode into failing function calls. | No hosted API until someone switches the setting; two `vercel.json` files to keep in sync meanwhile. | Tentative, user's call |
 
+## 2026-10-15 — Day/night by the real clock, twinkling knitted stars (T2-10)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| The garden follows the real clock: `lib/useDayPhase.ts` re-checks every `PHASE_RECHECK_MS` (60 s, `config/scene.ts`) and when the app returns to the foreground; the Settings demo clock still overrides. Rule in one pure helper, `lib/dayPhase.ts` (`resolveDayPhase`, unit-tested), on top of `shared/day-phase.ts` (day 07:00–18:59). | Without the demo clock the garden was always day. | Timezone is the constant `SENIOR_TIMEZONE = "Asia/Singapore"` in `config/scene.ts`: `users.timezone` exists in the database but the API doesn't expose it yet. | Final (timezone tentative until the API sends it) |
+| Night adds a separate `NightStars` layer (`components/NightStars.tsx`): six knitted stars (two `star-knit.webp`, two `star-knit-2.webp`, two peach `star-knit-warm.webp`) twinkling 3.9–5.6 s with staggered offsets, opacity + scale only, still at full opacity under reduced motion. Positions are % of the art box (`config/stars.ts`), placed between the painted stars. | Adds life to the night sky without new art; art coordinates keep the stars in the sky at every crop. | The sky band is small: on portrait phones it sits behind the name/hearts and settings button; in short landscape (915×355) it is almost entirely cropped, so at most one star shows. | Tentative (positions, sizes, timing) |
+
 ## 2026-10-13 — Provisional shared contract draft
 
 - Added `shared/contract.ts`, `shared/config.ts`, and four PRD-based fixtures before design exports were available.
@@ -32,7 +39,7 @@
 
 | Decision | Reason | Tradeoff | Status |
 |---|---|---|---|
-| Sun and stars are drawn into the garden backgrounds (`garden-day.webp`, `garden-night.webp`); no separate sky layer. Day/night = swap one image via `BACKDROP_BY_PHASE` in `mobile/src/config/scene.ts`. | The art arrived with the sky baked in; one fewer layer to align. | The sun can't be repositioned in code; it may sit near the settings button on narrow phones. | Final for the hackathon |
+| Sun and stars are drawn into the garden backgrounds (`garden-day.webp`, `garden-night.webp`); no separate sky layer. Day/night = swap one image via `BACKDROP_BY_PHASE` in `mobile/src/config/scene.ts`. (15 Oct: a twinkling `NightStars` layer now sits on the night art, see T2-10 above.) | The art arrived with the sky baked in; one fewer layer to align. | The sun can't be repositioned in code; it may sit near the settings button on narrow phones. | Final for the hackathon |
 | Backgrounds are portrait (923×2000) and positioned so the art's lawn line (`groundLine: 0.36`) lands at the dog's feet, clamped so the sky never shows a gap (`lib/useSceneGround.ts`). | Bottom-anchored square art cut off the sky and trees on short phones (real-phone test, Brave on Android). | On short screens a little sky at the top is cropped. | Final |
 | One dog image (`dog-base.webp`, 1000×1300) for all four moods; mood shown only through motion and glow. `DOG_IMAGE_BY_MOOD` keeps a path per mood so mood images can be dropped in later. | No 4-mood sheet yet (T1-18); PRD §15 fallback. | The face never changes; moods are subtler. | Tentative until a mood sheet exists |
 | The dog renders in a shared `DogLayer` in the app shell, on every senior screen except `care`, `cover` and `dedication` (`SCREENS_WITHOUT_DOG`). On Home it stands above the chips; elsewhere it sits on the content card's top edge. | The old photo had the dog baked into the background, so moving it to a separate layer made it disappear from other screens. | The secondary-screen card starts a little lower to make room. | Final |

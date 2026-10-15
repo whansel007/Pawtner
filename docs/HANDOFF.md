@@ -22,6 +22,7 @@ Updated 2026-10-15. Source of truth for scope: `PRD.md` (repo root), tiers in §
 6. Home shows `NextDoseCard` (next due/missed dose, then upcoming). "Taken" → prototype proof screen → API event; status is re-derived from the ledger. If the API call fails, `handleDoseVerified` marks the dose taken locally (not saved; the next successful `/api/today` replaces it) and gets a `celebrate` decision from local `decide()` via `lib/agent.ts`. The proof screen does not upload an image.
 7. Intro: cover → dedication (auto-advances after `DEDICATION_HOLD_MS`, `config/intro.ts`) → Home.
 8. Navigation: `lib/useNavigation.ts` keeps the screen and a short history (`lib/navigation.ts`). Top-level screens (home, health, milestones, walk, settings) show "Home"; drilled-down screens show "Back" and return to where they were opened from. Every non-Home screen uses `components/FullCard.tsx` (fixed frame, back button, inner scroll).
+9. Day/night (T2-10): `lib/useDayPhase.ts` picks the garden from the real clock in `SENIOR_TIMEZONE` (`config/scene.ts`, "Asia/Singapore" until the API exposes `users.timezone`), re-checked every minute and on returning to the app; the Settings demo clock overrides it. Day is 07:00–18:59 (`shared/day-phase.ts`). At night `components/NightStars.tsx` adds six twinkling knitted stars over the garden (config in `config/stars.ts`, in % of the art box inside `SceneBackdrop`, so they crop with the art; reduced motion = still). `/care` doesn't use the phase (it has its own garden image).
 
 ## Caretaker web (`/care`)
 
