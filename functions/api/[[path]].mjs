@@ -1034,7 +1034,7 @@ var PawtnerRepository = class {
   }
   async rephraseWithModel(sourceText, medicineName) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3e3);
+    const timeout = setTimeout(() => controller.abort(), 15e3);
     try {
       const response = await fetch(`${process.env.LLM_BASE_URL}/chat/completions`, {
         method: "POST",
@@ -1048,7 +1048,7 @@ var PawtnerRepository = class {
             { role: "system", content: "You rephrase trusted medicine information into warm, simple language for seniors. Do not add new numbers, doses, medicine names, or medical advice. Do not diagnose." },
             { role: "user", content: `Rephrase this in one or two short sentences: ${sourceText}` }
           ],
-          max_tokens: 150
+          max_tokens: 2e3
         }),
         signal: controller.signal
       });
@@ -1269,7 +1269,7 @@ var PawtnerRepository = class {
   }
   async describePillWithVision(imageBase64, mimeType) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 1e4);
+    const timeout = setTimeout(() => controller.abort(), 3e4);
     try {
       const dataUrl = `data:${mimeType};base64,${imageBase64}`;
       const response = await fetch(`${process.env.LLM_BASE_URL}/chat/completions`, {
@@ -1293,7 +1293,7 @@ var PawtnerRepository = class {
               ]
             }
           ],
-          max_tokens: 200
+          max_tokens: 2e3
         }),
         signal: controller.signal
       });

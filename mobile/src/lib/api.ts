@@ -20,10 +20,20 @@ import type {
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
+export class ApiRequestError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = "ApiRequestError";
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE}/api${path}`, { ...init, headers: { "content-type": "application/json", ...init?.headers } });
   const payload = await response.json();
-  if (!response.ok) throw new Error(payload.error ?? `Request failed (${response.status})`);
+  if (!response.ok) throw new ApiRequestError(payload.error ?? `Request failed (${response.status})`, response.status);
   return payload as T;
 }
 

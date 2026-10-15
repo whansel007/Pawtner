@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
-import { api } from "../lib/api";
+import { api, ApiRequestError } from "../lib/api";
 import type { PillDescribeResponse, PillVerifyResponse } from "../../../shared/contract";
 import type { BackAction } from "../lib/navigation";
 
@@ -61,7 +61,7 @@ export function ProofScreen({
         setCheck({ kind: "verified", result });
       } catch (verifyError) {
         // 409 = no saved description yet → this is the first time
-        if (verifyError instanceof Error && verifyError.message.includes("first")) {
+        if (verifyError instanceof ApiRequestError && verifyError.status === 409) {
           const result = await api.describePill(medicationId, imageBase64, mimeType);
           setCheck({ kind: "described", result });
         } else {
