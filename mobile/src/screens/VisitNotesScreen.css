@@ -29,3 +29,7 @@
 .visit-notes__hint { margin: 2px 0 10px; color: #7a847c; font-size: var(--font-size-sm); }
 .visit-notes__section .visit-notes__list { margin-top: 12px; }
 .visit-notes__section .visit-notes__item { background: white; }
+.visit-notes__earlier { margin-top: 8px; color: #6b7a6e; font-size: var(--font-size-sm); }
+.visit-notes__earlier summary { min-height: 32px; display: flex; align-items: center; cursor: pointer; font-weight: var(--font-weight-bold); }
+.visit-notes__earlier ul { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.visit-notes__earlier li { overflow-wrap: anywhere; white-space: pre-wrap; }

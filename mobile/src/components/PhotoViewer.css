@@ -31,11 +31,10 @@
   font-weight: var(--font-weight-black);
   cursor: pointer;
 }
+.photo-viewer__body { min-height: 0; overflow-y: auto; display: grid; gap: 16px; align-content: start; }
 .photo-viewer__image {
   width: 100%;
-  height: 100%;
-  min-height: 0;
-  max-height: 72dvh;
+  max-height: 60dvh;
   object-fit: contain;
   border-radius: var(--radius-md);
   background: #f2f3ee;
@@ -43,3 +42,7 @@
 .photo-viewer__actions { display: grid; }
 .photo-viewer__actions .secondary-button { min-height: 48px; }
 .photo-viewer__close:focus-visible, .photo-viewer__actions button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.memo-photo { margin: 0; display: grid; gap: 6px; }
+.memo-photo__actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.memo-photo__actions .secondary-button { width: auto; min-height: 44px; }
+.memo-photo__actions .text-button { margin-top: 0; min-height: 44px; }

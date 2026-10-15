@@ -110,6 +110,14 @@ function NotesSection({
               ) : (
                 <>
                   <p>{note.text}</p>
+                  {note.earlier.length > 0 && (
+                    <details className="visit-notes__earlier">
+                      <summary>{t("visitNotes.earlier", { count: note.earlier.length })}</summary>
+                      <ul>
+                        {note.earlier.map((version) => <li key={version.updatedAt}>{version.text}</li>)}
+                      </ul>
+                    </details>
+                  )}
                   <div className="visit-notes__actions">
                     <button type="button" className="secondary-button" onClick={() => { setEditingId(note.id); setEditDraft(note.text); }}>{t("visitNotes.edit")}</button>
                     <button type="button" className="text-button" onClick={() => onRemove(note.id)}>{t("visitNotes.delete")}</button>

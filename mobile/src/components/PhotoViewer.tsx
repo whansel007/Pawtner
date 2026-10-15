@@ -3,23 +3,22 @@ import { createPortal } from "react-dom";
 import "./PhotoViewer.css";
 
 /**
- * Full-screen look at one photo (e.g. the clinic memo). Close with the button, Escape, or a tap on the backdrop.
- * Focus moves to Close on open and back to the opener on close.
+ * Full-screen panel for looking at photos (e.g. the clinic memos). Close with the button, Escape, or a tap on
+ * the backdrop. Focus moves to Close on open and back to the opener on close. The body scrolls.
  */
 export function PhotoViewer({
-  src,
-  alt,
   title,
   closeLabel,
   onClose,
+  children,
   actions,
 }: {
-  src: string;
-  alt: string;
   title: string;
   closeLabel: string;
   onClose: () => void;
-  /** Extra buttons under the photo, e.g. "Replace photo". */
+  /** The photos (and anything about each one). */
+  children: ReactNode;
+  /** Buttons pinned under the body, e.g. "Add a photo". */
   actions?: ReactNode;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -45,7 +44,7 @@ export function PhotoViewer({
           <strong>{title}</strong>
           <button ref={closeRef} type="button" className="photo-viewer__close" onClick={onClose}>{closeLabel}</button>
         </div>
-        <img className="photo-viewer__image" src={src} alt={alt} />
+        <div className="photo-viewer__body">{children}</div>
         {actions && <div className="photo-viewer__actions">{actions}</div>}
       </div>
     </div>,

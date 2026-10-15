@@ -21,8 +21,8 @@ const blockedStore: KeyValueStore = {
   removeItem: () => { throw new Error("blocked"); },
 };
 
-const a: VisitNote = { id: "a", text: "Sleepy after dinner", updatedAt: "2026-10-14T10:00:00.000Z", shared: false };
-const b: VisitNote = { id: "b", text: "Ask about the dry cough", updatedAt: "2026-10-15T10:00:00.000Z", shared: false };
+const a: VisitNote = { id: "a", text: "Sleepy after dinner", updatedAt: "2026-10-14T10:00:00.000Z", shared: false, earlier: [] };
+const b: VisitNote = { id: "b", text: "Ask about the dry cough", updatedAt: "2026-10-15T10:00:00.000Z", shared: false, earlier: [] };
 
 describe("visit notes", () => {
   it("adds new notes on top and ignores empty text", () => {
@@ -30,10 +30,14 @@ describe("visit notes", () => {
     expect(addVisitNote([a], "", b.updatedAt, "b", false)).toEqual([a]);
   });
 
-  it("moves an edited note to the top; an emptied note is removed", () => {
-    expect(editVisitNote([b, a], "a", "Sleepy after dinner, most days", "2026-10-16T09:00:00.000Z"))
-      .toEqual([{ id: "a", text: "Sleepy after dinner, most days", updatedAt: "2026-10-16T09:00:00.000Z", shared: false }, b]);
-    expect(editVisitNote([b, a], "a", "", "2026-10-16T09:00:00.000Z")).toEqual([b]);
+  it("moves an edited note to the top and keeps the earlier wording; empty or unchanged edits change nothing", () => {
+    const once = editVisitNote([b, a], "a", "Sleepy after dinner, most days", "2026-10-16T09:00:00.000Z");
+    expect(once).toEqual([{ id: "a", text: "Sleepy after dinner, most days", updatedAt: "2026-10-16T09:00:00.000Z", shared: false,
+      earlier: [{ text: "Sleepy after dinner", updatedAt: "2026-10-14T10:00:00.000Z" }] }, b]);
+    const twice = editVisitNote(once, "a", "Sleepy every evening", "2026-10-17T09:00:00.000Z");
+    expect(twice[0].earlier.map((version) => version.text)).toEqual(["Sleepy after dinner, most days", "Sleepy after dinner"]);
+    expect(editVisitNote([b, a], "a", "", "2026-10-16T09:00:00.000Z")).toEqual([b, a]);
+    expect(editVisitNote([b, a], "a", "Sleepy after dinner", "2026-10-16T09:00:00.000Z")).toEqual([b, a]);
   });
 
   it("removes by id", () => {
@@ -63,12 +67,13 @@ describe("visit notes", () => {
 });
 
 describe("shared visit notes", () => {
-  const shared: VisitNote = { id: "s", text: "Ask about the cough", updatedAt: "2026-10-15T09:00:00.000Z", shared: true };
-  const mine: VisitNote = { id: "p", text: "Feeling low some evenings", updatedAt: "2026-10-15T12:00:00.000Z", shared: false };
+  const shared: VisitNote = { id: "s", text: "Ask about the cough", updatedAt: "2026-10-15T09:00:00.000Z", shared: true, earlier: [] };
+  const mine: VisitNote = { id: "p", text: "Feeling low some evenings", updatedAt: "2026-10-15T12:00:00.000Z", shared: false, earlier: [] };
 
   it("keeps who can see a note when it is edited", () => {
     expect(editVisitNote([shared, mine], "s", "Ask about the dry cough", "2026-10-16T08:00:00.000Z")[0])
-      .toEqual({ id: "s", text: "Ask about the dry cough", updatedAt: "2026-10-16T08:00:00.000Z", shared: true });
+      .toEqual({ id: "s", text: "Ask about the dry cough", updatedAt: "2026-10-16T08:00:00.000Z", shared: true,
+        earlier: [{ text: "Ask about the cough", updatedAt: "2026-10-15T09:00:00.000Z" }] });
   });
 
   it("treats notes saved before sharing existed as private", () => {

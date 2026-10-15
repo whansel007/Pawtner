@@ -16,6 +16,8 @@ export interface VisitNote {
   updatedAt: string;
   /** true = the caretaker can see it on /care; false = just for the senior. */
   shared: boolean;
+  /** Earlier wordings, newest first: editing never loses what she wrote before. */
+  earlier: Array<{ text: string; updatedAt: string }>;
 }
 
 /** A stored note; notes saved before sharing existed have no `shared` and stay private. */
@@ -23,7 +25,12 @@ function toNote(value: unknown): VisitNote | null {
   if (!value || typeof value !== "object") return null;
   const note = value as Record<string, unknown>;
   if (typeof note.id !== "string" || typeof note.text !== "string" || typeof note.updatedAt !== "string") return null;
-  return { id: note.id, text: note.text, updatedAt: note.updatedAt, shared: note.shared === true };
+  const earlier = Array.isArray(note.earlier)
+    ? note.earlier.filter((item): item is { text: string; updatedAt: string } =>
+      !!item && typeof item === "object" && typeof (item as Record<string, unknown>).text === "string"
+      && typeof (item as Record<string, unknown>).updatedAt === "string")
+    : [];
+  return { id: note.id, text: note.text, updatedAt: note.updatedAt, shared: note.shared === true, earlier };
 }
 
 /** Trimmed and capped at `maxLength`; empty string when there is nothing to save. */
@@ -50,14 +57,19 @@ export function writeVisitNotes(key: string, notes: VisitNote[], store: KeyValue
 
 /** New note on top. Returns the list unchanged when the text is empty. */
 export function addVisitNote(notes: VisitNote[], text: string, now: string, id: string, shared: boolean): VisitNote[] {
-  return text ? [{ id, text, updatedAt: now, shared }, ...notes] : notes;
+  return text ? [{ id, text, updatedAt: now, shared, earlier: [] }, ...notes] : notes;
 }
 
-/** Edited note moves to the top and keeps who can see it. An empty text removes it. */
+/**
+ * Edited note moves to the top, keeps who can see it, and keeps its previous wording in `earlier`.
+ * Empty or unchanged text changes nothing (removing is only ever removeVisitNote).
+ */
 export function editVisitNote(notes: VisitNote[], id: string, text: string, now: string): VisitNote[] {
   const original = notes.find((note) => note.id === id);
+  if (!original || !text || text === original.text) return notes;
   const rest = notes.filter((note) => note.id !== id);
-  return text && original ? [{ ...original, text, updatedAt: now }, ...rest] : rest;
+  const earlier = [{ text: original.text, updatedAt: original.updatedAt }, ...original.earlier];
+  return [{ ...original, text, updatedAt: now, earlier }, ...rest];
 }
 
 /**
