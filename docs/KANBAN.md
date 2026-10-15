@@ -68,6 +68,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | — | `dog.heartsTotal` (lifetime hearts, derived on read) in `/api/today` and `/api/caretaker/summary`; EdgeOne bundle regenerated (Claude Code, P1 files, P1 OK'd) | [#30](https://github.com/whansel007/Pawtner/pull/30) |
 | — | Wardrobe & world unlock by lifetime hearts, "N hearts together" on Milestones, demo switch in Settings (CodeBuddy) | [#31](https://github.com/whansel007/Pawtner/pull/31) |
 | T2-10 | Day/night follows the real clock (`lib/useDayPhase.ts`, re-checked every minute, demo clock overrides); twinkling knitted stars at night (`NightStars`, `config/stars.ts`, tentative positions) | Branch `claude/night-stars`, PR pending |
+| — | Demo time for filming: `?time=HH:MM` / `morning` / `evening` link and Settings > Demo "Morning (9:00)", "Evening (21:00)", "Real time" buttons (no agent run, no writes); 2 s day ↔ night cross-fade of the garden | Branch `claude/demo-time` (on top of `claude/night-stars`), PR pending |
 
 ## Blocked
 

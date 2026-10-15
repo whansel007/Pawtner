@@ -22,6 +22,13 @@
 |---|---|---|---|
 | Vercel project `pawtner-mobile` stays on Root Directory `mobile` (front end only) after P1's root `vercel.json` landed on `main`. Switching to the repo root, to serve `api/[...path].ts` from the same origin, waits for the hosted database to be migrated and `DATABASE_URL` to be set. | The root config is ignored today, so production and `/care` deep links keep working (preview from `1fc0b53` checked); switching early would only turn offline mode into failing function calls. | No hosted API until someone switches the setting; two `vercel.json` files to keep in sync meanwhile. | Tentative, user's call |
 
+## 2026-10-15 — Demo time shortcuts and day/night fade (branch `claude/demo-time`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| `?time=HH:MM` (24-hour) or `?time=morning` or `?time=evening` (presets in `config/demo.ts`: 09:00, 21:00) sets the demo clock on load to today's date at that time in `SENIOR_TIMEZONE`; Settings > Demo gets "Morning (9:00)", "Evening (21:00)" and "Real time" buttons. They only refresh `/api/today` (GET) and go Home; they never run the agent. The parameter is read once on load and kept in the URL. | Filming needs an instant switch of time of day without writing decisions to the database. | "Real time" doesn't remove `?time=` from the URL, so a reload re-applies it. The datetime input shows the instant in the device's time zone (as before). | Tentative |
+| Day ↔ night cross-fade: the day garden is the opaque base, the night garden (with `NightStars`) sits on top and fades its opacity over `PHASE_FADE_MS` (2 s). Instant under reduced motion; no fade on first load. Each garden has its own art box (aspect, ground line). The inactive garden mounts once the active one has loaded. | A hard cut looked abrupt on video; fading only the top layer never dips to the shell colour. | Both garden images load (~315 KB together), the second after the first has loaded. The blurred desktop backdrop (≥ 500 px wide) still switches instantly. | Tentative |
+
 ## 2026-10-15 — Day/night by the real clock, twinkling knitted stars (T2-10)
 
 | Decision | Reason | Tradeoff | Status |

@@ -6,9 +6,6 @@
   overflow: hidden;
   pointer-events: none;
   container-type: size;
-  /* Art size when covering the column (--art-aspect = width / height, from config). */
-  --art-w: max(100cqw, 100cqh * var(--art-aspect));
-  --art-h: calc(var(--art-w) / var(--art-aspect));
 }
 
 /*
@@ -18,12 +15,36 @@
  * The art box holds the image and anything drawn in art coordinates (NightStars), so they crop together.
  */
 .scene-backdrop__art {
+  /* Art size when covering the column (--art-aspect = width / height, per phase from config). */
+  --art-w: max(100cqw, 100cqh * var(--art-aspect));
+  --art-h: calc(var(--art-w) / var(--art-aspect));
   position: absolute;
   left: 50%;
   top: clamp(100cqh - var(--art-h), var(--ground-y, 100cqh) - var(--art-ground) * var(--art-h), 0px);
   width: var(--art-w);
   height: var(--art-h);
   transform: translateX(-50%);
+}
+
+/*
+ * Day ↔ night cross-fade (opacity only). The day art is the opaque base; the night art (with NightStars) sits on top
+ * and fades in or out over --phase-fade (PHASE_FADE_MS in config/scene.ts). A layer mounted already in its end state
+ * doesn't transition, so first load shows the right garden at once.
+ */
+.scene-backdrop__art--night {
+  opacity: 0;
+  transition: opacity var(--phase-fade, 2s) ease-in-out;
+}
+
+.scene-backdrop__art--night.is-active {
+  opacity: 1;
+}
+
+/* Still fallback: switch instantly. */
+@media (prefers-reduced-motion: reduce) {
+  .scene-backdrop__art--night {
+    transition: none;
+  }
 }
 
 .scene-backdrop__image {

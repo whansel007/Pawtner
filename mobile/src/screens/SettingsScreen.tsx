@@ -4,6 +4,8 @@ import { FullCard } from "../components/FullCard";
 import type { BackAction } from "../lib/navigation";
 import type { Caregiver } from "../types";
 import type { EscalationSettingsResponse } from "../../../shared/contract";
+import { DEMO_TIME_PRESETS, type DemoTimePreset } from "../config/demo";
+import { formatClockTime, parseDemoTime } from "../lib/demoTime";
 import { useEffect, useState } from "react";
 
 export function SettingsScreen({
@@ -21,6 +23,8 @@ export function SettingsScreen({
   onSaveEscalationSettings,
   demoUnlockAll,
   onToggleDemoUnlockAll,
+  demoTimeActive,
+  onDemoTime,
 }: {
   back: BackAction;
   addMedication: () => void;
@@ -36,6 +40,10 @@ export function SettingsScreen({
   onSaveEscalationSettings: (settings: EscalationSettingsResponse) => void;
   demoUnlockAll: boolean;
   onToggleDemoUnlockAll: () => void;
+  /** True while the demo clock (or `?time=`) overrides the real time. */
+  demoTimeActive: boolean;
+  /** Jump to a preset time today, or back to real time (null). Never runs the agent. */
+  onDemoTime: (preset: DemoTimePreset | null) => void;
 }) {
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
@@ -77,6 +85,18 @@ export function SettingsScreen({
           <input type="checkbox" checked={demoUnlockAll} onChange={onToggleDemoUnlockAll} />
           {t("settings.demoUnlockAll")}
         </label>
+        <p>{t("settings.demoTimeHint")}</p>
+        <div className="demo-time-buttons">
+          {(Object.keys(DEMO_TIME_PRESETS) as DemoTimePreset[]).map((preset) => {
+            const time = parseDemoTime(DEMO_TIME_PRESETS[preset], DEMO_TIME_PRESETS);
+            return (
+              <button key={preset} type="button" className="secondary-button" onClick={() => onDemoTime(preset)}>
+                {t(`settings.demoTime.${preset}`, { time: time ? formatClockTime(time) : DEMO_TIME_PRESETS[preset] })}
+              </button>
+            );
+          })}
+          <button type="button" className="secondary-button" disabled={!demoTimeActive} onClick={() => onDemoTime(null)}>{t("settings.demoTime.real")}</button>
+        </div>
       </div>
     </FullCard>
   );

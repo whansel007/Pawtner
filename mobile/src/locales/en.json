@@ -458,7 +458,13 @@
     "privacyTitle": "Your information stays yours.",
     "privacyBody": "{{caretaker}} sees caring moments, not private medicine details.",
     "demoEyebrow": "Demo",
-    "demoUnlockAll": "Unlock all rewards (demo)"
+    "demoUnlockAll": "Unlock all rewards (demo)",
+    "demoTimeHint": "Jump the garden to a time of day. Doesn't run the agent or save anything.",
+    "demoTime": {
+      "morning": "Morning ({{time}})",
+      "evening": "Evening ({{time}})",
+      "real": "Real time"
+    }
   },
   "toast": {
     "alreadyCounted": "Already counted. {{name}} remembers!",
