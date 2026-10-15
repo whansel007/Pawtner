@@ -15,15 +15,22 @@
  * Ground-line alignment: put the art's lawn line (--art-ground, fraction of its height) on the dog's feet (--ground-y).
  * Clamped so the art always covers the column: never a gap at the top (<= 0), never at the bottom (>= column - art).
  * Without a ground line (no dog on this screen) it falls back to the top, showing the full sky.
+ * The art box holds the image and anything drawn in art coordinates (NightStars), so they crop together.
  */
-.scene-backdrop__image {
+.scene-backdrop__art {
   position: absolute;
   left: 50%;
   top: clamp(100cqh - var(--art-h), var(--ground-y, 100cqh) - var(--art-ground) * var(--art-h), 0px);
   width: var(--art-w);
   height: var(--art-h);
-  max-width: none;
   transform: translateX(-50%);
+}
+
+.scene-backdrop__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
 }
 
 /* World themes (flat / garden / kampung) set --world-tint on .app-shell. */
