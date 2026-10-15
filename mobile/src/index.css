@@ -472,6 +472,19 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .proof-scanner.captured { color: #315a43; background: var(--color-surface-sage-darker); }
 .proof-check { z-index: 1; display: grid; place-items: center; width: 70px; height: 70px; border-radius: var(--radius-full); color: white; background: var(--color-accent-proof); box-shadow: var(--shadow-proof); }
 
+.proof-photo-preview { display: block; max-width: 100%; border-radius: var(--radius-lg); }
+.proof-photo-input { display: none; }
+.proof-check-block { display: grid; gap: 8px; margin-top: 12px; text-align: left; }
+.proof-check-card { padding: 12px; border-radius: var(--radius-xl); background: var(--color-surface-sage-light); border: 1px solid var(--color-border-card); }
+.proof-check-card-title { display: block; color: var(--color-text-heading); font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
+.proof-check-card-line { margin: 6px 0 0; color: var(--color-text-body); font-size: var(--font-size-sm); line-height: 1.4; }
+.proof-check-card-line strong { color: var(--color-text-heading); font-weight: var(--font-weight-bold); }
+.proof-check-card-note { margin: 8px 0 0; color: var(--color-text-muted); font-size: var(--font-size-xs); line-height: 1.4; }
+.proof-checking-status { max-width: none; margin: 0; color: var(--color-text-body); font-size: var(--font-size-md); }
+.proof-check-error { max-width: none; margin: 0; color: var(--color-action-stop); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); }
+.proof-check-disclosure { max-width: 430px; margin: 0; color: var(--color-text-body); font-size: var(--font-size-sm); line-height: 1.4; }
+.proof-check-disclosure ~ .primary-button { margin-top: 16px; }
+
 .scanner.scanning .camera-orb { animation: pulse 1s ease-in-out infinite; }
 .ocr-preview { margin-top: 14px; text-align: left; padding: 10px 14px; border-radius: var(--radius-3xl); background: var(--color-surface-sage); }
 .ocr-preview small { color: var(--color-text-faint); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: .04em; }
