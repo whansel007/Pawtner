@@ -1078,6 +1078,9 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
     scrollbar-width: none;
   }
   .home-layout__cards::-webkit-scrollbar { display: none; }
+  /* Home's cards rest just above the dock (gap = --nav-space, as in portrait); spare height stays at the top of the
+     pane. An auto margin rather than justify-content: flex-end, so a column taller than the pane still scrolls from its top. */
+  .home-layout__cards > :first-child { margin-top: auto; }
   .full-card {
     top: var(--pane-top);
     left: calc(100% - var(--pane-w) + var(--side-gutter));
