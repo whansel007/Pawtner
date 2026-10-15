@@ -25,6 +25,10 @@ testApi("HTTP handlers persist events and return the shared response contract", 
     await setup.query(`SET search_path TO "${schema}", public`);
     await setup.query(await readFile(join(here, "..", "..", "migrations", "001_init.sql"), "utf8"));
     await setup.query(await readFile(join(here, "..", "..", "migrations", "seed.sql"), "utf8"));
+    // The seed's history is relative to the day it runs; this test uses fixed 13 Oct times, so start
+    // from an empty history on that day (only inside this throwaway test schema).
+    await setup.query(`DELETE FROM "${schema}".dose_events; DELETE FROM "${schema}".health_metrics;
+      UPDATE "${schema}".med_schedules SET starts_on = '2026-10-13'`);
     pool = new Pool({ connectionString: databaseUrl, options: `-c search_path=${schema},public` });
     handler = createApiHandler(new PawtnerRepository(pool));
   });
