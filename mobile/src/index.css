@@ -456,7 +456,8 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .scan-card .supporting { margin-left: auto; margin-right: auto; }
 .scanner { position: relative; width: 100%; min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: var(--radius-7xl); color: #345845; background: var(--color-surface-scanner); cursor: pointer; overflow: hidden; }
 .scanner::before { content: ""; position: absolute; inset: 0; opacity: .4; background: repeating-linear-gradient(0deg, transparent 0 24px, rgba(76,112,86,.08) 25px 26px); }
-.scanner strong, .scanner small, .camera-orb { z-index: 1; }
+.scanner strong, .scanner small, .scanner .proof-scanner__saved, .camera-orb { z-index: 1; }
+.proof-scanner__saved { color: var(--color-text-body); font-weight: var(--font-weight-regular); }
 .scanner small { color: var(--color-text-body); }
 .camera-orb { display: grid; place-items: center; width: 64px; height: 64px; border-radius: var(--radius-full); color: white; background: var(--color-primary-camera); box-shadow: var(--shadow-camera); }
 .scan-corner { position: absolute; width: 42px; height: 42px; border-color: var(--color-accent-scan-corner); }
