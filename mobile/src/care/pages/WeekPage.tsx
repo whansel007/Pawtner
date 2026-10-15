@@ -1,14 +1,24 @@
 import { useTranslation } from "react-i18next";
 import type { CareData, Caretaker } from "../data/types";
+import type { TreatStatus } from "../hooks/useCareTreat";
 import { formatMomentTime, formatWeekday } from "../lib/format";
 import { progressPercent, recentDays, streakHearts, todayProgress, todayState, visibleMoments } from "../lib/rules";
 import { CareBadge, CareCard, PageWelcome } from "../components/CareCard";
+import { CareNotice } from "../components/CareNotice";
 import { CareDog } from "../components/CareDog";
 import { MomentList } from "../components/MomentList";
 import { ProgressRing } from "../components/ProgressRing";
 import { StreakHearts } from "../components/StreakHearts";
 
-export function WeekPage({ data, viewer }: { data: CareData; viewer: Caretaker }) {
+interface WeekPageProps {
+  data: CareData;
+  viewer: Caretaker;
+  offline: boolean;
+  treatStatus: TreatStatus;
+  onSendTreat: (message: string) => void;
+}
+
+export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat }: WeekPageProps) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
   const now = new Date();
@@ -70,6 +80,23 @@ export function WeekPage({ data, viewer }: { data: CareData; viewer: Caretaker }
           badge={<span className="care-card__meta">{t("care.web.week.momentsWhen")}</span>}
         >
           <MomentList rows={moments} emptyText={t("care.web.week.momentsEmpty")} />
+        </CareCard>
+
+        <CareCard eyebrow={t("care.web.week.treatEyebrow")} title={t("care.web.week.treatTitle", { dog: dog.name })} className="care-treat">
+          <p className="care-hint">{t("care.web.week.treatBody", { name: senior })}</p>
+          <button
+            className="care-primary-button care-primary-button--card"
+            type="button"
+            disabled={offline || treatStatus === "sending"}
+            onClick={() => onSendTreat(t("care.web.week.treatMessage", { caretaker: viewer.name, dog: dog.name }))}
+          >
+            {treatStatus === "sending" ? t("care.web.week.treatSending") : t("care.web.week.treatButton", { dog: dog.name })}
+          </button>
+          {offline && <CareNotice tone="warm">{t("care.web.week.treatOffline")}</CareNotice>}
+          <div className="care-live" role="status">
+            {!offline && treatStatus === "sent" && t("care.web.week.treatSent", { name: senior, dog: dog.name })}
+            {!offline && treatStatus === "failed" && t("care.web.week.treatFailed")}
+          </div>
         </CareCard>
 
         <CareCard eyebrow={t("care.web.week.questionsEyebrow", { name: senior })} title={t("care.web.week.questionsTitle")} stitched className="care-questions">

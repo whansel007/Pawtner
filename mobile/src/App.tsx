@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "./components/Icon";
 import { TopZone } from "./screens/TopZone";
 import { HomeScreen } from "./screens/HomeScreen";
-import { CareScreen } from "./screens/CareScreen";
 import { RemindersScreen } from "./screens/RemindersScreen";
 import { PrescriptionScreen } from "./screens/PrescriptionScreen";
 import { ExplanationScreen } from "./screens/ExplanationScreen";
@@ -47,8 +46,6 @@ import {
   activityLink,
   clinicTasks,
   caregiver,
-  careActivity,
-  restockAlert,
   worldOptions,
   accessoryOptions,
   walkStats,
@@ -110,7 +107,7 @@ export default function App() {
   };
   useEffect(() => { void refreshToday(); }, []);
   useEffect(() => {
-    if (screen === "care" || screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
+    if (screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
     if (screen === "settings") void api.escalationSettings().then(setEscalationSettings).catch((error) => reportApiProblem(error));
   }, [screen]);
 
@@ -132,7 +129,6 @@ export default function App() {
   const liveCaregiver = careSummary?.caregiver
     ? { ...caregiver, seniorName: careSummary.senior.name, caretakerName: careSummary.caregiver.name, names: t("care.pairNames", { senior: careSummary.senior.name, caretaker: careSummary.caregiver.name }) }
     : { ...caregiver, names: t("care.pairNames", { senior: caregiver.seniorName, caretaker: caregiver.caretakerName }) };
-  const liveCareActivity = careSummary ? { ...careActivity, dosesTaken: `${careSummary.dosesTaken} of ${careSummary.dosesDue}`, dosesTakenCount: careSummary.dosesTaken, dosesTotal: careSummary.dosesDue, walkDistance: `${(careSummary.walkDistanceMeters / 1000).toFixed(1)} km`, description: careSummary.caringMoments[0]?.message ?? "Care routine activity", timestamp: careSummary.latestActivityAt ? new Date(careSummary.latestActivityAt).toLocaleString() : "No recent activity" } : careActivity;
 
   const notify = (message: string) => {
     setToast(message);
@@ -238,10 +234,22 @@ export default function App() {
     }
   }
 
-  /** Caretaker treat: posts to the API; the toast shows either way so the demo beat never stalls. */
-  async function handleSendTreat() {
-    try { await api.sendTreat(); } catch { /* demo: still confirm the treat */ }
-    notify(t("toast.treatSent", { name: dogName }));
+  /**
+   * Gift chip: show the latest treat's message (written on /care, e.g. "Jamie sent Buddy a treat!") and mark it seen.
+   * No treat yet, or no API: the friendly "a treat from {{caretaker}} is waiting" line, so the beat never stalls.
+   */
+  async function handleTreatChip() {
+    try {
+      const treat = await api.latestTreat();
+      if (treat) {
+        notify(treat.message);
+        if (!treat.seen) void api.markTreatSeen(treat.id).catch((error) => console.warn("Pawtner API:", error));
+        return;
+      }
+    } catch (error) {
+      console.warn("Pawtner API:", error);
+    }
+    notify(t("toast.treatWaiting", { name: dogName, caretaker: caretakerName }));
   }
 
   /** Prescription "Explain this medicine": remember the name, then drill into the explanation. */
@@ -359,7 +367,7 @@ export default function App() {
           streak={livePet.streak}
           onToday={() => navigate("reminders")}
           onStreak={() => navigate("milestones")}
-          onTreat={() => notify(t("toast.treatWaiting", { name: dogName, caretaker: caretakerName }))}
+          onTreat={() => void handleTreatChip()}
         />
       </div>
       <div className={`screen-stage screen-${screen}`}>
@@ -372,14 +380,13 @@ export default function App() {
               navigate("proof");
             }}
             onReminders={() => navigate("reminders")}
-            onTreat={() => notify(t("toast.treatWaiting", { name: dogName, caretaker: caretakerName }))}
+            onTreat={() => void handleTreatChip()}
             onWalk={() => navigate("walk")}
             onBloodPressure={() => navigate("health")}
             onStreak={() => navigate("milestones")}
             decision={latestDecision}
           />
         )}
-        {screen === "care" && <CareScreen back={back} sendTreat={handleSendTreat} pet={livePet} caregiver={liveCaregiver} careActivity={liveCareActivity} restockAlert={restockAlert} />}
         {screen === "reminders" && <RemindersScreen back={back} doses={doseList} />}
         {screen === "prescription" && <PrescriptionScreen back={back} onHome={goHome} onExplain={handleExplainMedicine} onSaved={handleMedicationSaved} petName={dogName} />}
         {screen === "explanation" && <ExplanationScreen back={back} onContinue={() => navigate("schedule")} medicineName={savedMedicationName} />}
@@ -390,7 +397,7 @@ export default function App() {
         {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }], doctorQuestion: careSummary.doctorQuestions[0]?.note ?? weekSummary.doctorQuestion } : weekSummary} />}
-        {screen === "settings" && <SettingsScreen back={back} addMedication={() => navigate("prescription")} openCaretaker={() => navigate("care")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} demoUnlockAll={demoUnlockAll} onToggleDemoUnlockAll={() => setDemoUnlockAll((v) => !v)} demoTimeActive={demoNow !== null} onDemoTime={setDemoTime} />}
+        {screen === "settings" && <SettingsScreen back={back} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} demoUnlockAll={demoUnlockAll} onToggleDemoUnlockAll={() => setDemoUnlockAll((v) => !v)} demoTimeActive={demoNow !== null} onDemoTime={setDemoTime} />}
         {screen === "customize" && <CustomizeScreen back={back} onHome={goHome} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(nextWorld === "flat" ? t("toast.worldFlat", { name: dogName }) : nextWorld === "garden" ? t("toast.worldGarden", { name: dogName }) : t("toast.worldKampung", { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: t(`accessory.${nextAccessory}`) })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} caretakerName={caretakerName} heartsTotal={heartsTotal} demoUnlockAll={demoUnlockAll} notify={notify} />}
       </div>
       <div className="bottom-dock" aria-hidden="true" />

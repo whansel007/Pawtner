@@ -181,21 +181,6 @@ export interface Caregiver {
   status: string;
 }
 
-export interface CareActivity {
-  /** Doses taken summary, e.g. "2 of 3" */
-  dosesTaken: string;
-  /** Doses taken count */
-  dosesTakenCount: number;
-  /** Doses total */
-  dosesTotal: number;
-  /** Walk distance today */
-  walkDistance: string;
-  /** Timestamp of latest activity */
-  timestamp: string;
-  /** Activity description */
-  description: string;
-}
-
 export interface RestockAlert {
   /** Medicine name */
   name: string;

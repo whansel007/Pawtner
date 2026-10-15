@@ -11,7 +11,6 @@ import { useEffect, useState } from "react";
 export function SettingsScreen({
   back,
   addMedication,
-  openCaretaker,
   openReminders,
   caregiver,
   petName,
@@ -28,7 +27,6 @@ export function SettingsScreen({
 }: {
   back: BackAction;
   addMedication: () => void;
-  openCaretaker: () => void;
   openReminders: () => void;
   caregiver: Caregiver;
   petName: string;
@@ -57,7 +55,8 @@ export function SettingsScreen({
       <div className="settings-group">
         <button onClick={addMedication}><span className="feature-icon"><Icon name="pill" /></span><div><strong>{t("settings.addMed")}</strong><small>{t("settings.addMedSub")}</small></div><Icon name="chevron" /></button>
         <button onClick={openReminders}><span className="feature-icon sage"><Icon name="bell" /></span><div><strong>{t("settings.nudges", { name: petName })}</strong><small>{t("settings.nudgesSub")}</small></div><Icon name="chevron" /></button>
-        <button onClick={openCaretaker}><span className="feature-icon sage"><Icon name="users" /></span><div><strong>{t("settings.caretaker", { caretaker: caretakerName })}</strong><small>{t("settings.caretakerSub", { name: petName })}</small></div><Icon name="chevron" /></button>
+        {/* Information only: the caretaker's view lives on /care, not on the senior's phone. */}
+        <div className="settings-info"><span className="feature-icon sage"><Icon name="users" /></span><div><strong>{t("settings.caretaker", { caretaker: caretakerName })}</strong><small>{t("settings.caretakerSub", { name: petName })}</small></div></div>
       </div>
       <div className="settings-note"><Icon name="heart" /><p><strong>{t("settings.privacyTitle")}</strong><br />{t("settings.privacyBody", { caretaker: caretakerName })}</p></div>
       <div className="demo-clock-card">

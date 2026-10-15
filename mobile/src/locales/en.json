@@ -52,18 +52,7 @@
     "streakChip_other": "🔥 {{count}} days"
   },
   "care": {
-    "eyebrow": "Shared with your circle",
-    "title": "{{name}} is doing great",
-    "supporting": "You and {{caretaker}} look after {{name}} together. Good moments are shared; medicine details stay private.",
     "pairNames": "{{senior}} + {{caretaker}}",
-    "daysRemaining": "About {{count}} days remaining",
-    "daysRemaining_one": "About {{count}} day remaining",
-    "daysRemaining_other": "About {{count}} days remaining",
-    "careToday": "Care today",
-    "dosesTaken": "Doses taken",
-    "walkedToday": "Walked today",
-    "recentActivity": "Recent activity",
-    "sendTreat": "Send {{name}} a treat",
     "web": {
       "brand": "Pawtner",
       "brandHome": "Pawtner care home",
@@ -162,7 +151,16 @@
         "questionsTitle": "Questions for the doctor",
         "questionsSaved": "Saved on {{day}} · Ready for the next visit",
         "questionsEarlier": "Also this week",
-        "questionsEmpty": "No questions saved this week."
+        "questionsEmpty": "No questions saved this week.",
+        "treatEyebrow": "A little joy",
+        "treatTitle": "Send {{dog}} a treat",
+        "treatBody": "It shows up on {{name}}'s phone, behind the little gift.",
+        "treatButton": "Send {{dog}} a treat",
+        "treatSending": "Sending…",
+        "treatSent": "Treat sent. {{name}} will see {{dog}} celebrate.",
+        "treatFailed": "That didn't send. Please try again in a moment.",
+        "treatOffline": "Treats can be sent once Pawtner is back online.",
+        "treatMessage": "{{caretaker}} sent {{dog}} a treat!"
       },
       "alerts": {
         "eyebrow": "A trusted circle",
@@ -473,7 +471,6 @@
   "toast": {
     "alreadyCounted": "Already counted. {{name}} remembers!",
     "treatWaiting": "A treat from {{caretaker}} is waiting for {{name}}!",
-    "treatSent": "Treat sent. Mum will see {{name}} celebrate!",
     "nudgeSet": "{{name}} knows when to nudge you.",
     "heartGained": "{{name}} gained a heart!",
     "bpLogged": "Reading logged. {{name}}'s heart is full!",

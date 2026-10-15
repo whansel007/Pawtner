@@ -609,9 +609,10 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
    Settings
    ═══════════════════════════════════════════════════════════════════════ */
 .settings-group { display: grid; gap: 9px; margin-top: 18px; }
-.settings-group > button { width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 11px; padding: 12px; border: 0; border-radius: var(--radius-3xl); color: #294a3a; background: var(--color-surface-sage); text-align: left; cursor: pointer; }
+.settings-group > button, .settings-group > .settings-info { width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 11px; padding: 12px; border: 0; border-radius: var(--radius-3xl); color: #294a3a; background: var(--color-surface-sage); text-align: left; cursor: pointer; }
 .settings-group > button:nth-child(1) { background: var(--color-surface-cream-alt); }
-.settings-group button div { display: grid; gap: 2px; }
+.settings-group > .settings-info { grid-template-columns: auto 1fr; cursor: default; }
+.settings-group button div, .settings-group .settings-info div { display: grid; gap: 2px; }
 .settings-group small { color: #78857c; font-size: var(--font-size-sm); }
 .settings-note { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 13px; border-radius: var(--radius-2xl); color: #65766b; background: var(--color-surface-stone-alt); }
 .settings-note p { margin: 0; font-size: var(--font-size-sm); line-height: 1.4; }

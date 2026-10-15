@@ -2,7 +2,6 @@ export type Screen =
   | "cover"
   | "dedication"
   | "home"
-  | "care"
   | "reminders"
   | "prescription"
   | "explanation"
