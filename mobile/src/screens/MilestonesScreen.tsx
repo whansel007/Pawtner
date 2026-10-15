@@ -4,6 +4,7 @@ import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
 import type { BackAction } from "../lib/navigation";
 import { api } from "../lib/api";
+import { tricks as mockTricks } from "../mock";
 import type { MilestonesResponse } from "../../../shared/contract";
 import type { Pet } from "../types";
 
@@ -56,7 +57,7 @@ export function MilestonesScreen({
 
       <div className="section-title"><h3>{t("milestones.tricks")}</h3><span>{t("milestones.tricksSub")}</span></div>
       <div className="trick-grid">
-        {data?.tricks.map((trick) => (
+        {(data?.tricks ?? mockTricks).map((trick) => (
           <article className={trick.earned ? "earned" : ""} key={trick.name}><Icon name="star" /><strong>{trick.name}</strong><small>{trick.note}</small></article>
         ))}
       </div>
