@@ -121,7 +121,7 @@ export const bloodPressureReading: BloodPressureReading = {
 };
 
 export const clinicTasks: ClinicTask = {
-  title: "Doctor's tiny tasks",
+  title: "From the Doctor",
 };
 
 export const screeningInfo: ScreeningInfo = {

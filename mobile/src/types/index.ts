@@ -88,7 +88,7 @@ export interface WeekSummary {
   doctorQuestion: string;
 }
 
-/** Doctor's tiny tasks row: a photo of the clinic memo, kept on the phone (subtitles in en.json). */
+/** From the Doctor row: a photo of the clinic memo, kept on the phone (subtitles in en.json). */
 export interface ClinicTask {
   /** Row title */
   title: string;
