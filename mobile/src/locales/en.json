@@ -64,6 +64,17 @@
     "walkedToday": "Walked today",
     "recentActivity": "Recent activity",
     "sendTreat": "Send {{name}} a treat",
+    "pillRef": {
+      "set": "Set original pill photo",
+      "replace": "Replace original",
+      "setBadge": "Original photo set",
+      "hint": "Take a clear photo of ONE pill from the original pack. Every future check-in is compared to this photo.",
+      "capture": "Tap to take the pill photo",
+      "captured": "Photo ready",
+      "saving": "Saving…",
+      "save": "Save as original",
+      "saved": "Original pill photo saved."
+    },
     "web": {
       "brand": "Pawtner",
       "brandHome": "Pawtner care home",
@@ -291,21 +302,18 @@
     "giveHeart": "Give {{name}} a heart",
     "notNow": "Not now",
     "check": {
-      "button": "Compare with my first photo",
+      "button": "Compare with my pill",
       "checking": "{{name}} is looking…",
-      "described": {
-        "title": "First photo saved",
-        "note": "Next time, {{name}} will compare your photo with this one."
-      },
       "verified": {
         "match": "Looks like your usual pill",
         "diff": "This looks different from your usual pill. Please check the package before you take it.",
-        "savedLabel": "Your first photo:",
+        "referenceLabel": "Original pill:",
         "newLabel": "This photo:"
       },
       "error": "{{name}} can't compare photos right now. Your proof photo still counts.",
       "errorWarmup": "{{name}} is still warming up. Please tap Compare again in a moment.",
-      "disclosure": "{{name}} only compares this photo with your earlier one. It can't tell you what a pill is. Always check the package and ask your pharmacist."
+      "noReference": "No original pill photo is set yet. Please set it in the medicine settings (Care screen) first.",
+      "disclosure": "{{name}} only compares this photo with the original pill photo set in the medicine settings. It can't tell you what a pill is. Always check the package and ask your pharmacist."
     }
   },
   "walk": {

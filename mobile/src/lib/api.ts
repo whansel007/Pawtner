@@ -10,7 +10,7 @@ import type {
   MedicationListResponse,
   MedicineExplanationResponse,
   MilestonesResponse,
-  PillDescribeResponse,
+  PillReferenceResponse,
   PillVerifyResponse,
   SouvenirResponse,
   TodayResponse,
@@ -72,8 +72,10 @@ export const api = {
   milestones: () => request<MilestonesResponse>("/milestones"),
 
   // T2-08: Pill photo recognition (demo only)
-  describePill: (medicationId: string, imageBase64: string, mimeType: string) =>
-    request<PillDescribeResponse>("/pill-describe", { method: "POST", body: JSON.stringify({ medicationId, imageBase64, mimeType }) }),
+  // Set the SETTINGS-defined original/reference pill photo for a medicine.
+  setPillReference: (medicationId: string, imageBase64: string, mimeType: string) =>
+    request<PillReferenceResponse>("/pill-reference", { method: "POST", body: JSON.stringify({ medicationId, imageBase64, mimeType }) }),
+  // Compare a check-in photo against the medicine's reference picture.
   verifyPill: (medicationId: string, imageBase64: string, mimeType: string) =>
     request<PillVerifyResponse>("/pill-verify", { method: "POST", body: JSON.stringify({ medicationId, imageBase64, mimeType }) }),
   // Warms the vision model in the background; safe to ignore failures.

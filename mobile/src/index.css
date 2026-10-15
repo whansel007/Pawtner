@@ -783,6 +783,13 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .edit-actions { display: flex; gap: 8px; margin-top: 4px; }
 .edit-actions .primary-button { margin-top: 0; min-height: 40px; flex: 1; }
 .edit-actions .text-button { margin-top: 0; }
+/* T2-08: set original pill photo in medicine settings */
+.med-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; width: 100%; }
+.med-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.med-actions .text-button { margin-top: 0; }
+.med-ref-set { display: grid; gap: 8px; width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-border-card); }
+.pill-ref-set { color: var(--color-accent-sage); font-weight: 700; }
+.pill-ref-ok { color: var(--color-accent-sage); font-weight: 700; }
 
 /* Explanation links and credits */
 .explanation-links { margin-top: 16px; display: grid; gap: 8px; }
