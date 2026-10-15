@@ -134,10 +134,9 @@ export function HealthScreen({
           tabIndex={-1}
         >
           {/* Urgent decisions (995, see a GP) live here, not on Home (routine ones are on Milestones). User, 16 Oct:
-              just "Warning", the plain reason, and one calm action line; no button, no "Why?". */}
+              just "Warning" and the plain reason; no action line, no button, no "Why?". */}
           <p className="bp-result__title">{t("health.warning")}</p>
           <p className="bp-result__wording">{t(explainDecision(latestDecision).reasonKey)}</p>
-          <p className="bp-result__action">{isEmergency ? t("health.callEmergencyNow") : t("health.resultSeeGpTitle")}</p>
         </div>
       )}
 

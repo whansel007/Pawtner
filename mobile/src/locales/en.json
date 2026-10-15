@@ -427,9 +427,7 @@
     "bpLastReading": "Last reading",
     "bpNoReadingYet": "No reading logged yet",
     "resultTitle": "What the app noticed",
-    "warning": "Warning",
-    "callEmergencyNow": "Call 995 now.",
-    "resultSeeGpTitle": "Please see your GP soon"
+    "warning": "Warning"
   },
   "decisionLog": {
     "whyButton": "Why?",
