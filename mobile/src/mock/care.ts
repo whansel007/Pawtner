@@ -8,10 +8,10 @@ export const caregiver: Caregiver = {
   status: "Connected",
 };
 
-/** Low supply shown on the phone's Reminders screen when offline (restock help). Same id as the mock Rozevon dose. */
+/** Low supply shown on the phone's Reminders screen when offline (restock help). Same medicine as the seed's 4-day supply. */
 export const restockAlert: RestockAlert = {
-  medicationId: "med-rozevon",
-  name: "Rozevon",
+  medicationId: "med-tablet-b",
+  name: "Fictional Tablet B",
   daysRemaining: 4,
 };
 

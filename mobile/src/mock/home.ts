@@ -18,14 +18,14 @@ export const pet: Pet = {
 export const heartsTotal = 30;
 
 export const doses: Dose[] = [
-  { time: "10:00 AM", name: "Twynsta", dose: "80 mg / 10 mg", status: "Taken" },
-  { time: "1:00 PM", name: "Spironolactone", dose: "25 mg", status: "Take now" },
-  { time: "8:00 PM", name: "Rozevon", dose: "20 mg / 10 mg", status: "Later" },
+  { time: "10:00 AM", name: "Fictional Tablet A", dose: "5 mg", status: "Taken" },
+  { time: "8:00 PM", name: "Fictional Tablet B", dose: "10 mg", status: "Later" },
 ];
 
 /**
  * Contract-shaped mock doses for the compact next-dose card (T1-08/09), shown offline.
- * Same three medicines as the hosted demo data (user, 16 Oct): one taken, one due, one upcoming.
+ * Same two medicines and times as the fictional seed (migrations/seed.sql): one taken, one upcoming.
+ * Real medicines (e.g. Twynsta) are added during testing through Add a medication (user, 16 Oct).
  * Uses today's date so times render meaningfully.
  */
 function todayAt(hour: number, minute: number): string {
@@ -37,9 +37,9 @@ function todayAt(hour: number, minute: number): string {
 export const todayDoses: DerivedDose[] = [
   {
     id: "dose-001",
-    medicationId: "med-twynsta",
-    medicationName: "Twynsta",
-    strength: "80 mg / 10 mg",
+    medicationId: "med-tablet-a",
+    medicationName: "Fictional Tablet A",
+    strength: "5 mg",
     scheduledAt: todayAt(10, 0),
     status: "taken",
     eventAt: todayAt(10, 5),
@@ -48,20 +48,9 @@ export const todayDoses: DerivedDose[] = [
   },
   {
     id: "dose-002",
-    medicationId: "med-spironolactone",
-    medicationName: "Spironolactone",
-    strength: "25 mg",
-    scheduledAt: todayAt(13, 0),
-    status: "due",
-    eventAt: null,
-    nudgeCount: 1,
-    lastNudgeAt: todayAt(12, 45),
-  },
-  {
-    id: "dose-003",
-    medicationId: "med-rozevon",
-    medicationName: "Rozevon",
-    strength: "20 mg / 10 mg",
+    medicationId: "med-tablet-b",
+    medicationName: "Fictional Tablet B",
+    strength: "10 mg",
     scheduledAt: todayAt(20, 0),
     status: "upcoming",
     eventAt: null,
