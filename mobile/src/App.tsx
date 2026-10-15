@@ -44,7 +44,7 @@ import { DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset } from "./confi
 import { SENIOR_TIMEZONE } from "./config/scene";
 import type { World, Accessory } from "./types";
 import type { WalkCompletion } from "./lib/walkState";
-import { homeDecision, routineDecision } from "./lib/decisions";
+import { isUrgentDecision, routineDecision } from "./lib/decisions";
 import type { TrickRequest } from "./lib/tricks";
 import {
   pet,
@@ -363,7 +363,8 @@ export default function App() {
       setDemoNow(now);
       setDemoClockValue(toDateTimeLocal(parsed));
       await refreshToday(now);
-      navigate("home");
+      // Urgent answers (995, see a GP) show on Health; everything else on Home with the toast.
+      navigate(isUrgentDecision(result.decision) ? "health" : "home");
       notify(result.decision.wording);
     } catch (error) {
       reportApiProblem(error, true);
@@ -425,7 +426,6 @@ export default function App() {
             onWalk={() => navigate("walk")}
             onBloodPressure={() => navigate("health")}
             onStreak={() => navigate("milestones")}
-            decision={homeDecision(latestDecision)}
           />
         )}
         {screen === "reminders" && (

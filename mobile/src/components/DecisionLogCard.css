@@ -55,10 +55,6 @@
   scroll-margin-bottom: 12px;
 }
 
-/* Home's column scrolls under the bottom nav, so there the details stop above the nav. */
-.home-layout .decision-log__body {
-  scroll-margin-bottom: calc(var(--nav-space) + 12px);
-}
 
 .decision-log__reason {
   margin: 0 0 10px;
@@ -67,19 +63,7 @@
   color: var(--color-text-heading);
 }
 
-.decision-log__section {
-  margin-bottom: 8px;
-}
 
-.decision-log__section-label {
-  margin: 0;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-black);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: #7a8a76;
-  margin-bottom: 4px;
-}
 
 .decision-log__row {
   display: flex;
@@ -108,7 +92,7 @@
   word-break: break-word;
 }
 
-/* Home: one compact row (wording + "Why?"); the details open below it. */
+/* Summary row (wording + "Why?") on Health and Milestones; the details open below it. */
 .decision-log--summary {
   display: flex;
   flex-wrap: wrap;
@@ -128,6 +112,9 @@
   color: var(--color-primary);
 }
 
+/* The row's own gap already separates the wording from the reason: no extra margin, less top padding. */
 .decision-log--summary .decision-log__body {
   flex-basis: 100%;
+  margin-top: 0;
+  padding-top: 12px;
 }

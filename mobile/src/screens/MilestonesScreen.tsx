@@ -65,16 +65,6 @@ export function MilestonesScreen({
       <p className="streak-line">{t("milestones.streakLine", { count: pet.streak })}</p>
       <p className="streak-line">{t("milestones.hearts", { count: heartsTotal })}</p>
 
-      {data && (
-        <div className="world-card">
-          <span className="world-level">{data.currentWorld.levelText}</span>
-          <h3>{data.currentWorld.label}</h3>
-          <p>{data.currentWorld.description}</p>
-          <div className="world-progress"><span style={{ width: `${data.currentWorld.progress * 100}%` }} /></div>
-          <small>{(data.cumulativeWalkMeters / 1000).toFixed(1)} km total walked · {data.walkCount} walks</small>
-        </div>
-      )}
-
       <button className="customize-row" onClick={onCustomize}><span className="feature-icon"><Icon name="star" /></span><div><strong>{t("milestones.worldWardrobe")}</strong><small>{t("milestones.worldWardrobeSub", { name: petName })}</small></div><Icon name="chevron" /></button>
 
       <div className="section-title"><h3>{t("milestones.souvenirs")}</h3><span>{t("milestones.souvenirsSub")}</span></div>

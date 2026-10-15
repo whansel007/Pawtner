@@ -7,6 +7,7 @@ import { ClinicMemoRow } from "../components/ClinicMemoRow";
 import type { BackAction } from "../lib/navigation";
 import { DecisionLogCard } from "../components/DecisionLogCard";
 import { BP_RANGE } from "../config/bp";
+import { EMERGENCY_PHONE } from "../config/health";
 import type { AgentDecision, HealthMetric } from "../../../shared/contract";
 import type { BloodPressureReading, ScreeningInfo, ActivityLink, ClinicTask, WeekSummary } from "../types";
 import "./HealthScreen.css";
@@ -133,23 +134,16 @@ export function HealthScreen({
           className={`bp-result ${isEmergency ? "bp-result--emergency" : "bp-result--gp"}`}
           tabIndex={-1}
         >
+          {isSeeGp && <p className="bp-result__title">{t("health.resultSeeGpTitle")}</p>}
+          <p className="bp-result__wording">{latestDecision.wording}</p>
           {isEmergency && (
-            <>
-              <p className="bp-result__number">{t("health.resultEmergencyNumber")}</p>
-              <p className="bp-result__wording">{latestDecision.wording}</p>
-            </>
+            <a className="secondary-button bp-result__call" href={`tel:${EMERGENCY_PHONE}`}>
+              <Icon name="phone" size={20} /> {t("health.callEmergency", { number: EMERGENCY_PHONE })}
+            </a>
           )}
-          {isSeeGp && (
-            <>
-              <p className="bp-result__title">{t("health.resultSeeGpTitle")}</p>
-              <p className="bp-result__wording">{latestDecision.wording}</p>
-            </>
-          )}
+          {/* Urgent decisions (995, see a GP) live here, not on Home; "Why?" sits in the same calm card. Routine ones are on Milestones. */}
+          <DecisionLogCard decision={latestDecision} />
         </div>
-      )}
-
-      {latestDecision && (
-        <DecisionLogCard decision={latestDecision} />
       )}
 
       <form className="bp-form" onSubmit={handleSubmit}>
