@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildAgentInput, computeHeart, computeStreak, deriveDoseStatus, hasBloodPressureToday, selectAgentInput } from "../../shared/selectors.js";
-import type { DoseSchedule, HealthMetric } from "../../shared/contract.js";
+import { buildAgentInput, computeHeart, computeHeartsTotal, computeStreak, deriveDoseStatus, hasBloodPressureToday, selectAgentInput, selectHeartsTotal } from "../../shared/selectors.js";
+import type { DerivedDose, DoseSchedule, HealthMetric } from "../../shared/contract.js";
 import type { AgentSelectionSource } from "../../shared/selectors.js";
 
 const seedSchedule: DoseSchedule = {
@@ -83,5 +83,70 @@ describe("selectors", () => {
     expect(input.consecutiveMissedDoses).toBe(1);
     expect(input.latestDoseEvent).toBeNull();
     expect(selectAgentInput({ ...source, triggeringDoseEventId: "seed-event" }).latestDoseEvent?.scheduledFor).toBe(yesterday);
+  });
+
+  describe("computeHeartsTotal", () => {
+    const dose = (id: string, scheduledAt: string, status: DerivedDose["status"]): DerivedDose => ({
+      ...seedSchedule, id, scheduledAt, status, eventAt: null, nudgeCount: 0, lastNudgeAt: null,
+    });
+    const bp = (recordedAt: string): HealthMetric => ({ id: `bp-${recordedAt}`, kind: "blood_pressure", systolic: 120, diastolic: 80, note: null, recordedAt });
+
+    it("is 0 with no dose history, even when readings exist", () => {
+      expect(computeHeartsTotal([], [], "2026-10-13")).toBe(0);
+      expect(computeHeartsTotal([], [bp("2026-10-13T08:00:00.000Z")], "2026-10-13")).toBe(0);
+    });
+
+    it("sums each day's heart across several days, today included", () => {
+      const doses = [
+        dose("a", "2026-10-11T02:00:00.000Z", "taken"), dose("b", "2026-10-11T12:00:00.000Z", "taken"), // 4
+        dose("a", "2026-10-12T02:00:00.000Z", "taken"), dose("b", "2026-10-12T12:00:00.000Z", "missed"), // 2
+        dose("a", "2026-10-13T02:00:00.000Z", "skipped"), dose("b", "2026-10-13T12:00:00.000Z", "upcoming"), // 0
+      ];
+      expect(computeHeartsTotal(doses, [], "2026-10-13")).toBe(6);
+    });
+
+    it("adds the blood-pressure bonus on the days a reading was logged, capped at the maximum", () => {
+      const doses = [dose("a", "2026-10-11T02:00:00.000Z", "missed"), dose("a", "2026-10-12T02:00:00.000Z", "taken")];
+      expect(computeHeartsTotal(doses, [bp("2026-10-11T08:00:00.000Z"), bp("2026-10-12T08:00:00.000Z")], "2026-10-12")).toBe(1 + 4);
+      // Readings before the first scheduled dose add nothing.
+      expect(computeHeartsTotal(doses, [bp("2026-10-10T08:00:00.000Z")], "2026-10-12")).toBe(0 + 4);
+    });
+
+    it("counts gap days and an all-upcoming today as nothing due, and ignores anything after today", () => {
+      const doses = [
+        dose("a", "2026-10-10T02:00:00.000Z", "taken"), // 4
+        // 2026-10-11 and 2026-10-12: no occurrences -> 2 each
+        dose("a", "2026-10-13T12:00:00.000Z", "upcoming"), // today, nothing due yet -> 2
+        dose("a", "2026-10-14T02:00:00.000Z", "taken"), // future: ignored
+      ];
+      expect(computeHeartsTotal(doses, [bp("2026-10-14T08:00:00.000Z")], "2026-10-13")).toBe(4 + 2 + 2 + 2);
+    });
+
+    it("selects a total whose today's share equals the dog's heart", () => {
+      const source: AgentSelectionSource = {
+        now: "2026-10-13T11:00:00.000Z",
+        today: "2026-10-13",
+        userId: "u",
+        dog: { id: "d", name: "Buddy" },
+        doseOccurrences: [
+          { ...seedSchedule, scheduledAt: "2026-10-12T02:00:00.000Z" },
+          { ...seedSchedule, scheduledAt: "2026-10-13T02:00:00.000Z" },
+          { ...seedSchedule, scheduledAt: "2026-10-14T02:00:00.000Z" },
+        ],
+        doseEvents: [
+          { id: "e1", scheduleId: seedSchedule.id, scheduledFor: "2026-10-12T02:00:00.000Z", event: "taken", occurredAt: "2026-10-12T02:05:00.000Z" },
+          { id: "e2", scheduleId: seedSchedule.id, scheduledFor: "2026-10-13T02:00:00.000Z", event: "taken", occurredAt: "2026-10-13T02:05:00.000Z" },
+          // Recorded after `now`: not visible yet.
+          { id: "e3", scheduleId: seedSchedule.id, scheduledFor: "2026-10-14T02:00:00.000Z", event: "taken", occurredAt: "2026-10-14T02:05:00.000Z" },
+        ],
+        nudges: [],
+        healthMetrics: [bp("2026-10-13T08:00:00.000Z")],
+        daysOfSupplyByMedicationId: {},
+        caretaker: null,
+      };
+      const input = selectAgentInput(source);
+      expect(input.dog.heart).toBe(4);
+      expect(selectHeartsTotal(source)).toBe(4 + input.dog.heart);
+    });
   });
 });

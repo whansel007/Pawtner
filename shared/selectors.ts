@@ -96,20 +96,68 @@ export function buildAgentInput(input: AgentInput): AgentInput {
   return input;
 }
 
-export function selectAgentInput(source: AgentSelectionSource): AgentInput {
+/** Occurrence key shared by schedules, ledger events and nudges: one scheduled dose on one day. */
+function occurrenceKey(scheduleId: string, scheduledFor: string): string {
+  return `${scheduleId}|${Date.parse(scheduledFor)}`;
+}
+
+function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const value = key(item);
+    const group = groups.get(value);
+    if (group) group.push(item);
+    else groups.set(value, [item]);
+  }
+  return groups;
+}
+
+/** Every occurrence in the source with its ledger-derived status, oldest first, plus the metrics visible at `now`. */
+function deriveSelection(source: AgentSelectionSource): { derived: DerivedDose[]; metrics: HealthMetric[] } {
   const occurrences = [...source.doseOccurrences].sort((a, b) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt));
+  // Index events and nudges by occurrence so long histories stay linear; deriveDoseStatus still applies its own filters.
+  const eventsByOccurrence = groupBy(source.doseEvents, (event) => occurrenceKey(event.scheduleId, event.scheduledFor));
+  const nudgesByOccurrence = groupBy(source.nudges, (nudge) => occurrenceKey(nudge.scheduleId, nudge.scheduledFor));
   const derived = occurrences.map((schedule) => {
-    const nudgeHistory = source.nudges.filter((nudge) => nudge.scheduleId === schedule.id
-      && Date.parse(nudge.scheduledFor) === Date.parse(schedule.scheduledAt)
-      && Date.parse(nudge.createdAt) <= Date.parse(source.now))
+    const key = occurrenceKey(schedule.id, schedule.scheduledAt);
+    const nudgeHistory = (nudgesByOccurrence.get(key) ?? [])
+      .filter((nudge) => Date.parse(nudge.createdAt) <= Date.parse(source.now))
       .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
-    return deriveDoseStatus(schedule, source.doseEvents, source.now, {
+    return deriveDoseStatus(schedule, eventsByOccurrence.get(key) ?? [], source.now, {
       count: nudgeHistory.length,
       lastAt: nudgeHistory.at(-1)?.createdAt ?? null,
     });
   });
-  const todayDoses = derived.filter((dose) => dose.scheduledAt.slice(0, 10) === source.today);
   const metrics = source.healthMetrics.filter((metric) => Date.parse(metric.recordedAt) <= Date.parse(source.now));
+  return { derived, metrics };
+}
+
+/**
+ * Lifetime hearts: the sum of each day's `computeHeart` from the first day with a scheduled dose up to and including `today`.
+ * Days are grouped with the same date logic as `computeStreak` and today's heart (`scheduledAt` / `recordedAt` date),
+ * so today's share always equals the dog's current `heart`.
+ * - Days before the first scheduled dose add nothing; no dose history at all gives 0.
+ * - A day inside that range with nothing due (no occurrences, or only upcoming ones later today) adds
+ *   `DEMO_RULES.heartWhenNothingDue`, plus the blood-pressure bonus if logged that day: the heart the dog showed that day.
+ * - Doses and readings after `today` are ignored.
+ */
+export function computeHeartsTotal(doses: DerivedDose[], metrics: HealthMetric[], today: string): number {
+  const dosesByDate = groupBy(doses.filter((dose) => dose.scheduledAt.slice(0, 10) <= today), (dose) => dose.scheduledAt.slice(0, 10));
+  const firstDate = [...dosesByDate.keys()].sort()[0];
+  if (!firstDate) return 0;
+  const bloodPressureDates = new Set(metrics.map((metric) => metric.recordedAt.slice(0, 10)));
+  let total = 0;
+  const cursor = new Date(`${firstDate}T00:00:00.000Z`);
+  for (let date = firstDate; date <= today; date = cursor.toISOString().slice(0, 10)) {
+    total += computeHeart(dosesByDate.get(date) ?? [], bloodPressureDates.has(date));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return total;
+}
+
+export function selectAgentInput(source: AgentSelectionSource): AgentInput {
+  const { derived, metrics } = deriveSelection(source);
+  const todayDoses = derived.filter((dose) => dose.scheduledAt.slice(0, 10) === source.today);
   const streak = computeStreak(derived.map((dose) => ({
     date: dose.scheduledAt.slice(0, 10),
     scheduleId: dose.id,
@@ -140,4 +188,10 @@ export function selectAgentInput(source: AgentSelectionSource): AgentInput {
     consecutiveMissedDoses,
     caretaker: source.caretaker,
   });
+}
+
+/** The dog's lifetime hearts for this source, derived from the same occurrences, ledger and readings as `selectAgentInput`. */
+export function selectHeartsTotal(source: AgentSelectionSource): number {
+  const { derived, metrics } = deriveSelection(source);
+  return computeHeartsTotal(derived, metrics, source.today);
 }

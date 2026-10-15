@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient, QueryResultRow } from "pg";
 import { DEMO_RULES } from "../shared/config.js";
 import { decide, selectDogMood } from "../shared/rules.js";
-import { selectAgentInput, type AgentSelectionSource } from "../shared/selectors.js";
+import { selectAgentInput, selectHeartsTotal, type AgentSelectionSource } from "../shared/selectors.js";
 import { applyModelWording } from "../shared/wording.js";
 import { SOUVENIR_TIERS, unlockedSouvenirs, nextSouvenir } from "../shared/souvenirs.js";
 import { FALLBACK_EXPLANATION, HEALTHHUB_MEDICATIONS_URL, NDF_URL, validateRephrase } from "../shared/medlineplus.js";
@@ -200,6 +200,23 @@ export class PawtnerRepository {
     now: string,
     triggeringDoseEventId?: string,
   ): Promise<AgentInput> {
+    return selectAgentInput(await this.loadSource(client, userId, now, triggeringDoseEventId));
+  }
+
+  /** Today's agent input plus the dog's lifetime hearts, both from one read of the full dose history. */
+  private async loadDogState(client: PoolClient | Pool, userId: string, now: string, triggeringDoseEventId?: string)
+    : Promise<{ input: AgentInput; heartsTotal: number }> {
+    const source = await this.loadSource(client, userId, now, triggeringDoseEventId);
+    return { input: selectAgentInput(source), heartsTotal: selectHeartsTotal(source) };
+  }
+
+  /** Reads everything the selectors need: every occurrence since each active schedule started (no history cap), ledger, nudges, readings. */
+  private async loadSource(
+    client: PoolClient | Pool,
+    userId: string,
+    now: string,
+    triggeringDoseEventId?: string,
+  ): Promise<AgentSelectionSource> {
     const personResult = await client.query(
       `SELECT u.timezone, d.id::text AS dog_id, d.name AS dog_name
        FROM users u JOIN dogs d ON d.user_id = u.id WHERE u.id = $1`,
@@ -215,12 +232,11 @@ export class PawtnerRepository {
        JOIN medications m ON m.id = ms.medication_id
        JOIN users u ON u.id = m.user_id
        CROSS JOIN LATERAL generate_series(
-         GREATEST(ms.starts_on, ($2::date - 365))::timestamp,
+         ms.starts_on::timestamp,
          LEAST(COALESCE(ms.ends_on, $2::date), $2::date)::timestamp,
          interval '1 day'
        ) AS days(local_day)
-       WHERE u.id = $1 AND m.active = true
-         AND ms.starts_on <= $2::date AND (ms.ends_on IS NULL OR ms.ends_on >= ($2::date - 365))
+       WHERE u.id = $1 AND m.active = true AND ms.starts_on <= $2::date
        ORDER BY scheduled_at, ms.id`,
       [userId, today],
     );
@@ -271,7 +287,7 @@ export class PawtnerRepository {
       scheduledFor: iso(row.scheduled_for),
       createdAt: iso(row.created_at),
     }));
-    const source: AgentSelectionSource = {
+    return {
       now,
       today,
       userId,
@@ -286,7 +302,6 @@ export class PawtnerRepository {
         : null,
       ...(triggeringDoseEventId ? { triggeringDoseEventId } : {}),
     };
-    return selectAgentInput(source);
   }
 
   private async latestDecision(client: PoolClient | Pool, userId: string, now?: string): Promise<AgentDecision | null> {
@@ -299,7 +314,7 @@ export class PawtnerRepository {
   }
 
   private async today(client: PoolClient | Pool, userId: string, now: string, triggerEventId?: string): Promise<TodayResponse> {
-    const input = await this.loadInput(client, userId, now, triggerEventId);
+    const { input, heartsTotal } = await this.loadDogState(client, userId, now, triggerEventId);
     const userResult = await client.query("SELECT id::text, name FROM users WHERE id = $1", [userId]);
     const dogResult = await client.query("SELECT id::text, name, mood FROM dogs WHERE user_id = $1", [userId]);
     const timezoneResult = await client.query("SELECT timezone FROM users WHERE id = $1", [userId]);
@@ -309,7 +324,7 @@ export class PawtnerRepository {
     const dog = dogResult.rows[0];
     return {
       user: userResult.rows[0],
-      dog: { id: dog.id, name: dog.name, mood: selectDogMood(input.dog.heart, latestDecision, now), heart: input.dog.heart, streak: input.dog.streak },
+      dog: { id: dog.id, name: dog.name, mood: selectDogMood(input.dog.heart, latestDecision, now), heart: input.dog.heart, streak: input.dog.streak, heartsTotal },
       doses: input.doses,
       healthMetrics,
       bloodPressureLoggedToday: healthMetrics.length > 0,
@@ -484,7 +499,7 @@ export class PawtnerRepository {
       [userId, start, today, person.timezone],
     );
     const latestDecision = await this.latestDecision(this.pool, userId, now);
-    const input = await this.loadInput(this.pool, userId, now);
+    const { input, heartsTotal } = await this.loadDogState(this.pool, userId, now);
     const stats = scheduleStats.rows[0];
     const walks = walkStats.rows[0];
     const denominator = stats.doses_due;
@@ -495,7 +510,7 @@ export class PawtnerRepository {
       period: { start, end: today },
       senior: { id: person.user_id, name: person.senior_name },
       caregiver: person.caregiver_id ? { id: person.caregiver_id, name: person.caregiver_name } : null,
-      dog: { id: person.dog_id, name: person.dog_name, mood: selectDogMood(input.dog.heart, latestDecision, now), heart: input.dog.heart, streak: input.dog.streak },
+      dog: { id: person.dog_id, name: person.dog_name, mood: selectDogMood(input.dog.heart, latestDecision, now), heart: input.dog.heart, streak: input.dog.streak, heartsTotal },
       careScore,
       caringDays: Math.max(stats.completed_days, 0),
       dosesTaken: stats.doses_taken,
