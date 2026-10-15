@@ -97,8 +97,9 @@ export function ProofScreen({
         {captured && photoUrl ? (
           <>
             <img src={photoUrl} alt="Proof photo" className="proof-photo-preview" />
-            <strong>{t("proof.verified")}</strong>
-            {medicationName && <small>{medicationName}</small>}
+            {/* The medicine is what matters: its name is bold, "Photo saved!" is regular. */}
+            <span className="proof-scanner__saved">{t("proof.verified")}</span>
+            {medicationName && <strong>{medicationName}</strong>}
           </>
         ) : (
           <>

@@ -14,3 +14,14 @@ export const CLINIC_MEMO = {
   /** JPEG quality for the stored copy, 0–1. */
   jpegQuality: 0.8,
 } as const;
+
+/**
+ * "For my next visit": the senior's own notes to bring to the doctor. Kept on this phone only (no API,
+ * not shown on /care); text in en.json under "visitNotes".
+ */
+export const VISIT_NOTES = {
+  /** localStorage key; a JSON array of VisitNote, newest first. */
+  storageKey: "pawtner.visitNotes",
+  /** Longest note, in characters. */
+  maxLength: 300,
+} as const;

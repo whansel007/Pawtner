@@ -88,9 +88,10 @@
   text-align: center;
 }
 
+/* Calm, not alarming (user, 16 Oct): warm cream and Buddy's green, no red. The words still say "Call 995 now". */
 .bp-result--emergency {
-  background: #fdf0ee;
-  border: 2px solid #e8c5c0;
+  background: var(--color-surface-cream-warm);
+  border: 2px solid var(--color-surface-cream);
 }
 
 .bp-result--gp {
@@ -98,14 +99,6 @@
   border: 2px solid #c5d9c0;
 }
 
-.bp-result__number {
-  margin: 0 0 8px;
-  font-size: 56px;
-  font-weight: var(--font-weight-black);
-  line-height: 1;
-  color: #b3261e;
-  letter-spacing: -2px;
-}
 
 .bp-result__title {
   margin: 0 0 8px;
@@ -115,9 +108,11 @@
   color: var(--color-text-heading);
 }
 
+
 .bp-result__wording {
   margin: 0;
   font-size: var(--font-size-xl);
   line-height: 1.4;
   color: #3a4a3e;
 }
+

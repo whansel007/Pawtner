@@ -1,5 +1,4 @@
-import type { AgentDecision, DerivedDose } from "../../../shared/contract";
-import { DecisionLogCard } from "../components/DecisionLogCard";
+import type { DerivedDose } from "../../../shared/contract";
 import { NextDoseCard } from "../components/NextDoseCard";
 import { SceneChips } from "../components/SceneChips";
 import type { Pet } from "../types";
@@ -14,7 +13,6 @@ export function HomeScreen({
   onWalk,
   onBloodPressure,
   onStreak,
-  decision,
 }: {
   todayDoses: DerivedDose[];
   pet: Pet;
@@ -26,7 +24,6 @@ export function HomeScreen({
   onWalk: () => void;
   onBloodPressure: () => void;
   onStreak: () => void;
-  decision: AgentDecision | null;
 }) {
   return (
     // Stacked column: the dog (shared DogLayer) stands in the leftover space, so its paws always sit just above the chips.
@@ -52,8 +49,6 @@ export function HomeScreen({
           onWalk={onWalk}
           onBloodPressure={onBloodPressure}
         />
-        {/* Urgent / safety decisions only (App passes homeDecision); routine ones show on Milestones so Buddy gets the space. */}
-        {decision && <DecisionLogCard decision={decision} summary={decision.wording} />}
       </div>
     </div>
   );

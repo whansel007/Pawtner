@@ -26,6 +26,8 @@ export function SettingsScreen({
   demoTimeActive,
   onDemoTime,
   onResetDemo,
+  shareBloodPressure,
+  onShareBloodPressure,
 }: {
   back: BackAction;
   /** "My medicines": the medicine list with Edit and the original pill photo (T2-08). */
@@ -48,6 +50,9 @@ export function SettingsScreen({
   onDemoTime: (preset: DemoTimePreset | null) => void;
   /** "Reset demo": clears this phone's demo choices and reloads the app. */
   onResetDemo: () => void;
+  /** "Share my blood pressure with {{caretaker}}" (lib/sharing.ts). */
+  shareBloodPressure: boolean;
+  onShareBloodPressure: (value: boolean) => void;
 }) {
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
@@ -65,7 +70,11 @@ export function SettingsScreen({
         {/* Information only: the caretaker's view lives on /care, not on the senior's phone. */}
         <div className="settings-info"><span className="feature-icon sage"><Icon name="users" /></span><div><strong>{t("settings.caretaker", { caretaker: caretakerName })}</strong><small>{t("settings.caretakerSub", { name: petName })}</small></div></div>
       </div>
-      <div className="settings-note"><Icon name="heart" /><p><strong>{t("settings.privacyTitle")}</strong><br />{t("settings.privacyBody", { caretaker: caretakerName })}</p></div>
+      <label className="settings-share">
+        <input type="checkbox" checked={shareBloodPressure} onChange={(event) => onShareBloodPressure(event.target.checked)} />
+        <span><strong>{t("settings.shareBp", { caretaker: caretakerName })}</strong><small>{t("settings.shareBpSub", { caretaker: caretakerName })}</small></span>
+      </label>
+      <div className="settings-note"><Icon name="heart" /><p><strong>{t("settings.privacyTitle")}</strong></p></div>
       <div className="demo-clock-card">
         <p className="eyebrow green">Agent demo</p>
         <h3>Demo clock</h3>

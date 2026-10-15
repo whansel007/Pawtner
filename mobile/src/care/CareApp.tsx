@@ -9,6 +9,9 @@ import { useCareData } from "./hooks/useCareData";
 import { useCaretakerSlot } from "./hooks/useCaretakerSlot";
 import { useCareTreat } from "./hooks/useCareTreat";
 import { usePendingRestockRequest } from "../lib/useRestockHelp";
+import { useCareVisitNotes } from "../lib/useVisitNotes";
+import { useShareBloodPressure } from "../lib/useSharing";
+import { doctorQuestionsForCare } from "../lib/visitNotes";
 import { Brand } from "./components/Brand";
 import { CareFooter } from "./components/CareFooter";
 import { CareHeader } from "./components/CareHeader";
@@ -42,6 +45,10 @@ export default function CareApp() {
   const { data, offline, saveStatus, pendingThreshold, saveThreshold } = useCareData();
   const treat = useCareTreat(offline);
   const restock = usePendingRestockRequest();
+  // Rose's "For my next visit" notes she shared (demo: same browser, lib/visitNotes.ts).
+  const visitNotes = useCareVisitNotes();
+  // Rose's "Share my blood pressure" switch (demo: same browser, lib/sharing.ts): the latest reading and the questions she wrote with readings.
+  const [bloodPressureShared] = useShareBloodPressure();
   const mainRef = useRef<HTMLElement>(null);
   const firstRoute = useRef(true);
 
@@ -122,6 +129,8 @@ export default function CareApp() {
             onSendTreat={(message) => void treat.send(message)}
             restockRequest={restock.pending}
             onHandleRestock={restock.handle}
+            doctorQuestions={doctorQuestionsForCare(visitNotes, bloodPressureShared ? data.summary.doctorQuestions : [])}
+            latestBloodPressure={bloodPressureShared ? data.summary.latestBloodPressure : null}
           />
         )}
         {signedInPage && route === "alerts" && (

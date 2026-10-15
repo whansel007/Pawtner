@@ -8,10 +8,10 @@ export const caregiver: Caregiver = {
   status: "Connected",
 };
 
-/** Low supply shown on the phone's Reminders screen (restock help, demo only). Same id as the mock Gabapentin doses. */
+/** Low supply shown on the phone's Reminders screen when offline (restock help). Same medicine as the seed's 4-day supply. */
 export const restockAlert: RestockAlert = {
-  medicationId: "med-gaba",
-  name: "Gabapentin",
+  medicationId: "med-tablet-b",
+  name: "Fictional Tablet B",
   daysRemaining: 4,
 };
 

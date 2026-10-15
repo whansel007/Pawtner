@@ -5,7 +5,7 @@ import { FullCard } from "../components/FullCard";
 import { ActionRow } from "../components/ActionRow";
 import { ClinicMemoRow } from "../components/ClinicMemoRow";
 import type { BackAction } from "../lib/navigation";
-import { DecisionLogCard } from "../components/DecisionLogCard";
+import { explainDecision } from "../lib/decisions";
 import { BP_RANGE } from "../config/bp";
 import type { AgentDecision, HealthMetric } from "../../../shared/contract";
 import type { BloodPressureReading, ScreeningInfo, ActivityLink, ClinicTask, WeekSummary } from "../types";
@@ -25,6 +25,8 @@ export function HealthScreen({
   clinicTasks,
   weekSummary,
   petName,
+  visitNoteLatest,
+  onVisitNotes,
 }: {
   back: BackAction;
   bpLogged: boolean;
@@ -39,6 +41,9 @@ export function HealthScreen({
   clinicTasks: ClinicTask;
   weekSummary: WeekSummary;
   petName: string;
+  /** Newest "For my next visit" note (her own words), or null. */
+  visitNoteLatest: string | null;
+  onVisitNotes: () => void;
 }) {
   const { t } = useTranslation();
   const [systolic, setSystolic] = useState("");
@@ -128,23 +133,11 @@ export function HealthScreen({
           className={`bp-result ${isEmergency ? "bp-result--emergency" : "bp-result--gp"}`}
           tabIndex={-1}
         >
-          {isEmergency && (
-            <>
-              <p className="bp-result__number">{t("health.resultEmergencyNumber")}</p>
-              <p className="bp-result__wording">{latestDecision.wording}</p>
-            </>
-          )}
-          {isSeeGp && (
-            <>
-              <p className="bp-result__title">{t("health.resultSeeGpTitle")}</p>
-              <p className="bp-result__wording">{latestDecision.wording}</p>
-            </>
-          )}
+          {/* Urgent decisions (995, see a GP) live here, not on Home (routine ones are on Milestones). User, 16 Oct:
+              just "Warning" and the plain reason; no action line, no button, no "Why?". */}
+          <p className="bp-result__title">{t("health.warning")}</p>
+          <p className="bp-result__wording">{t(explainDecision(latestDecision).reasonKey)}</p>
         </div>
-      )}
-
-      {latestDecision && (
-        <DecisionLogCard decision={latestDecision} />
       )}
 
       <form className="bp-form" onSubmit={handleSubmit}>
@@ -190,6 +183,7 @@ export function HealthScreen({
 
       <ActionRow icon={<Icon name="book" />} title={t("health.weekSummary")} subtitle={t("health.weekSummarySub", { doses: weekSummary.metrics[0].value, walks: weekSummary.metrics[1].value })} onClick={onSummary} />
       <ClinicMemoRow title={clinicTasks.title} />
+      <ActionRow icon={<Icon name="note" />} title={t("visitNotes.title")} subtitle={visitNoteLatest ?? t("visitNotes.empty")} onClick={onVisitNotes} />
       <ActionRow icon={<Icon name="star" />} iconTone="peach" tone="warm" title={t("health.screeningTitle")} subtitle={t("health.screeningSub")} onClick={onScreening} />
       <ActionRow icon={<img className="action-row__logo" src={activityLink.logoSrc} alt={activityLink.logoAlt} />} iconTone="white" title={activityLink.title} subtitle={activityLink.subtitle} href={activityLink.url} />
     </FullCard>

@@ -8,8 +8,9 @@ import { browserStore, readItem, removeItem, writeItem, type KeyValueStore } fro
  * browser sees it). No database change. When P1 adds a table and endpoint, swap the bodies of
  * `requestRestockHelp`, `readRestockHelp` and `markRestockHelpHandled` for API calls; callers keep the same shapes.
  *
- * Privacy: the request carries the medication id only, never its name. /care shows "a medicine refill"
- * and the days left, never which medicine (caretakers see caring moments, not medicine details).
+ * Privacy (user, 16 Oct): asking the caretaker for help shares that one medicine's name, so they know what to
+ * buy; /care shows it with the days left. For a sensitive medicine the senior picks "I'll get it myself" and
+ * nothing is sent.
  */
 
 /**
@@ -20,8 +21,10 @@ import { browserStore, readItem, removeItem, writeItem, type KeyValueStore } fro
  * The server would add `id` and fill `status`/`handledAt`.
  */
 export interface RestockHelpRequest {
-  /** medications.id; never shown on /care. */
+  /** medications.id. */
   medicationId: string;
+  /** The medicine to buy, shown on /care (shared only because the senior asked for help with it). */
+  medicationName: string;
   /** Days of supply left when the senior asked. */
   daysLeft: number;
   /** ISO time the senior asked. */
@@ -40,7 +43,7 @@ export interface RestockHelpEntry extends RestockHelpRequest {
 function isEntry(value: unknown): value is RestockHelpEntry {
   if (!value || typeof value !== "object") return false;
   const entry = value as Record<string, unknown>;
-  return typeof entry.medicationId === "string"
+  return typeof entry.medicationId === "string" && typeof entry.medicationName === "string"
     && typeof entry.daysLeft === "number" && Number.isFinite(entry.daysLeft)
     && typeof entry.requestedAt === "string"
     && (entry.status === "pending" || entry.status === "handled")

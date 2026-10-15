@@ -38,5 +38,5 @@
 
 .action-row__text { min-width: 0; display: grid; gap: 2px; }
 .action-row__text strong { overflow-wrap: anywhere; }
-.action-row__text small { color: #7a847c; font-size: var(--font-size-sm); }
+.action-row__text small { color: #7a847c; font-size: var(--font-size-sm); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .action-row__chevron { color: #8a958d; }

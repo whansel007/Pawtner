@@ -4,29 +4,43 @@ import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
 import type { BackAction } from "../lib/navigation";
 import type { DerivedDose } from "../../../shared/contract";
-import { formatDoseTime } from "../lib/doses";
+import { formatDayDate, formatDoseTime, minutesUntil, selectNextDose } from "../lib/doses";
+import { SENIOR_TIMEZONE } from "../config/scene";
 
 export function RemindersScreen({
   back,
   doses,
+  now,
   restockCard,
 }: {
   back: BackAction;
   doses: DerivedDose[];
+  /** ISO "now" for the countdown and today's date (the agent demo clock when set, else real time). */
+  now: string;
   /** "Restock soon" card (App decides when it shows). */
   restockCard?: ReactNode;
 }) {
   const { t } = useTranslation();
+  // Same pick as Home's next-dose card: the earliest due or missed dose, else the next upcoming one.
+  const nextDose = selectNextDose(doses);
+  const minutes = nextDose ? minutesUntil(nextDose.scheduledAt, now) : 0;
+  const countdown = minutes <= 0
+    ? t("home.stillToTake")
+    : minutes < 60
+      ? t("reminders.nextDoseInMinutes", { minutes })
+      : t("reminders.nextDoseInHours", { hours: Math.floor(minutes / 60), minutes: minutes % 60 });
   return (
     <FullCard back={back}>
       <p className="eyebrow green">{t("reminders.eyebrow")}</p>
       <h2>{t("reminders.title")}</h2>
       {restockCard}
-      <div className="next-dose">
-        <span className="feature-icon sage"><Icon name="bell" /></span>
-        <div><small>{t("reminders.nextDose")}</small><h3>{t("reminders.nextDoseTime")}</h3><p>{t("reminders.nextDoseName")}</p></div>
-      </div>
-      <div className="section-title"><h3>{t("reminders.today")}</h3><span>{t("reminders.todayDate")}</span></div>
+      {nextDose && (
+        <div className="next-dose">
+          <span className="feature-icon sage"><Icon name="bell" /></span>
+          <div><small>{t("reminders.nextDose")}</small><h3>{countdown}</h3><p>{t("reminders.nextDoseName", { name: nextDose.medicationName, time: formatDoseTime(nextDose.scheduledAt) })}</p></div>
+        </div>
+      )}
+      <div className="section-title"><h3>{t("reminders.today")}</h3><span>{formatDayDate(now, SENIOR_TIMEZONE)}</span></div>
       <div className="timeline">
         {doses.map((dose, index) => (
           <article key={dose.id}>

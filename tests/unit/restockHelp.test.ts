@@ -11,7 +11,7 @@ import {
   pickRestockAlert,
   shouldShowRestock,
 } from "../../mobile/src/lib/restockHelp.js";
-import { fitWithin, isImageDataUrl, readClinicMemo, writeClinicMemo } from "../../mobile/src/lib/clinicMemo.js";
+import { addClinicMemo, fitWithin, isImageDataUrl, readClinicMemos, removeClinicMemo, writeClinicMemos } from "../../mobile/src/lib/clinicMemo.js";
 import { DEMO_STORAGE_KEYS, resetDemoStorage } from "../../mobile/src/lib/demoReset.js";
 
 function memoryStore(): KeyValueStore & { data: Map<string, string> } {
@@ -31,7 +31,7 @@ const blockedStore: KeyValueStore = {
   removeItem: () => { throw new Error("blocked"); },
 };
 
-const request = { medicationId: "med-gaba", daysLeft: 4, requestedAt: "2026-10-15T04:00:00.000Z" };
+const request = { medicationId: "med-rozevon", medicationName: "Rozevon", daysLeft: 4, requestedAt: "2026-10-15T04:00:00.000Z" };
 
 describe("restock help request (demo storage)", () => {
   it("stores a pending request and reads it back", async () => {
@@ -41,11 +41,12 @@ describe("restock help request (demo storage)", () => {
     expect(readRestockHelp(store)).toEqual(entry);
   });
 
-  it("never stores a medicine name, only the id", async () => {
+  it("stores the one medicine she asked help with (name included, so the caretaker knows what to buy), nothing else", async () => {
     const store = memoryStore();
     await requestRestockHelp(request, store);
     const raw = store.data.get(RESTOCK_STORAGE_KEYS.request) ?? "";
-    expect(Object.keys(JSON.parse(raw)).sort()).toEqual(["daysLeft", "handledAt", "medicationId", "requestedAt", "status"]);
+    expect(Object.keys(JSON.parse(raw)).sort()).toEqual(["daysLeft", "handledAt", "medicationId", "medicationName", "requestedAt", "status"]);
+    expect(JSON.parse(raw).medicationName).toBe("Rozevon");
   });
 
   it("marks a request handled, then clears it", async () => {
@@ -107,14 +108,25 @@ describe("clinic memo photo helpers", () => {
     expect(fitWithin(0, 480, 1000)).toEqual({ width: 0, height: 0 });
   });
 
-  it("stores and reads back only image data URLs; blocked storage reports false", () => {
+  it("adds new photos on top, keeps earlier ones, removes one at a time", () => {
+    const first = { id: "1", dataUrl: "data:image/jpeg;base64,AAAA", addedAt: "2026-10-14T10:00:00.000Z" };
+    const second = { id: "2", dataUrl: "data:image/jpeg;base64,BBBB", addedAt: "2026-10-15T10:00:00.000Z" };
+    const both = addClinicMemo([first], second);
+    expect(both).toEqual([second, first]);
+    expect(removeClinicMemo(both, "2")).toEqual([first]);
+  });
+
+  it("stores and reads back only image photos; keeps a photo saved by earlier builds; blocked storage reports false", () => {
     const store = memoryStore();
-    expect(writeClinicMemo("memo", "data:image/jpeg;base64,AAAA", store)).toBe(true);
-    expect(readClinicMemo("memo", store)).toBe("data:image/jpeg;base64,AAAA");
-    store.setItem("memo", "javascript:alert(1)");
-    expect(readClinicMemo("memo", store)).toBeNull();
+    const photo = { id: "1", dataUrl: "data:image/jpeg;base64,AAAA", addedAt: "2026-10-14T10:00:00.000Z" };
+    expect(writeClinicMemos("memo", [photo], store)).toBe(true);
+    expect(readClinicMemos("memo", store)).toEqual([photo]);
+    store.setItem("memo", JSON.stringify([{ id: "x", dataUrl: "javascript:alert(1)" }, photo]));
+    expect(readClinicMemos("memo", store)).toEqual([photo]);
+    store.setItem("memo", "data:image/jpeg;base64,OLD");
+    expect(readClinicMemos("memo", store)).toEqual([{ id: "memo-earlier", dataUrl: "data:image/jpeg;base64,OLD", addedAt: "" }]);
     expect(isImageDataUrl("data:text/html,hi")).toBe(false);
-    expect(writeClinicMemo("memo", "data:image/jpeg;base64,AAAA", blockedStore)).toBe(false);
+    expect(writeClinicMemos("memo", [photo], blockedStore)).toBe(false);
   });
 });
 

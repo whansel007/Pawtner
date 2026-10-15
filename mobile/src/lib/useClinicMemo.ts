@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { CLINIC_MEMO } from "../config/health";
-import { fitWithin, readClinicMemo, writeClinicMemo } from "./clinicMemo";
+import { addClinicMemo, fitWithin, readClinicMemos, removeClinicMemo, writeClinicMemos, type MemoPhoto } from "./clinicMemo";
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -30,22 +30,25 @@ async function downscaleToJpeg(file: File): Promise<string> {
 }
 
 /**
- * The clinic memo photo: one picture kept on this phone (localStorage), never uploaded or read.
- * If storage is full or blocked, the photo stays in memory for this session.
+ * The clinic memo photos kept on this phone (localStorage), never uploaded or read. A new photo is added on top;
+ * each one can be removed. If storage is full or blocked, the list stays in memory for this session.
  */
 export function useClinicMemo() {
-  const [photo, setPhoto] = useState<string | null>(() => readClinicMemo(CLINIC_MEMO.storageKey));
+  const [photos, setPhotos] = useState<MemoPhoto[]>(() => readClinicMemos(CLINIC_MEMO.storageKey));
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  const choose = useCallback(async (file: File | undefined) => {
+  const add = useCallback(async (file: File | undefined) => {
     if (!file) return;
     setBusy(true);
     setFailed(false);
     try {
       const dataUrl = await downscaleToJpeg(file);
-      writeClinicMemo(CLINIC_MEMO.storageKey, dataUrl);
-      setPhoto(dataUrl);
+      setPhotos((current) => {
+        const next = addClinicMemo(current, { id: crypto.randomUUID(), dataUrl, addedAt: new Date().toISOString() });
+        writeClinicMemos(CLINIC_MEMO.storageKey, next);
+        return next;
+      });
     } catch (error) {
       console.warn("Pawtner clinic memo:", error);
       setFailed(true);
@@ -54,5 +57,13 @@ export function useClinicMemo() {
     }
   }, []);
 
-  return { photo, busy, failed, choose };
+  const remove = useCallback((id: string) => {
+    setPhotos((current) => {
+      const next = removeClinicMemo(current, id);
+      writeClinicMemos(CLINIC_MEMO.storageKey, next);
+      return next;
+    });
+  }, []);
+
+  return { photos, busy, failed, add, remove };
 }

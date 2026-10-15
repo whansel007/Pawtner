@@ -18,14 +18,14 @@ export const pet: Pet = {
 export const heartsTotal = 30;
 
 export const doses: Dose[] = [
-  { time: "9:00 AM", name: "Gabapentin", dose: "50 mg · 1 capsule", status: "Taken" },
-  { time: "1:00 PM", name: "Apoquel", dose: "3.6 mg · with food", status: "Take now" },
-  { time: "8:00 PM", name: "Gabapentin", dose: "50 mg · 1 capsule", status: "Later" },
+  { time: "10:00 AM", name: "Fictional Tablet A", dose: "5 mg", status: "Taken" },
+  { time: "8:00 PM", name: "Fictional Tablet B", dose: "10 mg", status: "Later" },
 ];
 
 /**
- * Contract-shaped mock doses for the compact next-dose card (T1-08/09).
- * Fictional data: one taken, one due, one upcoming.
+ * Contract-shaped mock doses for the compact next-dose card (T1-08/09), shown offline.
+ * Same two medicines and times as the fictional seed (migrations/seed.sql): one taken, one upcoming.
+ * Real medicines (e.g. Twynsta) are added during testing through Add a medication (user, 16 Oct).
  * Uses today's date so times render meaningfully.
  */
 function todayAt(hour: number, minute: number): string {
@@ -37,31 +37,20 @@ function todayAt(hour: number, minute: number): string {
 export const todayDoses: DerivedDose[] = [
   {
     id: "dose-001",
-    medicationId: "med-gaba",
-    medicationName: "Gabapentin",
-    strength: "50 mg",
-    scheduledAt: todayAt(9, 0),
+    medicationId: "med-tablet-a",
+    medicationName: "Fictional Tablet A",
+    strength: "5 mg",
+    scheduledAt: todayAt(10, 0),
     status: "taken",
-    eventAt: todayAt(9, 5),
+    eventAt: todayAt(10, 5),
     nudgeCount: 0,
     lastNudgeAt: null,
   },
   {
     id: "dose-002",
-    medicationId: "med-apoq",
-    medicationName: "Apoquel",
-    strength: "3.6 mg",
-    scheduledAt: todayAt(13, 0),
-    status: "due",
-    eventAt: null,
-    nudgeCount: 1,
-    lastNudgeAt: todayAt(12, 45),
-  },
-  {
-    id: "dose-003",
-    medicationId: "med-gaba",
-    medicationName: "Gabapentin",
-    strength: "50 mg",
+    medicationId: "med-tablet-b",
+    medicationName: "Fictional Tablet B",
+    strength: "10 mg",
     scheduledAt: todayAt(20, 0),
     status: "upcoming",
     eventAt: null,

@@ -10,18 +10,22 @@ import type { CaringMoment } from "../data/types.js";
 export const STREAK_WINDOW_DAYS = 7;
 export const MIN_CHECK_IN_THRESHOLD = DEMO_RULES.caretakerMinimumThreshold;
 
-/** One flag per day, oldest first, ending today: the last min(streak, days) days are filled. */
+/** One flag per day, oldest first, ending yesterday (see recentDays): the last min(streak, days) days are filled, so filled hearts = streak. */
 export function streakHearts(streak: number, days: number = STREAK_WINDOW_DAYS): boolean[] {
   const filled = Number.isFinite(streak) ? Math.min(Math.max(Math.floor(streak), 0), days) : 0;
   return Array.from({ length: days }, (_, index) => index >= days - filled);
 }
 
-/** The calendar days the streak hearts stand for, oldest first, ending on `now`'s local day. */
+/**
+ * The calendar days the streak hearts stand for, oldest first, ending on the day BEFORE `now`: the streak
+ * (shared/selectors computeStreak) only counts finished days, so today never has a streak heart. Today has its
+ * own card on This week.
+ */
 export function recentDays(now: Date, days: number = STREAK_WINDOW_DAYS): Date[] {
   return Array.from({ length: days }, (_, index) => {
     const date = new Date(now);
     date.setHours(12, 0, 0, 0);
-    date.setDate(date.getDate() - (days - 1 - index));
+    date.setDate(date.getDate() - (days - index));
     return date;
   });
 }
