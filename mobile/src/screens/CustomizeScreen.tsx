@@ -8,6 +8,7 @@ import type { WorldOption, AccessoryOption, World, Accessory } from "../types";
 
 export function CustomizeScreen({
   back,
+  onHome,
   world,
   setWorld,
   accessory,
@@ -21,6 +22,8 @@ export function CustomizeScreen({
   notify,
 }: {
   back: BackAction;
+  /** "Show me at home": leaves the wardrobe for Home, where the dog wears the new look. */
+  onHome: () => void;
   world: World;
   setWorld: (world: World) => void;
   accessory: Accessory;
@@ -100,7 +103,7 @@ export function CustomizeScreen({
           );
         })}
       </div>
-      <button className="primary-button" onClick={back.onBack}>{t("customize.showMe")}</button>
+      <button className="primary-button" onClick={onHome}>{t("customize.showMe")}</button>
     </FullCard>
   );
 }

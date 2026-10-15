@@ -63,6 +63,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | — | Landscape chips row identical to Home: one shared `SceneChips` component (CodeBuddy) | [#23](https://github.com/whansel007/Pawtner/pull/23) |
 | — | Landscape caregiver view: Buddy and chips in the left column; portrait unchanged (CodeBuddy) | [#24](https://github.com/whansel007/Pawtner/pull/24) |
 | — | Caregiver view wording: "Shared with your circle", names from data ("Rose + Jamie") (CodeBuddy) | [#25](https://github.com/whansel007/Pawtner/pull/25) |
+| — | `dog.heartsTotal` (lifetime hearts, derived on read) in `/api/today` and `/api/caretaker/summary`; EdgeOne bundle regenerated. On branch `claude/hearts-total`, not merged, no UI yet | — |
 
 ## Blocked
 
@@ -77,6 +78,8 @@ Today's plan (agreed 13 Oct evening), in order:
 |---|---|
 | Buddy video (KIV, resume 15 Oct) | User has ~1000 Miora credits. Plan: pitch/demo video clip first; optional in-app celebration card (MP4 with its own background, muted, plays once, still fallback). No transparent in-app dog video (iPhone Safari format issues). |
 | P1 hosting landed on `main` without a PR (15 Oct) | `cb/api-hosting-edgeone` is fully in `main` (`1fc0b53`); nothing left to merge. Reviewed: checks pass (typecheck, 73/73, build); Vercel preview and `pawtner.edgeone.dev` still front end only. Also touched P2-owned screens (Proof, Reminders, Settings via `App.tsx`) — agreed split says screen changes go through P2. Reminders now lists `DerivedDose[]` (mock offline); Settings caretaker name from the summary. |
+| Wardrobe locks + demo unlock (15 Oct) | User decision: rewards unlock when Buddy's lifetime hearts reach a number (never spent). Needs P1 to add `dog.heartsTotal` to `/api/today` (computed from dose history like the streak; no DB change). CodeBuddy prompt given for `cb/wardrobe-locks` (hearts line on Milestones, `config/rewards.ts` thresholds hat 20 / glasses 40 / kampung 60, demo switch under "Caretaker check-ins" in Settings). Today nothing is locked: the notes are labels only. |
+| Pill-check wording (15 Oct) | User: the pill check is for verification against her own first photo; reworded, not removed. CodeBuddy prompt with the approved `proof.check.*` strings sent. |
 | P1's AI pill check on the proof screen | See HANDOFF risk 9: contradicts PRD §7.4 (never identify a pill from a photo); offline it shows a raw parse error; inline styles, English not in `en.json`, fragile error matching, base64 photo may exceed Vercel's 4.5 MB body limit. Product call needed before the API is live. |
 | "Just Buddy" hardcoded | `mobile/src/mock/milestones.ts` `note: "Just Buddy"` replaced the `accessory.justPet` key ("Just {{name}}") in `720f378`. Restore the key. |
 | Offline sample text still names people | `mobile/src/mock/care.ts`: "Two people, one Buddy"; activity "Mum took her lunchtime medicine and Buddy gained a heart." Shown only without the API. |

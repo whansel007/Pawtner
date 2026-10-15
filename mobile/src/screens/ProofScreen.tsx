@@ -11,7 +11,7 @@ type CheckState =
   | { kind: "checking" }
   | { kind: "described"; result: PillDescribeResponse }
   | { kind: "verified"; result: PillVerifyResponse }
-  | { kind: "error"; message: string };
+  | { kind: "error" };
 
 export function ProofScreen({
   back,
@@ -69,7 +69,9 @@ export function ProofScreen({
         }
       }
     } catch (error) {
-      setCheck({ kind: "error", message: error instanceof Error ? error.message : "Check failed." });
+      // Never show the raw error to the senior; log it for diagnosis instead.
+      console.warn("Proof screen pill check failed:", error);
+      setCheck({ kind: "error" });
     }
   }
 
@@ -82,7 +84,7 @@ export function ProofScreen({
       <label className={`scanner proof-scanner ${captured ? "captured" : ""}`}>
         {captured && photoUrl ? (
           <>
-            <img src={photoUrl} alt="Proof photo" style={{ maxWidth: "100%", borderRadius: "12px" }} />
+            <img src={photoUrl} alt="Proof photo" className="proof-photo-preview" />
             <strong>{t("proof.verified")}</strong>
             {medicationName && <small>{medicationName}</small>}
           </>
@@ -99,57 +101,54 @@ export function ProofScreen({
           accept="image/*"
           capture="environment"
           onChange={onFileChange}
-          style={{ display: "none" }}
+          className="proof-photo-input"
           aria-label={t("proof.tapPhoto")}
         />
       </label>
 
-      {/* T2-08: Pill recognition (demo only) */}
+      {/* T2-08: Pill comparison (demo only) — compares with the senior's own earlier photo,
+          per PRD 7.4 it never identifies a pill. */}
       {captured && medicationId && (
-        <div style={{ marginTop: "0.75rem" }}>
+        <div className="proof-check-block">
           {check.kind === "idle" && (
             <button className="secondary-button" onClick={() => void handleCheckPill()}>
-              Check pill with AI
+              {t("proof.check.button")}
             </button>
           )}
           {check.kind === "checking" && (
-            <p className="supporting" style={{ fontSize: "0.9em" }}>Checking pill…</p>
+            <p className="supporting proof-checking-status">{t("proof.check.checking", { name: petName })}</p>
           )}
           {check.kind === "described" && (
-            <div style={{ padding: "0.75rem", borderRadius: "12px", background: "var(--surface-soft, #f0fdf4)", border: "1px solid var(--green-accent, #86efac)" }}>
-              <small style={{ fontWeight: 600 }}>First photo saved</small>
-              <p style={{ fontSize: "0.85em", marginTop: "0.25rem" }}>{check.result.description}</p>
-              <p style={{ fontSize: "0.8em", opacity: 0.7, marginTop: "0.25rem" }}>
-                Next time you take this medicine, the AI will compare the photo to this description.
-              </p>
+            <div className="proof-check-card">
+              <small className="proof-check-card-title">{t("proof.check.described.title")}</small>
+              <p className="proof-check-card-line">{check.result.description}</p>
+              <p className="proof-check-card-note">{t("proof.check.described.note", { name: petName })}</p>
             </div>
           )}
           {check.kind === "verified" && (
-            <div style={{ padding: "0.75rem", borderRadius: "12px", background: check.result.match ? "var(--surface-soft, #f0fdf4)" : "#fef3c7", border: `1px solid ${check.result.match ? "#86efac" : "#fcd34d"}` }}>
-              <small style={{ fontWeight: 600 }}>{check.result.match ? "Match — same medicine" : "No match — different medicine?"}</small>
-              <p style={{ fontSize: "0.85em", marginTop: "0.25rem" }}>
-                <strong>Saved:</strong> {check.result.savedDescription}
-              </p>
-              <p style={{ fontSize: "0.85em", marginTop: "0.25rem" }}>
-                <strong>This photo:</strong> {check.result.newDescription}
-              </p>
-              <p style={{ fontSize: "0.8em", opacity: 0.7, marginTop: "0.25rem" }}>
-                Similarity: {Math.round(check.result.similarity * 100)}%
+            <div className="proof-check-card">
+              <small className="proof-check-card-title">
+                {check.result.match ? t("proof.check.verified.match") : t("proof.check.verified.diff")}
+              </small>
+              {check.result.savedDescription && (
+                <p className="proof-check-card-line">
+                  <strong>{t("proof.check.verified.savedLabel")}</strong> {check.result.savedDescription}
+                </p>
+              )}
+              <p className="proof-check-card-line">
+                <strong>{t("proof.check.verified.newLabel")}</strong> {check.result.newDescription}
               </p>
             </div>
           )}
           {check.kind === "error" && (
-            <p className="supporting" style={{ fontSize: "0.85em", color: "#dc2626" }}>{check.message}</p>
+            <p className="supporting proof-check-error">{t("proof.check.error", { name: petName })}</p>
           )}
         </div>
       )}
 
       {/* T2-02 safety: never identify a pill from a photo */}
       {captured && (
-        <p className="supporting" style={{ fontSize: "0.85em" }}>
-          The photo is saved as proof only. The app cannot identify a pill from a photo.
-          Always check the package and ask your pharmacist.
-        </p>
+        <p className="supporting proof-check-disclosure">{t("proof.check.disclosure", { name: petName })}</p>
       )}
 
       {captured && <button className="primary-button" onClick={() => void onVerified(photoUrl)}>{t("proof.giveHeart", { name: petName })}</button>}

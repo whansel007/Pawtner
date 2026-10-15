@@ -15,7 +15,7 @@ Updated 2026-10-15. Source of truth for scope: `PRD.md` (repo root), tiers in §
 ## Data flow on the phone (today)
 
 1. On launch, `App.tsx` requests `/api/today`; the server assembles scheduled occurrences and ledger events into `DerivedDose[]`.
-2. Heart and streak values come from shared selectors/rules; persisted decisions update the cached dog mood.
+2. Heart, streak and the lifetime hearts total (`dog.heartsTotal`, sum of every day's hearts since the first scheduled dose) come from shared selectors/rules, derived on read from the full dose history; only heart, streak and mood are cached in `dogs`. Persisted decisions update the cached dog mood. The phone does not show `heartsTotal` yet.
 3. Dose confirmation, BP entry, and walk completion write events through the API. Care and Weekly Summary use `/api/caretaker/summary`; caretaker consent and threshold save through `/api/escalation-settings`.
 4. Settings has a demo clock. It calls `/api/agent/decide` at the selected local time; Home shows the saved decision with its rule, observations, reasoning, and wording source.
 5. `SceneBackdrop` draws the garden; `lib/useSceneGround.ts` measures where the dog stands (portrait Home: top of the chips; other portrait screens: top of the content card; landscape: on the lawn in the left column, see `DOG_PLACEMENTS` and `LANDSCAPE_MEDIA_QUERY` in `config/scene.ts`) and publishes CSS variables so the art's lawn line and the dog's feet meet. It also publishes the dog's box (`--dog-top`, `--dog-height`) so the tap bubble (`PetBubble`, in the toast slot under the hearts) never covers the head.
@@ -33,6 +33,8 @@ Updated 2026-10-15. Source of truth for scope: `PRD.md` (repo root), tiers in §
 - **Offline.** `care/hooks/useCareData.ts` calls the three endpoints once; any failure is logged to the console and replaced by `buildMockCareData()` (typed like the API responses), and the page shows `care.web.notice.offline`. Saving is disabled offline.
 - **Look.** `care/care.css` holds one token block scoped to `.care-root` (cream/forest palette, Inter, radii, spacing); every class starts with `care-`. The dog is ours (`DOG_IMAGE_BY_MOOD` from `config/scene.ts`, by `dog.mood`); the design's cartoon dog is not used. Garden art: `public/assets/care-garden.webp` (1920×800, 121 KB, from the design's 2.8 MB PNG), path in `care/config.ts`.
 - **Mocks to replace** when P1 adds them: the updates-only caretaker (needs `caregivers: { id, name, receivesCheckIns }[]` in `CaretakerSummaryResponse`), the check-ins caretaker fallback when `summary.caregiver` is null, and the senior's time zone for moment times.
+
+Accessories on the dog (`components/PetAccessory.tsx`) are placed by `config/accessories.ts` in % of the dog image (crown ~8%, ears ~4–20%, eyes ~39% of `dog-base.webp`); the hibiscus is an inline SVG (colours as CSS custom properties on `.accessory-flower`). Short landscape (max-height 430px) uses a compact dock (68px) so the card keeps its height (`claude/accessory-landscape-fix`).
 
 Config lives in `mobile/src/config/` (`scene.ts`: images incl. `DOG_IMAGE_BY_MOOD` (sleepy has its own art; a mood image that fails to load falls back to `DOG_BASE_IMAGE`), ground line, dog size limits, screens without the dog; `intro.ts`: dedication timing). Text lives in `mobile/src/locales/en.json`; dog and caretaker names are interpolated from mock data (`{{name}}`, PR #4).
 

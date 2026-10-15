@@ -33,7 +33,7 @@ function mockDose(id: string, scheduledAt: string, status: DerivedDose["status"]
 }
 
 export function buildMockCareData(now: Date = new Date()): CareData {
-  const dog = { ...DOG, mood: "content" as const, heart: 3, streak: 5 };
+  const dog = { ...DOG, mood: "content" as const, heart: 3, streak: 5, heartsTotal: 30 };
   return {
     today: {
       user: SENIOR,

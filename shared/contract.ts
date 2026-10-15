@@ -99,9 +99,22 @@ export interface AgentRefusal {
   decision: AgentDecision;
 }
 
+/** The dog as the phone and the caretaker page read it. All numbers are derived on read from the dose ledger and readings. */
+export interface DogView {
+  id: string;
+  name: string;
+  mood: DogMood;
+  /** Today's hearts so far, 0-4 (`computeHeart`). */
+  heart: number;
+  /** Consecutive fully taken days before today (`computeStreak`). */
+  streak: number;
+  /** Lifetime hearts: the sum of every day's hearts since the first scheduled dose, today included (`computeHeartsTotal`). */
+  heartsTotal: number;
+}
+
 export interface TodayResponse {
   user: { id: string; name: string };
-  dog: { id: string; name: string; mood: DogMood; heart: number; streak: number };
+  dog: DogView;
   doses: DerivedDose[];
   healthMetrics: HealthMetric[];
   bloodPressureLoggedToday: boolean;
@@ -147,7 +160,7 @@ export interface CaretakerSummaryResponse {
   period: { start: string; end: string };
   senior: { id: string; name: string };
   caregiver: { id: string; name: string } | null;
-  dog: { id: string; name: string; mood: DogMood; heart: number; streak: number };
+  dog: DogView;
   careScore: number;
   caringDays: number;
   dosesTaken: number;

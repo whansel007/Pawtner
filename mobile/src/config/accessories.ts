@@ -18,10 +18,15 @@ export interface AccessoryLayout {
   rotate: string;
 }
 
-/** Per-accessory anchors: hat sits on the head, glasses over the eyes, flower at the ear. */
+/**
+ * Per-accessory anchors: hat sits on the head, glasses over the eyes, flower at the ear.
+ * Landmarks measured from dog-base.webp's alpha (% of image height): crown of the head ~8%,
+ * ears ~4-20% (outer edges ~x 6%-94% at 12-20%), eyes ~39%.
+ */
 export const ACCESSORY_LAYOUTS: Record<Exclude<AccessoryId, "none">, AccessoryLayout> = {
+  /* Box spans 3-21%: the dome covers the crown between the ears, the brim rests on the forehead above the eyes. */
   hat: {
-    top: "20%",
+    top: "3%",
     width: "55%",
     height: "18%",
     rotate: "3deg",

@@ -11,9 +11,15 @@ export const currentWorld: MilestoneWorld = {
   progress: 1,
 };
 
+/**
+ * Offline fallback for Milestones. Mirrors the API's trick ladder (api/repository.ts: Sit 1, High five 7,
+ * Roll over 14, New trick 30 day streak) for the mock streak of 12 days.
+ */
 export const tricks: Trick[] = [
-  { name: "Sit", note: "7 day streak", earned: true },
-  { name: "High five", note: "18 days to go", earned: false },
+  { name: "Sit", note: "1 day streak", earned: true },
+  { name: "High five", note: "7 day streak", earned: true },
+  { name: "Roll over", note: "2 days to go", earned: false },
+  { name: "New trick", note: "18 days to go", earned: false },
 ];
 
 export const souvenirs: Souvenir[] = [

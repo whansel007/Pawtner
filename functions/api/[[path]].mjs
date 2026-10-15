@@ -241,17 +241,50 @@ function buildAgentInput(input) {
   }
   return input;
 }
-function selectAgentInput(source) {
+function occurrenceKey(scheduleId, scheduledFor) {
+  return `${scheduleId}|${Date.parse(scheduledFor)}`;
+}
+function groupBy(items, key) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const item of items) {
+    const value = key(item);
+    const group = groups.get(value);
+    if (group) group.push(item);
+    else groups.set(value, [item]);
+  }
+  return groups;
+}
+function deriveSelection(source) {
   const occurrences = [...source.doseOccurrences].sort((a, b) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt));
+  const eventsByOccurrence = groupBy(source.doseEvents, (event) => occurrenceKey(event.scheduleId, event.scheduledFor));
+  const nudgesByOccurrence = groupBy(source.nudges, (nudge) => occurrenceKey(nudge.scheduleId, nudge.scheduledFor));
   const derived = occurrences.map((schedule) => {
-    const nudgeHistory = source.nudges.filter((nudge) => nudge.scheduleId === schedule.id && Date.parse(nudge.scheduledFor) === Date.parse(schedule.scheduledAt) && Date.parse(nudge.createdAt) <= Date.parse(source.now)).sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
-    return deriveDoseStatus(schedule, source.doseEvents, source.now, {
+    const key = occurrenceKey(schedule.id, schedule.scheduledAt);
+    const nudgeHistory = (nudgesByOccurrence.get(key) ?? []).filter((nudge) => Date.parse(nudge.createdAt) <= Date.parse(source.now)).sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+    return deriveDoseStatus(schedule, eventsByOccurrence.get(key) ?? [], source.now, {
       count: nudgeHistory.length,
       lastAt: nudgeHistory.at(-1)?.createdAt ?? null
     });
   });
-  const todayDoses = derived.filter((dose) => dose.scheduledAt.slice(0, 10) === source.today);
   const metrics = source.healthMetrics.filter((metric) => Date.parse(metric.recordedAt) <= Date.parse(source.now));
+  return { derived, metrics };
+}
+function computeHeartsTotal(doses, metrics, today) {
+  const dosesByDate = groupBy(doses.filter((dose) => dose.scheduledAt.slice(0, 10) <= today), (dose) => dose.scheduledAt.slice(0, 10));
+  const firstDate = [...dosesByDate.keys()].sort()[0];
+  if (!firstDate) return 0;
+  const bloodPressureDates = new Set(metrics.map((metric) => metric.recordedAt.slice(0, 10)));
+  let total = 0;
+  const cursor = /* @__PURE__ */ new Date(`${firstDate}T00:00:00.000Z`);
+  for (let date = firstDate; date <= today; date = cursor.toISOString().slice(0, 10)) {
+    total += computeHeart(dosesByDate.get(date) ?? [], bloodPressureDates.has(date));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return total;
+}
+function selectAgentInput(source) {
+  const { derived, metrics } = deriveSelection(source);
+  const todayDoses = derived.filter((dose) => dose.scheduledAt.slice(0, 10) === source.today);
   const streak = computeStreak(derived.map((dose) => ({
     date: dose.scheduledAt.slice(0, 10),
     scheduleId: dose.id,
@@ -279,6 +312,10 @@ function selectAgentInput(source) {
     consecutiveMissedDoses,
     caretaker: source.caretaker
   });
+}
+function selectHeartsTotal(source) {
+  const { derived, metrics } = deriveSelection(source);
+  return computeHeartsTotal(derived, metrics, source.today);
 }
 
 // shared/wording.ts
@@ -497,6 +534,15 @@ var PawtnerRepository = class {
     return result.rows[0].id;
   }
   async loadInput(client, userId, now, triggeringDoseEventId) {
+    return selectAgentInput(await this.loadSource(client, userId, now, triggeringDoseEventId));
+  }
+  /** Today's agent input plus the dog's lifetime hearts, both from one read of the full dose history. */
+  async loadDogState(client, userId, now, triggeringDoseEventId) {
+    const source = await this.loadSource(client, userId, now, triggeringDoseEventId);
+    return { input: selectAgentInput(source), heartsTotal: selectHeartsTotal(source) };
+  }
+  /** Reads everything the selectors need: every occurrence since each active schedule started (no history cap), ledger, nudges, readings. */
+  async loadSource(client, userId, now, triggeringDoseEventId) {
     const personResult = await client.query(
       `SELECT u.timezone, d.id::text AS dog_id, d.name AS dog_name
        FROM users u JOIN dogs d ON d.user_id = u.id WHERE u.id = $1`,
@@ -512,12 +558,11 @@ var PawtnerRepository = class {
        JOIN medications m ON m.id = ms.medication_id
        JOIN users u ON u.id = m.user_id
        CROSS JOIN LATERAL generate_series(
-         GREATEST(ms.starts_on, ($2::date - 365))::timestamp,
+         ms.starts_on::timestamp,
          LEAST(COALESCE(ms.ends_on, $2::date), $2::date)::timestamp,
          interval '1 day'
        ) AS days(local_day)
-       WHERE u.id = $1 AND m.active = true
-         AND ms.starts_on <= $2::date AND (ms.ends_on IS NULL OR ms.ends_on >= ($2::date - 365))
+       WHERE u.id = $1 AND m.active = true AND ms.starts_on <= $2::date
        ORDER BY scheduled_at, ms.id`,
       [userId, today]
     );
@@ -568,7 +613,7 @@ var PawtnerRepository = class {
       scheduledFor: iso(row.scheduled_for),
       createdAt: iso(row.created_at)
     }));
-    const source = {
+    return {
       now,
       today,
       userId,
@@ -581,7 +626,6 @@ var PawtnerRepository = class {
       caretaker: caregiverResult.rows[0] ? { optedIn: caregiverResult.rows[0].opted_in, threshold: caregiverResult.rows[0].threshold } : null,
       ...triggeringDoseEventId ? { triggeringDoseEventId } : {}
     };
-    return selectAgentInput(source);
   }
   async latestDecision(client, userId, now) {
     const result = await client.query(
@@ -592,7 +636,7 @@ var PawtnerRepository = class {
     return mapDecision(result.rows[0]);
   }
   async today(client, userId, now, triggerEventId) {
-    const input = await this.loadInput(client, userId, now, triggerEventId);
+    const { input, heartsTotal } = await this.loadDogState(client, userId, now, triggerEventId);
     const userResult = await client.query("SELECT id::text, name FROM users WHERE id = $1", [userId]);
     const dogResult = await client.query("SELECT id::text, name, mood FROM dogs WHERE user_id = $1", [userId]);
     const timezoneResult = await client.query("SELECT timezone FROM users WHERE id = $1", [userId]);
@@ -602,7 +646,7 @@ var PawtnerRepository = class {
     const dog = dogResult.rows[0];
     return {
       user: userResult.rows[0],
-      dog: { id: dog.id, name: dog.name, mood: selectDogMood(input.dog.heart, latestDecision, now), heart: input.dog.heart, streak: input.dog.streak },
+      dog: { id: dog.id, name: dog.name, mood: selectDogMood(input.dog.heart, latestDecision, now), heart: input.dog.heart, streak: input.dog.streak, heartsTotal },
       doses: input.doses,
       healthMetrics,
       bloodPressureLoggedToday: healthMetrics.length > 0,
@@ -777,7 +821,7 @@ var PawtnerRepository = class {
       [userId, start, today, person.timezone]
     );
     const latestDecision = await this.latestDecision(this.pool, userId, now);
-    const input = await this.loadInput(this.pool, userId, now);
+    const { input, heartsTotal } = await this.loadDogState(this.pool, userId, now);
     const stats = scheduleStats.rows[0];
     const walks = walkStats.rows[0];
     const denominator = stats.doses_due;
@@ -787,7 +831,7 @@ var PawtnerRepository = class {
       period: { start, end: today },
       senior: { id: person.user_id, name: person.senior_name },
       caregiver: person.caregiver_id ? { id: person.caregiver_id, name: person.caregiver_name } : null,
-      dog: { id: person.dog_id, name: person.dog_name, mood: selectDogMood(input.dog.heart, latestDecision, now), heart: input.dog.heart, streak: input.dog.streak },
+      dog: { id: person.dog_id, name: person.dog_name, mood: selectDogMood(input.dog.heart, latestDecision, now), heart: input.dog.heart, streak: input.dog.streak, heartsTotal },
       careScore,
       caringDays: Math.max(stats.completed_days, 0),
       dosesTaken: stats.doses_taken,
