@@ -1062,3 +1062,33 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
   .add-button { right: max(29px, calc(env(safe-area-inset-right) + 15px)); bottom: max(28px, calc(env(safe-area-inset-bottom) + 20px)); width: 60px; height: 60px; }
   .woof-bubble { right: max(23px, calc(env(safe-area-inset-right) + 9px)); bottom: max(92px, calc(env(safe-area-inset-bottom) + 84px)); }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Short landscape: compact dock
+   ────────────────────────────────────────────────────────────────────────
+   A phone held sideways with browser toolbars (e.g. 915x355) loses too much card height to the
+   dock above. 430px is the only breakpoint for this; it sits inside the landscape query above
+   (any landscape window of 430px height or less matches it), so these rules only refine it.
+   Portrait and taller landscape screens are untouched.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (orientation: landscape) and (max-height: 430px) {
+  .app-shell {
+    --dock-bottom: max(8px, env(safe-area-inset-bottom));
+    --dock-h: 68px;
+    --dock-nav-h: 56px;
+    --dock-paw: 48px;
+    --dock-paw-bottom: calc(var(--dock-bottom) + 10px);
+    /* Card ends just above the woof bubble, which sits on top of the paw button. */
+    --nav-space: calc(var(--dock-bottom) + var(--dock-h) + 16px);
+  }
+  .bottom-dock { height: var(--dock-h); }
+  .bottom-nav {
+    bottom: calc(var(--dock-bottom) + (var(--dock-h) - var(--dock-nav-h)) / 2);
+    height: var(--dock-nav-h);
+    padding: 4px;
+  }
+  /* 48px stays above the 44px minimum tap target. */
+  .bottom-nav button { height: 48px; }
+  .add-button { bottom: var(--dock-paw-bottom); width: var(--dock-paw); height: var(--dock-paw); }
+  .woof-bubble { bottom: calc(var(--dock-paw-bottom) + var(--dock-paw)); padding: 4px 9px; }
+}
