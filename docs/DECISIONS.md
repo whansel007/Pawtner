@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-15 — P1 hosting review
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Vercel project `pawtner-mobile` stays on Root Directory `mobile` (front end only) after P1's root `vercel.json` landed on `main`. Switching to the repo root, to serve `api/[...path].ts` from the same origin, waits for the hosted database to be migrated and `DATABASE_URL` to be set. | The root config is ignored today, so production and `/care` deep links keep working (preview from `1fc0b53` checked); switching early would only turn offline mode into failing function calls. | No hosted API until someone switches the setting; two `vercel.json` files to keep in sync meanwhile. | Tentative, user's call |
+
 ## 2026-10-13 — Provisional shared contract draft
 
 - Added `shared/contract.ts`, `shared/config.ts`, and four PRD-based fixtures before design exports were available.
