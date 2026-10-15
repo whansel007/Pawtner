@@ -44,7 +44,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | PR |
 |---|---|---|
-| — | Buddy plays in every mood; only fewer than 2 hearts stop play, with a "needs a heart" bubble (attentive from readings no longer blocks animations) | Branch `claude/play-hearts` |
+| — | Buddy plays in every mood; only fewer than 2 hearts stop play, with a "needs a heart" bubble (attentive from readings no longer blocks animations); 0–1 hearts always show the sad face (one shared `DEMO_RULES.lowHeartMaximum`; P1 files, user OK'd; EdgeOne bundle rebuilt) | Branch `claude/play-hearts` |
 | — | 16 Oct: calm urgent card on Health with a small "Call 995" button (not on Home); Why? without "What it noticed"; no World card on Milestones; clinic memo photos append and remove one at a time; note edits keep earlier versions; notes shared with Jamie or just for me; refill requests name the medicine; "Share my blood pressure" switch (latest reading on /care); one-line privacy note; proof screen: medicine name bold; Health urgent card = Warning + reason (no 995 line, deviates from PRD T1-10); Why? reason only; /care streak hearts match the streak | Branch `claude/visit-notes` |
 | — | "For my next visit" notes (add/edit/delete, this phone only) on Health and the Weekly Summary; Reminders next-dose card and date from live data; Add a medication labels one case | Branch `claude/visit-notes` |
 | — | "From the Doctor" (was "Doctor's tiny tasks"); Add a medication form fits the card (360–892 px) with a centred eyebrow; restock card stays after either choice; Settings > Demo "Reset demo"; day/night is look only, hearts stay one state | Branch `claude/from-the-doctor` |

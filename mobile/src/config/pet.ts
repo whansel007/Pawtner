@@ -1,3 +1,4 @@
+import { DEMO_RULES } from "../../../shared/config.js";
 /** Pet tap-reaction configuration. No timings or paths inside components. */
 
 export type PetReactionKind = "hop" | "hearts" | "bubble" | "bark";
@@ -11,10 +12,11 @@ export function bubbleLineKey(index: number): string {
 }
 
 /**
- * Buddy plays (tap reactions, tricks, the wave clip) from this many hearts up (user, 16 Oct). Below it a tap shows
- * a bubble asking for a heart instead (en.json pet.lowHeart). Mood from readings (attentive) never stops play.
+ * Buddy plays (tap reactions, tricks, the wave clip) from this many hearts up (user, 16 Oct): one above the
+ * shared low-heart line, where he also shows his sad face. Below it a tap shows a bubble asking for a heart
+ * instead (en.json pet.lowHeart). Mood from readings (attentive) never stops play.
  */
-export const PLAY_MIN_HEARTS = 2;
+export const PLAY_MIN_HEARTS = DEMO_RULES.lowHeartMaximum + 1;
 
 /** How many hearts float up on the hearts reaction (the CSS staggers up to this many). */
 export const HEART_BURST_COUNT = 5;

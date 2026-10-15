@@ -21,6 +21,8 @@ export function selectDogMood(
   latestDecision: Pick<AgentDecision, "decision" | "createdAt"> | null,
   now: string,
 ): DogMood {
+  // Low hearts always mean the sad (sleepy) face, before any decision (user, 16 Oct).
+  if (heart <= DEMO_RULES.lowHeartMaximum) return "sleepy";
   if (latestDecision?.decision === "emergency_995" || latestDecision?.decision === "see_gp_soon") return "attentive";
   if (latestDecision?.decision === "nudge") return "sleepy";
 
@@ -34,7 +36,6 @@ export function selectDogMood(
   }
 
   if (latestDecision?.decision === "restock_reminder" || latestDecision?.decision === "doctor_question") return "content";
-  if (heart <= 1) return "sleepy";
   return "content";
 }
 
