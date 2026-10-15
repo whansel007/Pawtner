@@ -289,7 +289,23 @@
     "onePill": "One pill in the frame",
     "verified": "Photo saved!",
     "giveHeart": "Give {{name}} a heart",
-    "notNow": "Not now"
+    "notNow": "Not now",
+    "check": {
+      "button": "Compare with my first photo",
+      "checking": "{{name}} is looking…",
+      "described": {
+        "title": "First photo saved",
+        "note": "Next time, {{name}} will compare your photo with this one."
+      },
+      "verified": {
+        "match": "Looks like your usual pill",
+        "diff": "This looks different from your usual pill. Please check the package before you take it.",
+        "savedLabel": "Your first photo:",
+        "newLabel": "This photo:"
+      },
+      "error": "{{name}} can't compare photos right now. Your proof photo still counts.",
+      "disclosure": "{{name}} only compares this photo with your earlier one. It can't tell you what a pill is. Always check the package and ask your pharmacist."
+    }
   },
   "walk": {
     "eyebrow": "Fresh air",
