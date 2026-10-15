@@ -1053,8 +1053,10 @@ export class PawtnerRepository {
   }
 
   private async describePillWithVision(imageBase64: string, mimeType: string): Promise<string | null> {
+    const model = process.env.LLM_VISION_MODEL ?? process.env.LLM_MODEL ?? "gpt-4o-mini";
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30_000);
+    // NVIDIA's free vision model can cold-start slowly; give it most of the function's time budget.
+    const timeout = setTimeout(() => controller.abort(), 55_000);
     try {
       const dataUrl = `data:${mimeType};base64,${imageBase64}`;
       const response = await fetch(`${process.env.LLM_BASE_URL}/chat/completions`, {
@@ -1064,7 +1066,7 @@ export class PawtnerRepository {
           authorization: `Bearer ${process.env.LLM_API_KEY}`,
         },
         body: JSON.stringify({
-          model: process.env.LLM_VISION_MODEL ?? process.env.LLM_MODEL ?? "gpt-4o-mini",
+          model,
           messages: [
             {
               role: "system",
@@ -1087,9 +1089,24 @@ export class PawtnerRepository {
       const text = payload.choices?.[0]?.message?.content?.trim();
       return text || null;
     } catch {
-      return null;
+      // Network error or timeout (cold start) — retryable; surfaced to the UI as a 504 "try again".
+      throw new ApiError(504, "The vision model took too long to respond. Please try again.");
     } finally {
       clearTimeout(timeout);
+    }
+  }
+
+  /** Warm (load) the vision model without persisting anything. Fire-and-forget from the mobile app
+   *  so the first real pill check hits an already-warm instance instead of a slow cold start. */
+  async warmupPillVision(): Promise<boolean> {
+    if (!process.env.LLM_API_KEY || !process.env.LLM_BASE_URL) return false;
+    // 1x1 transparent PNG — enough to trigger model loading; the description is discarded.
+    const tinyPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMBAQDJ/pLvAAAAAElFTkSuQmCC";
+    try {
+      const description = await this.describePillWithVision(tinyPng, "image/png");
+      return description !== null;
+    } catch {
+      return false;
     }
   }
 }

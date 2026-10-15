@@ -6666,8 +6666,9 @@ var PawtnerRepository = class {
     };
   }
   async describePillWithVision(imageBase64, mimeType) {
+    const model = process.env.LLM_VISION_MODEL ?? process.env.LLM_MODEL ?? "gpt-4o-mini";
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3e4);
+    const timeout = setTimeout(() => controller.abort(), 55e3);
     try {
       const dataUrl = `data:${mimeType};base64,${imageBase64}`;
       const response = await fetch(`${process.env.LLM_BASE_URL}/chat/completions`, {
@@ -6677,7 +6678,7 @@ var PawtnerRepository = class {
           authorization: `Bearer ${process.env.LLM_API_KEY}`
         },
         body: JSON.stringify({
-          model: process.env.LLM_VISION_MODEL ?? process.env.LLM_MODEL ?? "gpt-4o-mini",
+          model,
           messages: [
             {
               role: "system",
@@ -6700,9 +6701,21 @@ var PawtnerRepository = class {
       const text = payload.choices?.[0]?.message?.content?.trim();
       return text || null;
     } catch {
-      return null;
+      throw new ApiError(504, "The vision model took too long to respond. Please try again.");
     } finally {
       clearTimeout(timeout);
+    }
+  }
+  /** Warm (load) the vision model without persisting anything. Fire-and-forget from the mobile app
+   *  so the first real pill check hits an already-warm instance instead of a slow cold start. */
+  async warmupPillVision() {
+    if (!process.env.LLM_API_KEY || !process.env.LLM_BASE_URL) return false;
+    const tinyPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMBAQDJ/pLvAAAAAElFTkSuQmCC";
+    try {
+      const description = await this.describePillWithVision(tinyPng, "image/png");
+      return description !== null;
+    } catch {
+      return false;
     }
   }
 };
@@ -6810,6 +6823,10 @@ function createApiHandler(repository) {
         const data = await body(request);
         if (!requiredString(data.medicationId) || !requiredString(data.imageBase64) || !requiredString(data.mimeType)) throw new ApiError(400, "medicationId, imageBase64 and mimeType are required.");
         return json(await repository.verifyPill(data));
+      }
+      if (request.method === "POST" && url.pathname === "/api/pill-warmup") {
+        const warmed = await repository.warmupPillVision();
+        return json({ ok: true, warmed });
       }
       return json({ error: "Route not found." }, 404);
     } catch (error) {

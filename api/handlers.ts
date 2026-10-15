@@ -100,6 +100,11 @@ export function createApiHandler(repository: PawtnerRepository) {
         if (!requiredString(data.medicationId) || !requiredString(data.imageBase64) || !requiredString(data.mimeType)) throw new ApiError(400, "medicationId, imageBase64 and mimeType are required.");
         return json(await repository.verifyPill(data));
       }
+      // ── T2-08: Warm the vision model (no DB write) so the first real check is fast. ──
+      if (request.method === "POST" && url.pathname === "/api/pill-warmup") {
+        const warmed = await repository.warmupPillVision();
+        return json({ ok: true, warmed });
+      }
       return json({ error: "Route not found." }, 404);
     } catch (error) {
       if (error instanceof ApiError) return json({ error: error.message }, error.status);

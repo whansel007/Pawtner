@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
@@ -11,7 +11,8 @@ type CheckState =
   | { kind: "checking" }
   | { kind: "described"; result: PillDescribeResponse }
   | { kind: "verified"; result: PillVerifyResponse }
-  | { kind: "error" };
+  | { kind: "error" }
+  | { kind: "error-warmup" };
 
 export function ProofScreen({
   back,
@@ -32,6 +33,13 @@ export function ProofScreen({
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [check, setCheck] = useState<CheckState>({ kind: "idle" });
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Warm up the vision model in the background when this screen opens, so the first real
+  // pill check hits an already-warm instance instead of a slow cold start (which can time out).
+  useEffect(() => {
+    if (!medicationId) return;
+    void api.warmupPill().catch(() => {});
+  }, [medicationId]);
 
   const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -71,7 +79,13 @@ export function ProofScreen({
     } catch (error) {
       // Never show the raw error to the senior; log it for diagnosis instead.
       console.warn("Proof screen pill check failed:", error);
-      setCheck({ kind: "error" });
+      // 502/504 from the vision model usually means it is still warming up — ask for a retry
+      // rather than failing silently.
+      if (error instanceof ApiRequestError && (error.status === 502 || error.status === 504)) {
+        setCheck({ kind: "error-warmup" });
+      } else {
+        setCheck({ kind: "error" });
+      }
     }
   }
 
@@ -142,6 +156,9 @@ export function ProofScreen({
           )}
           {check.kind === "error" && (
             <p className="supporting proof-check-error">{t("proof.check.error", { name: petName })}</p>
+          )}
+          {check.kind === "error-warmup" && (
+            <p className="supporting proof-check-error">{t("proof.check.errorWarmup", { name: petName })}</p>
           )}
         </div>
       )}
