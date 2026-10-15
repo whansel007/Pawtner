@@ -1,0 +1,42 @@
+/* Shared tappable row (Health: week summary, clinic memo, Screen for Life, Healthy 365). */
+.action-row {
+  --action-row-icon: 48px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: var(--action-row-icon) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #e1e6de;
+  border-radius: var(--radius-3xl);
+  color: #294a3a;
+  background: white;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.action-row--warm { border-color: transparent; background: var(--color-surface-cream-warm); }
+.action-row:disabled { cursor: progress; opacity: .7; }
+.action-row:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+
+.action-row__icon {
+  width: var(--action-row-icon);
+  height: var(--action-row-icon);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+.action-row__icon--sage { color: var(--color-accent-sage-icon); background: var(--color-accent-sage-bg); }
+.action-row__icon--peach { color: #9b653a; background: #ffdab0; }
+.action-row__icon--white { background: white; box-shadow: inset 0 0 0 1px #e1e6de; }
+/* Logos and photos fill the box the same way on every row. */
+.action-row__icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.action-row__icon img.action-row__logo { width: 84%; height: 84%; object-fit: contain; }
+
+.action-row__text { min-width: 0; display: grid; gap: 2px; }
+.action-row__text strong { overflow-wrap: anywhere; }
+.action-row__text small { color: #7a847c; font-size: var(--font-size-sm); }
+.action-row__chevron { color: #8a958d; }

@@ -564,10 +564,10 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 /* ═══════════════════════════════════════════════════════════════════════
    Souvenir / screening / activity link
    ═══════════════════════════════════════════════════════════════════════ */
-.souvenir-row, .screening-card { width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 14px; border: 0; border-radius: var(--radius-4xl); color: #274538; background: var(--color-surface-cream); text-align: left; cursor: pointer; }
-.souvenir-row > span, .screening-card > span { display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--radius-xl); color: #9b653a; background: #ffdab0; font-size: var(--font-size-sm); font-weight: var(--font-weight-black); }
-.souvenir-row div, .screening-card div, .activity-link div { display: grid; }
-.souvenir-row small, .screening-card small, .activity-link small { color: #7a847c; font-size: var(--font-size-sm); }
+.souvenir-row { width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 14px; border: 0; border-radius: var(--radius-4xl); color: #274538; background: var(--color-surface-cream); text-align: left; cursor: pointer; }
+.souvenir-row > span { display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--radius-xl); color: #9b653a; background: #ffdab0; font-size: var(--font-size-sm); font-weight: var(--font-weight-black); }
+.souvenir-row div { display: grid; }
+.souvenir-row small { color: #7a847c; font-size: var(--font-size-sm); }
 
 /* ═══════════════════════════════════════════════════════════════════════
    Health / metric / weekly
@@ -583,15 +583,10 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .weekly-card h3 { margin: 0; font-size: var(--font-size-3xl); }
 .weekly-card p { color: #6d7d73; font-size: var(--font-size-md); line-height: 1.5; }
 .weekly-card > strong { display: block; padding: 10px; border-radius: var(--radius-sm); color: #5d6f63; background: white; font-size: var(--font-size-sm); }
-.health-bubble { width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 11px; margin-top: 10px; padding: 12px; border: 1px solid #e1e6de; border-radius: var(--radius-3xl); color: #294a3a; background: white; text-align: left; cursor: pointer; }
-.health-bubble div { display: grid; gap: 2px; }
-.health-bubble small { color: #7a847c; font-size: var(--font-size-sm); }
 .treatment-card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 11px; margin-bottom: 10px; padding: 13px; border: 1px solid #e1e6de; border-radius: var(--radius-3xl); }
 .treatment-card div { display: grid; gap: 2px; }
 .treatment-card small { color: #7a847c; font-size: var(--font-size-sm); }
 .treatment-card button { padding: 7px 10px; border: 0; border-radius: var(--radius-xs); color: #4f6d5c; background: #e8efe4; font-size: var(--font-size-sm); font-weight: var(--font-weight-black); cursor: pointer; }
-.screening-card { margin-bottom: 10px; background: var(--color-surface-cream-warm); }
-.activity-link { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 13px; border: 1px solid #e1e6de; border-radius: var(--radius-3xl); color: #284538; text-decoration: none; }
 
 /* ═══════════════════════════════════════════════════════════════════════
    Festival / summary

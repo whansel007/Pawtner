@@ -88,15 +88,10 @@ export interface WeekSummary {
   doctorQuestion: string;
 }
 
+/** Doctor's tiny tasks row: a photo of the clinic memo, kept on the phone (subtitles in en.json). */
 export interface ClinicTask {
-  /** Task title */
+  /** Row title */
   title: string;
-  /** Short description */
-  subtitle: string;
-  /** Completed count */
-  done: number;
-  /** Total count */
-  total: number;
 }
 
 export interface BloodPressureReading {
@@ -130,6 +125,10 @@ export interface ActivityLink {
   subtitle: string;
   /** External URL */
   url: string;
+  /** Partner logo shown in the row's icon box */
+  logoSrc: string;
+  /** Alt text for the logo */
+  logoAlt: string;
 }
 
 export interface MilestoneWorld {
