@@ -123,7 +123,8 @@ export default function App() {
     if (screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
     if (screen === "settings") void api.escalationSettings().then(setEscalationSettings).catch((error) => reportApiProblem(error));
     // On launch (Home's "See all" dot) and each time Reminders opens (a medicine may have been added).
-    if (screen === "home" || screen === "reminders") void api.listMedications().then((result) => setMedications(result.medications)).catch((error) => reportApiProblem(error));
+    // Quiet on failure (console only, mock alert stays): the hosted list 500s until migration 005 runs.
+    if (screen === "home" || screen === "reminders") void api.listMedications().then((result) => setMedications(result.medications)).catch((error) => console.warn("Restock: medicine list unavailable", error));
   }, [screen]);
 
   const pendingDose = doseList.find((item) => item.id === pendingDoseId);
