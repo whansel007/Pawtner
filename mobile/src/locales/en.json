@@ -47,6 +47,7 @@
     "allDone": "All done for today",
     "noDoses": "Nothing scheduled today",
     "seeAll": "See all",
+    "seeAllNew": "See all. Something new is waiting.",
     "takenAria": "Mark {{name}} as taken",
     "streakChip_one": "🔥 {{count}} day",
     "streakChip_other": "🔥 {{count}} days"
@@ -160,7 +161,13 @@
         "treatSent": "Treat sent. {{name}} will see {{dog}} celebrate.",
         "treatFailed": "That didn't send. Please try again in a moment.",
         "treatOffline": "Treats can be sent once Pawtner is back online.",
-        "treatMessage": "{{caretaker}} sent {{dog}} a treat!"
+        "treatMessage": "{{caretaker}} sent {{dog}} a treat!",
+        "restockEyebrow": "A small favour",
+        "restockTitle_one": "{{name}} would like help with a medicine refill (about {{count}} day left)",
+        "restockTitle_other": "{{name}} would like help with a medicine refill (about {{count}} days left)",
+        "restockBody": "Asked on {{day}} from {{name}}'s phone.",
+        "restockHandle": "I'll handle it",
+        "restockHandled": "Thank you. {{name}}'s phone will say you're helping."
       },
       "alerts": {
         "eyebrow": "A trusted circle",
@@ -247,6 +254,16 @@
     "statusSoon": "Soon",
     "statusLater": "Later",
     "add": "Add a reminder"
+  },
+  "restock": {
+    "label": "Restock soon",
+    "daysRemaining_one": "About {{count}} day remaining",
+    "daysRemaining_other": "About {{count}} days remaining",
+    "askHelp": "Ask {{caretaker}} to help",
+    "getItMyself": "I'll get it myself",
+    "asked": "{{caretaker}} has been asked to help.",
+    "handled": "{{caretaker}} will help with the refill.",
+    "ok": "OK"
   },
   "prescription": {
     "eyebrow": "New medication",

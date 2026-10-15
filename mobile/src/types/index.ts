@@ -181,13 +181,14 @@ export interface Caregiver {
   status: string;
 }
 
+/** A medicine running low (mock until the API sends supply data). Label text lives in en.json ("restock"). */
 export interface RestockAlert {
-  /** Medicine name */
+  /** medications.id; the only medicine detail a restock help request carries */
+  medicationId: string;
+  /** Medicine name, shown to the senior only (never on /care) */
   name: string;
-  /** Days remaining */
+  /** Days of supply remaining */
   daysRemaining: number;
-  /** Label, e.g. "RESTOCK SOON" */
-  label: string;
 }
 
 export interface AccessoryOption {

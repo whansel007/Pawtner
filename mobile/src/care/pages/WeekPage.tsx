@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
 import type { CareData, Caretaker } from "../data/types";
 import type { TreatStatus } from "../hooks/useCareTreat";
+import type { RestockHelpEntry } from "../../lib/restockHelp";
 import { formatMomentTime, formatWeekday } from "../lib/format";
 import { progressPercent, recentDays, streakHearts, todayProgress, todayState, visibleMoments } from "../lib/rules";
 import { CareBadge, CareCard, PageWelcome } from "../components/CareCard";
@@ -16,10 +18,15 @@ interface WeekPageProps {
   offline: boolean;
   treatStatus: TreatStatus;
   onSendTreat: (message: string) => void;
+  /** The senior's pending "help with a refill" request (demo: lib/restockHelp.ts). Never names the medicine. */
+  restockRequest: RestockHelpEntry | null;
+  onHandleRestock: () => void;
 }
 
-export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat }: WeekPageProps) {
+export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, restockRequest, onHandleRestock }: WeekPageProps) {
   const { t, i18n } = useTranslation();
+  // Thank-you line after "I'll handle it", until the page changes.
+  const [handledRestock, setHandledRestock] = useState(false);
   const locale = i18n.language;
   const now = new Date();
   const senior = data.summary.senior.name;
@@ -51,6 +58,30 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat }: We
       />
 
       <div className="care-grid">
+        {(restockRequest || handledRestock) && (
+          <CareCard
+            eyebrow={t("care.web.week.restockEyebrow")}
+            title={restockRequest
+              ? t("care.web.week.restockTitle", { name: senior, count: restockRequest.daysLeft })
+              : t("care.web.week.restockHandled", { name: senior })}
+            stitched
+            className="care-restock"
+          >
+            {restockRequest && (
+              <>
+                <p className="care-hint">{t("care.web.week.restockBody", { name: senior, day: formatWeekday(restockRequest.requestedAt, locale) })}</p>
+                <button
+                  className="care-primary-button care-primary-button--card"
+                  type="button"
+                  onClick={() => { onHandleRestock(); setHandledRestock(true); }}
+                >
+                  {t("care.web.week.restockHandle")}
+                </button>
+              </>
+            )}
+          </CareCard>
+        )}
+
         <CareCard eyebrow={t("care.web.week.todayEyebrow")} title={stateText("title")} badge={stateBadge} stitched>
           <div className="care-progress">
             <ProgressRing

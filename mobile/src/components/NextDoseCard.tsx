@@ -9,6 +9,8 @@ interface NextDoseCardProps {
   petName: string;
   onTaken: (doseId: string) => void;
   onSeeAll: () => void;
+  /** Small dot on "See all" while something new waits on Reminders. */
+  seeAllBadge?: boolean;
   onWalk: () => void;
   onBloodPressure: () => void;
 }
@@ -18,6 +20,7 @@ export function NextDoseCard({
   petName,
   onTaken,
   onSeeAll,
+  seeAllBadge = false,
   onWalk,
   onBloodPressure,
 }: NextDoseCardProps) {
@@ -82,8 +85,10 @@ export function NextDoseCard({
       <button
         className="next-dose-card__see-all"
         onClick={onSeeAll}
+        aria-label={seeAllBadge ? t("home.seeAllNew") : undefined}
       >
         {t("home.seeAll")}
+        {seeAllBadge && <span className="next-dose-card__see-all-dot" aria-hidden="true" />}
       </button>
     </section>
   );

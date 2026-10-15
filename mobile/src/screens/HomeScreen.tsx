@@ -10,6 +10,7 @@ export function HomeScreen({
   onTakenDose,
   onReminders,
   onTreat,
+  seeAllBadge = false,
   onWalk,
   onBloodPressure,
   onStreak,
@@ -20,6 +21,8 @@ export function HomeScreen({
   onTakenDose: (doseId: string) => void;
   onReminders: () => void;
   onTreat: () => void;
+  /** Dot on "See all" while something waits on Reminders (restock help). */
+  seeAllBadge?: boolean;
   onWalk: () => void;
   onBloodPressure: () => void;
   onStreak: () => void;
@@ -45,6 +48,7 @@ export function HomeScreen({
           petName={pet.name}
           onTaken={onTakenDose}
           onSeeAll={onReminders}
+          seeAllBadge={seeAllBadge}
           onWalk={onWalk}
           onBloodPressure={onBloodPressure}
         />

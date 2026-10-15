@@ -8,6 +8,7 @@ import type { Persona } from "./data/types";
 import { useCareData } from "./hooks/useCareData";
 import { useCaretakerSlot } from "./hooks/useCaretakerSlot";
 import { useCareTreat } from "./hooks/useCareTreat";
+import { usePendingRestockRequest } from "../lib/useRestockHelp";
 import { Brand } from "./components/Brand";
 import { CareFooter } from "./components/CareFooter";
 import { CareHeader } from "./components/CareHeader";
@@ -40,6 +41,7 @@ export default function CareApp() {
   const { slot, signIn, signOut } = useCaretakerSlot();
   const { data, offline, saveStatus, pendingThreshold, saveThreshold } = useCareData();
   const treat = useCareTreat(offline);
+  const restock = usePendingRestockRequest();
   const mainRef = useRef<HTMLElement>(null);
   const firstRoute = useRef(true);
 
@@ -118,6 +120,8 @@ export default function CareApp() {
             offline={offline}
             treatStatus={treat.status}
             onSendTreat={(message) => void treat.send(message)}
+            restockRequest={restock.pending}
+            onHandleRestock={restock.handle}
           />
         )}
         {signedInPage && route === "alerts" && (

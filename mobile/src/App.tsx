@@ -22,6 +22,7 @@ import { DesktopBackdrop, SceneBackdrop } from "./components/SceneBackdrop";
 import { DogLayer } from "./components/DogLayer";
 import { PetAccessory } from "./components/PetAccessory";
 import { SceneChips } from "./components/SceneChips";
+import { RestockCard } from "./components/RestockCard";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
 import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, DoseEvent, EscalationSettingsResponse, HealthMetric, TodayResponse } from "../../shared/contract";
@@ -30,6 +31,7 @@ import { requestDecision, buildAgentInputFromState } from "./lib/agent";
 import { useNavigation } from "./lib/useNavigation";
 import { useBark } from "./lib/useBark";
 import { useDayPhase } from "./lib/useDayPhase";
+import { useRestockHelp } from "./lib/useRestockHelp";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
 import { DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset } from "./config/demo";
 import { SENIOR_TIMEZONE } from "./config/scene";
@@ -46,6 +48,7 @@ import {
   activityLink,
   clinicTasks,
   caregiver,
+  restockAlert,
   worldOptions,
   accessoryOptions,
   walkStats,
@@ -129,6 +132,8 @@ export default function App() {
   const liveCaregiver = careSummary?.caregiver
     ? { ...caregiver, seniorName: careSummary.senior.name, caretakerName: careSummary.caregiver.name, names: t("care.pairNames", { senior: careSummary.senior.name, caretaker: careSummary.caregiver.name }) }
     : { ...caregiver, names: t("care.pairNames", { senior: caregiver.seniorName, caretaker: caregiver.caretakerName }) };
+  // Restock help (demo only, lib/restockHelp.ts): the card lives on Reminders; "See all" on Home gets a dot while it waits.
+  const restock = useRestockHelp(restockAlert);
 
   const notify = (message: string) => {
     setToast(message);
@@ -381,13 +386,20 @@ export default function App() {
             }}
             onReminders={() => navigate("reminders")}
             onTreat={() => void handleTreatChip()}
+            seeAllBadge={restock.needsAttention}
             onWalk={() => navigate("walk")}
             onBloodPressure={() => navigate("health")}
             onStreak={() => navigate("milestones")}
             decision={latestDecision}
           />
         )}
-        {screen === "reminders" && <RemindersScreen back={back} doses={doseList} />}
+        {screen === "reminders" && (
+          <RemindersScreen
+            back={back}
+            doses={doseList}
+            restockCard={restock.visible ? <RestockCard alert={restockAlert} caretakerName={caretakerName} state={restock.state} busy={restock.busy} onAsk={() => void restock.askForHelp()} onSelf={restock.getItMyself} onAcknowledge={restock.acknowledgeHandled} /> : null}
+          />
+        )}
         {screen === "prescription" && <PrescriptionScreen back={back} onHome={goHome} onExplain={handleExplainMedicine} onSaved={handleMedicationSaved} petName={dogName} />}
         {screen === "explanation" && <ExplanationScreen back={back} onContinue={() => navigate("schedule")} medicineName={savedMedicationName} />}
         {screen === "schedule" && <ScheduleScreen back={back} onConfirm={handleScheduleConfirmed} petName={dogName} medicationId={savedMedicationId} />}
