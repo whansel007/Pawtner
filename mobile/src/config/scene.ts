@@ -1,5 +1,5 @@
 import type { DogMood } from "../../../shared/contract";
-import { getDayPhase, type DayPhase } from "../../../shared/day-phase";
+import type { DayPhase } from "../../../shared/day-phase";
 import type { Screen } from "../types";
 
 /**
@@ -8,16 +8,22 @@ import type { Screen } from "../types";
 
 export type { DayPhase };
 
-/**
- * T2-10: Sun/moon by local time. Uses the shared helper so the same logic
- * applies everywhere. Falls back to "day" if timezone is unknown.
+/*
+ * T2-10: day/night follows the senior's local time through the shared helper (shared/day-phase.ts).
+ * lib/useDayPhase.ts applies it to the real clock, or to the Settings demo clock when one is set.
  */
-export function phaseFromTime(now: string, timezone: string): DayPhase {
-  return getDayPhase(now, timezone);
-}
 
-/** Default phase used before the API reports a time. */
+/** Fallback phase when the timezone can't be read (lib/dayPhase.ts). */
 export const DEFAULT_PHASE: DayPhase = "day";
+
+/**
+ * The senior's timezone for day/night. The database has users.timezone, but the API doesn't expose it yet;
+ * replace this with the API value once it does.
+ */
+export const SENIOR_TIMEZONE = "Asia/Singapore";
+
+/** How often the real clock is re-checked for the day/night switch (lib/useDayPhase.ts). */
+export const PHASE_RECHECK_MS = 60_000;
 
 /**
  * Backdrop art per phase.

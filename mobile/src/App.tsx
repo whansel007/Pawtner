@@ -23,13 +23,13 @@ import { DesktopBackdrop, SceneBackdrop } from "./components/SceneBackdrop";
 import { DogLayer } from "./components/DogLayer";
 import { PetAccessory } from "./components/PetAccessory";
 import { SceneChips } from "./components/SceneChips";
-import { DEFAULT_PHASE, phaseFromTime } from "./config/scene";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
 import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, DoseEvent, EscalationSettingsResponse, HealthMetric, TodayResponse } from "../../shared/contract";
 import { api } from "./lib/api";
 import { requestDecision, buildAgentInputFromState } from "./lib/agent";
 import { useNavigation } from "./lib/useNavigation";
+import { useDayPhase } from "./lib/useDayPhase";
 import type { World, Accessory } from "./types";
 import type { WalkCompletion } from "./lib/walkState";
 import {
@@ -103,8 +103,8 @@ export default function App() {
   const heartsTotal = today?.dog?.heartsTotal ?? mockHeartsTotal;
   // selectDogMood needs the current time: a celebrate keeps the dog joyful only for DEMO_RULES.celebrateJoyfulMinutes.
   const mood = today ? today.dog.mood : selectDogMood(heartCount, latestDecision, demoNow ?? new Date().toISOString());
-  // T2-10: sun/moon by local time using shared helper
-  const phase = demoNow ? (() => { try { return phaseFromTime(demoNow, "Asia/Singapore"); } catch { return DEFAULT_PHASE; } })() : DEFAULT_PHASE;
+  // T2-10: day/night follows the real clock, or the Settings demo clock when one is set.
+  const phase = useDayPhase(demoNow);
 
   // Names come from data unchanged — no .toLowerCase().
   const dogName = today?.dog.name ?? pet.name;
