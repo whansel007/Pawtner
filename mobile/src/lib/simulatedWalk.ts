@@ -10,6 +10,7 @@ import { walkStateAt } from "./walkState.js";
 export function useSimulatedWalk() {
   const [elapsedSimulatedSeconds, setElapsedSimulatedSeconds] = useState(0);
   const [started, setStarted] = useState(false);
+  const [forceFinished, setForceFinished] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const state = useMemo(
@@ -19,6 +20,7 @@ export function useSimulatedWalk() {
 
   const start = useCallback(() => {
     setStarted(true);
+    setForceFinished(false);
     setElapsedSimulatedSeconds(0);
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -32,13 +34,26 @@ export function useSimulatedWalk() {
     }, TICK_MS);
   }, []);
 
-  // Clear interval when the walk finishes
-  useEffect(() => {
-    if (started && state.finished && intervalRef.current) {
+  /**
+   * End the simulation early, keeping the distance and duration accumulated so far.
+   * The interval is cleared and the walk reports completion exactly once via the
+   * `forceFinished` flag (consumers OR it with `state.finished`).
+   */
+  const finish = useCallback(() => {
+    setForceFinished(true);
+    if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  }, [started, state.finished]);
+  }, []);
+
+  // Clear interval when the walk finishes (natural or forced)
+  useEffect(() => {
+    if (started && (state.finished || forceFinished) && intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, [started, state.finished, forceFinished]);
 
   // Clear interval on unmount
   useEffect(() => {
@@ -49,5 +64,5 @@ export function useSimulatedWalk() {
     };
   }, []);
 
-  return { state, start, started };
+  return { state, start, finish, started, forceFinished };
 }

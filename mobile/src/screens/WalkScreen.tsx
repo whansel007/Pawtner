@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
+import { KCAL_PER_KM, STRIDE_METERS } from "../config/walk";
 import type { BackAction } from "../lib/navigation";
 import type { WalkStats } from "../types";
 import { useSimulatedWalk } from "../lib/simulatedWalk";
@@ -39,7 +40,13 @@ export function WalkScreen({
   const { t } = useTranslation();
   const [walking, setWalking] = useState(false);
   const [finishedWalk, setFinishedWalk] = useState<FinishedWalk | null>(null);
-  const { state: simState, start: startSim, started: simStarted } = useSimulatedWalk();
+  const {
+    state: simState,
+    start: startSim,
+    finish: finishSim,
+    started: simStarted,
+    forceFinished,
+  } = useSimulatedWalk();
 
   useEffect(() => {
     onDizzyChange?.(simState.dizzy);
@@ -53,9 +60,10 @@ export function WalkScreen({
 
   // Report completion exactly once per simulated walk; re-arm when a new simulation starts.
   const completionReportedRef = useRef(false);
+  const simDone = simState.finished || forceFinished;
   useEffect(() => {
     if (!simStarted) return;
-    if (!simState.finished) {
+    if (!simDone) {
       completionReportedRef.current = false;
       return;
     }
@@ -66,11 +74,17 @@ export function WalkScreen({
       distanceMeters: simState.distanceMeters,
       fastStretchOccurred: simState.fastStretchOccurred,
     });
-  }, [simStarted, simState.finished, simState.durationSeconds, simState.distanceMeters, simState.fastStretchOccurred]);
+  }, [simStarted, simDone, simState.durationSeconds, simState.distanceMeters, simState.fastStretchOccurred]);
 
-  const isSimulating = simStarted && !simState.finished;
+  const isSimulating = simStarted && !simDone;
   const isActive = walking || isSimulating;
   const done = !isActive ? finishedWalk : null;
+
+  // Derive demo step count and calories from simulated distance.
+  const simSteps = isSimulating ? Math.max(0, Math.round(simState.distanceMeters / STRIDE_METERS)) : 0;
+  const simCalories = isSimulating
+    ? Math.max(0, Math.round((simState.distanceMeters / 1000) * KCAL_PER_KM))
+    : 0;
 
   return (
     <FullCard back={back} className="walk-card">
@@ -101,13 +115,18 @@ export function WalkScreen({
         <p className="walk-done" role="status">{t("walk.doneMessage", { km: formatKm(done.distanceMeters), name: petName })}</p>
       )}
       <div className="walk-stats">
-        <div><strong>{walking ? walkStats.steps : "0"}</strong><small>{t("common.steps")}</small></div>
-        <div><strong>{walking ? walkStats.calories : "0"}</strong><small>{t("common.calories")}</small></div>
+        <div><strong>{walking ? walkStats.steps : isSimulating ? String(simSteps) : "0"}</strong><small>{t("common.steps")}</small></div>
+        <div><strong>{walking ? walkStats.calories : isSimulating ? String(simCalories) : "0"}</strong><small>{t("common.calories")}</small></div>
         <div><strong>{isSimulating ? simState.speedKmh.toFixed(1) : walking ? walkStats.speed : "0.0"}</strong><small>{t("common.kmh")}</small></div>
       </div>
       {!isSimulating && (
         <button className={`primary-button ${walking ? "stop-button" : ""}`} onClick={() => { const next = !walking; if (next) setFinishedWalk(null); setWalking(next); onWalkState(next); }}>
           {walking ? t("walk.finishWalk") : t("walk.startWalk")}
+        </button>
+      )}
+      {isSimulating && (
+        <button className="primary-button stop-button" onClick={() => finishSim()}>
+          {t("walk.finishWalk")}
         </button>
       )}
       {!walking && !isSimulating && (
