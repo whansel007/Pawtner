@@ -44,6 +44,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | PR |
 |---|---|---|
+| — | 16 Oct: calm urgent card on Health with a small "Call 995" button (not on Home); Why? without "What it noticed"; no World card on Milestones; clinic memo photos append and remove one at a time; note edits keep earlier versions; notes shared with Jamie or just for me | Branch `claude/visit-notes` |
 | — | "For my next visit" notes (add/edit/delete, this phone only) on Health and the Weekly Summary; Reminders next-dose card and date from live data; Add a medication labels one case | Branch `claude/visit-notes` |
 | — | "From the Doctor" (was "Doctor's tiny tasks"); Add a medication form fits the card (360–892 px) with a centred eyebrow; restock card stays after either choice; Settings > Demo "Reset demo"; day/night is look only, hearts stay one state | Branch `claude/from-the-doctor` |
 | T2-08 | Hotfix: the after-schedule "Show {{name}} the pill" step saves the original pill photo with `api.setPillReference` (main failed `tsc` after #43 used the removed `api.describePill`) | branch `claude/fix-reference-photo` |

@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-10-16 — Calm urgent card on Health, memos and notes keep history (branch `claude/visit-notes`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Urgent decisions (995, see a GP) leave Home and live in Health's result card: the wording, then (995 only) a small "Call 995" button (`tel:` link, `EMERGENCY_PHONE` in `config/health.ts`; the phone asks before dialling), then "Why?" in the same card. No big red "995": warm cream and Buddy's green. "Run agent at this time" opens Health for an urgent answer. Home shows no decision row. | User: the row belongs on Health; the red 995 is scary and unfriendly; suggested a small call button. | An urgent decision is only seen when Rose opens Health (or after logging BP / running the agent). Supersedes "urgent decisions stay on Home" (15 Oct). | Final (user request; "Call 995" wording tentative) |
+| "Why?" shows only the plain reason and where the wording came from; "What it noticed" (observations) is removed with its config (`WHY_OBSERVATIONS`) and en.json labels. Smaller gap between the wording row and the reason. | User: redundant. | Fewer details for curious users. | Final |
+| Milestones: the "World 1 · Our flat" card (level, progress bar, km walked) is removed. | User: redundant with World & wardrobe and Souvenirs. | Total km walked is no longer shown there. | Final |
+| From the Doctor keeps every clinic memo photo, newest first (`pawtner.clinicMemo` is a list; a photo saved by earlier builds becomes the first entry). The viewer lists them, each with "Remove photo" → "Yes, remove" / "Keep", plus "Add a photo". Row subtitle "Your clinic memo" / "{{count}} clinic memos". | User: adding should append, each upload removable on its own. | localStorage (~5 MB) holds roughly 20–40 photos; past that a new photo lasts only the session. | Tentative (wording) |
+| Editing a "For my next visit" note keeps the previous wording under "Earlier versions (N)"; empty or unchanged edits change nothing. `/care` shows only the current text. | User: editing must not remove what was written. | Notes grow with every edit (no limit on versions). | Tentative (wording) |
+
 ## 2026-10-15 (late) — For my next visit, live Reminders card, one label case (branch `claude/visit-notes`)
 
 | Decision | Reason | Tradeoff | Status |
