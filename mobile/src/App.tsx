@@ -35,6 +35,7 @@ import { useBark } from "./lib/useBark";
 import { useDayPhase } from "./lib/useDayPhase";
 import { useRestockHelp } from "./lib/useRestockHelp";
 import { pickRestockAlert } from "./lib/restockHelp";
+import { resetDemoStorage } from "./lib/demoReset";
 import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
 import { DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset } from "./config/demo";
@@ -63,8 +64,8 @@ import {
 
 let demoParamWarned = false;
 
-/** `?time=HH:MM|morning|evening` → demo clock instant (today in the senior's timezone). Read once, on load. */
-function initialDemoNow(): string | null {
+/** `?time=HH:MM|morning|evening` → scene time (today in the senior's timezone). Read once, on load. Visual only. */
+function initialSceneTime(): string | null {
   const { demoNow, rejected } = demoNowFromSearch(window.location.search, DEMO_TIME_PARAM, DEMO_TIME_PRESETS, new Date(), SENIOR_TIMEZONE);
   if (rejected !== null && !demoParamWarned) {
     demoParamWarned = true;
@@ -96,9 +97,12 @@ export default function App() {
   const [dizzy, setDizzy] = useState(false);
   // One friendly notice per outage; the technical error goes to the console, never to the senior.
   const apiWarned = useRef(false);
-  // Demo clock: null = real time. `?time=` sets it on load (no agent run, no writes); see config/demo.ts.
-  const [demoNow, setDemoNow] = useState<string | null>(initialDemoNow);
-  const [demoClockValue, setDemoClockValue] = useState(() => toDateTimeLocal(demoNow ? new Date(demoNow) : new Date()));
+  // Agent demo clock (Settings > "Run agent at this time"): reads and writes happen at this instant. null = real time.
+  const [demoNow, setDemoNow] = useState<string | null>(null);
+  // Scene time (`?time=`, Settings > Demo time buttons): day/night look only. Hearts, mood and doses stay on the one
+  // real state; switching morning ↔ evening must never re-read /api/today at another time.
+  const [sceneTime, setSceneTime] = useState<string | null>(initialSceneTime);
+  const [demoClockValue, setDemoClockValue] = useState(() => toDateTimeLocal(new Date()));
   const [agentBusy, setAgentBusy] = useState(false);
   const [escalationSettings, setEscalationSettings] = useState<EscalationSettingsResponse | null>(null);
   // GET /api/medications (days of supply for restock help); null until loaded or while the API is offline.
@@ -134,7 +138,7 @@ export default function App() {
   // selectDogMood needs the current time: a celebrate keeps the dog joyful only for DEMO_RULES.celebrateJoyfulMinutes.
   const mood = today ? today.dog.mood : selectDogMood(heartCount, latestDecision, demoNow ?? new Date().toISOString());
   // T2-10: day/night follows the real clock, or the Settings demo clock when one is set.
-  const phase = useDayPhase(demoNow);
+  const phase = useDayPhase(sceneTime ?? demoNow);
 
   // Names come from data unchanged — no .toLowerCase().
   const dogName = today?.dog.name ?? pet.name;
@@ -347,6 +351,7 @@ export default function App() {
     if (!Number.isFinite(parsed.getTime())) return;
     const now = parsed.toISOString();
     setAgentBusy(true);
+    setSceneTime(null);
     setDemoNow(now);
     try {
       const current = await api.today(now);
@@ -365,14 +370,11 @@ export default function App() {
 
   /**
    * Settings > Demo quick buttons: jump the scene to a preset time today (senior's timezone), or back to real time (null).
-   * Only reads (GET /api/today); unlike runAgentAtDemoTime it never runs the agent or writes a decision.
+   * Look only: no API call, no agent run, no change to hearts, mood or doses.
    */
   const setDemoTime = (preset: DemoTimePreset | null) => {
     const time = preset ? parseDemoTime(DEMO_TIME_PRESETS[preset], DEMO_TIME_PRESETS) : null;
-    const now = time ? demoInstantToday(time, new Date(), SENIOR_TIMEZONE) : null;
-    setDemoNow(now);
-    setDemoClockValue(toDateTimeLocal(now ? new Date(now) : new Date()));
-    void refreshToday(now);
+    setSceneTime(time ? demoInstantToday(time, new Date(), SENIOR_TIMEZONE) : null);
     navigate("home");
   };
 
@@ -426,7 +428,7 @@ export default function App() {
           <RemindersScreen
             back={back}
             doses={doseList}
-            restockCard={restock.visible && liveRestockAlert ? <RestockCard alert={liveRestockAlert} caretakerName={caretakerName} state={restock.state} busy={restock.busy} onAsk={() => void restock.askForHelp()} onSelf={restock.getItMyself} onAcknowledge={restock.acknowledgeHandled} /> : null}
+            restockCard={restock.visible && liveRestockAlert ? <RestockCard alert={liveRestockAlert} caretakerName={caretakerName} state={restock.state} busy={restock.busy} onAsk={() => void restock.askForHelp()} onSelf={restock.getItMyself} /> : null}
           />
         )}
         {screen === "prescription" && <PrescriptionScreen back={back} onSaved={handleMedicationSaved} onExplain={handleExplainMedicine} petName={dogName} />}
@@ -439,7 +441,7 @@ export default function App() {
         {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }], doctorQuestion: careSummary.doctorQuestions[0]?.note ?? weekSummary.doctorQuestion } : weekSummary} />}
-        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} demoUnlockAll={demoUnlockAll} onToggleDemoUnlockAll={() => setDemoUnlockAll((v) => !v)} demoTimeActive={demoNow !== null} onDemoTime={setDemoTime} />}
+        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} demoUnlockAll={demoUnlockAll} onToggleDemoUnlockAll={() => setDemoUnlockAll((v) => !v)} demoTimeActive={sceneTime !== null} onDemoTime={setDemoTime} onResetDemo={() => { resetDemoStorage(); window.location.assign(window.location.pathname); }} />}
         {screen === "medicines" && <MedicinesScreen back={back} petName={dogName} />}
         {screen === "customize" && <CustomizeScreen back={back} onHome={goHome} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(nextWorld === "flat" ? t("toast.worldFlat", { name: dogName }) : nextWorld === "garden" ? t("toast.worldGarden", { name: dogName }) : t("toast.worldKampung", { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: t(`accessory.${nextAccessory}`) })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} caretakerName={caretakerName} heartsTotal={heartsTotal} demoUnlockAll={demoUnlockAll} notify={notify} />}
       </div>

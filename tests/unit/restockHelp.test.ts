@@ -2,17 +2,17 @@ import { describe, expect, it } from "vitest";
 import { RESTOCK_STORAGE_KEYS } from "../../mobile/src/config/restock.js";
 import type { KeyValueStore } from "../../mobile/src/lib/localStore.js";
 import {
+  chooseRestockSelf,
   clearRestockHelp,
-  dismissRestockForToday,
-  isRestockDismissed,
-  localDay,
   markRestockHelpHandled,
   readRestockHelp,
+  readRestockSelf,
   requestRestockHelp,
   pickRestockAlert,
   shouldShowRestock,
 } from "../../mobile/src/lib/restockHelp.js";
 import { fitWithin, isImageDataUrl, readClinicMemo, writeClinicMemo } from "../../mobile/src/lib/clinicMemo.js";
+import { DEMO_STORAGE_KEYS, resetDemoStorage } from "../../mobile/src/lib/demoReset.js";
 
 function memoryStore(): KeyValueStore & { data: Map<string, string> } {
   const data = new Map<string, string>();
@@ -76,32 +76,23 @@ describe("restock help request (demo storage)", () => {
 });
 
 describe("restock card visibility", () => {
-  it("'I'll get it myself' hides the card for the rest of the local day only", () => {
+  it("remembers 'I'll get it myself' for that medicine", () => {
     const store = memoryStore();
-    const morning = new Date(2026, 9, 15, 9, 0);
-    const evening = new Date(2026, 9, 15, 23, 59);
-    const nextDay = new Date(2026, 9, 16, 0, 1);
-    expect(isRestockDismissed(morning, store)).toBe(false);
-    expect(dismissRestockForToday(morning, store)).toBe(true);
-    expect(isRestockDismissed(evening, store)).toBe(true);
-    expect(isRestockDismissed(nextDay, store)).toBe(false);
+    expect(readRestockSelf(store)).toBeNull();
+    expect(chooseRestockSelf("med-1", store)).toBe(true);
+    expect(readRestockSelf(store)).toBe("med-1");
   });
 
-  it("reports a blocked dismissal so the caller can keep it in memory", () => {
-    expect(dismissRestockForToday(new Date(2026, 9, 15), blockedStore)).toBe(false);
-    expect(isRestockDismissed(new Date(2026, 9, 15), blockedStore)).toBe(false);
+  it("reports a blocked choice so the caller can keep it in memory", () => {
+    expect(chooseRestockSelf("med-1", blockedStore)).toBe(false);
+    expect(readRestockSelf(blockedStore)).toBeNull();
   });
 
-  it("formats the local day with zero padding", () => {
-    expect(localDay(new Date(2026, 0, 5, 12))).toBe("2026-01-05");
-  });
-
-  it("shows only for a low supply that wasn't dismissed today", () => {
-    expect(shouldShowRestock(4, 5, false)).toBe(true);
-    expect(shouldShowRestock(5, 5, false)).toBe(true);
-    expect(shouldShowRestock(6, 5, false)).toBe(false);
-    expect(shouldShowRestock(4, 5, true)).toBe(false);
-    expect(shouldShowRestock(null, 5, false)).toBe(false);
+  it("shows while the supply is low, whatever the senior chose", () => {
+    expect(shouldShowRestock(4, 5)).toBe(true);
+    expect(shouldShowRestock(5, 5)).toBe(true);
+    expect(shouldShowRestock(6, 5)).toBe(false);
+    expect(shouldShowRestock(null, 5)).toBe(false);
   });
 });
 
@@ -139,5 +130,19 @@ describe("pickRestockAlert", () => {
   it("returns null when nothing is low or supply is unknown", () => {
     expect(pickRestockAlert([med("a", 14), med("b", null)], 5)).toBeNull();
     expect(pickRestockAlert([], 5)).toBeNull();
+  });
+});
+
+describe("reset demo", () => {
+  it("clears every demo key and leaves other keys alone", () => {
+    const store = memoryStore();
+    DEMO_STORAGE_KEYS.forEach((key) => store.setItem(key, "x"));
+    store.setItem("unrelated", "keep");
+    resetDemoStorage(store);
+    expect([...store.data.keys()]).toEqual(["unrelated"]);
+  });
+
+  it("does nothing when storage is blocked", () => {
+    expect(() => resetDemoStorage(blockedStore)).not.toThrow();
   });
 });

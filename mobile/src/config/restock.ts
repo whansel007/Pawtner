@@ -13,6 +13,6 @@ export const RESTOCK_SOON_DAYS = DEMO_RULES.restockDaysOfSupply;
 export const RESTOCK_STORAGE_KEYS = {
   /** The senior's latest "Ask my caretaker to help" request (RestockHelpEntry as JSON). */
   request: "pawtner.restockHelp",
-  /** Local day (YYYY-MM-DD) the senior chose "I'll get it myself"; the card stays hidden for that day. */
-  dismissedOn: "pawtner.restockDismissedOn",
+  /** medications.id the senior chose "I'll get it myself" for; the card stays, with a status line instead of the buttons. */
+  self: "pawtner.restockSelf",
 } as const;

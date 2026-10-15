@@ -6,7 +6,7 @@ import { PhotoViewer } from "./PhotoViewer";
 import { useClinicMemo } from "../lib/useClinicMemo";
 
 /**
- * "Doctor's tiny tasks": a photo of the clinic memo, kept on this phone.
+ * "From the Doctor": a photo of the clinic memo, kept on this phone.
  * Empty: tap → camera/file picker. With a photo: the row shows a thumbnail; tap → larger view with "Replace photo".
  * No upload, no reading of the memo, no advice.
  */

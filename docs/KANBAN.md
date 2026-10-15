@@ -44,6 +44,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | PR |
 |---|---|---|
+| — | "From the Doctor" (was "Doctor's tiny tasks"); Add a medication form fits the card (360–892 px) with a centred eyebrow; restock card stays after either choice; Settings > Demo "Reset demo"; day/night is look only, hearts stay one state | Branch `claude/from-the-doctor` |
 | T2-08 | Hotfix: the after-schedule "Show {{name}} the pill" step saves the original pill photo with `api.setPillReference` (main failed `tsc` after #43 used the removed `api.describePill`) | branch `claude/fix-reference-photo` |
 | T1-14 | Centred 430 px column on desktop, blurred garden at the sides, responsive 360–430 px including short screens (360×640, 412×730) | [#1](https://github.com/whansel007/Pawtner/pull/1) |
 | — | Layered scene: portrait garden, separate dog with shadow, ground-line alignment, dog on every senior screen | [#1](https://github.com/whansel007/Pawtner/pull/1) |

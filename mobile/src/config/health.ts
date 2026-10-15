@@ -3,7 +3,7 @@
  */
 
 /**
- * Clinic memo photo (Doctor's tiny tasks): kept on this phone only. No upload, no reading of the memo,
+ * Clinic memo photo (From the Doctor): kept on this phone only. No upload, no reading of the memo,
  * no interpretation (PRD: no clinical advice). The photo is downscaled to a JPEG data URL before it is stored.
  */
 export const CLINIC_MEMO = {

@@ -83,20 +83,14 @@ export function clearRestockHelp(store: KeyValueStore | null = browserStore()): 
   removeItem(RESTOCK_STORAGE_KEYS.request, store);
 }
 
-/** Local calendar day as YYYY-MM-DD (the phone's own time zone). */
-export function localDay(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+/** "I'll get it myself": remember the choice for this medicine. Returns false if storage is blocked. */
+export function chooseRestockSelf(medicationId: string, store: KeyValueStore | null = browserStore()): boolean {
+  return writeItem(RESTOCK_STORAGE_KEYS.self, medicationId, store);
 }
 
-/** "I'll get it myself": hide the card for the rest of today. Returns false if storage is blocked. */
-export function dismissRestockForToday(now: Date, store: KeyValueStore | null = browserStore()): boolean {
-  return writeItem(RESTOCK_STORAGE_KEYS.dismissedOn, localDay(now), store);
-}
-
-/** True while the card was dismissed earlier today; it comes back the next day. */
-export function isRestockDismissed(now: Date, store: KeyValueStore | null = browserStore()): boolean {
-  return readItem(RESTOCK_STORAGE_KEYS.dismissedOn, store) === localDay(now);
+/** The medicine the senior said she'd restock herself, or null. */
+export function readRestockSelf(store: KeyValueStore | null = browserStore()): string | null {
+  return readItem(RESTOCK_STORAGE_KEYS.self, store);
 }
 
 /** The medicine with the fewest days of supply at or under `soonDays` (active ones only), or null when none is low. */
@@ -110,7 +104,7 @@ export function pickRestockAlert(
   return low ? { medicationId: low.id, name: low.name, daysRemaining: low.daysOfSupply ?? 0 } : null;
 }
 
-/** Should the restock card show? Only for a low supply, and not after "I'll get it myself" today. */
-export function shouldShowRestock(daysRemaining: number | null, soonDays: number, dismissedToday: boolean): boolean {
-  return daysRemaining !== null && daysRemaining <= soonDays && !dismissedToday;
+/** Should the restock card show? While the supply is low, whatever the senior chose (the choice only changes its status line). */
+export function shouldShowRestock(daysRemaining: number | null, soonDays: number): boolean {
+  return daysRemaining !== null && daysRemaining <= soonDays;
 }

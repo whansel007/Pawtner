@@ -451,7 +451,8 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
    Scanner / prescription
    ═══════════════════════════════════════════════════════════════════════ */
 .scan-card { text-align: center; }
-.scan-card .back-button, .scan-card .eyebrow { text-align: left; }
+/* Eyebrow, title and supporting line share one centred column; only the back button stays left. */
+.scan-card .back-button { text-align: left; }
 .scan-card .supporting { margin-left: auto; margin-right: auto; }
 .scanner { position: relative; width: 100%; min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: var(--radius-7xl); color: #345845; background: var(--color-surface-scanner); cursor: pointer; overflow: hidden; }
 .scanner::before { content: ""; position: absolute; inset: 0; opacity: .4; background: repeating-linear-gradient(0deg, transparent 0 24px, rgba(76,112,86,.08) 25px 26px); }
@@ -464,16 +465,17 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .bottom-left { bottom: 18px; left: 18px; border-bottom: 3px solid; border-left: 3px solid; border-radius: 0 0 0 var(--radius-sm); }
 .bottom-right { bottom: 18px; right: 18px; border-right: 3px solid; border-bottom: 3px solid; border-radius: 0 0 var(--radius-sm); }
 .text-button { margin-top: 16px; padding: 10px; border: 0; color: #557463; background: transparent; font-weight: var(--font-weight-black); cursor: pointer; }
-.prescription-result { display: grid; gap: 12px; margin-top: 20px; text-align: left; }
+/* minmax(0, 1fr): inputs have a ~20-character intrinsic width; without it the column grows past the card. */
+.prescription-result { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 20px; text-align: left; }
 .prescription-result > .feature-icon { width: 54px; height: 54px; border-radius: var(--radius-3xl); margin: 0 auto 8px; }
 
 /* ═══════════════════════════════════════════════════════════════════════
    Fields / proof
    ═══════════════════════════════════════════════════════════════════════ */
 .field, .field-row { padding: 14px; border-radius: var(--radius-xl); background: var(--color-surface-sage); }
-.field { display: grid; gap: 3px; }
+.field { display: grid; gap: 3px; min-width: 0; }
 .field small { color: #6e886f; }
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0; background: transparent; }
+.field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 0; background: transparent; }
 .proof-scanner.captured { color: #315a43; background: var(--color-surface-sage-darker); }
 .proof-check { z-index: 1; display: grid; place-items: center; width: 70px; height: 70px; border-radius: var(--radius-full); color: white; background: var(--color-accent-proof); box-shadow: var(--shadow-proof); }
 
@@ -767,7 +769,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .no-results p { color: var(--color-text-body); font-size: var(--font-size-lg); }
 .error-text { margin-top: 8px; color: var(--color-action-stop); font-size: var(--font-size-sm); font-weight: 700; }
 .field-hint { color: var(--color-text-faint) !important; font-size: var(--font-size-xs) !important; font-weight: 400 !important; letter-spacing: 0 !important; }
-.field input { min-height: 44px; padding: 6px 10px; border: 1px solid var(--color-border-card); border-radius: var(--radius-lg); color: var(--color-text-base); font: inherit; }
+.field input { width: 100%; min-width: 0; min-height: 44px; padding: 6px 10px; border: 1px solid var(--color-border-card); border-radius: var(--radius-lg); color: var(--color-text-base); font: inherit; }
 .field input:focus { outline: 2px solid var(--color-focus); outline-offset: 1px; }
 
 /* Medication list and edit on /care */

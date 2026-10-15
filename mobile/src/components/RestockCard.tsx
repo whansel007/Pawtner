@@ -15,7 +15,6 @@ export function RestockCard({
   busy,
   onAsk,
   onSelf,
-  onAcknowledge,
 }: {
   alert: RestockAlert;
   caretakerName: string;
@@ -23,7 +22,6 @@ export function RestockCard({
   busy: boolean;
   onAsk: () => void;
   onSelf: () => void;
-  onAcknowledge: () => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -43,12 +41,8 @@ export function RestockCard({
         </div>
       )}
       {state === "asked" && <p className="restock-card__status" role="status">{t("restock.asked", { caretaker: caretakerName })}</p>}
-      {state === "handled" && (
-        <div className="restock-card__done">
-          <p className="restock-card__status" role="status">{t("restock.handled", { caretaker: caretakerName })}</p>
-          <button type="button" className="restock-card__secondary" onClick={onAcknowledge}>{t("restock.ok")}</button>
-        </div>
-      )}
+      {state === "handled" && <p className="restock-card__status" role="status">{t("restock.handled", { caretaker: caretakerName })}</p>}
+      {state === "self" && <p className="restock-card__status" role="status">{t("restock.self")}</p>}
     </section>
   );
 }
