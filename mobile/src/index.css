@@ -441,6 +441,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .status-tag { padding: 6px 9px; border-radius: var(--radius-pill); color: var(--color-status-default); background: var(--color-status-default-bg); font-size: var(--font-size-xs); font-weight: var(--font-weight-black); }
 .status-tag.now { color: var(--color-status-now); background: var(--color-status-now-bg); }
 .primary-button { width: 100%; min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 18px; border: 0; border-radius: var(--radius-3xl); color: white; background: var(--color-primary); font-weight: var(--font-weight-black); text-decoration: none; cursor: pointer; box-shadow: var(--shadow-primary); }
+.secondary-button { width: 100%; min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 0; padding: 0 16px; border: 2px solid var(--color-primary); border-radius: var(--radius-3xl); color: var(--color-primary); background: transparent; font-weight: var(--font-weight-black); cursor: pointer; text-decoration: none; box-shadow: none; }
 
 /* ═══════════════════════════════════════════════════════════════════════
    Scanner / prescription
