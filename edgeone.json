@@ -1,0 +1,15 @@
+{
+  "installCommand": "npm install --no-audit --no-fund && npm --prefix mobile install --no-audit --no-fund",
+  "buildCommand": "npm --prefix mobile run build",
+  "outputDirectory": "mobile/dist",
+  "nodeVersion": "22.11.0",
+  "rewrites": [
+    {
+      "source": "/*",
+      "destination": "/index.html"
+    }
+  ],
+  "cloudFunctions": {
+    "maxDuration": 30
+  }
+}
