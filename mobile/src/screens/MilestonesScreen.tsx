@@ -1,12 +1,20 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
 import type { BackAction } from "../lib/navigation";
-import { api } from "../lib/api";
-import { tricks as mockTricks } from "../mock";
-import type { MilestonesResponse } from "../../../shared/contract";
+import { useMilestones } from "../lib/useMilestones";
+import { isPerformable, trickCardTap, type TrickLike } from "../lib/tricks";
+import type { TrickPerformance } from "../config/tricks";
+import type { DogMood } from "../../../shared/contract";
 import type { Pet } from "../types";
+import "./MilestonesScreen.css";
+
+/**
+ * Milestones: Buddy's progress, Souvenirs, then Tricks.
+ * Earned trick cards are buttons: Buddy (standing above the card) performs the trick via onTrick; when he's too
+ * sleepy to wave, the Wave card shows a gentle line instead (lib/tricks.ts trickCardTap). Locked tricks do nothing.
+ */
 
 export function MilestonesScreen({
   back,
@@ -15,6 +23,8 @@ export function MilestonesScreen({
   pet,
   petName,
   heartsTotal,
+  mood,
+  onTrick,
 }: {
   back: BackAction;
   onWalk: () => void;
@@ -22,14 +32,18 @@ export function MilestonesScreen({
   pet: Pet;
   petName: string;
   heartsTotal: number;
+  mood: DogMood;
+  onTrick: (performance: TrickPerformance) => void;
 }) {
   const { t } = useTranslation();
-  const [data, setData] = useState<MilestonesResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, tricks } = useMilestones({ refresh: true });
+  const [sleepyLine, setSleepyLine] = useState(false);
 
-  useEffect(() => {
-    api.milestones().then(setData).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+  function tapTrick(trick: TrickLike) {
+    const tap = trickCardTap(trick, mood);
+    setSleepyLine(tap === "sleepyLine");
+    if (tap === "basic" || tap === "wave") onTrick(tap);
+  }
 
   if (loading) return (
     <FullCard back={back}>
@@ -58,13 +72,6 @@ export function MilestonesScreen({
 
       <button className="customize-row" onClick={onCustomize}><span className="feature-icon"><Icon name="star" /></span><div><strong>{t("milestones.worldWardrobe")}</strong><small>{t("milestones.worldWardrobeSub", { name: petName })}</small></div><Icon name="chevron" /></button>
 
-      <div className="section-title"><h3>{t("milestones.tricks")}</h3><span>{t("milestones.tricksSub")}</span></div>
-      <div className="trick-grid">
-        {(data?.tricks ?? mockTricks).map((trick) => (
-          <article className={trick.earned ? "earned" : ""} key={trick.name}><Icon name="star" /><strong>{trick.name}</strong><small>{trick.note}</small></article>
-        ))}
-      </div>
-
       <div className="section-title"><h3>{t("milestones.souvenirs")}</h3><span>{t("milestones.souvenirsSub")}</span></div>
       {data && data.unlockedSouvenirs.length > 0 ? data.unlockedSouvenirs.map((souvenir) => (
         <button className="souvenir-row" key={souvenir.key} onClick={onWalk}>
@@ -82,6 +89,17 @@ export function MilestonesScreen({
       {data?.nextSouvenirTarget && (
         <p className="supporting">Next: {data.nextSouvenirTarget.name} at {(data.nextSouvenirTarget.cumulativeMeters / 1000).toFixed(1)} km ({(data.nextSouvenirTarget.progress * 100).toFixed(0)}% there)</p>
       )}
+
+      <div className="section-title"><h3>{t("milestones.tricks")}</h3><span>{t("milestones.tricksSub")}</span></div>
+      <div className="trick-grid">
+        {(tricks ?? []).map((trick) => {
+          const content = <><Icon name="star" /><strong>{trick.name}</strong><small>{trick.note}</small></>;
+          return isPerformable(trick)
+            ? <button type="button" className="earned trick-card--perform" key={trick.name} onClick={() => tapTrick(trick)}>{content}</button>
+            : <article className={trick.earned ? "earned" : ""} key={trick.name}>{content}</article>;
+        })}
+      </div>
+      {sleepyLine && <p className="trick-note" role="status">{t("milestones.waveSleepy", { name: petName })}</p>}
     </FullCard>
   );
 }

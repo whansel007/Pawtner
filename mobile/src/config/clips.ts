@@ -42,10 +42,10 @@ export const CLIP_SAFETY_TIMEOUT_MS = 7000;
 export const CLIP_PRELOAD_FALLBACK_MS = 1500;
 
 /**
- * Which clip a tap plays, by mood. null = no clip; the tap keeps the normal reaction rotation.
- * Sleepy has a different face and attentive is a calm moment, so neither plays a clip.
+ * The clip Buddy's "Wave" trick plays, by mood (once Wave is earned; see config/tricks.ts). null = no wave:
+ * the wave is skipped in the tap rotation. Sleepy has a different face and attentive is a calm moment.
  */
-export const TAP_CLIP_BY_MOOD: Record<DogMood, BuddyClipKind | null> = {
+export const WAVE_CLIP_BY_MOOD: Record<DogMood, BuddyClipKind | null> = {
   content: "wave",
   joyful: "joyful",
   sleepy: null,
