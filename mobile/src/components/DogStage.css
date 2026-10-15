@@ -166,7 +166,8 @@
 .dog-stage--content .dog-stage__body { animation: dog-breathe 3.6s ease-in-out infinite; }
 .dog-stage--joyful .dog-stage__body { animation: dog-hop-mood 1.6s ease-in-out infinite; }
 .dog-stage--sleepy .dog-stage__body { animation: dog-droop 5s ease-in-out infinite; }
-/* attentive: still and upright, no playful motion */
+/* attentive (from readings): breathes like content; readings never stop Buddy playing (user, 16 Oct). */
+.dog-stage--attentive .dog-stage__body { animation: dog-breathe 3.6s ease-in-out infinite; }
 
 /* While the dog is in the air its shadow tightens and fades, and the paw creases lift off; same timing as the hop. */
 .dog-stage--joyful .dog-stage__ground { animation: ground-hop-mood 1.6s ease-in-out infinite; }

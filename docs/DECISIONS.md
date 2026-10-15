@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-16 (evening) — Buddy plays unless he's low on hearts (branch `claude/play-hearts`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Mood from readings ("attentive" after a 995 / see-GP decision) no longer stops Buddy playing: taps, trick cards and the wave clip work as usual (attentive waves like content and breathes like content). Only low hearts stop play: below `PLAY_MIN_HEARTS` (2, `config/pet.ts`; `hasHeartsToPlay` in `lib/tricks.ts`) a tap or trick card shows the bubble "{{name}} needs a heart to play. Take your medicine or log your blood pressure to give one." Sleepy (missed-dose nudge) keeps its own face and gentle Wave line. | User: the hosted 185/120 test reading kept Buddy attentive, so every animation looked missing; readings shouldn't do that, only hearts, and the app should prompt for a heart. | **Deviates from PRD §6 mood table** ("attentive: still, upright, no playful effects"). The Health Warning card still shows the urgent state. | Final (user request; bubble wording tentative) |
+
 ## 2026-10-16 (later) — Warning card, Why? without wording source, streak hearts match (branch `claude/visit-notes`)
 
 | Decision | Reason | Tradeoff | Status |

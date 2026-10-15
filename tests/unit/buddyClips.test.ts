@@ -52,11 +52,11 @@ describe("clipOverlayBox", () => {
 describe("clip triggers", () => {
   const ok = { reducedMotion: false, canPlay: () => true };
 
-  it("tap: content waves, joyful replays the joyful clip, sleepy and attentive never play a clip", () => {
+  it("tap: content and attentive wave, joyful replays the joyful clip, sleepy never plays a clip", () => {
     expect(waveClipFor("content", ok)).toBe("wave");
+    expect(waveClipFor("attentive", ok)).toBe("wave");
     expect(waveClipFor("joyful", ok)).toBe("joyful");
     expect(waveClipFor("sleepy", ok)).toBeNull();
-    expect(waveClipFor("attentive", ok)).toBeNull();
   });
 
   it("fresh heart: only a joyful Home plays the joyful clip", () => {

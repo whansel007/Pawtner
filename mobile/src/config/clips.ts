@@ -43,13 +43,14 @@ export const CLIP_PRELOAD_FALLBACK_MS = 1500;
 
 /**
  * The clip Buddy's "Wave" trick plays, by mood (once Wave is earned; see config/tricks.ts). null = no wave:
- * the wave is skipped in the tap rotation. Sleepy has a different face and attentive is a calm moment.
+ * the wave is skipped in the tap rotation. Sleepy has a different face. Attentive (from readings) uses the base art,
+ * so it waves like content (user, 16 Oct: readings never stop play; only low hearts do).
  */
 export const WAVE_CLIP_BY_MOOD: Record<DogMood, BuddyClipKind | null> = {
   content: "wave",
   joyful: "joyful",
   sleepy: null,
-  attentive: null,
+  attentive: "wave",
 };
 
 /** After "Give Buddy a heart", Home plays this clip once, only if it shows this mood. */

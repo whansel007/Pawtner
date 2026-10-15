@@ -404,6 +404,7 @@ export default function App() {
         accessory={<PetAccessory accessory={accessory} dogName={dogName} />}
         celebrateRequest={celebrateRequest}
         trickRequest={trickRequest}
+        heartCount={heartCount}
       />
       <TopZone onSettings={() => navigate("settings")} onHome={goHome} pet={livePet} />
       <div className="scene-chips">

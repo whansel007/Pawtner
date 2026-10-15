@@ -10,6 +10,12 @@ export function bubbleLineKey(index: number): string {
   return `pet.lines.${BUBBLE_LINE_KEYS[index % BUBBLE_LINE_KEYS.length]}`;
 }
 
+/**
+ * Buddy plays (tap reactions, tricks, the wave clip) from this many hearts up (user, 16 Oct). Below it a tap shows
+ * a bubble asking for a heart instead (en.json pet.lowHeart). Mood from readings (attentive) never stops play.
+ */
+export const PLAY_MIN_HEARTS = 2;
+
 /** How many hearts float up on the hearts reaction (the CSS staggers up to this many). */
 export const HEART_BURST_COUNT = 5;
 
@@ -24,9 +30,8 @@ export const PET_REACTIONS = {
     bark: 800,
   } as const,
   /**
-   * Bark sound (dog tap rotation and the paw button, via lib/useBark.ts). The file is user-supplied
-   * (CC0, 0.95 s, 12 KB); its licence source is still to be recorded in docs/DECISIONS.md.
-   * Don't replace it with a downloaded sound.
+   * Bark sound (dog tap rotation and the paw button, via lib/useBark.ts). User-supplied from Pixabay
+   * (Pixabay Content License, no attribution needed; 0.95 s, 12 KB). Don't replace it with a downloaded sound.
    */
   barkSoundPath: "/assets/bark.mp3",
   /** Whether sound is on by default. */
