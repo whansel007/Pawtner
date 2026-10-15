@@ -1,10 +1,16 @@
 # Decisions
 
+## 2026-10-15 — Fictional seed history
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| `migrations/seed.sql` builds a history relative to the day it runs (Rose's zone): schedules start today − 10; days −10..−8 Tablet A taken, Tablet B missed (2 hearts); days −7..−1 both taken (4 hearts); three normal BP readings (128/82, 124/79, 131/84, no note) on days −6, −4, −2; today empty. Expected: streak 7, `heartsTotal` 34 + today's share, Milestones caring days 10 (9 before 10:0x), caretaker summary caring days 6. | Live demo showed 0 hearts, 0-day streak, everything locked; judging happens on later days, so dates can't be fixed. | Re-running deletes **every** dose event of the two seed schedules (incl. "Taken" taps) and sets `dogs.streak = 7`; history goes stale if the seed isn't re-run on the demo day. The API integration test pins its own schema back to 13 Oct. | Tentative (target numbers) |
+
 ## 2026-10-15 — Wardrobe, pill check, accessories
 
 | Decision | Reason | Tradeoff | Status |
 |---|---|---|---|
-| World & wardrobe rewards unlock when Buddy's lifetime hearts reach a threshold (`config/rewards.ts`); hearts are never spent. A Settings switch "Unlock all rewards (demo)" sits under "Caretaker check-ins". | User: one currency is easy to explain; spending hearts would feel like losing something. | Needs `dog.heartsTotal` from P1; mock value until then. Seed history caps the total near 48. | Tentative (thresholds) |
+| World & wardrobe rewards unlock when Buddy's lifetime hearts reach a threshold (`config/rewards.ts`); hearts are never spent. A Settings switch "Unlock all rewards (demo)" sits under "Caretaker check-ins". | User: one currency is easy to explain; spending hearts would feel like losing something. | Needs `dog.heartsTotal` from P1; mock value until then. The seed history (below) gives 34 before today, so the hat is unlocked and glasses/Kampung stay locked. | Tentative (thresholds) |
 | The AI pill check stays, reworded as a comparison with her own first photo ("Looks like your usual pill"), no similarity %, raw errors never shown. | User: it's for verification, not identification; PRD §7.4 forbids identifying a pill. | Still an AI judgement; the disclosure says it can't tell what a pill is. | Final (PR #28) |
 | Hibiscus drawn as an inline SVG; hat at top 3% of the dog image; compact dock below 430px landscape height. | `box-shadow` with % offsets was invalid CSS (petals never drew); hat brim sat on the eyes; card was 225px tall at 915×355. | The "woof!" bubble has ~1px slack in short landscape; "Show me at home" still needs a scroll there. | Final |
 
