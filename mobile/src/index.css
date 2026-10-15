@@ -149,7 +149,6 @@
   --shadow-proof: 0 12px 30px rgba(49, 91, 68, .2);
   --shadow-toast: 0 10px 30px rgba(20, 40, 28, .3);
   --shadow-hearts: drop-shadow(0 2px 2px rgba(30, 45, 31, .2));
-  --shadow-bandana: drop-shadow(0 5px 5px rgba(49, 44, 30, .22));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -265,13 +264,20 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .home-layout::-webkit-scrollbar { display: none; }
 /* Empty spacer: the shared dog layer stands on the chips below it. Keeps room for at least --dog-min (it may reach under the top bar). */
 .home-layout__stage { flex: 1 1 auto; min-height: max(0px, calc(var(--dog-min, 0px) - var(--top-overlap))); }
-.home-layout__chips {
-  flex: none;
-  /* Bottom row: the chips' top edge is the dog's ground line. */
+/* Shared chips row: Today on the left, streak + treat on the right. Each wrapper
+   provides its own positioning — .home-layout__chips is a flex child of .home-layout
+   (and sets the dog's ground line), .scene-chips is the absolute landscape row. */
+.home-layout__chips,
+.scene-chips {
   display: flex;
   justify-content: space-between;
   padding-inline: 14px;
 }
+/* Home's chips are a fixed-size flex child at the bottom of .home-layout; their
+   top edge is the dog's ground line. */
+.home-layout__chips { flex: none; }
+/* Portrait: keep the shared .scene-chips row hidden so it doesn't duplicate Home's own chips. */
+.scene-chips { display: none; }
 .scene-actions { display: flex; gap: 8px; }
 /* Portrait: the cards are plain items of the Home column. Landscape turns this into the right-hand pane. */
 .home-layout__cards { display: contents; }
@@ -634,22 +640,88 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .mark-glasses::after { content: ""; position: absolute; top: 12px; left: 14px; width: 7px; border-top: 3px solid #27322b; }
 .mark-hat::before { content: ""; position: absolute; left: 5px; top: 3px; width: 24px; height: 16px; border-radius: 15px 15px 3px 3px; background: #e4b85e; }
 .mark-hat::after { content: ""; position: absolute; left: 0; top: 17px; width: 34px; height: 7px; border-radius: var(--radius-full); background: #bd793f; }
-.mark-bandana::before { content: ""; position: absolute; left: 3px; top: 4px; width: 28px; height: 20px; background: #d75442; clip-path: polygon(0 0,100% 0,50% 100%); }
+.mark-flower::before { content: ""; position: absolute; left: 10px; top: 5px; width: 14px; height: 14px; border-radius: 50%; background: #e8a5c0; box-shadow: -4px 0 #d484a8, 4px 0 #d484a8, 0 -4px #d484a8, 0 4px #d484a8; }
+.mark-flower::after { content: ""; position: absolute; left: 14px; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: #f5d76e; }
 
 /* ═══════════════════════════════════════════════════════════════════════
    Pet accessories (full-size on the dog)
    ═══════════════════════════════════════════════════════════════════════ */
-/* Rendered inside DogStage's body, so it moves with the dog. Offsets are % of the dog figure; tune when the final dog art lands. */
-.pet-accessory { position: absolute; z-index: 1; left: 50%; pointer-events: none; }
-.accessory-glasses { top: 31%; width: 124px; height: 46px; transform: translateX(-50%) rotate(-2deg); }
-.accessory-glasses i { position: absolute; width: 51px; height: 36px; border: 8px solid #201f1d; border-radius: var(--radius-full); background: rgba(47,57,50,.48); box-shadow: inset 0 3px rgba(255,255,255,.25); }
-.accessory-glasses i:first-child { left: 5px; }
-.accessory-glasses i:last-child { right: 5px; }
-.accessory-glasses::after { content: ""; position: absolute; top: 15px; left: 53px; width: 19px; border-top: 7px solid #201f1d; }
-.accessory-hat { top: 24%; width: 150px; height: 70px; transform: translateX(-50%) rotate(3deg); }
-.accessory-hat::before { content: ""; position: absolute; left: 34px; top: 4px; width: 82px; height: 48px; border-radius: 50px 50px 8px 8px; background: repeating-linear-gradient(90deg,#e7bd65 0 5px,#d7a953 6px 8px); }
-.accessory-hat::after { content: ""; position: absolute; left: 0; bottom: 4px; width: 150px; height: 20px; border-radius: var(--radius-full); background: #c88143; box-shadow: inset 0 5px #f0ce79; }
-.accessory-bandana { top: 39%; width: 94px; height: 58px; transform: translateX(-50%); background: #d95543; clip-path: polygon(0 0,100% 0,50% 100%); filter: var(--shadow-bandana); }
+/* Rendered inside DogStage's body, so it moves with the dog.
+   Sizes and positions are driven by config/accessories.ts via CSS custom properties. */
+.pet-accessory {
+  position: absolute;
+  z-index: 1;
+  left: var(--acc-left, 50%);
+  top: var(--acc-top);
+  width: var(--acc-width);
+  height: var(--acc-height);
+  transform: translateX(-50%) rotate(var(--acc-rotate, 0deg));
+  pointer-events: none;
+}
+
+.accessory-glasses i {
+  position: absolute;
+  width: 41%;
+  height: 78%;
+  border: min(8px, 1.5cqw) solid #201f1d;
+  border-radius: var(--radius-full);
+  background: rgba(47,57,50,.48);
+  box-shadow: inset 0 3px rgba(255,255,255,.25);
+}
+.accessory-glasses i:first-child { left: 4%; }
+.accessory-glasses i:last-child { right: 4%; }
+.accessory-glasses::after {
+  content: "";
+  position: absolute;
+  top: 33%;
+  left: 43%;
+  width: 15%;
+  border-top: min(7px, 1.2cqw) solid #201f1d;
+}
+
+.accessory-hat::before {
+  content: "";
+  position: absolute;
+  left: 23%;
+  top: 6%;
+  width: 55%;
+  height: 69%;
+  border-radius: 999px 999px 8px 8px;
+  background: repeating-linear-gradient(90deg,#e7bd65 0 5px,#d7a953 6px 8px);
+}
+.accessory-hat::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 6%;
+  width: 100%;
+  height: 29%;
+  border-radius: var(--radius-full);
+  background: #c88143;
+  box-shadow: inset 0 5px #f0ce79;
+}
+
+.accessory-flower::before {
+  content: "";
+  position: absolute;
+  left: 20%;
+  top: 20%;
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  background: #e8a5c0;
+  box-shadow: -20% 0 #d484a8, 20% 0 #d484a8, 0 -20% #d484a8, 0 20% #d484a8;
+}
+.accessory-flower::after {
+  content: "";
+  position: absolute;
+  left: 35%;
+  top: 35%;
+  width: 30%;
+  height: 30%;
+  border-radius: 50%;
+  background: #f5d76e;
+}
 
 /* ═══════════════════════════════════════════════════════════════════════
    T2: Search bar, HSA results, medication edit, explanation links
@@ -949,6 +1021,16 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
     padding: var(--top-bar-space) var(--side-gutter) var(--scene-bottom) calc(var(--side-gutter) + env(safe-area-inset-left));
     overflow: visible;
   }
+  /* Show chips under the dog in the left column on every screen with a landscape scene.
+     Home keeps its own .home-layout__chips (the dog's ground line is measured from it) and the shared row is hidden on Home. */
+  .scene-chips {
+    position: absolute;
+    left: calc(var(--side-gutter) + env(safe-area-inset-left));
+    right: calc(var(--pane-w) + var(--side-gutter));
+    bottom: var(--scene-bottom);
+    display: flex; /* re-enables the row in landscape; the shared rule already gives it justify + padding. */
+  }
+  .app-shell:has(.screen-home) .scene-chips { display: none; }
 
   /* Right pane */
   .home-layout__cards {

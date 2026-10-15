@@ -6,7 +6,7 @@ export const demoUser = { id: "user-demo" };
 export const demoDog = { id: "dog-demo" };
 
 export const pet: Pet = {
-  name: "buddy",
+  name: "Buddy",
   heartCount: 2,
   maxHearts: 4,
   careScore: 86,

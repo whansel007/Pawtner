@@ -8,7 +8,7 @@ Updated 2026-10-14 (evening). Tier 1 is due **Wednesday night**; submission **Fr
 Today's plan (agreed 13 Oct evening), in order:
 1. Morning: message P1 for the hosting decision, the first endpoints (`today`, `dose event`) and the contract additions for `/care`.
 2. T1-10 + T1-12 emergency beat.
-3. T1-15 `/care` from the Miro frames, on mock data.
+3. T1-15 `/care` from the Figma Make export, wired to the API with a mock fallback (PR from `claude/care-web`).
 4. Afternoon: T1-16 simulated walk.
 5. Evening: connect to the API if it's ready, then deploy to production.
 6. Later, if there's time: T2-10 morning/night from one shared helper.
@@ -19,8 +19,8 @@ Today's plan (agreed 13 Oct evening), in order:
 | T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Posts dose event and derives status from ledger; offline fallback (local taken + local `celebrate`) on `claude/sleepy-taken-fallback`; scanner/photo is still a prototype. |
 | T1-11 | In-app nudge + demo clock | P2 | Settings demo clock runs the deterministic agent; dose nudges are capped at two per occurrence. |
 | T1-13 | Dog mood on Home | P2 | Shared dog mood fed from API state; visual moods remain motion/glow. |
-| T1-15 | `/care` web page from the Miro frame | P2 / CodeBuddy | Frame in progress. The phone's Care/Settings screens already use the API (summary, consent, threshold min 2). Web page needs P1's caretaker list (see Blocked). |
-| T1-17 | Public HTTPS URL | P2 (+ P1 API) | **Front end in production** on Vercel: `pawtner-mobile-three.vercel.app` = `main` @ `d318270` (deploy `pawtner-mobile-1fn80qgz0`, 14 Oct evening; checks passed first). **API hosting is now wired** (same commit that added proof photo pass-through): `api/[...path].ts` is a Vercel serverless catch-all that wraps the existing `createApiHandler()`; `vercel.json` builds the Vite front-end into `mobile/dist` and rewrites all unknown routes to `index.html`. `functions/api/[[path]].mjs` is the same handler as an EdgeOne Pages Function for the EdgeOne copy. Just needs `DATABASE_URL` in the project env + the Supabase schema migrated (still P1). Until then the deployed front end still runs on the offline fallback (beats 2 and 3 work; beat 1 needs the API). |
+| T1-15 | `/care` web page from the Miro frame | P2 / CodeBuddy | Done: landing, demo sign-in picker, This week, Alerts & caregivers, Settings. PR #14, #16, #21. The phone's Care/Settings screens already use the API (summary, consent, threshold min 2). Web page needs P1's caretaker list (see Blocked). |
+| T1-17 | Public HTTPS URL | P2 (+ P1 API) | **Front end in production:** `pawtner-care.vercel.app` (and `pawtner-mobile-three.vercel.app`) = `main` @ `32ca8ab` incl. `/care`, PR #16 (non-personal landing, framed footer) and PR #17 (accessories scale with the dog, ear flower, chips in landscape) (14 Oct night). No hosted API yet: offline fallback; Taken and the emergency beat and walk work offline, the demo clock and Tier 2 screens need the API. P1's EdgeOne copy (`pawtner-dpyqrh9kdlee.edgeone.dev`) is static and needs the `/care/*` rewrite. **API hosting is now wired** (same commit that added proof photo pass-through): `api/[...path].ts` is a Vercel serverless catch-all that wraps the existing `createApiHandler()`; `vercel.json` builds the Vite front-end into `mobile/dist` and rewrites all unknown routes to `index.html`. `functions/api/[[path]].mjs` is the same handler as an EdgeOne Pages Function for the EdgeOne copy. Just needs `DATABASE_URL` in the project env + the Supabase schema migrated (still P1). Until then the deployed front end still runs on the offline fallback (beats 2 and 3 work; beat 1 needs the API). |
 | T1-18 | Dog assets | Design | Base dog + garden day/night done. Sleepy art (`dog-sleepy.webp`, same canvas) wired on `claude/sleepy-taken-fallback`; joyful, content, attentive still use the base art. |
 
 ## Backlog (Tier 1)
@@ -54,18 +54,30 @@ Today's plan (agreed 13 Oct evening), in order:
 | — | Home fix: friendly one-time API notice, tap-through toasts, compact decision row | [#7](https://github.com/whansel007/Pawtner/pull/7) |
 | T1-16 | Simulated walk: growing distance, fast (bus) stretch pauses distance, dizzy dog, one walk session posted on finish | [#9](https://github.com/whansel007/Pawtner/pull/9) |
 | — | UI tweaks: landscape two-column layout, shared back navigation, streak chip → Milestones, fixed card frames, tap bubble in the toast slot, stronger hearts, dizzy stars, walk end state (merged into `main` @ `d318270`) | [#10](https://github.com/whansel007/Pawtner/pull/10) |
+| T1-15 | `/care` caretaker web: landing, demo sign-in picker (senior → phone app, check-ins caretaker, updates-only caretaker; front end only), This week, Alerts & caregivers (shared threshold ≥ 2), read-only Settings; crochet dog; `mobile/vercel.json` rewrites | [#14](https://github.com/whansel007/Pawtner/pull/14) |
+| — | `/care` landing not personal (no names, generic dog alt), framed footer (CodeBuddy) | [#16](https://github.com/whansel007/Pawtner/pull/16) |
+| — | Accessories sized relative to the dog (both dog sizes), hibiscus at the ear replaces the bandana, chips in landscape on non-Home screens (CodeBuddy) | [#17](https://github.com/whansel007/Pawtner/pull/17) |
+| — | Proof screen wording: photo is proof, never verification (PRD §7.4) | [#13](https://github.com/whansel007/Pawtner/pull/13) |
+| — | Demo names Rose (senior) and Buddy (dog), knitted wording (CodeBuddy) | [#19](https://github.com/whansel007/Pawtner/pull/19) |
+| — | `/care` landing: tighter vertical spacing (CodeBuddy) | [#21](https://github.com/whansel007/Pawtner/pull/21) |
+| — | Landscape chips row identical to Home: one shared `SceneChips` component (CodeBuddy) | [#23](https://github.com/whansel007/Pawtner/pull/23) |
+| — | Landscape caregiver view: Buddy and chips in the left column; portrait unchanged (CodeBuddy) | [#24](https://github.com/whansel007/Pawtner/pull/24) |
+| — | Caregiver view wording: "Shared with your circle", names from data ("Rose + Jamie") (CodeBuddy) | [#25](https://github.com/whansel007/Pawtner/pull/25) |
 
 ## Blocked
 
 | Item | Blocked on |
 |---|---|
 | T1-17 production URL | P1: host the API and run migrations + fictional seed on the hosted database (Supabase has no Pawtner schema yet). Message drafted for the user to send 14 Oct. |
-| T1-15 caretaker list on the web | P1: `caregivers: { id, name, receivesCheckIns }[]` in `CaretakerSummaryResponse`, 3–4 seeded caretakers, check-in template in `shared/templates.ts`. |
+| T1-15 caretaker list on the web (real data) | P1: `caregivers: { id, name, receivesCheckIns }[]` in `CaretakerSummaryResponse`, 3–4 seeded caretakers, check-in template in `shared/templates.ts`. Until then `/care` shows the API caregiver (gets check-ins) plus the mock updates-only slot `MOCK_UPDATES_ONLY_CARETAKER` in `mobile/src/care/data/mock.ts`. Also wanted: the senior's time zone in the summary (moment times use the viewer's zone). |
 
 ## Kept in view (KIV) / follow-ups
 
 | Item | Note |
 |---|---|
+| Buddy video (KIV, resume 15 Oct) | User has ~1000 Miora credits. Plan: pitch/demo video clip first; optional in-app celebration card (MP4 with its own background, muted, plays once, still fallback). No transparent in-app dog video (iPhone Safari format issues). |
+| P1 hosting branch `cb/api-hosting-edgeone` (unmerged, 14 Oct) | Wires API hosting for Vercel and EdgeOne and seeds caretaker Alex (`opted_in = false`). Adds a ROOT `vercel.json`, while the Vercel project builds from Root Directory `mobile` with `mobile/vercel.json` (the `/care` rewrites): review before merge so deploys and `/care` deep links keep working. |
+| Offline sample text still names people | `mobile/src/mock/care.ts`: "Two people, one Buddy"; activity "Mum took her lunchtime medicine and Buddy gained a heart." Shown only without the API. |
 | Fixed names left in mock data | `mobile/src/mock/care.ts` has `names: "Mum + Jamie"`; `mobile/src/mock/milestones.ts` has `note: "From Jamie"`. Renaming the caretaker won't change these; derive them from the name fields. |
 | CodeBuddy credits below 5% (14 Oct) | Spend CodeBuddy only on judged features (T1-16, then T1-15). Claude Code does merges, structural fixes and screenshots. Ask organisers about a top-up. |
 | First load shows a plain green screen for ~3 s | Seen on the 14 Oct preview: `garden-day.webp` and `dog-base.webp` load after Home appears. Preload them during the cover/dedication. |

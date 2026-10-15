@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/care", "destination": "/index.html" },
+    { "source": "/care/:path*", "destination": "/index.html" }
+  ]
+}

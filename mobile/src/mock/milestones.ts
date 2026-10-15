@@ -30,7 +30,7 @@ export const accessoryOptions: AccessoryOption[] = [
   { id: "none", label: "Fluffy", note: "Just Buddy" },
   { id: "glasses", label: "Sunny specs", note: "3 walks" },
   { id: "hat", label: "Sun hat", note: "7 day streak" },
-  { id: "bandana", label: "Red bandana", note: "From Jamie" },
+  { id: "flower", label: "Hibiscus bloom", note: "From Jamie" },
 ];
 
 export const walkStats: WalkStats = {

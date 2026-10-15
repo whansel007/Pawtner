@@ -1,10 +1,11 @@
 import type { Caregiver, CareActivity, RestockAlert, WeekSummary, BloodPressureReading, ScreeningInfo, ActivityLink, ClinicTask } from "../types";
 
 export const caregiver: Caregiver = {
-  names: "Jamie · Alex",
+  seniorName: "Rose",
   caretakerName: "Jamie",
-  relationship: "Jamie gets check-ins, Alex gets updates only",
-  status: "Gets check-ins",
+  names: "Rose + Jamie",
+  relationship: "Two people, one Buddy",
+  status: "Connected",
 };
 
 export const careActivity: CareActivity = {
@@ -13,7 +14,7 @@ export const careActivity: CareActivity = {
   dosesTotal: 3,
   walkDistance: "1.8 km",
   timestamp: "12:42 PM",
-  description: "Mum took her lunchtime medicine and Max gained a heart.",
+  description: "Mum took her lunchtime medicine and Buddy gained a heart.",
 };
 
 export const restockAlert: RestockAlert = {

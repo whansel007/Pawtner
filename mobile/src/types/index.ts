@@ -3,7 +3,7 @@ export interface Pet {
   name: string;
   /** Current heart count (0–4) derived from doses taken + BP logged */
   heartCount: number;
-  /** Max hearts the bar can show */
+  /** Upper bound on hearts the bar can show */
   maxHearts: number;
   /** Care-progress score shown on the care screen */
   careScore: number;
@@ -170,10 +170,12 @@ export interface Souvenir {
 }
 
 export interface Caregiver {
-  /** Combined names, e.g. "Mum + Jamie" */
-  names: string;
+  /** Senior's display name, used in the pair label on /care */
+  seniorName: string;
   /** Caretaker display name, e.g. "Jamie" */
   caretakerName: string;
+  /** Combined names for the role strip, built from senior + caretaker via care.pairNames */
+  names: string;
   /** Relationship note */
   relationship: string;
   /** Connection status */

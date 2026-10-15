@@ -21,6 +21,8 @@ import { DedicationScreen } from "./screens/DedicationScreen";
 import { BottomNav } from "./screens/BottomNav";
 import { DesktopBackdrop, SceneBackdrop } from "./components/SceneBackdrop";
 import { DogLayer } from "./components/DogLayer";
+import { PetAccessory } from "./components/PetAccessory";
+import { SceneChips } from "./components/SceneChips";
 import { DEFAULT_PHASE, phaseFromTime } from "./config/scene";
 import { selectDogMood } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
@@ -104,7 +106,11 @@ export default function App() {
   const dogName = today?.dog.name ?? pet.name;
   const caretakerName = careSummary?.caregiver?.name ?? caregiver.caretakerName;
   const livePet = { ...pet, name: dogName, heartCount, streak: today?.dog.streak ?? pet.streak, careScore: careSummary?.careScore ?? pet.careScore, caringDays: careSummary?.caringDays ?? pet.caringDays };
-  const liveCaregiver = careSummary?.caregiver ? { ...caregiver, caretakerName: careSummary.caregiver.name, names: `${careSummary.senior.name} + ${careSummary.caregiver.name}` } : caregiver;
+  // /care pair label: build from data via the care.pairNames pattern, not a hardcoded string.
+  // Live API names take priority; otherwise fall back to the mock data.
+  const liveCaregiver = careSummary?.caregiver
+    ? { ...caregiver, seniorName: careSummary.senior.name, caretakerName: careSummary.caregiver.name, names: t("care.pairNames", { senior: careSummary.senior.name, caretaker: careSummary.caregiver.name }) }
+    : { ...caregiver, names: t("care.pairNames", { senior: caregiver.seniorName, caretaker: caregiver.caretakerName }) };
   const liveCareActivity = careSummary ? { ...careActivity, dosesTaken: `${careSummary.dosesTaken} of ${careSummary.dosesDue}`, dosesTakenCount: careSummary.dosesTaken, dosesTotal: careSummary.dosesDue, walkDistance: `${(careSummary.walkDistanceMeters / 1000).toFixed(1)} km`, description: careSummary.caringMoments[0]?.message ?? "Care routine activity", timestamp: careSummary.latestActivityAt ? new Date(careSummary.latestActivityAt).toLocaleString() : "No recent activity" } : careActivity;
 
   const notify = (message: string) => {
@@ -309,9 +315,17 @@ export default function App() {
         mood={mood}
         dogName={dogName}
         dizzy={dizzy}
-        accessory={accessory !== "none" && <span className={`pet-accessory accessory-${accessory}`} aria-label={t("toast.petAccessoryAria", { name: dogName, item: accessory })}><i /><i /></span>}
+        accessory={<PetAccessory accessory={accessory} dogName={dogName} />}
       />
       <TopZone onSettings={() => navigate("settings")} onHome={goHome} pet={livePet} />
+      <div className="scene-chips">
+        <SceneChips
+          streak={livePet.streak}
+          onToday={() => navigate("reminders")}
+          onStreak={() => navigate("milestones")}
+          onTreat={() => notify(t("toast.treatWaiting", { name: dogName, caretaker: caretakerName }))}
+        />
+      </div>
       <div className={`screen-stage screen-${screen}`}>
         {screen === "home" && (
           <HomeScreen
@@ -341,7 +355,7 @@ export default function App() {
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }], doctorQuestion: careSummary.doctorQuestions[0]?.note ?? weekSummary.doctorQuestion } : weekSummary} />}
         {screen === "settings" && <SettingsScreen back={back} addMedication={() => navigate("prescription")} openCaretaker={() => navigate("care")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} />}
-        {screen === "customize" && <CustomizeScreen back={back} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(nextWorld === "flat" ? t("toast.worldFlat", { name: dogName }) : nextWorld === "garden" ? t("toast.worldGarden", { name: dogName }) : t("toast.worldKampung", { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: nextAccessory })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} />}
+        {screen === "customize" && <CustomizeScreen back={back} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(nextWorld === "flat" ? t("toast.worldFlat", { name: dogName }) : nextWorld === "garden" ? t("toast.worldGarden", { name: dogName }) : t("toast.worldKampung", { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: t(`accessory.${nextAccessory}`) })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} />}
       </div>
       <div className="bottom-dock" aria-hidden="true" />
       <BottomNav screen={screen} navigate={navigate} />
