@@ -1,5 +1,17 @@
 # Decisions
 
+## 2026-10-15 — Health rows, caretaker view off the phone, restock help (branch `claude/health-care`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Health's four rows (week summary, Doctor's tiny tasks, Screen for Life, Link to Healthy 365) use one `ActionRow` primitive: 48 px icon box, same text edge, same chevron. "Annual check" block replaced by a star icon. | User (Android): the rows didn't line up. | Screen for Life lost its "Annual check" label (subtitle kept). | Tentative |
+| HealthHub links: `/programmes/screen_for_life` and `/programmes/healthyliving` (both 200 on 15 Oct), in `mock/home.ts`. Healthy 365 row titled "Link to Healthy 365" (user's wording) with the user-supplied logo, new tab. | Old URLs returned 404. | HealthHub may move pages again. | Final (wording: user's) |
+| Doctor's tiny tasks = a photo of the clinic memo, stored only on the phone (≤1000 px JPEG data URL in localStorage, in memory if storage fails). No upload, OCR or interpretation. Fake "1 of 2 done" removed. | It did nothing and showed fake progress; PRD: no clinical advice. | Lost if site data is cleared; one photo only. Subtitles "Snap your clinic memo" / "Your clinic memo" are tentative. | Tentative |
+| The caretaker dashboard is removed from Rose's phone: Settings > "Jamie, caretaker" is information only; the `care` screen and `CareScreen` are deleted. The caretaker view is `/care` only. | User: Rose's phone showed caretaker-perspective content ("Mum took her lunchtime medicine", "Send Buddy a treat", "No medications yet"). | The phone's medication edit form on that screen is gone (it was the only place to edit days of supply). | Final (user request) |
+| "Send Buddy a treat" moved to `/care` This week, using the same `api.sendTreat` with a message naming the sender; disabled with a calm notice when offline. Rose's gift chip shows the latest treat's message ("Jamie sent Buddy a treat!") and marks it seen; with no treat or no API it keeps "A treat from Jamie is waiting for Buddy!". | Treats come from the caretaker; the senior's chip should say who sent it. | The sender's name is stored in the treat message text (no sender column), in English. | Tentative |
+| Restock card goes on **Reminders**, not Home; Home's "See all" gets a small dot while the card waits. | Prototype on Home (`home-restock-prototype-390x844.png`): with the next-dose card and decision row, the extra card pushed Buddy up under the name and the decision row under the dock at 390×844. | One more tap to see it; the dot is the only hint on Home. | Tentative |
+| Restock help is demo only and wire-ready: `requestRestockHelp({ medicationId, daysLeft, requestedAt })` stores the request in localStorage (same origin, so `/care` in the same browser sees it). `/care` shows "Rose would like help with a medicine refill (about N days left)", never the medicine name; "I'll handle it" marks it handled. "I'll get it myself" hides the card until the next local day. No database change. To wire: P1 adds a table and `POST /api/restock-requests` / `GET ?status=pending` / `POST /:id/handled`; swap the bodies of the three functions in `lib/restockHelp.ts`. | User: demo now, real API later; privacy promise (caretakers see caring moments, not medicine details). | Doesn't work across devices until the endpoint exists; supply data is mock. | Tentative |
+
 ## 2026-10-15 — Buddy clips and bark
 
 | Decision | Reason | Tradeoff | Status |
