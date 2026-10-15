@@ -474,7 +474,8 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
    ═══════════════════════════════════════════════════════════════════════ */
 .field, .field-row { padding: 14px; border-radius: var(--radius-xl); background: var(--color-surface-sage); }
 .field { display: grid; gap: 3px; min-width: 0; }
-.field small { color: #6e886f; }
+/* Labels display in one case whatever their source text says ("Dosage form" and "MEDICATION" look the same). */
+.field small { color: #6e886f; text-transform: uppercase; }
 .field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 0; background: transparent; }
 .proof-scanner.captured { color: #315a43; background: var(--color-surface-sage-darker); }
 .proof-check { z-index: 1; display: grid; place-items: center; width: 70px; height: 70px; border-radius: var(--radius-full); color: white; background: var(--color-accent-proof); box-shadow: var(--shadow-proof); }
@@ -768,7 +769,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .no-results { text-align: center; margin-top: 18px; }
 .no-results p { color: var(--color-text-body); font-size: var(--font-size-lg); }
 .error-text { margin-top: 8px; color: var(--color-action-stop); font-size: var(--font-size-sm); font-weight: 700; }
-.field-hint { color: var(--color-text-faint) !important; font-size: var(--font-size-xs) !important; font-weight: 400 !important; letter-spacing: 0 !important; }
+.field-hint { color: var(--color-text-faint) !important; font-size: var(--font-size-xs) !important; font-weight: 400 !important; letter-spacing: 0 !important; text-transform: none !important; }
 .field input { width: 100%; min-width: 0; min-height: 44px; padding: 6px 10px; border: 1px solid var(--color-border-card); border-radius: var(--radius-lg); color: var(--color-text-base); font: inherit; }
 .field input:focus { outline: 2px solid var(--color-focus); outline-offset: 1px; }
 

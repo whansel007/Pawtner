@@ -36,3 +36,13 @@ export function formatDoseTime(isoString: string): string {
     hour12: true,
   }).format(date);
 }
+
+/** Whole minutes from `now` until `scheduledAt` (rounded up); 0 or less once it is due. */
+export function minutesUntil(scheduledAt: string, now: string): number {
+  return Math.ceil((Date.parse(scheduledAt) - Date.parse(now)) / 60000);
+}
+
+/** "Thursday, October 15" for `now` in `timeZone`, in the active i18n language. */
+export function formatDayDate(now: string, timeZone: string): string {
+  return new Intl.DateTimeFormat(i18n.language, { weekday: "long", month: "long", day: "numeric", timeZone }).format(new Date(now));
+}

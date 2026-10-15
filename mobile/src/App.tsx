@@ -432,6 +432,7 @@ export default function App() {
           <RemindersScreen
             back={back}
             doses={doseList}
+            now={demoNow ?? new Date().toISOString()}
             restockCard={restock.visible && liveRestockAlert ? <RestockCard alert={liveRestockAlert} caretakerName={caretakerName} state={restock.state} busy={restock.busy} onAsk={() => void restock.askForHelp()} onSelf={restock.getItMyself} /> : null}
           />
         )}

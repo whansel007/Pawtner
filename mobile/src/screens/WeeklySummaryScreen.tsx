@@ -22,7 +22,7 @@ export function WeeklySummaryScreen({
           <article key={metric.label}><strong>{metric.value}</strong><small>{metric.label}</small></article>
         ))}
       </div>
-      <div className="doctor-question"><Icon name="book" /><div><small>{t("summary.askDoctor")}</small><p>{weekSummary.doctorQuestion}</p></div></div>
+      <div className="doctor-question"><Icon name="note" /><div><small>{t("summary.askDoctor")}</small><p>{weekSummary.doctorQuestion}</p></div></div>
       <button className="primary-button" onClick={back.onBack}>{t("summary.doneReading")}</button>
     </FullCard>
   );

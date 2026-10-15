@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-15 (late) — For my next visit, live Reminders card, one label case (branch `claude/visit-notes`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| "For my next visit": Rose's own notes for the doctor, add / edit / delete, newest first. Health row under "From the Doctor" (subtitle = newest note, else "Jot down what to ask the doctor"), its own screen (`visitNotes`), and the Weekly Summary shows the newest note under "FOR MY NEXT VISIT" (was "ASK YOUR DOCTOR" with a read-only line). Kept on this phone only (`pawtner.visitNotes`, `lib/visitNotes.ts`, max 300 characters); Reset demo clears them. | User: "Ask your doctor" should be Rose's notes to herself, and she couldn't edit it. | Not on `/care` and lost if site data is cleared. BP notes still reach `/care`'s "Questions for the doctor" (API, unchanged); the phone summary no longer shows them. | Final (user's yes and wording) |
+| Reminders "Next dose" card uses the same pick as Home (`selectNextDose`: earliest due/missed, else next upcoming): "In N hr M min" / "In M min" before it is due, "Still to take" after; "{{name}} · {{time}}"; hidden when there is no dose. The date is today in `SENIOR_TIMEZONE` (`formatDayDate`). Countdown uses the agent demo clock when set, else real time. | It showed fixed prototype text ("Apoquel · 1:00 PM", "Wednesday, May 14"). | The countdown updates when the screen re-renders, not every minute. | Final |
+| Add a medication labels display uppercase via CSS (`.field small { text-transform: uppercase }`); the hint under "What did your doctor say it's for?" stays normal case. | User: make it case agnostic instead of rewording ("Dosage form" vs "MEDICATION"). | Long labels in capitals are slightly harder to read. | Final |
+
 ## 2026-10-15 (night) — Demo state, restock card, Add a medication layout (branch `claude/from-the-doctor`)
 
 | Decision | Reason | Tradeoff | Status |
