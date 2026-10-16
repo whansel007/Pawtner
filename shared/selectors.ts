@@ -32,7 +32,7 @@ export function deriveDoseStatus(
 
 /** Today's (or any day's) three heart activities from that day's doses, readings and walks. */
 export function heartActivities(doses: Pick<DerivedDose, "status">[], bloodPressureLogged: boolean, walked: boolean): HeartActivities {
-  return { medicines: doses.every((dose) => dose.status === "taken"), bloodPressure: bloodPressureLogged, walk: walked };
+  return { medicines: doses.length > 0 && doses.every((dose) => dose.status === "taken"), bloodPressure: bloodPressureLogged, walk: walked };
 }
 
 /** How many of the three activities are done. */
@@ -40,9 +40,54 @@ export function countActivitiesDone(activities: HeartActivities): number {
   return Object.values(activities).filter(Boolean).length;
 }
 
-/** Hearts for a day: the start heart plus one per activity done, capped at the maximum (DEMO_RULES). */
+/** Hearts without any history (the phone offline): the minimum plus one per activity done today, capped. */
 export function computeHeart(activities: HeartActivities): number {
-  return Math.min(DEMO_RULES.heartMaximum, DEMO_RULES.heartDayStart + countActivitiesDone(activities));
+  return Math.min(DEMO_RULES.heartMaximum, DEMO_RULES.heartMinimum + countActivitiesDone(activities));
+}
+
+const DECAY_MS = DEMO_RULES.heartDecayHours * 3_600_000;
+
+/**
+ * When each heart was earned (ISO instants, oldest first): per day, one for the medicines (the moment the last of the
+ * day's doses was taken, once all are), one for the day's first measurement, one for the day's first walk. Days are
+ * grouped like the streak (`scheduledAt` / `recordedAt` / walk finish date).
+ */
+export function heartGains(doses: DerivedDose[], metrics: HealthMetric[], walkFinishedAt: readonly string[]): string[] {
+  const gains: string[] = [];
+  for (const dayDoses of groupBy(doses, (dose) => dose.scheduledAt.slice(0, 10)).values()) {
+    if (!dayDoses.every((dose) => dose.status === "taken" && dose.eventAt)) continue;
+    gains.push(dayDoses.reduce((latest, dose) => (Date.parse(dose.eventAt!) > Date.parse(latest) ? dose.eventAt! : latest), dayDoses[0]!.eventAt!));
+  }
+  const firstPerDay = (instants: readonly string[]) => [...groupBy([...instants], (instant) => instant.slice(0, 10)).values()]
+    .map((day) => day.reduce((first, instant) => (Date.parse(instant) < Date.parse(first) ? instant : first)));
+  gains.push(...firstPerDay(metrics.map((metric) => metric.recordedAt)), ...firstPerDay(walkFinishedAt));
+  return gains.sort((a, b) => Date.parse(a) - Date.parse(b));
+}
+
+/**
+ * Hearts at `at`: from the minimum, each heart earned adds one (up to the maximum) and restarts the decay timer;
+ * every `heartDecayHours` without a new heart takes one away, never below the minimum.
+ */
+export function heartsAt(gains: readonly string[], at: string): number {
+  const atMs = Date.parse(at);
+  let hearts: number = DEMO_RULES.heartMinimum;
+  let timerFrom: number | null = null;
+  const decayUntil = (untilMs: number) => {
+    if (timerFrom === null) return;
+    const drops = Math.floor((untilMs - timerFrom) / DECAY_MS);
+    if (drops <= 0) return;
+    hearts = Math.max(DEMO_RULES.heartMinimum, hearts - drops);
+    timerFrom += drops * DECAY_MS;
+  };
+  for (const gain of gains) {
+    const gainMs = Date.parse(gain);
+    if (gainMs > atMs) break;
+    decayUntil(gainMs);
+    hearts = Math.min(DEMO_RULES.heartMaximum, hearts + 1);
+    timerFrom = gainMs;
+  }
+  decayUntil(atMs);
+  return hearts;
 }
 
 export interface StreakDay {
@@ -161,25 +206,20 @@ function deriveSelection(source: AgentSelectionSource): { derived: DerivedDose[]
 }
 
 /**
- * Lifetime hearts: the sum of each day's `computeHeart` from the first day with a scheduled dose up to and including `today`.
- * Days are grouped with the same date logic as `computeStreak` and today's heart (`scheduledAt` / `recordedAt` /
- * walk finish date), so today's share always equals the dog's current `heart`.
- * - Days before the first scheduled dose add nothing; no dose history at all gives 0.
- * - A day inside that range with nothing scheduled counts its medicines as done (start heart + 1, plus the
- *   measurement and walk hearts if those happened that day).
- * - Doses, readings and walks after `today` are ignored.
+ * Lifetime hearts: the sum of each day's hearts at the end of that day (`heartsAt`; today at `now`), from the first day
+ * with a scheduled dose up to and including `today`. No dose history at all gives 0. Anything after `now` is ignored.
  */
-export function computeHeartsTotal(doses: DerivedDose[], metrics: HealthMetric[], today: string, walkFinishedAt: readonly string[] = []): number {
-  const dosesByDate = groupBy(doses.filter((dose) => dose.scheduledAt.slice(0, 10) <= today), (dose) => dose.scheduledAt.slice(0, 10));
-  const firstDate = [...dosesByDate.keys()].sort()[0];
+export function computeHeartsTotal(doses: DerivedDose[], metrics: HealthMetric[], today: string, walkFinishedAt: readonly string[], now: string): number {
+  const days = [...new Set(doses.map((dose) => dose.scheduledAt.slice(0, 10)))].filter((date) => date <= today).sort();
+  const firstDate = days[0];
   if (!firstDate) return 0;
-  const bloodPressureDates = new Set(metrics.map((metric) => metric.recordedAt.slice(0, 10)));
-  const walkDates = new Set(walkFinishedAt.map((finishedAt) => finishedAt.slice(0, 10)));
+  const gains = heartGains(doses, metrics, walkFinishedAt).filter((gain) => Date.parse(gain) <= Date.parse(now));
   let total = 0;
   const cursor = new Date(`${firstDate}T00:00:00.000Z`);
   for (let date = firstDate; date <= today; date = cursor.toISOString().slice(0, 10)) {
-    total += computeHeart(heartActivities(dosesByDate.get(date) ?? [], bloodPressureDates.has(date), walkDates.has(date)));
     cursor.setUTCDate(cursor.getUTCDate() + 1);
+    const endOfDay = new Date(cursor.getTime() - 1).toISOString();
+    total += heartsAt(gains, date === today || Date.parse(endOfDay) > Date.parse(now) ? now : endOfDay);
   }
   return total;
 }
@@ -216,7 +256,7 @@ export function selectAgentInput(source: AgentSelectionSource): AgentInput {
     userId: source.userId,
     dog: {
       ...source.dog,
-      heart: computeHeart(todayActivities(derived, metrics, source)),
+      heart: heartsAt(heartGains(derived, metrics, walksUntilNow(source)), source.now),
       streak,
     },
     doses: todayDoses,
@@ -233,5 +273,9 @@ export function selectAgentInput(source: AgentSelectionSource): AgentInput {
 /** The dog's lifetime hearts for this source, derived from the same occurrences, ledger and readings as `selectAgentInput`. */
 export function selectHeartsTotal(source: AgentSelectionSource): number {
   const { derived, metrics } = deriveSelection(source);
-  return computeHeartsTotal(derived, metrics, source.today, source.walkFinishedAt.filter((finishedAt) => Date.parse(finishedAt) <= Date.parse(source.now)));
+  return computeHeartsTotal(derived, metrics, source.today, walksUntilNow(source), source.now);
+}
+
+function walksUntilNow(source: AgentSelectionSource): string[] {
+  return source.walkFinishedAt.filter((finishedAt) => Date.parse(finishedAt) <= Date.parse(source.now));
 }

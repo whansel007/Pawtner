@@ -16,11 +16,14 @@ export const DEMO_RULES = {
   bpNormalSystolic: 120,
   bpNormalDiastolic: 80,
   /**
-   * Hearts (user, 16 Oct): every day starts at `heartDayStart`, and each of the three activities adds one, up to
-   * `heartMaximum`: all of the day's medicines taken, a blood-pressure measurement logged, a walk with the dog.
+   * Hearts (user, 16 Oct): each of the day's three activities earns one, up to `heartMaximum` (all of the day's
+   * medicines taken, the day's first blood-pressure measurement, the day's first walk with the dog). Every
+   * `heartDecayHours` without a new heart, the dog loses one, never below `heartMinimum`; each heart earned restarts
+   * that timer. History starts at the minimum.
    */
-  heartDayStart: 1,
+  heartMinimum: 1,
   heartMaximum: 4,
+  heartDecayHours: 12,
   /**
    * At or below this many hearts Buddy is sad (sleepy face) whatever the latest decision, and doesn't play
    * (the phone asks for a heart instead). User, 16 Oct. One source for shared/rules.ts and mobile/src/config/pet.ts.

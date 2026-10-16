@@ -5373,11 +5373,14 @@ var DEMO_RULES = {
   bpNormalSystolic: 120,
   bpNormalDiastolic: 80,
   /**
-   * Hearts (user, 16 Oct): every day starts at `heartDayStart`, and each of the three activities adds one, up to
-   * `heartMaximum`: all of the day's medicines taken, a blood-pressure measurement logged, a walk with the dog.
+   * Hearts (user, 16 Oct): each of the day's three activities earns one, up to `heartMaximum` (all of the day's
+   * medicines taken, the day's first blood-pressure measurement, the day's first walk with the dog). Every
+   * `heartDecayHours` without a new heart, the dog loses one, never below `heartMinimum`; each heart earned restarts
+   * that timer. History starts at the minimum.
    */
-  heartDayStart: 1,
+  heartMinimum: 1,
   heartMaximum: 4,
+  heartDecayHours: 12,
   /**
    * At or below this many hearts Buddy is sad (sleepy face) whatever the latest decision, and doesn't play
    * (the phone asks for a heart instead). User, 16 Oct. One source for shared/rules.ts and mobile/src/config/pet.ts.
@@ -5559,13 +5562,39 @@ function deriveDoseStatus(schedule, events, now, nudgeHistory = { count: 0, last
   };
 }
 function heartActivities(doses, bloodPressureLogged, walked) {
-  return { medicines: doses.every((dose) => dose.status === "taken"), bloodPressure: bloodPressureLogged, walk: walked };
+  return { medicines: doses.length > 0 && doses.every((dose) => dose.status === "taken"), bloodPressure: bloodPressureLogged, walk: walked };
 }
-function countActivitiesDone(activities) {
-  return Object.values(activities).filter(Boolean).length;
+var DECAY_MS = DEMO_RULES.heartDecayHours * 36e5;
+function heartGains(doses, metrics, walkFinishedAt) {
+  const gains = [];
+  for (const dayDoses of groupBy(doses, (dose) => dose.scheduledAt.slice(0, 10)).values()) {
+    if (!dayDoses.every((dose) => dose.status === "taken" && dose.eventAt)) continue;
+    gains.push(dayDoses.reduce((latest, dose) => Date.parse(dose.eventAt) > Date.parse(latest) ? dose.eventAt : latest, dayDoses[0].eventAt));
+  }
+  const firstPerDay = (instants) => [...groupBy([...instants], (instant) => instant.slice(0, 10)).values()].map((day) => day.reduce((first, instant) => Date.parse(instant) < Date.parse(first) ? instant : first));
+  gains.push(...firstPerDay(metrics.map((metric) => metric.recordedAt)), ...firstPerDay(walkFinishedAt));
+  return gains.sort((a, b) => Date.parse(a) - Date.parse(b));
 }
-function computeHeart(activities) {
-  return Math.min(DEMO_RULES.heartMaximum, DEMO_RULES.heartDayStart + countActivitiesDone(activities));
+function heartsAt(gains, at) {
+  const atMs = Date.parse(at);
+  let hearts = DEMO_RULES.heartMinimum;
+  let timerFrom = null;
+  const decayUntil = (untilMs) => {
+    if (timerFrom === null) return;
+    const drops = Math.floor((untilMs - timerFrom) / DECAY_MS);
+    if (drops <= 0) return;
+    hearts = Math.max(DEMO_RULES.heartMinimum, hearts - drops);
+    timerFrom += drops * DECAY_MS;
+  };
+  for (const gain of gains) {
+    const gainMs = Date.parse(gain);
+    if (gainMs > atMs) break;
+    decayUntil(gainMs);
+    hearts = Math.min(DEMO_RULES.heartMaximum, hearts + 1);
+    timerFrom = gainMs;
+  }
+  decayUntil(atMs);
+  return hearts;
 }
 function computeStreak(days, today) {
   const byDate = /* @__PURE__ */ new Map();
@@ -5633,17 +5662,17 @@ function deriveSelection(source) {
   const metrics = source.healthMetrics.filter((metric) => Date.parse(metric.recordedAt) <= Date.parse(source.now));
   return { derived, metrics };
 }
-function computeHeartsTotal(doses, metrics, today, walkFinishedAt = []) {
-  const dosesByDate = groupBy(doses.filter((dose) => dose.scheduledAt.slice(0, 10) <= today), (dose) => dose.scheduledAt.slice(0, 10));
-  const firstDate = [...dosesByDate.keys()].sort()[0];
+function computeHeartsTotal(doses, metrics, today, walkFinishedAt, now) {
+  const days = [...new Set(doses.map((dose) => dose.scheduledAt.slice(0, 10)))].filter((date) => date <= today).sort();
+  const firstDate = days[0];
   if (!firstDate) return 0;
-  const bloodPressureDates = new Set(metrics.map((metric) => metric.recordedAt.slice(0, 10)));
-  const walkDates = new Set(walkFinishedAt.map((finishedAt) => finishedAt.slice(0, 10)));
+  const gains = heartGains(doses, metrics, walkFinishedAt).filter((gain) => Date.parse(gain) <= Date.parse(now));
   let total = 0;
   const cursor = /* @__PURE__ */ new Date(`${firstDate}T00:00:00.000Z`);
   for (let date = firstDate; date <= today; date = cursor.toISOString().slice(0, 10)) {
-    total += computeHeart(heartActivities(dosesByDate.get(date) ?? [], bloodPressureDates.has(date), walkDates.has(date)));
     cursor.setUTCDate(cursor.getUTCDate() + 1);
+    const endOfDay = new Date(cursor.getTime() - 1).toISOString();
+    total += heartsAt(gains, date === today || Date.parse(endOfDay) > Date.parse(now) ? now : endOfDay);
   }
   return total;
 }
@@ -5672,7 +5701,7 @@ function selectAgentInput(source) {
     userId: source.userId,
     dog: {
       ...source.dog,
-      heart: computeHeart(todayActivities(derived, metrics, source)),
+      heart: heartsAt(heartGains(derived, metrics, walksUntilNow(source)), source.now),
       streak
     },
     doses: todayDoses,
@@ -5687,7 +5716,10 @@ function selectAgentInput(source) {
 }
 function selectHeartsTotal(source) {
   const { derived, metrics } = deriveSelection(source);
-  return computeHeartsTotal(derived, metrics, source.today, source.walkFinishedAt.filter((finishedAt) => Date.parse(finishedAt) <= Date.parse(source.now)));
+  return computeHeartsTotal(derived, metrics, source.today, walksUntilNow(source), source.now);
+}
+function walksUntilNow(source) {
+  return source.walkFinishedAt.filter((finishedAt) => Date.parse(finishedAt) <= Date.parse(source.now));
 }
 
 // shared/wording.ts
