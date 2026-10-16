@@ -86,6 +86,7 @@ Config lives in `mobile/src/config/` (`scene.ts`: images incl. `DOG_IMAGE_BY_MOO
 
 ## Known risks
 
+0. **For William (P1), 16 Oct (2):** `claude/proof-thanks` changes your `shared/rules.ts` again: `selectDogMood` returns `joyful` at full hearts before any decision (your "calm down after 30 min at 4/4" rule is replaced), with the user's OK; bundle rebuilt; tests in `tests/unit/rules.test.ts`.
 0. **For William (P1), 16 Oct:** `claude/play-hearts` changes your `shared/config.ts` (new `DEMO_RULES.lowHeartMaximum: 1`) and `shared/rules.ts` (`selectDogMood` returns `sleepy` at or below it before any decision), with the user's OK, and the rebuilt `cloud-functions/api/[[default]].js`. The hosted `/api/today` mood changes accordingly. Tests: `tests/unit/rules.test.ts`.
 0. **Hosted demo data, 15 Oct night:** (since `claude/play-hearts`, attentive no longer stops Buddy's animations; only fewer than 2 hearts do, with a "needs a heart" bubble, and 0–1 hearts always show the sad face.) the latest stored BP reading is 185/120 with the note "bad headache" (14 Oct, 15:00 SGT; another on 13 Oct), entered through the app while testing the 995 beat (not from the seed). The agent's first rule (high reading + symptom in the latest reading) therefore returns `emergency_995` on every run ("Run agent at this time" at 23:23 saved one), Buddy stays attentive and Home shows the urgent row. A newer normal reading (e.g. 120/80, no note) clears it; deleting the rows is a data change (flag first).
 
