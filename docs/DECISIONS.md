@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-16 — Hearts carry over and fade every 12 hours (branch `claude/hearts-carry-over`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Hearts are a timeline, not a per-day count: each activity earns +1 (up to 4): all of the day's medicines (at the moment the last one is taken), the day's first measurement, the day's first walk. Every 12 hours without a new heart Buddy loses 1, never below 1 (`DEMO_RULES.heartDecayHours`, `heartMinimum`); each heart earned restarts the timer, even at 4 (`heartGains`, `heartsAt` in `shared/selectors.ts`). So a joyful evening (4) is 3 the next morning, one activity makes it 4 again, and a day with nothing done costs 2. Lifetime hearts = the sum of each day's hearts at the end of that day (today at now). A day with no medicines scheduled gives no medicine heart. Supersedes "each day starts at 1" below. | User: Buddy should start the morning with yesterday's hearts - 1, drop 1 every 12 hours unless a heart comes back, minimum 1. | Hearts depend on the time of each tap, so the Current Time of Demo matters more. | Final |
+
 ## 2026-10-16 — Hearts from three activities; demo hearts ticks (branch `claude/hearts-activities`)
 
 | Decision | Reason | Tradeoff | Status |
