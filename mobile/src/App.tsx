@@ -109,7 +109,7 @@ export default function App() {
   const [dizzy, setDizzy] = useState(false);
   // One friendly notice per outage; the technical error goes to the console, never to the senior.
   const apiWarned = useRef(false);
-  // Agent demo clock (Settings > "Run agent at this time"): reads and writes happen at this instant. null = real time.
+  // Agent demo clock (Settings > "Current Time of Demo"): reads and writes happen at this instant. null = real time.
   const [demoNow, setDemoNow] = useState<string | null>(initialAgentClock);
   // Scene time (`?time=`, Settings > Demo time buttons): day/night look only. Hearts, mood and doses stay on the one
   // real state; switching morning ↔ evening must never re-read /api/today at another time.

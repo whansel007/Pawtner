@@ -559,10 +559,10 @@
       "days7": "7-day streak",
       "hearts20": "20 hearts in total"
     },
-    "demoClockTitle": "Agent clock",
-    "demoClockHint": "Choose a time to check the dose rules at. Nudges are limited to two per scheduled dose.",
+    "demoClockTitle": "Current Time of Demo",
+    "demoClockHint": "The phone acts as if it is this time: doses, readings and walks are saved at it, and Buddy checks his rules (nudges, check-ins) when you run him. Nudges are limited to two per scheduled dose.",
     "demoClockLabel": "Simulated local time",
-    "demoClockRun": "Run agent at this time",
+    "demoClockRun": "Run Buddy's check at this time",
     "demoClockBusy": "Checking…",
     "demoTime": {
       "morning": "Morning ({{time}})",
