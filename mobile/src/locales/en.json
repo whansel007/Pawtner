@@ -394,7 +394,8 @@
     "lockedToast": "{{name}} unlocks this at {{count}} hearts.",
     "lockedToast_one": "{{name}} unlocks this at {{count}} heart.",
     "worldLevelNote": "{{level}} · {{hearts}}",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "comingSoonGift": "Soon: a gift from {{name}}"
   },
   "health": {
     "eyebrow": "This week",
