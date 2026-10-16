@@ -71,11 +71,14 @@ export function ReferenceScreen({
 
       {stage !== "capture" && photoUrl && (
         <>
-          <img src={photoUrl} alt={t("reference.photoAlt")} className="proof-photo-preview" style={{ marginBottom: 12 }} />
-          {stage === "saving" && <p className="supporting">{t("reference.saving", { name: petName })}</p>}
+          {/* Same photo card as the proof screen: photo centred, status line inside the card. */}
+          <div className="scanner proof-scanner captured">
+            <img src={photoUrl} alt={t("reference.photoAlt")} className="proof-photo-preview" />
+            {stage === "saving" && <span className="proof-scanner__saved">{t("reference.saving", { name: petName })}</span>}
+            {stage === "saved" && <strong>{t("reference.savedTitle")}</strong>}
+          </div>
           {stage === "saved" && (
             <div className="proof-check-card">
-              <small className="proof-check-card-title">{t("reference.savedTitle")}</small>
               <p className="proof-check-card-line">{description || t("reference.savedFallback", { name: petName })}</p>
               <p className="proof-check-card-note">{t("reference.savedNote", { name: petName })}</p>
             </div>
