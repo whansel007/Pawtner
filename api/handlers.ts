@@ -91,6 +91,12 @@ export function createApiHandler(repository: PawtnerRepository) {
       if (request.method === "GET" && url.pathname === "/api/milestones") return json(await repository.getMilestones());
       // ── T2-08: Pill photo recognition (demo only) ──
       // Set the SETTINGS-defined original picture for a medicine (one-time, in medicine settings).
+      // Read the saved original picture back (My medicines shows it).
+      if (request.method === "GET" && url.pathname === "/api/pill-reference") {
+        const medicationId = url.searchParams.get("medicationId") ?? "";
+        if (!requiredString(medicationId)) throw new ApiError(400, "medicationId is required.");
+        return json(await repository.getPillReference(medicationId));
+      }
       if (request.method === "POST" && url.pathname === "/api/pill-reference") {
         const data = await body<PillReferenceRequest>(request);
         if (!requiredString(data.medicationId) || !requiredString(data.imageBase64) || !requiredString(data.mimeType)) throw new ApiError(400, "medicationId, imageBase64 and mimeType are required.");

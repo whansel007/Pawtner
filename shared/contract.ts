@@ -287,6 +287,15 @@ export interface PillReferenceResponse {
   set: boolean;
 }
 
+/** GET /api/pill-reference?medicationId=… : the saved original pill photo, to show it again (user, 16 Oct). */
+export interface PillReferenceImageResponse {
+  medicationId: string;
+  /** data: URL of the original photo, as saved by setPillReference. */
+  imageDataUrl: string;
+  /** ISO time it was set. */
+  setAt: string;
+}
+
 export interface PillVerifyRequest {
   /** Medication ID whose reference photo to compare against. */
   medicationId: string;

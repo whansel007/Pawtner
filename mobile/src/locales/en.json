@@ -546,7 +546,8 @@
       "saving": "Saving…",
       "save": "Save as original",
       "saved": "Original pill photo saved.",
-      "failed": "{{name}} can't save the photo right now. Please try again in a moment."
+      "failed": "{{name}} can't save the photo right now. Please try again in a moment.",
+      "viewFailed": "Couldn't open the original photo right now."
     }
   },
   "toast": {

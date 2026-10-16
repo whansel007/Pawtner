@@ -6648,6 +6648,18 @@ var PawtnerRepository = class {
       set: true
     };
   }
+  /** The saved original pill photo for a medicine (read-only), or 404 when none is set. */
+  async getPillReference(medicationId) {
+    const userId = await this.getDefaultUserId();
+    const result = await this.pool.query(
+      "SELECT pill_reference_image, pill_reference_set_at FROM medications WHERE id = $1 AND user_id = $2",
+      [medicationId, userId]
+    );
+    const row = result.rows[0];
+    if (!row) throw new ApiError(404, "Medication not found.");
+    if (!row.pill_reference_image) throw new ApiError(404, "No original pill photo is set for this medicine.");
+    return { medicationId, imageDataUrl: row.pill_reference_image, setAt: iso(row.pill_reference_set_at) };
+  }
   async verifyPill(request) {
     if (!process.env.LLM_API_KEY || !process.env.LLM_BASE_URL) {
       throw new ApiError(503, "LLM API is not configured. Set LLM_API_KEY and LLM_BASE_URL.");
@@ -6826,6 +6838,11 @@ function createApiHandler(repository) {
         return json({ ok: true });
       }
       if (request.method === "GET" && url.pathname === "/api/milestones") return json(await repository.getMilestones());
+      if (request.method === "GET" && url.pathname === "/api/pill-reference") {
+        const medicationId = url.searchParams.get("medicationId") ?? "";
+        if (!requiredString(medicationId)) throw new ApiError(400, "medicationId is required.");
+        return json(await repository.getPillReference(medicationId));
+      }
       if (request.method === "POST" && url.pathname === "/api/pill-reference") {
         const data = await body(request);
         if (!requiredString(data.medicationId) || !requiredString(data.imageBase64) || !requiredString(data.mimeType)) throw new ApiError(400, "medicationId, imageBase64 and mimeType are required.");

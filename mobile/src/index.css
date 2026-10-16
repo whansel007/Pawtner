@@ -805,6 +805,9 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
 .med-actions .text-button { margin-top: 0; }
 .med-ref-set { display: grid; gap: 8px; width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-border-card); }
 .pill-ref-set { color: var(--color-accent-sage); font-weight: 700; }
+/* "Original photo set" is a link-style button that opens the saved original. */
+.pill-ref-view { padding: 0; border: 0; background: none; font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.pill-ref-view:disabled { opacity: .6; cursor: progress; }
 .pill-ref-ok { color: var(--color-accent-sage); font-weight: 700; }
 
 /* Explanation links and credits */

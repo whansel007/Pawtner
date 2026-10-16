@@ -26,6 +26,7 @@ import type {
   MedicationListResponse,
   MedicineExplanationResponse,
   MilestonesResponse,
+  PillReferenceImageResponse,
   PillReferenceRequest,
   PillReferenceResponse,
   PillVerifyRequest,
@@ -1029,6 +1030,19 @@ export class PawtnerRepository {
       description,
       set: true,
     };
+  }
+
+  /** The saved original pill photo for a medicine (read-only), or 404 when none is set. */
+  async getPillReference(medicationId: string): Promise<PillReferenceImageResponse> {
+    const userId = await this.getDefaultUserId();
+    const result = await this.pool.query(
+      "SELECT pill_reference_image, pill_reference_set_at FROM medications WHERE id = $1 AND user_id = $2",
+      [medicationId, userId],
+    );
+    const row = result.rows[0];
+    if (!row) throw new ApiError(404, "Medication not found.");
+    if (!row.pill_reference_image) throw new ApiError(404, "No original pill photo is set for this medicine.");
+    return { medicationId, imageDataUrl: row.pill_reference_image, setAt: iso(row.pill_reference_set_at) };
   }
 
   async verifyPill(request: PillVerifyRequest): Promise<PillVerifyResponse> {
