@@ -158,6 +158,14 @@ export interface AgentDecideResponse {
   decision: AgentDecision;
 }
 
+/**
+ * Demo only (Settings > For demo only > Reset to morning). `now` is the morning instant to restart at; the API
+ * deletes the demo user's dose taps, readings and decisions from the start of that local day on, then decides once at `now`.
+ */
+export interface DemoResetDayRequest {
+  now: string;
+}
+
 export interface CaretakerSummaryResponse {
   period: { start: string; end: string };
   senior: { id: string; name: string };

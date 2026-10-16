@@ -6096,6 +6096,36 @@ var PawtnerRepository = class {
       return (await this.decideAndPersist(client, userId, now)).decision;
     });
   }
+  /**
+   * Demo only (Settings > For demo only > Reset to morning). DATA DELETE, scoped to the demo user: removes their dose
+   * taps (by scheduled time), readings and agent decisions from the start of `now`'s local day on, including rows a
+   * demo clock dated later. Earlier days, the seed readings, walks and treats stay. Then the agent decides once at `now`,
+   * so Buddy's mood comes from the fresh state rather than an older decision.
+   */
+  async resetDemoDay(now) {
+    return this.transaction(async (client) => {
+      const userId = await this.getDefaultUserId(client);
+      const dayStart = "((($2::timestamptz AT TIME ZONE u.timezone)::date)::timestamp AT TIME ZONE u.timezone)";
+      await client.query(
+        `DELETE FROM dose_events de USING med_schedules ms, medications m, users u
+         WHERE ms.id = de.schedule_id AND m.id = ms.medication_id AND u.id = m.user_id
+           AND u.id = $1 AND de.scheduled_for >= ${dayStart}`,
+        [userId, now]
+      );
+      await client.query(
+        `DELETE FROM health_metrics hm USING users u
+         WHERE u.id = hm.user_id AND u.id = $1 AND hm.recorded_at >= ${dayStart}`,
+        [userId, now]
+      );
+      await client.query(
+        `DELETE FROM agent_decisions ad USING users u
+         WHERE u.id = ad.user_id AND u.id = $1 AND ad.created_at >= ${dayStart}`,
+        [userId, now]
+      );
+      await this.decideAndPersist(client, userId, now);
+      return this.today(client, userId, now);
+    });
+  }
   async getCaretakerSummary(now = (/* @__PURE__ */ new Date()).toISOString()) {
     const userId = await this.getDefaultUserId();
     const identity = await this.pool.query(
@@ -6786,6 +6816,11 @@ function createApiHandler(repository) {
         const data = await body(request);
         if (!requiredString(data.userId) || !validDate(data.now)) throw new ApiError(400, "userId and ISO now are required.");
         return json({ decision: await repository.decideNow(data.userId, data.now) });
+      }
+      if (request.method === "POST" && url.pathname === "/api/demo/reset-day") {
+        const data = await body(request);
+        if (!validDate(data.now)) throw new ApiError(400, "ISO now is required.");
+        return json(await repository.resetDemoDay(data.now));
       }
       if (request.method === "POST" && url.pathname === "/api/walk-session") {
         const data = await body(request);

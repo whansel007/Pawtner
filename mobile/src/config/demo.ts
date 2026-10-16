@@ -7,6 +7,15 @@
 /** URL parameter name: `/?time=21:00`, `/?time=morning`. */
 export const DEMO_TIME_PARAM = "time";
 
+/**
+ * URL parameter for the agent clock (reads and writes happen at this time, like Settings "Run agent at this time"):
+ * `/?clock=morning`. Set by Settings > For demo only > Reset to morning after the reload.
+ */
+export const DEMO_CLOCK_PARAM = "clock";
+
+/** The preset "Reset to morning" restarts the day at. */
+export const DEMO_RESET_PRESET = "morning" satisfies keyof typeof DEMO_TIME_PRESETS;
+
 /** Named presets, accepted by `?time=<name>` and shown as Settings > Demo buttons (labels in en.json). */
 export const DEMO_TIME_PRESETS = {
   morning: "09:00",

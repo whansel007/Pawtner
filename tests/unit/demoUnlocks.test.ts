@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { demoHeartsTotal, withDemoStreak } from "../../mobile/src/lib/demoUnlocks.js";
+import { demoHeartsTotal, demoStreak, withStreak } from "../../mobile/src/lib/demoUnlocks.js";
 import { TRICK_STREAK_DAYS } from "../../mobile/src/config/tricks.js";
 import { isUnlocked } from "../../mobile/src/lib/rewards.js";
 import type { DemoUnlockKey } from "../../mobile/src/config/demo.js";
@@ -23,9 +23,17 @@ describe("Settings > Demo ticks", () => {
     expect(isUnlocked("flower", 1000)).toBe(false);
   });
 
-  it("the 7 days tick earns Wave only", () => {
-    expect(withDemoStreak(tricks, ticks()).map((t) => t.earned)).toEqual([true, false, false]);
-    expect(withDemoStreak(tricks, ticks("days7")).map((t) => t.earned)).toEqual([true, true, false]);
+  it("the 7 days tick raises the one streak number, never lowers it", () => {
+    expect(demoStreak(2, ticks())).toBe(2);
+    expect(demoStreak(2, ticks("days7"))).toBe(7);
+    expect(demoStreak(9, ticks("days7"))).toBe(9);
+  });
+
+  it("a 7-day streak earns Wave only, and the notes follow the streak", () => {
+    expect(withStreak(tricks, 2).map((t) => t.earned)).toEqual([true, false, false]);
+    expect(withStreak(tricks, demoStreak(2, ticks("days7"))).map((t) => [t.earned, t.note])).toEqual([
+      [true, "1 day streak"], [true, "7 day streak"], [false, "7 days to go"],
+    ]);
   });
 
   it("trick days match api/repository.ts trickDefs", () => {

@@ -42,8 +42,8 @@ import { resetDemoStorage } from "./lib/demoReset";
 import { shouldBarkFor } from "./lib/nudgeBark";
 import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
-import { DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset, type DemoUnlockKey } from "./config/demo";
-import { demoHeartsTotal } from "./lib/demoUnlocks";
+import { DEMO_CLOCK_PARAM, DEMO_RESET_PRESET, DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset, type DemoUnlockKey } from "./config/demo";
+import { demoHeartsTotal, demoStreak } from "./lib/demoUnlocks";
 import { SENIOR_TIMEZONE } from "./config/scene";
 import type { World, Accessory } from "./types";
 import type { WalkCompletion } from "./lib/walkState";
@@ -79,6 +79,11 @@ function initialSceneTime(): string | null {
   return demoNow;
 }
 
+/** `?clock=HH:MM|morning|evening` → agent clock (today in the senior's timezone), e.g. after "Reset to morning". Read once, on load. */
+function initialAgentClock(): string | null {
+  return demoNowFromSearch(window.location.search, DEMO_CLOCK_PARAM, DEMO_TIME_PRESETS, new Date(), SENIOR_TIMEZONE).demoNow;
+}
+
 /** Heart count from the local dose list; used only until /api/today has answered. */
 function localHeartCount(doses: DerivedDose[], bpLogged: boolean): number {
   return Math.min(DEMO_RULES.heartMaximum, 1 + doses.filter((d) => d.status === "taken").length + (bpLogged ? 1 : 0));
@@ -103,11 +108,11 @@ export default function App() {
   // One friendly notice per outage; the technical error goes to the console, never to the senior.
   const apiWarned = useRef(false);
   // Agent demo clock (Settings > "Run agent at this time"): reads and writes happen at this instant. null = real time.
-  const [demoNow, setDemoNow] = useState<string | null>(null);
+  const [demoNow, setDemoNow] = useState<string | null>(initialAgentClock);
   // Scene time (`?time=`, Settings > Demo time buttons): day/night look only. Hearts, mood and doses stay on the one
   // real state; switching morning ↔ evening must never re-read /api/today at another time.
   const [sceneTime, setSceneTime] = useState<string | null>(initialSceneTime);
-  const [demoClockValue, setDemoClockValue] = useState(() => toDateTimeLocal(new Date()));
+  const [demoClockValue, setDemoClockValue] = useState(() => toDateTimeLocal(new Date(demoNow ?? Date.now())));
   const [agentBusy, setAgentBusy] = useState(false);
   const [escalationSettings, setEscalationSettings] = useState<EscalationSettingsResponse | null>(null);
   // GET /api/medications (days of supply for restock help); null until loaded or while the API is offline.
@@ -154,8 +159,9 @@ export default function App() {
 
   const pendingDose = doseList.find((item) => item.id === pendingDoseId);
   const heartCount = today?.dog.heart ?? localHeartCount(doseList, bpLogged);
-  // P1 is adding heartsTotal to the API response; keep this lookup in one place.
-  const heartsTotal = today?.dog?.heartsTotal ?? mockHeartsTotal;
+  // One number each for the whole phone app: the API's (or mock) value, raised by a Settings demo tick if one is on.
+  const heartsTotal = demoHeartsTotal(today?.dog?.heartsTotal ?? mockHeartsTotal, demoUnlocks);
+  const streak = demoStreak(today?.dog.streak ?? pet.streak, demoUnlocks);
   // selectDogMood needs the current time: a celebrate keeps the dog joyful only for DEMO_RULES.celebrateJoyfulMinutes.
   const mood = today ? today.dog.mood : selectDogMood(heartCount, latestDecision, demoNow ?? new Date().toISOString());
   // T2-10: day/night follows the real clock, or the Settings demo clock when one is set.
@@ -164,7 +170,7 @@ export default function App() {
   // Names come from data unchanged — no .toLowerCase().
   const dogName = today?.dog.name ?? pet.name;
   const caretakerName = careSummary?.caregiver?.name ?? caregiver.caretakerName;
-  const livePet = { ...pet, name: dogName, heartCount, streak: today?.dog.streak ?? pet.streak, careScore: careSummary?.careScore ?? pet.careScore, caringDays: careSummary?.caringDays ?? pet.caringDays };
+  const livePet = { ...pet, name: dogName, heartCount, streak, careScore: careSummary?.careScore ?? pet.careScore, caringDays: careSummary?.caringDays ?? pet.caringDays };
   // /care pair label: build from data via the care.pairNames pattern, not a hardcoded string.
   // Live API names take priority; otherwise fall back to the mock data.
   const liveCaregiver = careSummary?.caregiver
@@ -399,6 +405,20 @@ export default function App() {
   };
 
   /**
+   * Settings > For demo only > Reset to morning: the API deletes today's dose taps, readings and decisions and decides
+   * at 9:00 (lib/api.ts resetDemoDay); this phone's demo choices are cleared; the reload starts with the agent clock at 9:00.
+   * If the API is unreachable, the phone side still resets (the toast says the action failed).
+   */
+  const resetDemoToMorning = async () => {
+    const morning = parseDemoTime(DEMO_TIME_PRESETS[DEMO_RESET_PRESET], DEMO_TIME_PRESETS);
+    if (!morning) return;
+    try { await api.resetDemoDay(demoInstantToday(morning, new Date(), SENIOR_TIMEZONE)); }
+    catch (error) { reportApiProblem(error, true); }
+    resetDemoStorage();
+    window.location.assign(`${window.location.pathname}?${DEMO_CLOCK_PARAM}=${DEMO_RESET_PRESET}`);
+  };
+
+  /**
    * Settings > Demo quick buttons: jump the scene to a preset time today (senior's timezone), or back to real time (null).
    * Look only: no API call, no agent run, no change to hearts, mood or doses.
    */
@@ -428,7 +448,7 @@ export default function App() {
         celebrateRequest={celebrateRequest}
         trickRequest={trickRequest}
         heartCount={heartCount}
-        demoUnlocks={demoUnlocks}
+        streak={streak}
       />
       <TopZone onSettings={() => navigate("settings")} onHome={goHome} pet={livePet} />
       <div className="scene-chips">
@@ -470,14 +490,14 @@ export default function App() {
         {screen === "reference" && <ReferenceScreen back={back} onDone={handleReferenceDone} onSkip={handleReferenceDone} petName={dogName} medicationId={savedMedicationId} />}
         {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} medicationId={pendingDose?.medicationId} />}
         {screen === "walk" && <WalkScreen back={back} walkStats={walkStats} petName={dogName} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
-        {screen === "milestones" && <MilestonesScreen back={back} onWalk={() => navigate("walk")} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} heartsTotal={heartsTotal} mood={mood} decision={routineDecision(latestDecision)} onTrick={(performance) => setTrickRequest((prev) => ({ id: (prev?.id ?? 0) + 1, performance }))} demoUnlocks={demoUnlocks} />}
+        {screen === "milestones" && <MilestonesScreen back={back} onWalk={() => navigate("walk")} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} heartsTotal={heartsTotal} mood={mood} decision={routineDecision(latestDecision)} onTrick={(performance) => setTrickRequest((prev) => ({ id: (prev?.id ?? 0) + 1, performance }))} />}
         {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={{ ...(careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }] } : weekSummary), doctorQuestion: visitNotes.latest?.text ?? t("visitNotes.empty") }} onVisitNotes={() => navigate("visitNotes")} warning={isUrgentDecision(latestDecision) ? latestDecision : null} />}
-        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => { const next = new Set(current); if (next.has(key)) next.delete(key); else next.add(key); return next; })} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={() => { resetDemoStorage(); window.location.assign(window.location.pathname); }} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} />}
+        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => { const next = new Set(current); if (next.has(key)) next.delete(key); else next.add(key); return next; })} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} />}
         {screen === "medicines" && <MedicinesScreen back={back} petName={dogName} />}
         {screen === "visitNotes" && <VisitNotesScreen back={back} notes={visitNotes.notes} caretakerName={caretakerName} maxLength={visitNotes.maxLength} onAdd={visitNotes.add} onEdit={visitNotes.edit} onRemove={visitNotes.remove} />}
-        {screen === "customize" && <CustomizeScreen back={back} onHome={goHome} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(t(`toast.worlds.${nextWorld}`, { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: t(`accessory.${nextAccessory}`) })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} caretakerName={caretakerName} heartsTotal={demoHeartsTotal(heartsTotal, demoUnlocks)} notify={notify} />}
+        {screen === "customize" && <CustomizeScreen back={back} onHome={goHome} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(t(`toast.worlds.${nextWorld}`, { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: t(`accessory.${nextAccessory}`) })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} caretakerName={caretakerName} heartsTotal={heartsTotal} notify={notify} />}
       </div>
       <div className="bottom-dock" aria-hidden="true" />
       <BottomNav screen={screen} navigate={navigate} />
