@@ -203,6 +203,8 @@ export interface CaretakerSummaryResponse {
    * `lastMissedDay` is the senior's local date; `sentAt` may be later than now when a demo clock ran the agent ahead.
    */
   checkIn: { missedDays: number; lastMissedDay: string; sentAt: string } | null;
+  /** Buddy's hearts at the end of each of the 7 days before today (the senior's local dates, oldest first). */
+  dayHearts: Array<{ date: string; hearts: number }>;
 }
 
 export interface EscalationSettingsRequest {

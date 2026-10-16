@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient, QueryResultRow } from "pg";
 import { DEMO_RULES } from "../shared/config.js";
 import { decide, selectDogMood, firstReadingOf } from "../shared/rules.js";
-import { selectAgentInput, selectHeartActivities, selectHeartsTotal, type AgentSelectionSource } from "../shared/selectors.js";
+import { selectAgentInput, selectHeartActivities, selectHeartsAtInstants, selectHeartsTotal, type AgentSelectionSource } from "../shared/selectors.js";
 import { applyModelWording } from "../shared/wording.js";
 import { SOUVENIR_TIERS, unlockedSouvenirs, nextSouvenir } from "../shared/souvenirs.js";
 import { FALLBACK_EXPLANATION, HEALTHHUB_MEDICATIONS_URL, NDF_URL, validateRephrase } from "../shared/medlineplus.js";
@@ -208,9 +208,9 @@ export class PawtnerRepository {
 
   /** Today's agent input, the dog's lifetime hearts and today's heart activities, all from one read of the history. */
   private async loadDogState(client: PoolClient | Pool, userId: string, now: string, triggeringDoseEventId?: string)
-    : Promise<{ input: AgentInput; heartsTotal: number; activities: HeartActivities }> {
+    : Promise<{ input: AgentInput; heartsTotal: number; activities: HeartActivities; source: AgentSelectionSource }> {
     const source = await this.loadSource(client, userId, now, triggeringDoseEventId);
-    return { input: selectAgentInput(source), heartsTotal: selectHeartsTotal(source), activities: selectHeartActivities(source) };
+    return { input: selectAgentInput(source), heartsTotal: selectHeartsTotal(source), activities: selectHeartActivities(source), source };
   }
 
   /** Reads everything the selectors need: every occurrence since each active schedule started (no history cap), ledger, nudges, readings. */
@@ -558,7 +558,15 @@ export class PawtnerRepository {
       [userId, start, today, person.timezone],
     );
     const latestDecision = await this.latestDecision(this.pool, userId, now);
-    const { input, heartsTotal } = await this.loadDogState(this.pool, userId, now);
+    const { input, heartsTotal, source } = await this.loadDogState(this.pool, userId, now);
+    // Buddy's hearts at the end of each of the 7 days before today, in the senior's time zone (/care's rhythm card).
+    const pastDays = Array.from({ length: 7 }, (_, index) => shiftDate(today, index - 7));
+    const dayEnds = await this.pool.query(
+      `SELECT d.day::text AS day, ((d.day + 1)::timestamp AT TIME ZONE $1) - interval '1 millisecond' AS end_at
+       FROM unnest($2::date[]) WITH ORDINALITY AS d(day, n) ORDER BY d.n`,
+      [person.timezone, pastDays],
+    );
+    const endHearts = selectHeartsAtInstants(source, dayEnds.rows.map((row) => iso(row.end_at)));
     const stats = scheduleStats.rows[0];
     const walks = walkStats.rows[0];
     const denominator = stats.doses_due;
@@ -591,6 +599,7 @@ export class PawtnerRepository {
       checkIn: checkInRow
         ? { missedDays: Number(checkInRow.observations.consecutiveMissedDays), lastMissedDay: String(checkInRow.observations.lastMissedDay), sentAt: iso(checkInRow.created_at) }
         : null,
+      dayHearts: dayEnds.rows.map((row, index) => ({ date: row.day, hearts: endHearts[index]! })),
     };
   }
 

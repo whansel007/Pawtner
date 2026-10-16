@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-16 — /care rhythm week: Sunday to Saturday, filled by Buddy's hearts (branch `claude/care-week-sunday`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| "A lovely rhythm" shows this week, Sunday to Saturday (`weekRhythm` in `care/lib/rules.ts`). A day before today is filled when Buddy ended it on 2 or more hearts (`RHYTHM_MIN_HEARTS`); today and later stay empty. The API adds `CaretakerSummaryResponse.dayHearts` (Buddy's hearts at the end of each of the 7 days before today, senior's time zone, from the same hearts rule as the phone). The "N-day streak" line and "All week" badge still follow the dose streak. Hearts label: "This week, Sunday to Saturday. A filled heart is a day {{dog}} ended with {{count}} or more hearts." | User: on a Friday the hearts should be filled until Thursday, starting from Sunday; filled when Buddy is 2, 3 or 4 (demo). | The hearts and the streak line can disagree (a 2-heart day with a missed dose is filled but breaks the streak). | Final (label wording tentative) |
+
 ## 2026-10-16 — Combination strengths read with a slash (branch `claude/strength-display`)
 
 | Decision | Reason | Tradeoff | Status |

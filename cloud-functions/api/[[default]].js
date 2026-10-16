@@ -5718,6 +5718,11 @@ function selectHeartsTotal(source) {
   const { derived, metrics } = deriveSelection(source);
   return computeHeartsTotal(derived, metrics, source.today, walksUntilNow(source), source.now);
 }
+function selectHeartsAtInstants(source, instants) {
+  const { derived, metrics } = deriveSelection(source);
+  const gains = heartGains(derived, metrics, walksUntilNow(source));
+  return instants.map((instant) => heartsAt(gains, Date.parse(instant) > Date.parse(source.now) ? source.now : instant));
+}
 function walksUntilNow(source) {
   return source.walkFinishedAt.filter((finishedAt) => Date.parse(finishedAt) <= Date.parse(source.now));
 }
@@ -5944,7 +5949,7 @@ var PawtnerRepository = class {
   /** Today's agent input, the dog's lifetime hearts and today's heart activities, all from one read of the history. */
   async loadDogState(client, userId, now, triggeringDoseEventId) {
     const source = await this.loadSource(client, userId, now, triggeringDoseEventId);
-    return { input: selectAgentInput(source), heartsTotal: selectHeartsTotal(source), activities: selectHeartActivities(source) };
+    return { input: selectAgentInput(source), heartsTotal: selectHeartsTotal(source), activities: selectHeartActivities(source), source };
   }
   /** Reads everything the selectors need: every occurrence since each active schedule started (no history cap), ledger, nudges, readings. */
   async loadSource(client, userId, now, triggeringDoseEventId) {
@@ -6278,7 +6283,14 @@ var PawtnerRepository = class {
       [userId, start, today, person.timezone]
     );
     const latestDecision = await this.latestDecision(this.pool, userId, now);
-    const { input, heartsTotal } = await this.loadDogState(this.pool, userId, now);
+    const { input, heartsTotal, source } = await this.loadDogState(this.pool, userId, now);
+    const pastDays = Array.from({ length: 7 }, (_, index) => shiftDate(today, index - 7));
+    const dayEnds = await this.pool.query(
+      `SELECT d.day::text AS day, ((d.day + 1)::timestamp AT TIME ZONE $1) - interval '1 millisecond' AS end_at
+       FROM unnest($2::date[]) WITH ORDINALITY AS d(day, n) ORDER BY d.n`,
+      [person.timezone, pastDays]
+    );
+    const endHearts = selectHeartsAtInstants(source, dayEnds.rows.map((row) => iso(row.end_at)));
     const stats = scheduleStats.rows[0];
     const walks = walkStats.rows[0];
     const denominator = stats.doses_due;
@@ -6307,7 +6319,8 @@ var PawtnerRepository = class {
         note: `Ask a healthcare professional about: ${row.note}`,
         occurredAt: iso(row.recorded_at)
       })),
-      checkIn: checkInRow ? { missedDays: Number(checkInRow.observations.consecutiveMissedDays), lastMissedDay: String(checkInRow.observations.lastMissedDay), sentAt: iso(checkInRow.created_at) } : null
+      checkIn: checkInRow ? { missedDays: Number(checkInRow.observations.consecutiveMissedDays), lastMissedDay: String(checkInRow.observations.lastMissedDay), sentAt: iso(checkInRow.created_at) } : null,
+      dayHearts: dayEnds.rows.map((row, index) => ({ date: row.day, hearts: endHearts[index] }))
     };
   }
   async getEscalationSettings() {

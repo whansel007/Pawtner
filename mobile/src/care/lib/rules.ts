@@ -9,6 +9,29 @@ import type { CaringMoment } from "../data/types.js";
  */
 
 export const STREAK_WINDOW_DAYS = 7;
+/** "A lovely rhythm": a day's heart is filled when Buddy ended that day on at least this many hearts (user, 16 Oct; demo). */
+export const RHYTHM_MIN_HEARTS = 2;
+
+/** A date as "YYYY-MM-DD" in the viewer's own calendar. */
+function localKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+/**
+ * The rhythm card's week (user, 16 Oct): Sunday to Saturday of the week containing `now`. A day before today is filled
+ * when Buddy ended it on RHYTHM_MIN_HEARTS or more (`dayHearts` from the summary); today and later are not yet.
+ */
+export function weekRhythm(now: Date, dayHearts: ReadonlyArray<{ date: string; hearts: number }>): Array<{ date: Date; filled: boolean }> {
+  const hearts = new Map(dayHearts.map((day) => [day.date, day.hearts]));
+  const today = localKey(now);
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(now);
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() - date.getDay() + index);
+    const key = localKey(date);
+    return { date, filled: key < today && (hearts.get(key) ?? 0) >= RHYTHM_MIN_HEARTS };
+  });
+}
 export const MIN_CHECK_IN_THRESHOLD = DEMO_RULES.caretakerMinimumThreshold;
 
 /** One flag per day, oldest first, ending yesterday (see recentDays): the last min(streak, days) days are filled, so filled hearts = streak. */
