@@ -104,6 +104,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | Item | Note |
 |---|---|
+| Health card ignores readings already saved today after a reload | Found 17 Oct: `HealthScreen` reads `healthMetrics` from App state, which only gets a reading when Rose saves one in this session; after a reload it shows "Buddy needs one reading" and "Logged today · in your usual range" together. Fix: fill App's `healthMetrics` from `/api/today` (`today.healthMetrics`) on load. |
 | Restock help: wire to the API | Demo stores the request in localStorage (`lib/restockHelp.ts`), so `/care` sees it only in the same browser. P1: table + `POST /api/restock-requests`, `GET ?status=pending`, `POST /:id/handled` (shapes and TODO in `lib/restockHelp.ts`). Supply data is live from `GET /api/medications` (mock only if that fails). No DB change made. |
 | Wording waiting for the user (#65, #66) | Grab bar label and next-dose strip (`home.sheet.*`), Settings demo card (`settings.demo*`), "today" (`topZone.heartsToday`), /care check-in card (`care.web.week.checkIn*`) and Alerts switch/days strings (`care.web.alerts.*`). |
 | Health wording waiting for the user | "Snap your clinic memo" / "Your clinic memo" and the restock buttons are tentative; "Ask your doctor" / "Questions for the doctor" unchanged on purpose. |

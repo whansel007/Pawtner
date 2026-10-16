@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-17 — README screenshot size (branch `claude/readme-image-size`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Phone screenshots in the README show at 390 px wide (HTML `<img width="390">`, still linked to the full-size file), the size of How it works #1; the three caregiver-page screenshots stay full width. How it works #4 shows a normal reading ("150 / 88, Keep at it!") instead of the Warning, and its line names all three outcomes. | User: the portrait pictures were too big; #4 should not show a warning. | Smaller phone shots on wide screens. | Final (step 4 wording tentative) |
+
 ## 2026-10-16 — Demo video link slot on /care (branch `claude/demo-video-link`)
 
 | Decision | Reason | Tradeoff | Status |
