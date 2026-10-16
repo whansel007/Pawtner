@@ -561,7 +561,7 @@
       "hearts20": "20 hearts in total"
     },
     "demoClockTitle": "Current Time of Demo",
-    "demoClockHint": "The phone acts as if it is this time: doses, readings and walks are saved at it, and Buddy checks his rules (nudges, check-ins) when you run him. Nudges are limited to two per scheduled dose.",
+    "demoClockHint": "The phone acts as if it is this time, and the clock keeps running from there: doses, readings and walks are saved at it, the dose-time reminder fires when it reaches a dose, and Buddy checks his rules (nudges, check-ins) when you run him. Nudges are limited to two per scheduled dose.",
     "demoClockLabel": "Simulated local time",
     "demoClockRun": "Run Buddy's check at this time",
     "demoClockBusy": "Checking…",
@@ -607,6 +607,7 @@
     }
   },
   "toast": {
+    "doseTime": "It's time for your medicine: {{medicine}}.",
     "alreadyCounted": "Already counted. {{name}} remembers!",
     "treatWaiting": "A treat from {{caretaker}} is waiting for {{name}}!",
     "nudgeSet": "{{name}} knows when to nudge you.",
