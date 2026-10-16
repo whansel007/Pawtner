@@ -79,7 +79,7 @@ As of 16 Oct 2026, built from 13 Oct:
 
 ## Built with
 
-William built the API, the agent rules and the hosting; I built the phone app and the caregiver's page. We use CodeBuddy and Miora for this project; Miora is the backdrop and the pet dog companion. Claude Code helped with fixes and reviews. Screenshots of the CodeBuddy chats are in [`proof/`](proof/).
+William built the API, the agent rules and the hosting; I built the phone app and the caregiver's page. We use CodeBuddy and Miora for this project; Miora is the backdrop and the pet dog companion. Claude Code helped with fixes and reviews. Screenshots of the CodeBuddy chats are in [`proof/`](proof/), and the full chat histories in [`proof/chat-history/`](proof/chat-history/).
 
 React 19, TypeScript, Vite 6, Tailwind CSS 4 and i18next for the app; a TypeScript API on Tencent EdgeOne Pages cloud functions; PostgreSQL on Supabase.
 
