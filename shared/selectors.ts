@@ -276,6 +276,13 @@ export function selectHeartsTotal(source: AgentSelectionSource): number {
   return computeHeartsTotal(derived, metrics, source.today, walksUntilNow(source), source.now);
 }
 
+/** Buddy's hearts at each instant (e.g. the end of each day), from the same gains as `heartsAt`; instants after `now` use `now`. */
+export function selectHeartsAtInstants(source: AgentSelectionSource, instants: readonly string[]): number[] {
+  const { derived, metrics } = deriveSelection(source);
+  const gains = heartGains(derived, metrics, walksUntilNow(source));
+  return instants.map((instant) => heartsAt(gains, Date.parse(instant) > Date.parse(source.now) ? source.now : instant));
+}
+
 function walksUntilNow(source: AgentSelectionSource): string[] {
   return source.walkFinishedAt.filter((finishedAt) => Date.parse(finishedAt) <= Date.parse(source.now));
 }
