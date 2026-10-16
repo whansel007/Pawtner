@@ -54,7 +54,7 @@
   max-width: none;
 }
 
-/* World themes (flat / garden / kampung) set --world-tint on .app-shell. */
+/* World themes (garden / beach / playground) set --world-tint on .app-shell. */
 .scene-backdrop__tint {
   position: absolute;
   inset: 0;

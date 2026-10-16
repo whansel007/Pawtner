@@ -391,7 +391,8 @@
     "lockedNote_one": "{{count}} heart",
     "lockedNote_other": "{{count}} hearts",
     "lockedToast": "{{name}} unlocks this at {{count}} hearts.",
-    "lockedToast_one": "{{name}} unlocks this at {{count}} heart."
+    "lockedToast_one": "{{name}} unlocks this at {{count}} heart.",
+    "worldLevelNote": "{{level}} · {{hearts}}"
   },
   "health": {
     "eyebrow": "This week",
@@ -485,7 +486,7 @@
   "screening": {
     "eyebrow": "A once-a-year task",
     "title": "Festival day is waiting",
-    "supporting": "Based on your age, it may be time for a health screening. When it is done, {{name}}'s kampung celebrates too.",
+    "supporting": "Based on your age, it may be time for a health screening. When it is done, {{name}}'s garden celebrates too.",
     "checkHealthHub": "Check on HealthHub",
     "remindLater": "Remind me another day"
   },
@@ -554,9 +555,11 @@
     "nudgeSet": "{{name}} knows when to nudge you.",
     "heartGained": "{{name}} gained a heart!",
     "bpLogged": "Reading logged. {{name}}'s heart is full!",
-    "worldFlat": "Our flat is now behind {{name}}.",
-    "worldGarden": "The garden is now behind {{name}}.",
-    "worldKampung": "The kampung is now behind {{name}}.",
+    "worlds": {
+      "garden": "The garden is now behind {{name}}.",
+      "beach": "The beach is now behind {{name}}.",
+      "playground": "The playground is now behind {{name}}."
+    },
     "accessoryNone": "{{name}} is back to a fluffy self.",
     "accessoryOn": "{{name}} put on a {{item}}.",
     "hello": "Woof woof! {{name}} is happy you're here.",

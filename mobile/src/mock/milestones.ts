@@ -1,15 +1,4 @@
-import type { MilestoneWorld, Trick, Souvenir, WalkStats, WorldOption, AccessoryOption } from "../types";
-
-export const currentWorld: MilestoneWorld = {
-  id: "kampung",
-  label: "The kampung",
-  note: "Level 3 reward",
-  current: true,
-  unlocked: true,
-  levelText: "LEVEL UP · WORLD 3",
-  description: "Unlocked! The flat and garden stay yours to revisit.",
-  progress: 1,
-};
+import type { Trick, Souvenir, WalkStats, WorldOption, AccessoryOption } from "../types";
 
 /**
  * Offline fallback for Milestones. Mirrors the API's trick ladder (api/repository.ts: Sit 1, Wave 7,
@@ -27,9 +16,9 @@ export const souvenirs: Souvenir[] = [
 ];
 
 export const worldOptions: WorldOption[] = [
-  { id: "flat", label: "Our flat", note: "First home" },
-  { id: "garden", label: "Garden", note: "Current world" },
-  { id: "kampung", label: "Kampung", note: "" },
+  { id: "garden", label: "Garden", note: "First home" },
+  { id: "beach", label: "Beach", note: "Level 1" },
+  { id: "playground", label: "Playground", note: "Level 2" },
 ];
 
 export const accessoryOptions: AccessoryOption[] = [

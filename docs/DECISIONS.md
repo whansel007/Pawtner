@@ -4,6 +4,7 @@
 
 | Decision | Reason | Tradeoff | Status |
 |---|---|---|---|
+| Scenery is Garden (first home, always open), Beach ("Level 1 · 80 hearts") and Playground ("Level 2 · 160 hearts"), unlocked by lifetime hearts (`config/rewards.ts`); "Our flat" and "Kampung" are gone. Each world is a tint over the garden scene plus a drawn thumbnail, like before. Toasts from `toast.worlds.<id>`; the screening line now says "{{name}}'s garden celebrates too." | User, 16 Oct. | No beach or playground art yet: picking them only re-tints the garden. The API's milestone worlds (flat/garden/kampung, by km walked) are unchanged and no longer shown. | Final (user request) |
 | After the proof photo the title says "Thank you!" (was "That counts!") and the supporting line ("Thank you. The photo is kept for proof. {{name}} gained a little more energy.") is removed; 18 px between title and photo. | User's wording. | The screen no longer says the photo is kept. | Final (user's wording) |
 
 ## 2026-10-16 (evening) — Buddy plays unless he's low on hearts (branch `claude/play-hearts`)

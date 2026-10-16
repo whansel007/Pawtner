@@ -58,6 +58,12 @@ export function CustomizeScreen({
     setAccessory(item.id);
   }
 
+  /** Worlds with a threshold show their level and hearts ("Level 1 · 80 hearts"); the first home shows its note. */
+  function worldNote(item: WorldOption): string {
+    const threshold = unlockThreshold(item.id);
+    return threshold === undefined ? item.note : t("customize.worldLevelNote", { level: item.note, hearts: t("customize.lockedNote", { count: threshold }) });
+  }
+
   function itemNote(item: WorldOption | AccessoryOption): string {
     const threshold = unlockThreshold(item.id);
     if (threshold !== undefined) {
@@ -85,7 +91,7 @@ export function CustomizeScreen({
             <button className={`${item.id} ${world === item.id ? "selected" : ""} ${locked ? "locked" : ""}`} key={item.id} onClick={() => handleWorldClick(item)}>
               <span className="world-thumb"><i /></span>
               <strong>{item.label}</strong>
-              <small>{itemNote(item)}{locked ? <Icon name="lock" size={10} className="lock-icon" /> : null}</small>
+              <small>{worldNote(item)}{locked ? <Icon name="lock" size={10} className="lock-icon" /> : null}</small>
             </button>
           );
         })}
