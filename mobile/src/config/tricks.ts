@@ -14,6 +14,14 @@ export const TRICK_PERFORMANCE_BY_NAME: Readonly<Record<string, TrickPerformance
   Wave: "wave",
 };
 
+/** Streak days each trick needs; must match api/repository.ts trickDefs. Used only by the Demo "7 days" tick. */
+export const TRICK_STREAK_DAYS: Readonly<Record<string, number>> = {
+  Sit: 1,
+  Wave: 7,
+  "Roll over": 14,
+  "New trick": 30,
+};
+
 /**
  * Where an earned Wave goes in the dog-tap rotation: after the basic reactions, so a full cycle is
  * hop → hearts → bubble → bark → wave. Earned tricks are appended in the order they were learned,

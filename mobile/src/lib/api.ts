@@ -10,6 +10,7 @@ import type {
   MedicationListResponse,
   MedicineExplanationResponse,
   MilestonesResponse,
+  PillReferenceImageResponse,
   PillReferenceResponse,
   PillVerifyResponse,
   SouvenirResponse,
@@ -76,6 +77,8 @@ export const api = {
   setPillReference: (medicationId: string, imageBase64: string, mimeType: string) =>
     request<PillReferenceResponse>("/pill-reference", { method: "POST", body: JSON.stringify({ medicationId, imageBase64, mimeType }) }),
   // Compare a check-in photo against the medicine's reference picture.
+  // Read the saved original pill photo back (My medicines).
+  getPillReference: (medicationId: string) => request<PillReferenceImageResponse>(`/pill-reference?medicationId=${encodeURIComponent(medicationId)}`),
   verifyPill: (medicationId: string, imageBase64: string, mimeType: string) =>
     request<PillVerifyResponse>("/pill-verify", { method: "POST", body: JSON.stringify({ medicationId, imageBase64, mimeType }) }),
   // Warms the vision model in the background; safe to ignore failures.

@@ -18,5 +18,5 @@ export type Screen =
   | "visitNotes"
   | "customize";
 
-export type World = "flat" | "garden" | "kampung";
+export type World = "garden" | "beach" | "playground";
 export type Accessory = "none" | "glasses" | "hat" | "flower";

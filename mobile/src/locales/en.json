@@ -317,12 +317,12 @@
     "eyebrowCheck": "A quick check",
     "eyebrowFound": "{{name}} can see it",
     "titleShow": "Show {{name}} the pill",
-    "titleFound": "That counts!",
+    "titleFound": "Thank you!",
     "supportingShow": "Snap the pill before taking it. Nothing is saved to your gallery.",
-    "supportingFound": "Thank you. The photo is kept for proof. {{name}} gained a little more energy.",
     "tapPhoto": "Tap to take proof photo",
     "onePill": "One pill in the frame",
     "verified": "Photo saved!",
+    "retake": "Please retake the picture",
     "giveHeart": "Give {{name}} a heart",
     "notNow": "Not now",
     "check": {
@@ -392,7 +392,8 @@
     "lockedNote_one": "{{count}} heart",
     "lockedNote_other": "{{count}} hearts",
     "lockedToast": "{{name}} unlocks this at {{count}} hearts.",
-    "lockedToast_one": "{{name}} unlocks this at {{count}} heart."
+    "lockedToast_one": "{{name}} unlocks this at {{count}} heart.",
+    "worldLevelNote": "{{level}} · {{hearts}}"
   },
   "health": {
     "eyebrow": "This week",
@@ -486,7 +487,7 @@
   "screening": {
     "eyebrow": "A once-a-year task",
     "title": "Festival day is waiting",
-    "supporting": "Based on your age, it may be time for a health screening. When it is done, {{name}}'s kampung celebrates too.",
+    "supporting": "Based on your age, it may be time for a health screening. When it is done, {{name}}'s garden celebrates too.",
     "checkHealthHub": "Check on HealthHub",
     "remindLater": "Remind me another day"
   },
@@ -505,14 +506,18 @@
     "shareBpSub": "{{caretaker}} sees your latest reading and the notes you write with it.",
     "privacyTitle": "Your information stays yours, unless specified otherwise.",
     "demoEyebrow": "Demo",
-    "demoUnlockAll": "Unlock all rewards (demo)",
+    "demoUnlockHint": "Unlock as if Rose reached:",
+    "demoUnlock": {
+      "days7": "7 days",
+      "hearts20": "20 hearts",
+      "hearts40": "40 hearts"
+    },
     "demoReset": "Reset demo",
-    "demoResetHint": "Clears this phone's demo choices: restock answer, clinic memo photo, rewards switch and garden time. Saved doses and readings stay.",
-    "demoTimeHint": "Jump the garden to a time of day. Doesn't run the agent or save anything.",
+    "demoResetHint": "Clears this phone's demo choices: restock answer, clinic memo photo, demo ticks and garden time. Saved doses and readings stay.",
+    "demoTimeHint": "Jump the garden to a time of day; tap it again for real time. Doesn't run the agent or save anything.",
     "demoTime": {
       "morning": "Morning ({{time}})",
-      "evening": "Evening ({{time}})",
-      "real": "Real time"
+      "evening": "Evening ({{time}})"
     }
   },
   "medicines": {
@@ -546,7 +551,8 @@
       "saving": "Saving…",
       "save": "Save as original",
       "saved": "Original pill photo saved.",
-      "failed": "{{name}} can't save the photo right now. Please try again in a moment."
+      "failed": "{{name}} can't save the photo right now. Please try again in a moment.",
+      "viewFailed": "Couldn't open the original photo right now."
     }
   },
   "toast": {
@@ -555,9 +561,11 @@
     "nudgeSet": "{{name}} knows when to nudge you.",
     "heartGained": "{{name}} gained a heart!",
     "bpLogged": "Reading logged. {{name}}'s heart is full!",
-    "worldFlat": "Our flat is now behind {{name}}.",
-    "worldGarden": "The garden is now behind {{name}}.",
-    "worldKampung": "The kampung is now behind {{name}}.",
+    "worlds": {
+      "garden": "The garden is now behind {{name}}.",
+      "beach": "The beach is now behind {{name}}.",
+      "playground": "The playground is now behind {{name}}."
+    },
     "accessoryNone": "{{name}} is back to a fluffy self.",
     "accessoryOn": "{{name}} put on a {{item}}.",
     "hello": "Woof woof! {{name}} is happy you're here.",

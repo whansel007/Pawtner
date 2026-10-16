@@ -4,7 +4,7 @@ import { FullCard } from "../components/FullCard";
 import type { BackAction } from "../lib/navigation";
 import type { Caregiver } from "../types";
 import type { EscalationSettingsResponse } from "../../../shared/contract";
-import { DEMO_TIME_PRESETS, type DemoTimePreset } from "../config/demo";
+import { DEMO_TIME_PRESETS, type DemoTimePreset, DEMO_UNLOCKS, type DemoUnlockKey } from "../config/demo";
 import { formatClockTime, parseDemoTime } from "../lib/demoTime";
 import { useEffect, useState } from "react";
 
@@ -21,9 +21,9 @@ export function SettingsScreen({
   agentBusy,
   escalationSettings,
   onSaveEscalationSettings,
-  demoUnlockAll,
-  onToggleDemoUnlockAll,
-  demoTimeActive,
+  demoUnlocks,
+  onToggleDemoUnlock,
+  activeTimePreset,
   onDemoTime,
   onResetDemo,
   shareBloodPressure,
@@ -42,10 +42,11 @@ export function SettingsScreen({
   agentBusy: boolean;
   escalationSettings: EscalationSettingsResponse | null;
   onSaveEscalationSettings: (settings: EscalationSettingsResponse) => void;
-  demoUnlockAll: boolean;
-  onToggleDemoUnlockAll: () => void;
-  /** True while the demo clock (or `?time=`) overrides the real time. */
-  demoTimeActive: boolean;
+  /** Demo tick boxes that are on ("7 days", "20 hearts", "40 hearts", config/demo.ts DEMO_UNLOCKS). */
+  demoUnlocks: ReadonlySet<DemoUnlockKey>;
+  onToggleDemoUnlock: (key: DemoUnlockKey) => void;
+  /** The Morning / Evening button currently on, or null (real time). Tapping it again goes back to real time. */
+  activeTimePreset: DemoTimePreset | null;
   /** Jump to a preset time today, or back to real time (null). Never runs the agent. */
   onDemoTime: (preset: DemoTimePreset | null) => void;
   /** "Reset demo": clears this phone's demo choices and reloads the app. */
@@ -96,21 +97,25 @@ export function SettingsScreen({
       </div>
       <div className="demo-clock-card demo-unlock-card">
         <p className="eyebrow green">{t("settings.demoEyebrow")}</p>
-        <label className="consent-toggle">
-          <input type="checkbox" checked={demoUnlockAll} onChange={onToggleDemoUnlockAll} />
-          {t("settings.demoUnlockAll")}
-        </label>
+        <p>{t("settings.demoUnlockHint")}</p>
+        <div className="demo-unlocks">
+          {DEMO_UNLOCKS.map((unlock) => (
+            <label className="consent-toggle" key={unlock.key}>
+              <input type="checkbox" checked={demoUnlocks.has(unlock.key)} onChange={() => onToggleDemoUnlock(unlock.key)} />
+              {t(`settings.demoUnlock.${unlock.key}`)}
+            </label>
+          ))}
+        </div>
         <p>{t("settings.demoTimeHint")}</p>
         <div className="demo-time-buttons">
           {(Object.keys(DEMO_TIME_PRESETS) as DemoTimePreset[]).map((preset) => {
             const time = parseDemoTime(DEMO_TIME_PRESETS[preset], DEMO_TIME_PRESETS);
             return (
-              <button key={preset} type="button" className="secondary-button" onClick={() => onDemoTime(preset)}>
+              <button key={preset} type="button" className={`secondary-button ${activeTimePreset === preset ? "is-active" : ""}`} aria-pressed={activeTimePreset === preset} onClick={() => onDemoTime(activeTimePreset === preset ? null : preset)}>
                 {t(`settings.demoTime.${preset}`, { time: time ? formatClockTime(time) : DEMO_TIME_PRESETS[preset] })}
               </button>
             );
           })}
-          <button type="button" className="secondary-button" disabled={!demoTimeActive} onClick={() => onDemoTime(null)}>{t("settings.demoTime.real")}</button>
         </div>
         <p>{t("settings.demoResetHint")}</p>
         <button type="button" className="secondary-button" onClick={onResetDemo}>{t("settings.demoReset")}</button>

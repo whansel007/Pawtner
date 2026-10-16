@@ -1,11 +1,7 @@
-import { REWARD_THRESHOLDS } from "../config/rewards";
+import { REWARD_THRESHOLDS } from "../config/rewards.js";
 
-export function isUnlocked(
-  itemId: string,
-  heartsTotal: number,
-  demoUnlockAll: boolean,
-): boolean {
-  if (demoUnlockAll) return true;
+/** `heartsTotal` already includes any Demo hearts tick (lib/demoUnlocks.ts demoHeartsTotal). */
+export function isUnlocked(itemId: string, heartsTotal: number): boolean {
   const threshold = REWARD_THRESHOLDS[itemId];
   if (threshold === undefined) return true;
   return heartsTotal >= threshold;

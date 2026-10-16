@@ -195,11 +195,11 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
   overflow: hidden;
   background: var(--color-bg-shell);
 }
-.app-shell.world-flat { --world-tint: linear-gradient(rgba(113, 86, 61, .26), rgba(60, 75, 57, .14)); }
 .app-shell.world-garden { --world-tint: linear-gradient(rgba(65, 111, 58, .05), rgba(34, 79, 46, .08)); }
-.app-shell.world-kampung { --world-tint: linear-gradient(rgba(222, 143, 60, .22), rgba(74, 89, 44, .18)); }
-.world-flat .scene-shade { background: linear-gradient(180deg, rgba(62,46,32,.48), transparent 26%, rgba(245,213,170,.1) 55%, rgba(46,53,39,.4)); }
-.world-kampung .scene-shade { background: linear-gradient(180deg, rgba(95,48,28,.25), rgba(255,180,85,.06) 32%, transparent 55%, rgba(59,45,25,.42)); }
+.app-shell.world-beach { --world-tint: linear-gradient(rgba(88, 170, 205, .2), rgba(233, 205, 150, .2)); }
+.app-shell.world-playground { --world-tint: linear-gradient(rgba(255, 196, 92, .16), rgba(96, 150, 210, .12)); }
+.world-beach .scene-shade { background: linear-gradient(180deg, rgba(40,110,150,.22), transparent 30%, rgba(250,225,170,.12) 60%, rgba(60,80,70,.3)); }
+.world-playground .scene-shade { background: linear-gradient(180deg, rgba(70,110,170,.18), transparent 32%, rgba(255,205,120,.1) 58%, rgba(52,64,50,.34)); }
 
 .scene-shade {
   position: absolute;
@@ -420,7 +420,9 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 /* Settings > Demo time buttons: share the row, wrap onto a second line on narrow phones. */
 .demo-time-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 .demo-time-buttons .secondary-button { flex: 1 1 auto; width: auto; min-height: 48px; padding: 0 12px; font-size: var(--font-size-sm); white-space: nowrap; }
-.demo-time-buttons .secondary-button:disabled { opacity: .45; cursor: default; }
+/* The Morning / Evening button that is on: filled; tap it again for real time. */
+.demo-time-buttons .secondary-button.is-active { color: white; background: var(--color-primary); }
+.demo-unlocks { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 12px; }
 .role-strip { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-bottom: 12px; padding: 12px 14px; border-radius: var(--radius-3xl); color: #426653; background: var(--color-surface-sage-light); }
 .role-strip div { display: grid; }
 .role-strip small { color: #76847b; font-size: var(--font-size-sm); }
@@ -454,6 +456,8 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 /* Eyebrow, title and supporting line share one centred column; only the back button stays left. */
 .scan-card .back-button { text-align: left; }
 .scan-card .supporting { margin-left: auto; margin-right: auto; }
+/* Proof screen after the photo has no supporting line: keep air between the title and the photo. */
+.scan-card h2 + .scanner { margin-top: 18px; }
 .scanner { position: relative; width: 100%; min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: var(--radius-7xl); color: #345845; background: var(--color-surface-scanner); cursor: pointer; overflow: hidden; }
 .scanner::before { content: ""; position: absolute; inset: 0; opacity: .4; background: repeating-linear-gradient(0deg, transparent 0 24px, rgba(76,112,86,.08) 25px 26px); }
 .scanner strong, .scanner small, .scanner .proof-scanner__saved, .camera-orb { z-index: 1; }
@@ -484,7 +488,8 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .proof-photo-preview { display: block; max-width: 100%; border-radius: var(--radius-lg); }
 .proof-photo-input { display: none; }
 .proof-check-block { display: grid; gap: 8px; margin-top: 12px; text-align: left; }
-.proof-check-card { padding: 12px; border-radius: var(--radius-xl); background: var(--color-surface-sage-light); border: 1px solid var(--color-border-card); }
+.proof-heart-secondary { margin-top: 10px; }
+.proof-check-card { margin-top: 12px; padding: 12px; border-radius: var(--radius-xl); background: var(--color-surface-sage-light); border: 1px solid var(--color-border-card); }
 .proof-check-card-title { display: block; color: var(--color-text-heading); font-size: var(--font-size-md); font-weight: var(--font-weight-bold); }
 .proof-check-card-line { margin: 6px 0 0; color: var(--color-text-body); font-size: var(--font-size-sm); line-height: 1.4; }
 .proof-check-card-line strong { color: var(--color-text-heading); font-weight: var(--font-weight-bold); }
@@ -608,6 +613,10 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .doctor-question { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 14px; border-radius: var(--radius-3xl); color: #805b46; background: var(--color-surface-cream); }
 .doctor-question small { font-size: var(--font-size-2xs); font-weight: var(--font-weight-black); letter-spacing: 1px; }
 .doctor-question p { margin: 3px 0 0; font-size: var(--font-size-md); }
+/* Tappable: opens "For my next visit" to add or edit notes. */
+button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit; cursor: pointer; }
+.doctor-question > div { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.doctor-question__chevron { flex: 0 0 auto; color: #a07a63; }
 
 /* ═══════════════════════════════════════════════════════════════════════
    Settings
@@ -634,19 +643,21 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .world-picker > button { min-width: 0; display: grid; gap: 3px; padding: 6px 6px 9px; border: 2px solid transparent; border-radius: var(--radius-3xl); color: #345343; background: var(--color-surface-stone); text-align: left; cursor: pointer; }
 .world-picker > button.selected { border-color: var(--color-border-world-sel); background: var(--color-surface-sage-light); }
 .world-picker strong { padding-inline: 3px; overflow: hidden; font-size: var(--font-size-md); text-overflow: ellipsis; white-space: nowrap; }
-.world-picker small { padding-inline: 3px; overflow: hidden; color: var(--color-text-faint); font-size: var(--font-size-2xs); text-overflow: ellipsis; white-space: nowrap; }
+.world-picker small { padding-inline: 3px; color: var(--color-text-faint); font-size: var(--font-size-2xs); line-height: 1.3; }
 
 .world-thumb { position: relative; height: 58px; border-radius: var(--radius-md); overflow: hidden; }
 .world-thumb::before, .world-thumb::after, .world-thumb i { content: ""; position: absolute; display: block; }
-.flat .world-thumb { background: linear-gradient(#f7c78f 0 48%, #c98555 49% 52%, #e7d3b5 53%); }
-.flat .world-thumb::before { left: 13%; bottom: 9px; width: 62%; height: 24px; border-radius: var(--radius-sm) var(--radius-sm) 3px 3px; background: #8caa82; }
-.flat .world-thumb::after { right: 10px; top: 8px; width: 17px; height: 24px; border: 3px solid rgba(255,255,255,.8); }
 .garden .world-thumb { background: linear-gradient(#8dc8c1 0 46%, #6b9f5b 47% 70%, #89b662 71%); }
 .garden .world-thumb::before { left: 11px; top: 13px; width: 22px; height: 31px; border-radius: var(--radius-full); background: #3f7b47; box-shadow: 45px 7px 0 #e194a4; }
 .garden .world-thumb::after { left: 42%; bottom: 0; width: 16%; height: 31px; background: #d6bf83; clip-path: polygon(40% 0,60% 0,100% 100%,0 100%); }
-.kampung .world-thumb { background: linear-gradient(#f5a86e 0 48%, #617d47 49%); }
-.kampung .world-thumb::before { left: 24%; bottom: 9px; width: 54%; height: 27px; background: #e6c184; clip-path: polygon(50% 0,100% 35%,92% 35%,92% 100%,8% 100%,8% 35%,0 35%); }
-.kampung .world-thumb::after { left: 44%; bottom: 9px; width: 14%; height: 16px; background: #855943; }
+/* Beach: sky, sea, sand and a sun. */
+.beach .world-thumb { background: linear-gradient(#a9dcef 0 40%, #4fa3c7 41% 58%, #ead7a4 59%); }
+.beach .world-thumb::before { right: 12px; top: 7px; width: 14px; height: 14px; border-radius: var(--radius-full); background: #ffd36e; }
+.beach .world-thumb::after { left: 16%; bottom: 7px; width: 26px; height: 13px; border-radius: 13px 13px 0 0; background: #e9837a; }
+/* Playground: sky, grass, a slide and a swing frame. */
+.playground .world-thumb { background: linear-gradient(#bfe3f2 0 50%, #86b866 51%); }
+.playground .world-thumb::before { left: 14%; bottom: 8px; width: 30px; height: 26px; background: #f2a65a; clip-path: polygon(0 100%,20% 100%,20% 30%,100% 100%,100% 85%,28% 12%,28% 0,0 0); }
+.playground .world-thumb::after { right: 14%; bottom: 8px; width: 32px; height: 28px; border: 3px solid #6d8fc7; border-bottom: 0; }
 .wardrobe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .wardrobe-grid button { display: grid; grid-template-columns: 45px 1fr; align-items: center; gap: 1px 8px; padding: 9px; border: 2px solid transparent; border-radius: var(--radius-2xl); color: #345343; background: var(--color-surface-stone); text-align: left; cursor: pointer; }
 .wardrobe-grid button.selected { border-color: var(--color-border-wardrobe-sel); background: var(--color-surface-cream-selected); }
@@ -797,6 +808,9 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .med-actions .text-button { margin-top: 0; }
 .med-ref-set { display: grid; gap: 8px; width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-border-card); }
 .pill-ref-set { color: var(--color-accent-sage); font-weight: 700; }
+/* "Original photo set" is a link-style button that opens the saved original. */
+.pill-ref-view { padding: 0; border: 0; background: none; font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.pill-ref-view:disabled { opacity: .6; cursor: progress; }
 .pill-ref-ok { color: var(--color-accent-sage); font-weight: 700; }
 
 /* Explanation links and credits */

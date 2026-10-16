@@ -21,21 +21,19 @@ export function selectDogMood(
   latestDecision: Pick<AgentDecision, "decision" | "createdAt"> | null,
   now: string,
 ): DogMood {
-  // Low hearts always mean the sad (sleepy) face, before any decision (user, 16 Oct).
+  // Hearts lead at both ends, before any decision (user, 16 Oct): low hearts are the sad (sleepy) face,
+  // full hearts are joyful. Decisions only shape the mood in between.
   if (heart <= DEMO_RULES.lowHeartMaximum) return "sleepy";
+  if (heart >= DEMO_RULES.heartMaximum) return "joyful";
   if (latestDecision?.decision === "emergency_995" || latestDecision?.decision === "see_gp_soon") return "attentive";
   if (latestDecision?.decision === "nudge") return "sleepy";
 
-  // Celebrate decisions keep the dog joyful for a fixed window, then expire.
+  // Celebrate decisions keep the dog joyful for a fixed window, then expire (only matters below full hearts).
   if (latestDecision?.decision === "celebrate") {
     const elapsedMs = Date.parse(now) - Date.parse(latestDecision.createdAt);
     if (elapsedMs < DEMO_RULES.celebrateJoyfulMinutes * 60_000) return "joyful";
-    // Window expired — fall through to heart-based mood (even at 4/4 hearts).
-  } else if (heart >= DEMO_RULES.heartMaximum) {
-    return "joyful";
   }
 
-  if (latestDecision?.decision === "restock_reminder" || latestDecision?.decision === "doctor_question") return "content";
   return "content";
 }
 

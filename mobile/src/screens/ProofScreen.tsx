@@ -33,6 +33,7 @@ export function ProofScreen({
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [check, setCheck] = useState<CheckState>({ kind: "idle" });
   const fileRef = useRef<HTMLInputElement>(null);
+  const looksDifferent = check.kind === "verified" && !check.result.match;
 
   // Warm up the vision model in the background when this screen opens, so the first real
   // pill check hits an already-warm instance instead of a slow cold start (which can time out).
@@ -91,7 +92,8 @@ export function ProofScreen({
     <FullCard back={back} backLabel={t("proof.notNow")} className="scan-card">
       <p className="eyebrow green">{captured ? t("proof.eyebrowFound", { name: petName }) : t("proof.eyebrowCheck")}</p>
       <h2>{captured ? t("proof.titleFound") : t("proof.titleShow", { name: petName })}</h2>
-      <p className="supporting">{captured ? t("proof.supportingFound", { name: petName }) : t("proof.supportingShow")}</p>
+      {/* After the photo: just the title (user, 16 Oct); before it, the how-to line. */}
+      {!captured && <p className="supporting">{t("proof.supportingShow")}</p>}
 
       <label className={`scanner proof-scanner ${captured ? "captured" : ""}`}>
         {captured && photoUrl ? (
@@ -163,7 +165,15 @@ export function ProofScreen({
         <p className="supporting proof-check-disclosure">{t("proof.check.disclosure", { name: petName })}</p>
       )}
 
-      {captured && <button className="primary-button" onClick={() => void onVerified(photoUrl)}>{t("proof.giveHeart", { name: petName })}</button>}
+      {/* The pill looks different: retaking is the main action (same as tapping the photo); she can still go ahead. */}
+      {captured && looksDifferent && (
+        <button className="primary-button" onClick={() => fileRef.current?.click()}>{t("proof.retake")}</button>
+      )}
+      {captured && (
+        <button className={looksDifferent ? "secondary-button proof-heart-secondary" : "primary-button"} onClick={() => void onVerified(photoUrl)}>
+          {t("proof.giveHeart", { name: petName })}
+        </button>
+      )}
     </FullCard>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
+import { PhotoViewer } from "../components/PhotoViewer";
 import type { BackAction } from "../lib/navigation";
 import { api } from "../lib/api";
 import { fileToBase64 } from "../lib/imageBase64";
@@ -27,6 +28,23 @@ export function MedicinesScreen({ back, petName }: { back: BackAction; petName: 
   const [refPreview, setRefPreview] = useState<string | null>(null);
   const [refSaving, setRefSaving] = useState(false);
   const [refMsg, setRefMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
+  // "Original photo set" → look at the saved original (GET /api/pill-reference).
+  const [viewingRef, setViewingRef] = useState<{ name: string; image: string } | null>(null);
+  const [loadingRefId, setLoadingRefId] = useState<string | null>(null);
+
+  const viewRef = async (med: MedicationDetail) => {
+    setLoadingRefId(med.id);
+    setRefMsg(null);
+    try {
+      const result = await api.getPillReference(med.id);
+      setViewingRef({ name: med.name, image: result.imageDataUrl });
+    } catch (error) {
+      console.warn("My medicines: original pill photo could not be loaded:", error);
+      setRefMsg({ id: med.id, ok: false, text: t("medicines.pillRef.viewFailed") });
+    } finally {
+      setLoadingRefId(null);
+    }
+  };
 
   useEffect(() => {
     api.listMedications()
@@ -112,7 +130,9 @@ export function MedicinesScreen({ back, petName }: { back: BackAction; petName: 
                       {med.strength && <small> · {med.strength}</small>}
                       {med.prescribedFor && <small><br />{t("medicines.doctorSaid", { reason: med.prescribedFor })}</small>}
                       {med.daysOfSupply !== null && <small> · {t("medicines.daysLeft", { count: med.daysOfSupply })}</small>}
-                      {med.pillReferenceSet && <small className="pill-ref-set"> · {t("medicines.pillRef.setBadge")}</small>}
+                      {med.pillReferenceSet && (
+                        <small> · <button type="button" className="pill-ref-set pill-ref-view" disabled={loadingRefId === med.id} onClick={() => void viewRef(med)}>{t("medicines.pillRef.setBadge")}</button></small>
+                      )}
                     </div>
                     <div className="med-actions">
                       <button className="text-button" onClick={() => startEdit(med)}>{t("medicines.edit.button")}</button>
@@ -161,6 +181,11 @@ export function MedicinesScreen({ back, petName }: { back: BackAction; petName: 
             </div>
           ))}
         </div>
+      )}
+      {viewingRef && (
+        <PhotoViewer title={viewingRef.name} closeLabel={t("health.memoClose")} onClose={() => setViewingRef(null)}>
+          <img className="photo-viewer__image" src={viewingRef.image} alt={t("medicines.pillRef.photoAlt")} />
+        </PhotoViewer>
       )}
     </FullCard>
   );

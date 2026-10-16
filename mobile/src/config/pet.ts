@@ -18,6 +18,12 @@ export function bubbleLineKey(index: number): string {
  */
 export const PLAY_MIN_HEARTS = DEMO_RULES.lowHeartMaximum + 1;
 
+/**
+ * Decisions that make Buddy bark once when they arrive while the app is open (user, 16 Oct): the in-app stand-in
+ * for a phone notification (push is Tier 3 in the PRD). Uses the same bark as taps and the paw button.
+ */
+export const BARK_ON_DECISIONS: readonly string[] = ["nudge"];
+
 /** How many hearts float up on the hearts reaction (the CSS staggers up to this many). */
 export const HEART_BURST_COUNT = 5;
 
