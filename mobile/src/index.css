@@ -440,6 +440,40 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .demo-panel__section h3 { margin: 0; color: #294a3a; font-size: var(--font-size-2xl); }
 .demo-panel__section p { margin: 0; color: #78857c; font-size: var(--font-size-sm); line-height: 1.4; }
 @media (prefers-reduced-motion: reduce) { .demo-panel summary svg { transition: none; } }
+
+/* Home sheet: the card (or, in full-screen Buddy, a strip with the next dose) plus its grab bar (HomeSheetHandle).
+   While dragging it follows the finger: up in portrait, left in landscape (transform only); at rest it eases back. */
+.home-sheet { position: relative; flex: none; display: flex; flex-direction: column; transform: translateY(calc(-1 * var(--sheet-follow, 0px))); transition: transform .2s ease; }
+.home-sheet--landscape { transform: translateX(calc(-1 * var(--sheet-follow, 0px))); }
+.home-sheet.is-dragging { transition: none; }
+/* Room for the grab bar: on top in portrait, down the left edge in landscape. */
+.home-sheet--portrait .next-dose-card { padding-top: calc(16 * var(--ndc-u, 1px) + 10px); }
+.home-sheet--landscape .next-dose-card { padding-left: calc(16 * var(--ndc-u, 1px) + 16px); }
+.home-sheet__peek {
+  margin: 0;
+  padding: 26px 18px 16px;
+  border-radius: 24px;
+  color: var(--color-text-heading);
+  background: var(--color-surface-card);
+  box-shadow: var(--shadow-card);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-black);
+  text-align: center;
+}
+.home-sheet--landscape .home-sheet__peek {
+  padding: calc(14 * var(--ndc-u, 1px)) calc(16 * var(--ndc-u, 1px)) calc(14 * var(--ndc-u, 1px)) calc(16 * var(--ndc-u, 1px) + 20px);
+  border-radius: calc(24 * var(--ndc-u, 1px));
+  font-size: calc(16 * var(--ndc-u, 1px));
+  text-align: left;
+}
+@media (prefers-reduced-motion: reduce) { .home-sheet { transition: none; } }
+
+/* Full-screen form (portrait and landscape): no Buddy, no chips; the sheet takes the column and the card grows with it. */
+.app-shell.home-view-medicines .dog-layer,
+.app-shell.home-view-medicines .scene-ground { display: none; }
+.app-shell.home-view-medicines .home-layout__cards { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; container-type: size; }
+.app-shell.home-view-medicines .home-sheet { flex: 1 1 auto; --ndc-u: clamp(1px, min(0.4cqh, 0.36cqi), 2.4px); }
+.app-shell.home-view-medicines .home-sheet .next-dose-card { flex: 1 1 auto; justify-content: space-evenly; }
 .role-strip { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-bottom: 12px; padding: 12px 14px; border-radius: var(--radius-3xl); color: #426653; background: var(--color-surface-sage-light); }
 .role-strip div { display: grid; }
 .role-strip small { color: #76847b; font-size: var(--font-size-sm); }
@@ -1128,9 +1162,24 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
   /* The right pane is a size container: the next-dose card's scale unit grows with the pane's height and width, so the
      card is bigger sideways: it fills the pane on phones and grows with tablets (user, 16 Oct). 1px = the portrait size. */
   .home-layout__cards { container-type: size; }
-  .next-dose-card { --ndc-u: clamp(1px, min(0.5cqh, 0.36cqi), 2.4px); }
+  .home-sheet { --ndc-u: clamp(1px, min(0.5cqh, 0.36cqi), 2.4px); }
   /* Taller panes (tablets): the card grows to fill the height, up to a size its content still reads as one card. */
-  .home-layout__cards .next-dose-card { flex: 1 1 auto; justify-content: space-evenly; max-height: calc(320 * var(--ndc-u)); }
+  .home-layout__cards > .home-sheet { flex: 1 1 auto; max-height: calc(320 * var(--ndc-u)); }
+  .home-sheet .next-dose-card { flex: 1 1 auto; justify-content: space-evenly; }
+
+  /* Full-screen form sideways: the pane takes the whole width (Buddy's column is hidden); the card is centred and capped. */
+  .app-shell.home-view-medicines { --pane-w: 100vw; }
+  .app-shell.home-view-medicines .top-zone { right: 0; }
+  .app-shell.home-view-medicines .scene-backdrop,
+  .app-shell.home-view-medicines .scene-shade { right: 0; }
+  .app-shell.home-view-medicines .home-layout__cards { align-items: center; padding-top: calc(var(--top-bar-space) - var(--pane-top)); }
+  .app-shell.home-view-medicines .home-layout__cards > .home-sheet { width: min(100%, 680px); max-height: none; --ndc-u: clamp(1px, min(0.6cqh, 0.2cqi), 2.4px); }
+
+  /* Full-screen Buddy sideways: the garden runs behind the pane too and the card is only the next-dose strip. The pane
+     keeps its width, so the dock below it stays roomy. */
+  .app-shell.home-view-buddy .scene-backdrop,
+  .app-shell.home-view-buddy .scene-shade { right: 0; }
+  .app-shell.home-view-buddy .home-layout__cards > .home-sheet { flex: none; }
   /* Home's cards sit in the middle of the pane, between the top and the dock (user, 16 Oct: the gap above the card was
      too big). Auto margins rather than justify-content: center, so a column taller than the pane still scrolls from its top. */
   .home-layout__cards > :first-child { margin-top: auto; }
@@ -1180,6 +1229,11 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
   .hearts-row { margin-top: 4px; gap: 6px; }
   .hearts { font-size: 22px; }
   .hearts-today { font-size: var(--font-size-3xl); }
+  /* Full-screen form on a phone held sideways: the form needs the whole height, so the name and hearts step aside
+     (the settings gear stays) and the card is narrowed to clear the gear. */
+  .app-shell.home-view-medicines .top-zone__home { visibility: hidden; }
+  .app-shell.home-view-medicines .home-layout__cards { padding-top: 0; }
+  .app-shell.home-view-medicines .home-layout__cards > .home-sheet { width: min(100% - 160px, 640px); --ndc-u: clamp(1px, min(0.5cqh, 0.2cqi), 2.4px); }
   .bottom-dock { height: var(--dock-h); }
   .bottom-nav {
     bottom: calc(var(--dock-bottom) + (var(--dock-h) - var(--dock-nav-h)) / 2);

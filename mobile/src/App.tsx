@@ -40,6 +40,7 @@ import { useRestockHelp } from "./lib/useRestockHelp";
 import { pickRestockAlert } from "./lib/restockHelp";
 import { resetDemoStorage } from "./lib/demoReset";
 import { saveDemoClock } from "./lib/demoClock";
+import { useHomeView } from "./lib/useHomeView";
 import { shouldBarkFor } from "./lib/nudgeBark";
 import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
@@ -128,6 +129,8 @@ export default function App() {
   // Set when a trick card on Milestones is tapped; DogLayer performs the trick once per id.
   const [trickRequest, setTrickRequest] = useState<TrickRequest | null>(null);
   const { bark } = useBark();
+  // Full-screen Buddy, both, or the full-screen form: dragging Home's card (config/homeView.ts), kept on this phone.
+  const [homeView, setHomeView] = useHomeView();
   // A new dose nudge while the app is open: Buddy barks once (in-app stand-in for a phone notification).
   // The decision already there on first load counts as seen, so opening the app never barks.
   const seenDecisionId = useRef<string | null | undefined>(undefined);
@@ -433,7 +436,7 @@ export default function App() {
   return (
     <>
     <DesktopBackdrop phase={phase} />
-    <main className={`app-shell world-${world}`}>
+    <main className={`app-shell world-${world} ${screen === "home" ? `home-view-${homeView}` : ""}`}>
       {screen === "cover" && <CoverScreen onContinue={() => navigate("dedication")} />}
       {screen === "dedication" && <DedicationScreen onContinue={() => navigate("home")} />}
       {screen !== "cover" && screen !== "dedication" && (
@@ -475,6 +478,8 @@ export default function App() {
             onWalk={() => navigate("walk")}
             onBloodPressure={() => navigate("health")}
             onStreak={() => navigate("milestones")}
+            view={homeView}
+            onView={setHomeView}
           />
         )}
         {screen === "reminders" && (
