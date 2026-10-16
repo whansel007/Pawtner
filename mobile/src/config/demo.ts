@@ -14,3 +14,16 @@ export const DEMO_TIME_PRESETS = {
 } as const;
 
 export type DemoTimePreset = keyof typeof DEMO_TIME_PRESETS;
+
+/**
+ * Settings > Demo tick boxes (user, 16 Oct): unlock rewards as if Rose had reached these, without changing
+ * her real streak or hearts anywhere else. Labels in en.json settings.demoUnlock.<key>.
+ * "streakDays" unlocks tricks (config/tricks.ts TRICK_STREAK_DAYS); "hearts" unlocks wardrobe/worlds (config/rewards.ts).
+ */
+export const DEMO_UNLOCKS = [
+  { key: "days7", kind: "streakDays", value: 7 },
+  { key: "hearts20", kind: "hearts", value: 20 },
+  { key: "hearts40", kind: "hearts", value: 40 },
+] as const;
+
+export type DemoUnlockKey = (typeof DEMO_UNLOCKS)[number]["key"];

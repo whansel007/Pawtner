@@ -5,6 +5,8 @@ import { FullCard } from "../components/FullCard";
 import { DecisionLogCard } from "../components/DecisionLogCard";
 import type { BackAction } from "../lib/navigation";
 import { useMilestones } from "../lib/useMilestones";
+import { withDemoStreak } from "../lib/demoUnlocks";
+import type { DemoUnlockKey } from "../config/demo";
 import { isPerformable, trickCardTap, type TrickLike } from "../lib/tricks";
 import type { TrickPerformance } from "../config/tricks";
 import type { AgentDecision, DogMood } from "../../../shared/contract";
@@ -27,6 +29,7 @@ export function MilestonesScreen({
   mood,
   decision,
   onTrick,
+  demoUnlocks,
 }: {
   back: BackAction;
   onWalk: () => void;
@@ -38,9 +41,12 @@ export function MilestonesScreen({
   /** The routine decision to show on top (App passes only non-urgent ones), or null. */
   decision: AgentDecision | null;
   onTrick: (performance: TrickPerformance) => void;
+  demoUnlocks: ReadonlySet<DemoUnlockKey>;
 }) {
   const { t } = useTranslation();
-  const { data, loading, tricks } = useMilestones({ refresh: true });
+  const { data, loading, tricks: loadedTricks } = useMilestones({ refresh: true });
+  // Settings > Demo "7 days" tick counts Wave as earned (lib/demoUnlocks.ts).
+  const tricks = loadedTricks ? withDemoStreak(loadedTricks, demoUnlocks) : loadedTricks;
   const [sleepyLine, setSleepyLine] = useState(false);
 
   function tapTrick(trick: TrickLike) {

@@ -18,7 +18,6 @@ export function CustomizeScreen({
   petName,
   caretakerName,
   heartsTotal,
-  demoUnlockAll,
   notify,
 }: {
   back: BackAction;
@@ -33,15 +32,14 @@ export function CustomizeScreen({
   petName: string;
   caretakerName: string;
   heartsTotal: number;
-  demoUnlockAll: boolean;
   notify: (message: string) => void;
 }) {
   const { t } = useTranslation();
 
-  const allWorldsUnlocked = worldOptions.every((w) => isUnlocked(w.id, heartsTotal, demoUnlockAll));
+  const allWorldsUnlocked = worldOptions.every((w) => isUnlocked(w.id, heartsTotal));
 
   function handleWorldClick(item: WorldOption) {
-    if (!isUnlocked(item.id, heartsTotal, demoUnlockAll)) {
+    if (!isUnlocked(item.id, heartsTotal)) {
       const threshold = unlockThreshold(item.id);
       notify(t("customize.lockedToast", { name: petName, count: threshold }));
       return;
@@ -50,7 +48,7 @@ export function CustomizeScreen({
   }
 
   function handleAccessoryClick(item: AccessoryOption) {
-    if (!isUnlocked(item.id, heartsTotal, demoUnlockAll)) {
+    if (!isUnlocked(item.id, heartsTotal)) {
       const threshold = unlockThreshold(item.id);
       notify(t("customize.lockedToast", { name: petName, count: threshold }));
       return;
@@ -86,7 +84,7 @@ export function CustomizeScreen({
       <div className="section-title"><h3>{t("customize.scenery")}</h3><span>{allWorldsUnlocked ? t("customize.scenerySub") : t("customize.scenerySubLocked")}</span></div>
       <div className="world-picker">
         {worldOptions.map((item) => {
-          const locked = !isUnlocked(item.id, heartsTotal, demoUnlockAll);
+          const locked = !isUnlocked(item.id, heartsTotal);
           return (
             <button className={`${item.id} ${world === item.id ? "selected" : ""} ${locked ? "locked" : ""}`} key={item.id} onClick={() => handleWorldClick(item)}>
               <span className="world-thumb"><i /></span>
@@ -99,7 +97,7 @@ export function CustomizeScreen({
       <div className="section-title"><h3>{t("customize.accessories")}</h3><span>{t("customize.accessoriesSub")}</span></div>
       <div className="wardrobe-grid">
         {accessoryOptions.map((item) => {
-          const locked = !isUnlocked(item.id, heartsTotal, demoUnlockAll);
+          const locked = !isUnlocked(item.id, heartsTotal);
           return (
             <button className={`${accessory === item.id ? "selected" : ""} ${locked ? "locked" : ""}`} key={item.id} onClick={() => handleAccessoryClick(item)}>
               <span><AccessoryMark accessory={item.id} /></span>
