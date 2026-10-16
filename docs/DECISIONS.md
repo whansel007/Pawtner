@@ -5,6 +5,12 @@
 | Decision | Reason | Tradeoff | Status |
 |---|---|---|---|
 | Every /care page's footer has "Watch the demo video" under the tagline, from one setting `DEMO_VIDEO_URL` in `mobile/src/care/config.ts`, opening in a new tab; it is `"#"` (shown, does nothing when tapped) until the YouTube link exists. Same pattern as JagaOS's footer links. | User: a space on the website to slot in the YouTube link later. | A visible link that does nothing until the URL is set. | Final (wording tentative) |
+## 2026-10-16 — Dose-time reminder and a running demo clock (branch `claude/dose-reminder`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| At each saved dose time (from the schedules, never a fixed hour), if that dose isn't taken, Buddy barks once and a toast says "It's time for your medicine: {{medicine}}." (6 s). A timer checks every 5 s (`useDoseReminder`, `dosesDueForReminder`, `config/reminders.ts`); each dose is reminded once (kept in localStorage `pawtner.doseReminders`, cleared by Reset to morning), from its time until the first nudge would be due (60 min). The agent's nudges (60 min, then 60 min more, max 2), missed-day rules and Jamie's check-ins are unchanged. | User: a gentle reminder right at the dose time, before the nudges. | It runs only while the app is open (no push notification). | Final (toast wording tentative) |
+| The demo clock (Current Time of Demo, Reset to morning, `?clock=`) runs forward from when it is set, like a real clock (`runningClock` in `lib/demoClock.ts`); taps are saved at the running time and /care in the same browser follows it. | The clock must reach a dose time for the reminder to fire. | Before, the demo clock stayed frozen at the set time. | Final |
 
 ## 2026-10-16 — Combination strengths read with a slash (branch `claude/strength-display`)
 

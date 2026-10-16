@@ -38,8 +38,9 @@ import { useDayPhase } from "./lib/useDayPhase";
 import { useRestockHelp } from "./lib/useRestockHelp";
 import { pickRestockAlert } from "./lib/restockHelp";
 import { resetDemoStorage } from "./lib/demoReset";
-import { saveDemoClock } from "./lib/demoClock";
+import { runningClock, saveDemoClock, type DemoClockAnchor } from "./lib/demoClock";
 import { useHomeView } from "./lib/useHomeView";
+import { useDoseReminder } from "./lib/useDoseReminder";
 import { shouldBarkFor } from "./lib/nudgeBark";
 import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
@@ -110,11 +111,17 @@ export default function App() {
   // One friendly notice per outage; the technical error goes to the console, never to the senior.
   const apiWarned = useRef(false);
   // Agent demo clock (Settings > "Current Time of Demo"): reads and writes happen at this instant. null = real time.
-  const [demoNow, setDemoNow] = useState<string | null>(initialAgentClock);
+  // It runs forward from when it was set (lib/demoClock.ts), so it can reach a dose time and fire the reminder.
+  const [demoClock, setDemoClock] = useState<DemoClockAnchor | null>(() => { const at = initialAgentClock(); return at ? { at, setAtMs: Date.now() } : null; });
+  /** The demo clock's time right now, or null for real time. */
+  const demoNow = (): string | null => runningClock(demoClock);
+  const setDemoNow = (at: string | null) => setDemoClock(at ? { at, setAtMs: Date.now() } : null);
   // Scene time (`?time=`, Settings > Demo time buttons): day/night look only. Hearts, mood and doses stay on the one
   // real state; switching morning ↔ evening must never re-read /api/today at another time.
   const [sceneTime, setSceneTime] = useState<string | null>(initialSceneTime);
-  const [demoClockValue, setDemoClockValue] = useState(() => toDateTimeLocal(new Date(demoNow ?? Date.now())));
+  // True once /api/today has answered or failed: the dose-time reminder starts then.
+  const [dosesLoaded, setDosesLoaded] = useState(false);
+  const [demoClockValue, setDemoClockValue] = useState(() => toDateTimeLocal(new Date(demoNow() ?? Date.now())));
   const [agentBusy, setAgentBusy] = useState(false);
   // GET /api/medications (days of supply for restock help); null until loaded or while the API is offline.
   const [medications, setMedications] = useState<MedicationDetail[] | null>(null);
@@ -147,13 +154,16 @@ export default function App() {
 
   /** GET /api/today. `now`: undefined = the current demo clock; null = real time; a string = that instant. */
   const refreshToday = async (now?: string | null) => {
-    const at = now === undefined ? demoNow : now;
+    try { await loadToday(now); } finally { setDosesLoaded(true); }
+  };
+  const loadToday = async (now?: string | null) => {
+    const at = now === undefined ? demoNow() : now;
     try { const result = await api.today(at ?? undefined); setToday(result); setDoseList(result.doses); setBpLogged(result.bloodPressureLoggedToday); setLatestDecision(result.latestDecision); apiWarned.current = false; }
     catch (error) { reportApiProblem(error); }
   };
   useEffect(() => { void refreshToday(); }, []);
   // /care in the same browser follows this clock, so Jamie sees Buddy as Rose does (lib/demoClock.ts).
-  useEffect(() => { saveDemoClock(demoNow); }, [demoNow]);
+  useEffect(() => { saveDemoClock(demoClock); }, [demoClock]);
   useEffect(() => {
     if (screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
     // On launch (Home's "See all" dot) and each time Reminders opens (a medicine may have been added).
@@ -168,9 +178,9 @@ export default function App() {
   const heartsTotal = demoHeartsTotal(today?.dog?.heartsTotal ?? mockHeartsTotal, demoUnlocks);
   const streak = demoStreak(today?.dog.streak ?? pet.streak, demoUnlocks);
   // selectDogMood needs the current time: a celebrate keeps the dog joyful only for DEMO_RULES.celebrateJoyfulMinutes.
-  const mood = today && !hasDemoTodayHearts(demoUnlocks) ? today.dog.mood : selectDogMood(heartCount, latestDecision, demoNow ?? new Date().toISOString());
+  const mood = today && !hasDemoTodayHearts(demoUnlocks) ? today.dog.mood : selectDogMood(heartCount, latestDecision, demoNow() ?? new Date().toISOString());
   // T2-10: day/night follows the real clock, or the Settings demo clock when one is set.
-  const phase = useDayPhase(sceneTime ?? demoNow);
+  const phase = useDayPhase(sceneTime ?? demoNow());
 
   // Names come from data unchanged — no .toLowerCase().
   const dogName = today?.dog.name ?? pet.name;
@@ -192,10 +202,17 @@ export default function App() {
   // "Share my blood pressure with {{caretaker}}" (Settings; /care follows it in the same browser).
   const [shareBloodPressure, setShareBloodPressure] = useShareBloodPressure();
 
-  const notify = (message: string) => {
+  const notify = (message: string, ms = 2400) => {
     setToast(message);
-    window.setTimeout(() => setToast(""), 2400);
+    window.setTimeout(() => setToast(""), ms);
   };
+
+  // Dose-time reminder (config/reminders.ts): at each saved dose time, if it isn't taken, Buddy barks once and a toast
+  // says it's time. Waits for the first /api/today answer (or its failure) so sample doses never trigger it.
+  useDoseReminder(dosesLoaded ? doseList : [], () => demoNow() ?? new Date().toISOString(), (due) => {
+    bark();
+    notify(t("toast.doseTime", { medicine: due.map((dose) => dose.medicationName).join(", ") }), 6000);
+  });
 
   /** Background loads warn once per outage; failed user actions always say so. */
   const reportApiProblem = (error: unknown, userAction = false) => {
@@ -214,7 +231,7 @@ export default function App() {
    * so the beat still works offline, and shows the one-time offline notice.
    */
   async function handleLogBp(logged: HealthMetric) {
-    const recordedAt = demoNow ?? new Date().toISOString();
+    const recordedAt = demoNow() ?? new Date().toISOString();
     // The local copy carries the same time the API gets, so it matches the server's row (first-reading check).
     const metric = { ...logged, recordedAt };
     setHealthMetrics((prev) => [...prev, metric]);
@@ -356,7 +373,7 @@ export default function App() {
    */
   async function handleDoseVerified(proofPhotoUrl: string | null) {
     if (!pendingDose) return;
-    const occurredAt = demoNow ?? new Date().toISOString();
+    const occurredAt = demoNow() ?? new Date().toISOString();
     const doseEvent = { scheduleId: pendingDose.id, scheduledFor: pendingDose.scheduledAt, event: "taken" as const, occurredAt, proofPhotoUrl };
     try {
       const result = await api.doseEvent(doseEvent);
@@ -487,7 +504,7 @@ export default function App() {
           <RemindersScreen
             back={back}
             doses={doseList}
-            now={demoNow ?? new Date().toISOString()}
+            now={demoNow() ?? new Date().toISOString()}
             restockCard={restock.visible && liveRestockAlert ? <RestockCard alert={liveRestockAlert} caretakerName={caretakerName} state={restock.state} busy={restock.busy} onAsk={() => void restock.askForHelp()} onSelf={restock.getItMyself} /> : null}
           />
         )}

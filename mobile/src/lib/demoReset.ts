@@ -2,6 +2,7 @@ import { CLINIC_MEMO, VISIT_NOTES } from "../config/health.js";
 import { RESTOCK_STORAGE_KEYS } from "../config/restock.js";
 import { SHARING } from "../config/sharing.js";
 import { DEMO_CLOCK_STORAGE_KEY } from "../config/demo.js";
+import { DOSE_REMINDER } from "../config/reminders.js";
 import { browserStore, removeItem, type KeyValueStore } from "./localStore.js";
 
 /**
@@ -14,6 +15,8 @@ export const DEMO_STORAGE_KEYS: readonly string[] = [
   VISIT_NOTES.storageKey,
   SHARING.bloodPressureKey,
   DEMO_CLOCK_STORAGE_KEY,
+  // Reset to morning gives today's dose-time reminders again.
+  DOSE_REMINDER.storageKey,
   // Written by earlier builds ("I'll get it myself" used to hide the card for the day).
   "pawtner.restockDismissedOn",
 ];
