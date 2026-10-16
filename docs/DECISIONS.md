@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-16 — Blood pressure against the first reading (branch `claude/bp-first-reading`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Each reading is compared with the person's **first** reading (earliest ever; `firstReadingOf`, `bloodPressureProgress` in `shared/rules.ts`): more than 5 above it on either number (`bpFirstReadingSlack`) → Warning (`see_gp_soon`, `bp_above_first_reading`); both ≤ 120/80 (`bpNormalSystolic/Diastolic`, demo values) → "Good job! Your reading is in the normal range."; otherwise "Keep at it! About the same as or lower than your first reading."; the first itself → "Your first reading. Buddy will compare the next ones with it." Replaces the fixed 180/120, 180/120 + symptom and three-≥140/90 rules. | User: people with long-term high BP (e.g. 185/120) should be judged against their own start; meds should bring it down. | **Deviates from PRD §5 thresholds and T1-10** (185/120 + "bad headache" no longer warns on its own). Demo values, not clinical advice. | Final (user request) |
+| BP form: "How do you feel?" tick boxes, "I feel fine" (neutral, clears the others) plus Chest pain, Shortness of breath, Fainting, Confusion, One-sided weakness, Slurred speech. Ticked labels go into the saved note; any of these in the **latest** reading's note is a Warning at any numbers (`emergency_symptom_note`). Headache alone no longer warns. | User: people won't think to type symptoms; tick boxes make it clear. | Labels must contain the rule's keywords (unit-tested). | Final (wording tentative) |
+| `TodayResponse.firstBloodPressure` (API) feeds the phone; Settings shows "First reading: 185 / 120 (13 Oct)" under "Share my blood pressure". No database change. Cholesterol: later (no cholesterol logging yet). CORS for the Vercel site: skipped (demo on pawtner.edgeone.dev, which has live data). | No new column needed: the first reading is the earliest stored one. | Can't be re-set without deleting old readings; Vercel stays on sample data. | Final |
+
 ## 2026-10-16 (night) — Proof screen thank-you (branch `claude/proof-thanks`)
 
 | Decision | Reason | Tradeoff | Status |
