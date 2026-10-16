@@ -39,6 +39,7 @@ import { useDayPhase } from "./lib/useDayPhase";
 import { useRestockHelp } from "./lib/useRestockHelp";
 import { pickRestockAlert } from "./lib/restockHelp";
 import { resetDemoStorage } from "./lib/demoReset";
+import { shouldBarkFor } from "./lib/nudgeBark";
 import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
 import { DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset, type DemoUnlockKey } from "./config/demo";
@@ -122,6 +123,19 @@ export default function App() {
   // Set when a trick card on Milestones is tapped; DogLayer performs the trick once per id.
   const [trickRequest, setTrickRequest] = useState<TrickRequest | null>(null);
   const { bark } = useBark();
+  // A new dose nudge while the app is open: Buddy barks once (in-app stand-in for a phone notification).
+  // The decision already there on first load counts as seen, so opening the app never barks.
+  const seenDecisionId = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (seenDecisionId.current === undefined) {
+      if (today) seenDecisionId.current = today.latestDecision?.id ?? null;
+      return;
+    }
+    if (!latestDecision || latestDecision.id === seenDecisionId.current) return;
+    const barkNow = shouldBarkFor(latestDecision, seenDecisionId.current);
+    seenDecisionId.current = latestDecision.id;
+    if (barkNow) bark();
+  }, [today, latestDecision, bark]);
 
   /** GET /api/today. `now`: undefined = the current demo clock; null = real time; a string = that instant. */
   const refreshToday = async (now?: string | null) => {
