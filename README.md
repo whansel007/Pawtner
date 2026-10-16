@@ -68,13 +68,13 @@ Jamie decides when to be told: check-ins on or off, and after how many days in a
 
    [![A gentle check-in on Jamie's page](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/care-checkin.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/care-checkin.jpg)
 
-Evidence, as of 16 Oct 2026: 169 unit tests pass (`npm run test:unit`) without a database, a model or a network, covering these rules and the hearts. The live demo runs on the hosted database.
+Evidence, as of 16 Oct 2026: 175 unit tests pass (`npm run test:unit`) without a database, a model or a network, covering these rules, the hearts and the reminders. The live demo runs on the hosted database.
 
 ## By the numbers
 
 As of 16 Oct 2026, built from 13 Oct:
 
-- 293 commits and 72 merged pull requests
+- 302 commits and 75 merged pull requests
 - 5,511 registered medicines searchable when adding a medicine
 
 ## Built with
