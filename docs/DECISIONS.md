@@ -4,7 +4,7 @@
 
 | Decision | Reason | Tradeoff | Status |
 |---|---|---|---|
-| The seed's three readings become 160/95 (first, Rose's "normal"), 156/93, 150/90, so the medicine visibly brings it down ("Keep at it"); a 185/120 entry is then a Warning (more than 5 above 160). The hosted rows are updated in place by their fixed ids (SQL run by the user; nothing deleted). | User: her mother's normal reading is about 160, a realistic baseline for the demo. | Demo values, not clinical advice. The bottom number 95 is assumed. | Final |
+| The seed's three readings become 160/95 (first, Rose's "normal" before medicine), 148/84, 137/75 (after medicine), so the medicine visibly brings it down ("Keep at it"); a 185/120 entry is then a Warning (more than 5 above 160). The hosted rows are updated in place by their fixed ids (SQL run by the user; nothing deleted). | User: her mother's normal reading is about 160, and 137/75 after her medicine: a realistic baseline and trend. | Demo values, not clinical advice. The first bottom number (95) and the middle reading are assumed. | Final |
 
 ## 2026-10-16 — /care This week on one screen (branch `claude/care-compact`)
 
