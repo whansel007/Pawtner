@@ -475,13 +475,13 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .home-sheet__peek-empty { color: #6c806f; font-size: calc(11 * var(--u)); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .home-sheet { transition: none; } }
 
-/* Full-screen form (portrait and landscape): no Buddy, no chips; the card grows with the column but keeps its natural
-   height, pinned to the top like /care's pages (user, 16 Oct), so a short day doesn't spread out. */
+/* Full-screen form (portrait and landscape): no Buddy, no chips; the white card fills the column and its contents sit
+   at the top like /care's pages (user, 16 Oct), so a short day doesn't spread out. */
 .app-shell.home-view-medicines .dog-layer,
 .app-shell.home-view-medicines .scene-ground { display: none; }
 .app-shell.home-view-medicines .home-layout__cards { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; container-type: size; }
-.app-shell.home-view-medicines .home-sheet { flex: none; --ndc-u: clamp(1px, min(0.4cqh, 0.36cqi), 2.4px); }
-.app-shell.home-view-medicines .home-sheet .next-dose-card { flex: none; justify-content: flex-start; }
+.app-shell.home-view-medicines .home-sheet { flex: 1 1 auto; --ndc-u: clamp(1px, min(0.4cqh, 0.36cqi), 2.4px); }
+.app-shell.home-view-medicines .home-sheet .next-dose-card { flex: 1 1 auto; justify-content: flex-start; }
 .role-strip { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-bottom: 12px; padding: 12px 14px; border-radius: var(--radius-3xl); color: #426653; background: var(--color-surface-sage-light); }
 .role-strip div { display: grid; }
 .role-strip small { color: #76847b; font-size: var(--font-size-sm); }
@@ -1181,7 +1181,7 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
   .app-shell.home-view-medicines .scene-backdrop,
   .app-shell.home-view-medicines .scene-shade { right: 0; }
   .app-shell.home-view-medicines .home-layout__cards { align-items: center; padding-top: calc(var(--top-bar-space) - var(--pane-top)); }
-  .app-shell.home-view-medicines .home-layout__cards > .home-sheet { flex: none; margin: 0; width: min(100%, 680px); max-height: none; --ndc-u: clamp(1px, min(0.6cqh, 0.2cqi), 2.4px); }
+  .app-shell.home-view-medicines .home-layout__cards > .home-sheet { flex: 1 1 auto; margin: 0; width: min(100%, 680px); max-height: none; --ndc-u: clamp(1px, min(0.6cqh, 0.2cqi), 2.4px); }
 
   /* Full-screen Buddy sideways: the garden runs behind the pane too and the card is only the next-dose strip. The pane
      keeps its width, so the dock below it stays roomy. */
