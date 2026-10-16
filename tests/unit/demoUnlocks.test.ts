@@ -20,7 +20,7 @@ describe("Settings > Demo ticks", () => {
     expect(isUnlocked("hat", demoHeartsTotal(0, ticks("hearts20")))).toBe(true);
     // Sunglasses are "Coming soon": locked at any hearts.
     expect(isUnlocked("glasses", 1000)).toBe(false);
-    expect(isUnlocked("flower", 0)).toBe(true);
+    expect(isUnlocked("flower", 1000)).toBe(false);
   });
 
   it("the 7 days tick earns Wave only", () => {
