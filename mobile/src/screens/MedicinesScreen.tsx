@@ -7,6 +7,7 @@ import type { BackAction } from "../lib/navigation";
 import { api } from "../lib/api";
 import { fileToBase64 } from "../lib/imageBase64";
 import type { MedicationDetail } from "../../../shared/contract";
+import { formatStrength } from "../lib/strength";
 
 /**
  * "My medicines" (Settings): the senior's medicine list with Edit (T2-06) and the
@@ -112,7 +113,7 @@ export function MedicinesScreen({ back, petName }: { back: BackAction; petName: 
               {editingMed === med.id ? (
                 <div className="medication-edit-form">
                   <strong>{med.name}</strong>
-                  {med.strength && <small>{med.strength}</small>}
+                  {med.strength && <small>{formatStrength(med.strength)}</small>}
                   <label htmlFor={`prescribed-${med.id}`}>{t("medicines.edit.prescribedLabel")}</label>
                   <input id={`prescribed-${med.id}`} type="text" value={editPrescribed} onChange={(e) => setEditPrescribed(e.target.value)} placeholder={t("medicines.edit.prescribedPlaceholder")} />
                   <label htmlFor={`days-${med.id}`}>{t("medicines.edit.daysLabel")}</label>
@@ -127,7 +128,7 @@ export function MedicinesScreen({ back, petName }: { back: BackAction; petName: 
                   <div className="med-head">
                     <div>
                       <strong>{med.name}</strong>
-                      {med.strength && <small> · {med.strength}</small>}
+                      {med.strength && <small> · {formatStrength(med.strength)}</small>}
                       {med.prescribedFor && <small><br />{t("medicines.doctorSaid", { reason: med.prescribedFor })}</small>}
                       {med.daysOfSupply !== null && <small> · {t("medicines.daysLeft", { count: med.daysOfSupply })}</small>}
                       {med.pillReferenceSet && (

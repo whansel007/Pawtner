@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-16 — Combination strengths read with a slash (branch `claude/strength-display`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| HSA combination strengths ("10 mg&&80.000mg") show "&&" as " / " everywhere a strength appears (Home card, Reminders, My medicines, Add a medication's product list), via one helper `formatStrength` (`mobile/src/lib/strength.ts`); picking a product saves the translated text. The order stays as stored. The hosted Twynsta row is set to "80 mg / 10 mg" (name order: telmisartan / amlodipine) by SQL the user runs; the HSA product table is not changed. | User: Twynsta is 80 mg/10 mg; "&&" should read as "/". | HSA lists amlodipine first, so other combination products can still show the reverse of their name until edited. | Final |
+
 ## 2026-10-16 — Hearts carry over and fade every 12 hours (branch `claude/hearts-carry-over`)
 
 | Decision | Reason | Tradeoff | Status |

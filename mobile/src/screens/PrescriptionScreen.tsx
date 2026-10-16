@@ -5,6 +5,7 @@ import { FullCard } from "../components/FullCard";
 import type { BackAction } from "../lib/navigation";
 import { api } from "../lib/api";
 import type { CreateMedicationRequest } from "../../../shared/contract";
+import { formatStrength } from "../lib/strength";
 
 interface HsaProduct {
   id: string;
@@ -115,7 +116,7 @@ export function PrescriptionScreen({
 
   const selectProduct = (p: HsaProduct) => {
     setName(p.brandName);
-    setStrength(p.strength ?? "");
+    setStrength(formatStrength(p.strength));
     setDosageForm(p.dosageForm ?? "");
     setActiveIngredients(p.activeIngredients ?? "");
     setGenericName(p.genericName ?? "");
@@ -291,7 +292,7 @@ export function PrescriptionScreen({
                   <div>
                     <strong>{p.brandName}</strong>
                     <small>
-                      {p.strength ?? "Strength not listed"}{p.dosageForm ? ` · ${p.dosageForm}` : ""}
+                      {p.strength ? formatStrength(p.strength) : "Strength not listed"}{p.dosageForm ? ` · ${p.dosageForm}` : ""}
                     </small>
                     {p.activeIngredients && <small>{p.activeIngredients}</small>}
                   </div>
