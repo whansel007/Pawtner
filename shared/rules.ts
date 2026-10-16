@@ -27,7 +27,7 @@ export type BloodPressureProgress = "first" | "warning" | "keepGoing" | "goodJob
  * itself is "first". One rule for the agent (decide) and the phone (Health feedback).
  */
 /** The same reading: same id, or (a phone's local copy vs the server's row) same numbers within a minute. */
-function isSameReading(a: Reading, b: Reading): boolean {
+export function isSameReading(a: Reading, b: Reading): boolean {
   return a.id === b.id || (a.systolic === b.systolic && a.diastolic === b.diastolic
     && Math.abs(Date.parse(a.recordedAt) - Date.parse(b.recordedAt)) < 60_000);
 }

@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-17 — Health card readings come from /api/today (branch `claude/health-card-today-readings`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Each `/api/today` answer fills App's `healthMetrics` with `mergeHealthMetrics(server, current, previousServer)` (`mobile/src/lib/healthReadings.ts`): today's server rows, plus readings on the phone the server doesn't have yet (save failed offline); the phone's copy of a saved reading gives way to the server's row (`isSameReading`, now exported from `shared/rules.ts`, so the rule stays in one place); rows from the previous answer that the new one drops (demo clock moved to another day) go. | After a reload the card said "Buddy needs one reading" next to "Logged today · in your usual range" (found 17 Oct). | One-word change in `shared/` (export). Readings saved offline stay on the phone until a reload; they are not re-sent. | Final |
+
 ## 2026-10-16 — Demo video link slot on /care (branch `claude/demo-video-link`)
 
 | Decision | Reason | Tradeoff | Status |
