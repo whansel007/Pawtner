@@ -6,6 +6,8 @@ import {
   initialOf,
   progressPercent,
   recentDays,
+  weekRhythm,
+  RHYTHM_MIN_HEARTS,
   stepThreshold,
   streakHearts,
   todayProgress,
@@ -36,6 +38,27 @@ describe("care streak hearts", () => {
     expect(days[6].getDate()).toBe(13);
     expect(days[0].getDate()).toBe(7);
     expect(streakHearts(3).filter(Boolean)).toHaveLength(3);
+  });
+});
+
+describe("care rhythm week", () => {
+  it("runs Sunday to Saturday and fills the days before today where Buddy ended on 2+ hearts", () => {
+    const friday = new Date(2026, 9, 16, 15, 0); // Fri 16 Oct 2026
+    const week = weekRhythm(friday, [
+      { date: "2026-10-10", hearts: 4 }, // last Saturday: not this week
+      { date: "2026-10-11", hearts: 2 }, { date: "2026-10-12", hearts: 1 }, { date: "2026-10-13", hearts: 3 },
+      { date: "2026-10-14", hearts: 4 }, { date: "2026-10-15", hearts: 2 },
+    ]);
+    expect(week.map((day) => day.date.getDay())).toEqual([0, 1, 2, 3, 4, 5, 6]);
+    expect(week[0]!.date.getDate()).toBe(11);
+    // Sun 2, Mon 1 (sad day, empty), Tue 3, Wed 4, Thu 2; Friday (today) and Saturday not yet.
+    expect(week.map((day) => day.filled)).toEqual([true, false, true, true, true, false, false]);
+    expect(RHYTHM_MIN_HEARTS).toBe(2);
+  });
+
+  it("fills nothing on a Sunday, and a missing day stays empty", () => {
+    expect(weekRhythm(new Date(2026, 9, 11, 9, 0), [{ date: "2026-10-11", hearts: 4 }]).some((day) => day.filled)).toBe(false);
+    expect(weekRhythm(new Date(2026, 9, 13, 9, 0), []).some((day) => day.filled)).toBe(false);
   });
 });
 

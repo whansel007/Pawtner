@@ -143,6 +143,7 @@
         "streakTitle_one": "{{count}}-day streak",
         "streakTitle_other": "{{count}}-day streak",
         "streakBadge": "All week",
+        "rhythmLabel": "This week, Sunday to Saturday. A filled heart is a day {{dog}} ended with {{count}} or more hearts.",
         "streakLabel_zero": "Hearts for the {{days}} days before today. A new streak starts with the next day of every dose.",
         "streakLabel_one": "Hearts for the {{days}} days before today. {{count}} day in a row with every dose taken.",
         "streakLabel_other": "Hearts for the {{days}} days before today. {{count}} days in a row with every dose taken.",
