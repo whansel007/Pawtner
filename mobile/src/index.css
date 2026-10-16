@@ -454,6 +454,8 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 /* Eyebrow, title and supporting line share one centred column; only the back button stays left. */
 .scan-card .back-button { text-align: left; }
 .scan-card .supporting { margin-left: auto; margin-right: auto; }
+/* Proof screen after the photo has no supporting line: keep air between the title and the photo. */
+.scan-card h2 + .scanner { margin-top: 18px; }
 .scanner { position: relative; width: 100%; min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: var(--radius-7xl); color: #345845; background: var(--color-surface-scanner); cursor: pointer; overflow: hidden; }
 .scanner::before { content: ""; position: absolute; inset: 0; opacity: .4; background: repeating-linear-gradient(0deg, transparent 0 24px, rgba(76,112,86,.08) 25px 26px); }
 .scanner strong, .scanner small, .scanner .proof-scanner__saved, .camera-orb { z-index: 1; }

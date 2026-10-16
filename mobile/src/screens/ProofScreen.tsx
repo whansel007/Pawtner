@@ -91,7 +91,8 @@ export function ProofScreen({
     <FullCard back={back} backLabel={t("proof.notNow")} className="scan-card">
       <p className="eyebrow green">{captured ? t("proof.eyebrowFound", { name: petName }) : t("proof.eyebrowCheck")}</p>
       <h2>{captured ? t("proof.titleFound") : t("proof.titleShow", { name: petName })}</h2>
-      <p className="supporting">{captured ? t("proof.supportingFound", { name: petName }) : t("proof.supportingShow")}</p>
+      {/* After the photo: just the title (user, 16 Oct); before it, the how-to line. */}
+      {!captured && <p className="supporting">{t("proof.supportingShow")}</p>}
 
       <label className={`scanner proof-scanner ${captured ? "captured" : ""}`}>
         {captured && photoUrl ? (

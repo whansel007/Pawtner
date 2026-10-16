@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-16 (night) — Proof screen thank-you (branch `claude/proof-thanks`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| After the proof photo the title says "Thank you!" (was "That counts!") and the supporting line ("Thank you. The photo is kept for proof. {{name}} gained a little more energy.") is removed; 18 px between title and photo. | User's wording. | The screen no longer says the photo is kept. | Final (user's wording) |
+
 ## 2026-10-16 (evening) — Buddy plays unless he's low on hearts (branch `claude/play-hearts`)
 
 | Decision | Reason | Tradeoff | Status |
