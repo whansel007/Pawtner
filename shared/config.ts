@@ -6,12 +6,14 @@ export const DEMO_RULES = {
   caretakerMinimumThreshold: 2,
   defaultCaretakerThreshold: 2,
   restockDaysOfSupply: 5,
-  highSystolic: 180,
-  highDiastolic: 120,
-  repeatedHighReadingSystolic: 140,
-  repeatedHighReadingDiastolic: 90,
-  repeatedHighReadingsRequired: 3,
-  repeatedHighReadingWindowDays: 7,
+  /**
+   * Blood pressure is judged against the person's FIRST reading (user, 16 Oct): more than this many points
+   * above it on either number is a Warning (measurement wobble allowed).
+   */
+  bpFirstReadingSlack: 5,
+  /** At or below both of these, a reading is "in the normal range" (Good job). Demo values, not clinical advice. */
+  bpNormalSystolic: 120,
+  bpNormalDiastolic: 80,
   heartMinimum: 0,
   heartMaximum: 4,
   heartScale: 4,
@@ -27,6 +29,7 @@ export const DEMO_RULES = {
   celebrateJoyfulMinutes: 30,
 } as const;
 
+/** In the latest reading's note, these mean Warning whatever the numbers (emergency signs at any reading). */
 export const EMERGENCY_SYMPTOM_KEYWORDS = [
   "chest pain",
   "breathlessness",
@@ -36,15 +39,6 @@ export const EMERGENCY_SYMPTOM_KEYWORDS = [
   "confusion",
   "one-sided weakness",
   "slurred speech",
-] as const;
-
-/** Symptoms paired with a high blood-pressure reading; includes the PRD demo's headache example. */
-export const HIGH_READING_SYMPTOM_KEYWORDS = [
-  ...EMERGENCY_SYMPTOM_KEYWORDS,
-  "headache",
-  "dizzy",
-  "dizziness",
-  "nausea",
 ] as const;
 
 export const POSSIBLE_SIDE_EFFECT_KEYWORDS = ["sleepy", "dizzy", "nausea"] as const;

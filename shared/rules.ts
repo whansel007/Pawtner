@@ -1,10 +1,9 @@
 import {
   DEMO_RULES,
   EMERGENCY_SYMPTOM_KEYWORDS,
-  HIGH_READING_SYMPTOM_KEYWORDS,
   POSSIBLE_SIDE_EFFECT_KEYWORDS,
 } from "./config.js";
-import type { AgentDecision, AgentInput, DecisionKind, DogMood } from "./contract.js";
+import type { AgentDecision, AgentInput, DecisionKind, DogMood, HealthMetric } from "./contract.js";
 import { DECISION_TEMPLATES } from "./templates.js";
 
 function includesAny(text: string, keywords: readonly string[]): boolean {
@@ -12,8 +11,27 @@ function includesAny(text: string, keywords: readonly string[]): boolean {
   return keywords.some((word) => normalized.includes(word));
 }
 
-function isHighReading(systolic: number, diastolic: number): boolean {
-  return systolic >= DEMO_RULES.highSystolic || diastolic >= DEMO_RULES.highDiastolic;
+type Reading = Pick<HealthMetric, "id" | "systolic" | "diastolic" | "recordedAt">;
+
+/** The person's first blood-pressure reading (earliest recorded), or null. Everything is compared with it. */
+export function firstReadingOf<T extends Reading>(metrics: readonly T[]): T | null {
+  return metrics.reduce<T | null>((first, metric) =>
+    first === null || Date.parse(metric.recordedAt) < Date.parse(first.recordedAt) ? metric : first, null);
+}
+
+export type BloodPressureProgress = "first" | "warning" | "keepGoing" | "goodJob";
+
+/**
+ * A reading against the first one (user, 16 Oct): more than `bpFirstReadingSlack` above it on either number is a
+ * Warning; at or below the normal line on both numbers is Good job; anything else is Keep at it. The first reading
+ * itself is "first". One rule for the agent (decide) and the phone (Health feedback).
+ */
+export function bloodPressureProgress(reading: Reading, first: Reading | null): BloodPressureProgress {
+  if (!first || reading.id === first.id) return "first";
+  if (reading.systolic > first.systolic + DEMO_RULES.bpFirstReadingSlack
+    || reading.diastolic > first.diastolic + DEMO_RULES.bpFirstReadingSlack) return "warning";
+  if (reading.systolic <= DEMO_RULES.bpNormalSystolic && reading.diastolic <= DEMO_RULES.bpNormalDiastolic) return "goodJob";
+  return "keepGoing";
 }
 
 export function selectDogMood(
@@ -65,30 +83,19 @@ export function decide(input: AgentInput): AgentDecision {
   const nowMs = Date.parse(input.now);
   const metrics = input.healthMetrics.filter((metric) => Date.parse(metric.recordedAt) <= nowMs);
   const latestMetric = [...metrics].sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))[0];
-  const latestNote = latestMetric?.note ?? "";
-  const emergencyNote = metrics.find((metric) => includesAny(metric.note ?? "", EMERGENCY_SYMPTOM_KEYWORDS));
-  const highReadingSymptom = latestMetric && isHighReading(latestMetric.systolic, latestMetric.diastolic)
-    && includesAny(latestNote, HIGH_READING_SYMPTOM_KEYWORDS);
-
-  if (emergencyNote || highReadingSymptom) {
-    return decision(input, "emergency_995", emergencyNote ? "emergency_symptom_note" : "bp_high_with_symptom",
-      "A configured emergency symptom or a symptom with a high reading was recorded; emergency wording is fixed and uses no model.",
-      { symptomDetected: true, highReading: Boolean(highReadingSymptom) });
+  // Emergency signs typed in the latest reading's note: Warning whatever the numbers.
+  if (latestMetric && includesAny(latestMetric.note ?? "", EMERGENCY_SYMPTOM_KEYWORDS)) {
+    return decision(input, "emergency_995", "emergency_symptom_note",
+      "The latest reading's note mentions a configured emergency symptom; the wording is fixed and uses no model.",
+      { symptomDetected: true });
   }
 
-  const repeatedHighReadings = metrics.filter((metric) => {
-    const withinWindow = nowMs - Date.parse(metric.recordedAt) <= DEMO_RULES.repeatedHighReadingWindowDays * 86_400_000;
-    return withinWindow && metric.systolic >= DEMO_RULES.repeatedHighReadingSystolic && metric.diastolic >= DEMO_RULES.repeatedHighReadingDiastolic;
-  });
-  if (latestMetric && isHighReading(latestMetric.systolic, latestMetric.diastolic)) {
-    return decision(input, "see_gp_soon", "bp_high_without_symptom",
-      "A blood-pressure reading met a configured demo threshold without a detected symptom.",
-      { systolic: latestMetric.systolic, diastolic: latestMetric.diastolic, symptomDetected: false });
-  }
-  if (repeatedHighReadings.length >= DEMO_RULES.repeatedHighReadingsRequired) {
-    return decision(input, "see_gp_soon", "repeated_high_readings_7d",
-      "Three or more readings met the configured demo threshold in the seven-day window.",
-      { qualifyingReadings: repeatedHighReadings.length, windowDays: DEMO_RULES.repeatedHighReadingWindowDays });
+  // Otherwise the numbers decide, against the first reading (user, 16 Oct).
+  const firstReading = firstReadingOf(metrics);
+  if (latestMetric && bloodPressureProgress(latestMetric, firstReading) === "warning" && firstReading) {
+    return decision(input, "see_gp_soon", "bp_above_first_reading",
+      "The latest blood-pressure reading is higher than the first reading by more than the configured slack.",
+      { systolic: latestMetric.systolic, diastolic: latestMetric.diastolic, firstSystolic: firstReading.systolic, firstDiastolic: firstReading.diastolic });
   }
 
   const sideEffectMetric = [...metrics].reverse().find((metric) => includesAny(metric.note ?? "", POSSIBLE_SIDE_EFFECT_KEYWORDS));
