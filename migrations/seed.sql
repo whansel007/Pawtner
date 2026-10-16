@@ -83,15 +83,16 @@ FROM (
 ) AS o
 WHERE NOT (o.is_tablet_b AND o.day_index < 3);
 
--- Three normal fictional readings (well below the 140/90 repeated-high and 180/120 high demo
--- thresholds), no note. Fixed ids make re-runs move them instead of adding more; nothing deleted.
+-- Three fictional readings, no note. The first (160/95) is Rose's "normal" that every later reading is
+-- compared with (shared/rules.ts bloodPressureProgress); the next two show the medicine bringing it down
+-- to 137/75, a real after-medicine reading ("Keep at it"). Fixed ids make re-runs move them instead of adding more; nothing deleted.
 INSERT INTO health_metrics (id, user_id, kind, systolic, diastolic, note, recorded_at)
 SELECT v.id::uuid, u.id, 'blood_pressure', v.systolic, v.diastolic, NULL,
        (((now() AT TIME ZONE u.timezone)::date + v.day_offset) + time '08:45') AT TIME ZONE u.timezone
 FROM (VALUES
-  ('00000000-0000-4000-8000-0000000000b1', -6, 128, 82),
-  ('00000000-0000-4000-8000-0000000000b2', -4, 124, 79),
-  ('00000000-0000-4000-8000-0000000000b3', -2, 131, 84)
+  ('00000000-0000-4000-8000-0000000000b1', -6, 160, 95),
+  ('00000000-0000-4000-8000-0000000000b2', -4, 148, 84),
+  ('00000000-0000-4000-8000-0000000000b3', -2, 137, 75)
 ) AS v(id, day_offset, systolic, diastolic)
 JOIN users u ON u.id = '00000000-0000-4000-8000-000000000001'
 ON CONFLICT (id) DO UPDATE SET systolic = EXCLUDED.systolic, diastolic = EXCLUDED.diastolic,
