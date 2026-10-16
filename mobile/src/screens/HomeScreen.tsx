@@ -90,6 +90,7 @@ export function HomeScreen({
               seeAllBadge={seeAllBadge}
               onWalk={onWalk}
               onBloodPressure={onBloodPressure}
+              showAll={view === "medicines"}
             />
           )}
         </div>

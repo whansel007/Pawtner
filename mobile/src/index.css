@@ -480,8 +480,8 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .app-shell.home-view-medicines .dog-layer,
 .app-shell.home-view-medicines .scene-ground { display: none; }
 .app-shell.home-view-medicines .home-layout__cards { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; container-type: size; }
-.app-shell.home-view-medicines .home-sheet { flex: 1 1 auto; --ndc-u: clamp(1px, min(0.4cqh, 0.36cqi), 2.4px); }
-.app-shell.home-view-medicines .home-sheet .next-dose-card { flex: 1 1 auto; justify-content: flex-start; }
+.app-shell.home-view-medicines .home-sheet { flex: 1 1 auto; min-height: 0; --ndc-u: clamp(1px, min(0.4cqh, 0.36cqi), 2.4px); }
+.app-shell.home-view-medicines .home-sheet .next-dose-card { flex: 1 1 auto; min-height: 0; justify-content: flex-start; }
 .role-strip { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-bottom: 12px; padding: 12px 14px; border-radius: var(--radius-3xl); color: #426653; background: var(--color-surface-sage-light); }
 .role-strip div { display: grid; }
 .role-strip small { color: #76847b; font-size: var(--font-size-sm); }
