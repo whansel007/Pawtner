@@ -2,9 +2,7 @@
 
 A Tencent Cloud AI CAN DO IT Hackathon Singapore 2026 prototype for seniors who take medicine every day: a knitted dog named Buddy on their phone, and a calm page for the family who cares for them.
 
-**[Try Pawtner](https://pawtner.edgeone.dev)** · **[Watch the demo](YOUTUBE_LINK_HERE)**
-
-<!-- Video: replace YOUTUBE_LINK_HERE above with the YouTube link, e.g. https://www.youtube.com/watch?v=... -->
+**[Try Pawtner](https://pawtner.edgeone.dev)** · **[Watch the demo](https://youtu.be/xlip3x6tUjk)**
 
 All people and data in the demo are fictional. Thresholds are demo values, not clinical advice.
 

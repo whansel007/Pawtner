@@ -13,16 +13,12 @@ export function CareFooter({ onNavigate }: { onNavigate: (route: CareRoute) => v
           <div>
             <Brand onClick={() => onNavigate("landing")} />
             <p className="care-footer__text">{t("care.web.footer.tagline")}</p>
-            {/* The demo video (config.ts DEMO_VIDEO_URL): a new tab, so this page stays put; "#" until the link exists. */}
-            <a
-              className="care-footer__link care-footer__video"
-              href={DEMO_VIDEO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={DEMO_VIDEO_URL === "#" ? (event) => event.preventDefault() : undefined}
-            >
-              <span aria-hidden="true">▶</span> {t("care.web.footer.video")}
-            </a>
+            {/* The demo video, played on our own page /care/video (the address stays Pawtner's). Hidden until a link is set. */}
+            {DEMO_VIDEO_URL !== "#" && (
+              <CareLink to="video" onNavigate={onNavigate} className="care-footer__link care-footer__video">
+                <span aria-hidden="true">▶</span> {t("care.web.footer.video")}
+              </CareLink>
+            )}
           </div>
           <nav className="care-footer__nav" aria-label={t("care.web.nav.footerLabel")}>
             {CARE_NAV_ROUTES.map((item) => (

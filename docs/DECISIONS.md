@@ -4,6 +4,7 @@
 
 | Decision | Reason | Tradeoff | Status |
 |---|---|---|---|
+| The demo video is https://youtu.be/xlip3x6tUjk. It plays on our own page **pawtner.edgeone.dev/care/video** (public, YouTube's privacy-enhanced embed via `youtubeEmbedUrl` in `care/lib/video.ts`), so the address stays Pawtner's; "Watch the demo video" in every /care footer goes there in the same tab, with "Back to Pawtner". The README links to the YouTube video itself (GitHub can't embed it). | User, 16 Oct: watch the video without the address changing. | YouTube's own sharing and comments aren't on our page. | Final (page wording tentative) |
 | Every /care page's footer has "Watch the demo video" under the tagline, from one setting `DEMO_VIDEO_URL` in `mobile/src/care/config.ts`, opening in a new tab; it is `"#"` (shown, does nothing when tapped) until the YouTube link exists. Same pattern as JagaOS's footer links. | User: a space on the website to slot in the YouTube link later. | A visible link that does nothing until the URL is set. | Final (wording tentative) |
 ## 2026-10-16 — /care rhythm week: Sunday to Saturday, filled by Buddy's hearts (branch `claude/care-week-sunday`)
 

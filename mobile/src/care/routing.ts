@@ -3,7 +3,7 @@
  * `/` stays the senior phone app; everything under `/care` is the caretaker web app.
  */
 
-export type CareRoute = "landing" | "signIn" | "week" | "alerts" | "settings";
+export type CareRoute = "landing" | "signIn" | "week" | "alerts" | "settings" | "video";
 
 /** Routes in the signed-in header nav, in display order. */
 export const CARE_NAV_ROUTES = ["week", "alerts", "settings"] as const;
@@ -18,6 +18,8 @@ export const CARE_PATHS: Record<CareRoute, string> = {
   week: `${CARE_BASE_PATH}/week`,
   alerts: `${CARE_BASE_PATH}/alerts`,
   settings: `${CARE_BASE_PATH}/settings`,
+  /** The demo video, public (pages/VideoPage.tsx). */
+  video: `${CARE_BASE_PATH}/video`,
 };
 
 /** Routes that need a demo persona; without one the visitor is sent to the picker. */
