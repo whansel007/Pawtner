@@ -7,6 +7,7 @@ import type { BackAction } from "../lib/navigation";
 import type { Caregiver } from "../types";
 import { DEMO_RESET_PRESET, DEMO_TIME_PRESETS, type DemoTimePreset, DEMO_UNLOCKS, type DemoUnlockKey } from "../config/demo";
 import { formatClockTime, parseDemoTime } from "../lib/demoTime";
+import { HOME_VIEWS, type HomeView } from "../config/homeView";
 
 export function SettingsScreen({
   back,
@@ -27,6 +28,8 @@ export function SettingsScreen({
   shareBloodPressure,
   onShareBloodPressure,
   firstReading,
+  homeView,
+  onHomeView,
 }: {
   back: BackAction;
   /** "My medicines": the medicine list with Edit and the original pill photo (T2-08). */
@@ -53,6 +56,9 @@ export function SettingsScreen({
   onShareBloodPressure: (value: boolean) => void;
   /** Her first blood-pressure reading (every reading is compared with it), or null before any. */
   firstReading: HealthMetric | null;
+  /** "What Home shows" (config/homeView.ts). */
+  homeView: HomeView;
+  onHomeView: (view: HomeView) => void;
 }) {
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
@@ -68,6 +74,22 @@ export function SettingsScreen({
         {/* Information only: the caretaker's view lives on /care, not on the senior's phone. */}
         <div className="settings-info"><span className="feature-icon sage"><Icon name="users" /></span><div><strong>{t("settings.caretaker", { caretaker: caretakerName })}</strong><small>{t("settings.caretakerSub", { name: petName })}</small></div></div>
       </div>
+      {/* Big, worded choices (no icons to decode); saved on this phone so Home never changes by a stray tap. */}
+      <fieldset className="home-view-picker">
+        <legend>
+          <strong>{t("settings.homeView.title")}</strong>
+          <small>{t("settings.homeView.sub")}</small>
+        </legend>
+        {HOME_VIEWS.map((view) => (
+          <label key={view} className={`home-view-picker__option ${homeView === view ? "is-on" : ""}`}>
+            <input type="radio" name="home-view" value={view} checked={homeView === view} onChange={() => onHomeView(view)} />
+            <span>
+              <strong>{t(`settings.homeView.${view}`, { name: petName })}</strong>
+              <small>{t(`settings.homeView.${view}Sub`, { name: petName })}</small>
+            </span>
+          </label>
+        ))}
+      </fieldset>
       <label className="settings-share">
         <input type="checkbox" checked={shareBloodPressure} onChange={(event) => onShareBloodPressure(event.target.checked)} />
         <span>

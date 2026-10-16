@@ -440,6 +440,35 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .demo-panel__section h3 { margin: 0; color: #294a3a; font-size: var(--font-size-2xl); }
 .demo-panel__section p { margin: 0; color: #78857c; font-size: var(--font-size-sm); line-height: 1.4; }
 @media (prefers-reduced-motion: reduce) { .demo-panel summary svg { transition: none; } }
+
+/* Settings > What Home shows: three big worded choices; the chosen one is filled. */
+.home-view-picker { display: grid; gap: 8px; margin: 18px 0 0; padding: 0; border: 0; }
+.home-view-picker legend { display: grid; gap: 3px; margin-bottom: 8px; padding: 0; }
+.home-view-picker legend strong { color: #294a3a; font-size: var(--font-size-3xl); }
+.home-view-picker legend small { color: #78857c; font-size: var(--font-size-md); }
+.home-view-picker__option { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px; border: 2px solid var(--color-border-card); border-radius: var(--radius-3xl); background: #fffdf8; cursor: pointer; }
+.home-view-picker__option.is-on { border-color: var(--color-primary); background: var(--color-surface-sage-light); }
+.home-view-picker__option input { flex: none; width: 24px; height: 24px; margin: 0; accent-color: var(--color-primary); }
+.home-view-picker__option span { display: grid; gap: 2px; }
+.home-view-picker__option strong { color: #294a3a; font-size: var(--font-size-2xl); }
+.home-view-picker__option small { color: #78857c; font-size: var(--font-size-md); }
+.home-view-picker__option:focus-within { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+
+/* Home "Just my medicines": no Buddy, no chips; the cards take the column and grow with it (same unit as landscape). */
+.app-shell.home-view-medicines .dog-layer,
+.app-shell.home-view-medicines .scene-ground { display: none; }
+.app-shell.home-view-medicines .home-layout__cards {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  container-type: size;
+}
+.app-shell.home-view-medicines .home-layout__cards > :first-child { margin-top: auto; }
+.app-shell.home-view-medicines .home-layout__cards > :last-child { margin-bottom: auto; }
+.app-shell.home-view-medicines .next-dose-card,
+.app-shell.home-view-medicines .home-view-button { --ndc-u: clamp(1px, min(0.4cqh, 0.36cqi), 2.4px); }
 .role-strip { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-bottom: 12px; padding: 12px 14px; border-radius: var(--radius-3xl); color: #426653; background: var(--color-surface-sage-light); }
 .role-strip div { display: grid; }
 .role-strip small { color: #76847b; font-size: var(--font-size-sm); }
@@ -1072,9 +1101,9 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
    ═══════════════════════════════════════════════════════════════════════ */
 @media (orientation: landscape) and (hover: none) and (pointer: coarse), (orientation: landscape) and (max-height: 520px) {
   .app-shell {
-    /* Right pane: never narrower than a 360 px phone's card, never wider than a roomy one.
-       vw, not %: the shell is full-width here, and % would resolve against each element's own container. */
-    --pane-w: clamp(360px, 48vw, 480px);
+    /* Right pane: never narrower than a 360 px phone's card; tablets get up to 600 px so the card can grow (phones stay
+       under 480). vw, not %: the shell is full-width here, and % would resolve against each element's own container. */
+    --pane-w: clamp(360px, 48vw, 600px);
     --pane-top: max(12px, env(safe-area-inset-top));
     --scene-bottom: max(12px, env(safe-area-inset-bottom));
     --top-pad: max(clamp(12px, 3dvh, 30px), env(safe-area-inset-top));
@@ -1126,13 +1155,40 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
   }
   .home-layout__cards::-webkit-scrollbar { display: none; }
   /* The right pane is a size container: the next-dose card's scale unit grows with the pane's height and width, so the
-     card is bigger sideways and fills the pane on phones (user, 16 Oct). 1px = the portrait size; 1.8px at most. */
+     card is bigger sideways: it fills the pane on phones and grows with tablets (user, 16 Oct). 1px = the portrait size. */
   .home-layout__cards { container-type: size; }
-  .next-dose-card { --ndc-u: clamp(1px, min(0.5cqh, 0.42cqi), 1.8px); }
+  .next-dose-card { --ndc-u: clamp(1px, min(0.5cqh, 0.36cqi), 2.4px); }
+  /* Taller panes (tablets): the card grows to fill the height, up to a size its content still reads as one card. */
+  .home-layout__cards .next-dose-card { flex: 1 1 auto; justify-content: space-evenly; max-height: calc(320 * var(--ndc-u)); }
   /* Home's cards sit in the middle of the pane, between the top and the dock (user, 16 Oct: the gap above the card was
      too big). Auto margins rather than justify-content: center, so a column taller than the pane still scrolls from its top. */
   .home-layout__cards > :first-child { margin-top: auto; }
   .home-layout__cards > :last-child { margin-bottom: auto; }
+
+  /* "Just my medicines" sideways: the pane takes the whole width (Buddy's column is hidden), cards centred and capped. */
+  .app-shell.home-view-medicines { --pane-w: 100vw; }
+  .app-shell.home-view-medicines .top-zone { right: 0; }
+  .app-shell.home-view-medicines .scene-backdrop,
+  .app-shell.home-view-medicines .scene-shade { right: 0; }
+  /* The card and "Show Buddy" sit side by side, so the way back is always on screen. */
+  .app-shell.home-view-medicines .home-layout__cards {
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+    gap: 14px;
+    padding-top: calc(var(--top-bar-space) - var(--pane-top));
+  }
+  .app-shell.home-view-medicines .home-layout__cards > * { margin: auto 0; }
+  .app-shell.home-view-medicines .next-dose-card { flex: 0 1 calc(360 * var(--ndc-u)); }
+  .app-shell.home-view-medicines .home-view-button {
+    flex: 0 1 calc(170 * var(--ndc-u));
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+  }
+  .app-shell.home-view-medicines .home-view-button > svg:last-child { display: none; }
+  .app-shell.home-view-medicines .next-dose-card,
+  .app-shell.home-view-medicines .home-view-button { --ndc-u: clamp(1px, min(0.55cqh, 0.17cqi), 2.4px); }
   .full-card {
     top: var(--pane-top);
     left: calc(100% - var(--pane-w) + var(--side-gutter));
