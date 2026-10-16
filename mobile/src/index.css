@@ -1125,9 +1125,10 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
     scrollbar-width: none;
   }
   .home-layout__cards::-webkit-scrollbar { display: none; }
-  /* Home's cards rest just above the dock (gap = --nav-space, as in portrait); spare height stays at the top of the
-     pane. An auto margin rather than justify-content: flex-end, so a column taller than the pane still scrolls from its top. */
+  /* Home's cards sit in the middle of the pane, between the top and the dock (user, 16 Oct: the gap above the card was
+     too big). Auto margins rather than justify-content: center, so a column taller than the pane still scrolls from its top. */
   .home-layout__cards > :first-child { margin-top: auto; }
+  .home-layout__cards > :last-child { margin-bottom: auto; }
   .full-card {
     top: var(--pane-top);
     left: calc(100% - var(--pane-w) + var(--side-gutter));

@@ -13,6 +13,9 @@ export const DEMO_TIME_PARAM = "time";
  */
 export const DEMO_CLOCK_PARAM = "clock";
 
+/** localStorage key holding the phone's agent clock for /care (lib/demoClock.ts). */
+export const DEMO_CLOCK_STORAGE_KEY = "pawtner.demoClock";
+
 /** The preset "Reset to morning" restarts the day at. */
 export const DEMO_RESET_PRESET = "morning" satisfies keyof typeof DEMO_TIME_PRESETS;
 

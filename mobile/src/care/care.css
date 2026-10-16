@@ -1335,6 +1335,18 @@ button.care-brand {
   }
 }
 
+/* Wide footer: keep the three columns of the earlier layout with the pills in the last one, though the
+   middle note was removed (user, 16 Oct). */
+@media (min-width: 900px) {
+  .care-footer__inner {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .care-footer__nav {
+    grid-column: 3;
+  }
+}
+
 .care-footer__inner > div {
   min-width: 0;
 }
@@ -1344,14 +1356,6 @@ button.care-brand {
   color: var(--care-on-dark-faint);
   font-size: var(--care-text-sm);
   line-height: 1.55;
-}
-
-.care-footer__eyebrow {
-  color: var(--care-yellow-soft);
-  font-size: var(--care-text-xs);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .care-footer__nav {
@@ -1385,7 +1389,8 @@ button.care-brand {
   display: flex;
   margin-top: clamp(14px, 2vw, 20px);
   padding-top: 12px;
-  justify-content: space-between;
+  /* "Demo with fictional people" stays at the right, where it sat beside the removed line (user, 16 Oct). */
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 4px 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);

@@ -1,7 +1,7 @@
 import { useEffect, useRef, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { navigateTo, replacePath, usePathname } from "../lib/pathname";
-import { CARE_GARDEN_IMAGE } from "./config";
+import { CARE_GARDEN_IMAGE, LANDING_DOG_MOOD } from "./config";
 import { CARE_PATHS, guardRoute, isSignedInRoute, PHONE_APP_PATH, routeFromPath, type CareRoute } from "./routing";
 import { buildCaretakers, buildPersonas, findCaretaker } from "./data/personas";
 import type { Persona } from "./data/types";
@@ -42,7 +42,8 @@ export default function CareApp() {
   const { t } = useTranslation();
   const pathname = usePathname();
   const { slot, signIn, signOut } = useCaretakerSlot();
-  const { data, offline, saveStatus, pendingThreshold, saveThreshold, saveConsent } = useCareData();
+  // Live refresh only on signed-in pages (a persona chosen); the landing and sign-in picker are everybody's.
+  const { data, offline, saveStatus, pendingThreshold, saveThreshold, saveConsent } = useCareData(slot !== null && isSignedInRoute(routeFromPath(pathname)));
   const treat = useCareTreat(offline);
   const restock = usePendingRestockRequest();
   // Rose's "For my next visit" notes she shared (demo: same browser, lib/visitNotes.ts).
@@ -114,7 +115,7 @@ export default function CareApp() {
       <main className="care-main" id="care-main" ref={mainRef} tabIndex={-1} key={route}>
         {route === "landing" && (
           <LandingPage
-            dogMood={data.today.dog.mood}
+            dogMood={LANDING_DOG_MOOD}
             signedIn={viewer !== null}
             onStart={() => go(viewer ? "week" : "signIn")}
           />

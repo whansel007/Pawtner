@@ -39,6 +39,7 @@ import { useDayPhase } from "./lib/useDayPhase";
 import { useRestockHelp } from "./lib/useRestockHelp";
 import { pickRestockAlert } from "./lib/restockHelp";
 import { resetDemoStorage } from "./lib/demoReset";
+import { saveDemoClock } from "./lib/demoClock";
 import { shouldBarkFor } from "./lib/nudgeBark";
 import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
@@ -148,6 +149,8 @@ export default function App() {
     catch (error) { reportApiProblem(error); }
   };
   useEffect(() => { void refreshToday(); }, []);
+  // /care in the same browser follows this clock, so Jamie sees Buddy as Rose does (lib/demoClock.ts).
+  useEffect(() => { saveDemoClock(demoNow); }, [demoNow]);
   useEffect(() => {
     if (screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
     // On launch (Home's "See all" dot) and each time Reminders opens (a medicine may have been added).
