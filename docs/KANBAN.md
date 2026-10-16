@@ -45,6 +45,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | ID | Item | PR |
 |---|---|---|
 | — | Repo clean-up: unused `max-garden.jpg` removed, `playwright` moved to devDependencies, stale `functions/` ignore line dropped, CLAUDE.md PRD path fixed, favicon linked, `Pawtner.csv` → `docs/user-stories.csv`; old local worktrees and merged local branches removed (CodeBuddy ones kept) | Branch `claude/repo-cleanup` |
+| — | /care footer "Watch the demo video" slot (`DEMO_VIDEO_URL`, "#" until the YouTube link exists) | Branch `claude/demo-video-link` |
 | — | /care "A lovely rhythm": Sunday to Saturday; a past day filled when Buddy ended it on 2+ hearts (`dayHearts` in the summary) | Branch `claude/care-week-sunday` |
 | — | Dose-time reminder: Buddy barks once + toast at each saved dose time if not taken (once per dose, before the nudges); demo clock runs forward from when it is set | Branch `claude/dose-reminder` |
 | — | Combination strengths: "&&" shows as " / " on every strength (Home, Reminders, My medicines, product search); Twynsta row → "80 mg / 10 mg" (SQL by the user) | Branch `claude/strength-display` |
