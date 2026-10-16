@@ -77,11 +77,36 @@
   line-clamp: 2;
   overflow: hidden;
   overflow-wrap: break-word;
+  /* Two even lines ("Fictional / Tablet A"), not a lone last word. */
+  text-wrap: balance;
 }
 
 .next-dose-card__strength {
   font-size: calc(11 * var(--u));
   color: var(--color-text-muted, #79867e);
+}
+
+/* Full-screen form: every dose of today; the list scrolls inside the card once it's longer than the card. */
+.next-dose-card__list {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* Rows keep their height (the list scrolls instead of squeezing them); times share one column so names line up. */
+.next-dose-card__list > .next-dose-card__row { flex: none; grid-template-columns: calc(64 * var(--u)) 1fr auto; }
+.next-dose-card__list .next-dose-card__row + .next-dose-card__row { border-top: 1px solid rgba(41, 74, 58, 0.1); }
+.next-dose-card__row.is-taken .next-dose-card__name { color: #6f7d73; }
+
+/* A taken dose in the list: a calm label where the button was. */
+.next-dose-card__done {
+  min-width: calc(64 * var(--u));
+  color: var(--color-text-eyebrow-green, #4a7a5a);
+  font-size: calc(12 * var(--u));
+  font-weight: 800;
+  text-align: center;
 }
 
 /* Taken button */

@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-16 — Drag Home's card to full-screen Buddy or the full-screen form (branch `claude/home-drag`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Full-screen form lists **every dose of today** in time order ("Today's schedule", each with its own Taken button or "Done"); the list scrolls inside the card once it's longer than the card, the header and buttons stay. | User: with Tablets B and C at 12 pm and 2 pm, the full form should show them and scroll. | On a phone held sideways only one or two rows show at a time (the list scrolls). | Final |
+| Full-screen form: the white card fills the screen and its contents sit at the top (as on /care), not spread out; the full-Buddy strip uses the card's type (green NEXT label, grey time, bold name only). Long medicine names wrap in two even lines. | User: the card stays full size, the inside goes to the top like the web; the tablet strip's bolding was off. | — | Final |
+| Home's card has a grab bar (`HomeSheetHandle`): portrait drag up = full-screen form, down = full-screen Buddy; landscape left = form, right = Buddy. It snaps one step per 56 px (`HOME_VIEW.snapPx`); a tap on the bar returns to both; arrow keys step. Full-screen Buddy keeps a strip with the next dose ("Next: 10:00 AM, Fictional Tablet A"), so the medicines are never out of sight and the bar is always there to drag back. Full-screen form hides Buddy and the chips and the card grows (one scale unit); on a phone held sideways the name and hearts step aside, the gear stays. The last position is kept on this phone (`pawtner.homeView`). No extra buttons or Settings choice. | User: see Buddy only or the form only, by dragging, "clean", portrait and landscape. | Dragging must be discovered: the bar is the only hint (its spoken label explains it). | Final (wording tentative) |
+
 ## 2026-10-16 — Demo card, one streak, Reset to morning, check-ins by missed days on /care (branch `claude/demo-settings`)
 
 | Decision | Reason | Tradeoff | Status |

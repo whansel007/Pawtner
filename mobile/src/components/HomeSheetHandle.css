@@ -1,0 +1,24 @@
+/* The grab bar: a 48 px tap/drag target with a short pill inside. touch-action none so the drag isn't a page scroll. */
+.home-sheet-handle {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+.home-sheet-handle:active { cursor: grabbing; }
+.home-sheet-handle:focus-visible { outline: 3px solid var(--color-primary-deep, #2d6b4a); outline-offset: -3px; border-radius: 14px; }
+
+.home-sheet-handle__bar { display: block; border-radius: 999px; background: rgba(41, 74, 58, 0.32); }
+
+/* Portrait: across the top edge of the card. */
+.home-sheet-handle--portrait { top: 0; left: 50%; width: 120px; height: 28px; transform: translateX(-50%); }
+.home-sheet-handle--portrait .home-sheet-handle__bar { width: 44px; height: 5px; }
+
+/* Landscape: down the left edge of the pane. */
+.home-sheet-handle--landscape { top: 50%; left: 0; width: 28px; height: 120px; transform: translateY(-50%); }
+.home-sheet-handle--landscape .home-sheet-handle__bar { width: 5px; height: 44px; }

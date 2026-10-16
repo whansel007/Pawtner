@@ -30,6 +30,10 @@
     "settingsAria": "Open settings"
   },
   "home": {
+    "sheet": {
+      "portrait": "Drag up to see only your medicines, or down to see only {{name}}. Tap to see both.",
+      "landscape": "Drag left to see only your medicines, or right to see only {{name}}. Tap to see both."
+    },
     "dailyCare": "Daily care",
     "title": "Today's schedule",
     "progress": "{{count}} of {{total}} done",

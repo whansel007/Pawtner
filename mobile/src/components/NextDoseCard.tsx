@@ -13,6 +13,8 @@ interface NextDoseCardProps {
   seeAllBadge?: boolean;
   onWalk: () => void;
   onBloodPressure: () => void;
+  /** Full-screen form: every dose of today in time order (the list scrolls inside the card), not just the next one. */
+  showAll?: boolean;
 }
 
 export function NextDoseCard({
@@ -23,48 +25,61 @@ export function NextDoseCard({
   seeAllBadge = false,
   onWalk,
   onBloodPressure,
+  showAll = false,
 }: NextDoseCardProps) {
   const { t } = useTranslation();
   const takenCount = countTaken(doses);
   const total = doses.length;
   const nextDose = selectNextDose(doses);
+  const byTime = [...doses].sort((a, b) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt));
+  const doseRow = (dose: DerivedDose) => (
+    <div className={`next-dose-card__row ${dose.status === "taken" ? "is-taken" : ""}`} key={dose.id}>
+      <time className="next-dose-card__time">
+        {formatDoseTime(dose.scheduledAt)}
+      </time>
+      <div className="next-dose-card__info">
+        <span className="next-dose-card__name">
+          {dose.medicationName}
+        </span>
+        {dose.strength && (
+          <span className="next-dose-card__strength">
+            {dose.strength}
+          </span>
+        )}
+      </div>
+      {dose.status === "taken" ? (
+        <span className="next-dose-card__done">{t("reminders.statusDone")}</span>
+      ) : (
+        <button
+          className="next-dose-card__taken-btn"
+          onClick={() => onTaken(dose.id)}
+          aria-label={t("home.takenAria", { name: dose.medicationName })}
+        >
+          {t("home.taken")}
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <section className="next-dose-card" aria-label={t("home.dailyCare")}>
       <div className="next-dose-card__header">
         <span className="next-dose-card__label">
-          {nextDose && nextDose.status === "missed"
-            ? t("home.stillToTake")
-            : t("home.next")}
+          {showAll
+            ? t("home.title")
+            : nextDose && nextDose.status === "missed"
+              ? t("home.stillToTake")
+              : t("home.next")}
         </span>
         <span className="next-dose-card__progress">
           {t("home.progress", { count: takenCount, total })}
         </span>
       </div>
 
-      {nextDose ? (
-        <div className="next-dose-card__row" key={nextDose.id}>
-          <time className="next-dose-card__time">
-            {formatDoseTime(nextDose.scheduledAt)}
-          </time>
-          <div className="next-dose-card__info">
-            <span className="next-dose-card__name">
-              {nextDose.medicationName}
-            </span>
-            {nextDose.strength && (
-              <span className="next-dose-card__strength">
-                {nextDose.strength}
-              </span>
-            )}
-          </div>
-          <button
-            className="next-dose-card__taken-btn"
-            onClick={() => onTaken(nextDose.id)}
-            aria-label={t("home.takenAria", { name: nextDose.medicationName })}
-          >
-            {t("home.taken")}
-          </button>
-        </div>
+      {showAll && total > 0 ? (
+        <div className="next-dose-card__list">{byTime.map(doseRow)}</div>
+      ) : nextDose ? (
+        doseRow(nextDose)
       ) : total === 0 ? (
         <p className="next-dose-card__empty">{t("home.noDoses")}</p>
       ) : (
