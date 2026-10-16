@@ -4,7 +4,7 @@ import type { CareData, Caretaker } from "../data/types";
 import type { TreatStatus } from "../hooks/useCareTreat";
 import type { RestockHelpEntry } from "../../lib/restockHelp";
 import { formatCalendarDay, formatWeekday } from "../lib/format";
-import { progressPercent, recentDays, streakHearts, todayProgress, todayState } from "../lib/rules";
+import { progressPercent, RHYTHM_MIN_HEARTS, streakHearts, todayProgress, todayState, weekRhythm } from "../lib/rules";
 import { CareBadge, CareCard, PageWelcome } from "../components/CareCard";
 import { CareNotice } from "../components/CareNotice";
 import { CareDog } from "../components/CareDog";
@@ -41,7 +41,8 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
   const stateBadge = state === "allDone" || state === "onTrack" ? <CareBadge>{stateText("badge")}</CareBadge> : null;
 
   const hearts = streakHearts(dog.streak);
-  const streakDays = recentDays(now).map((date, index) => ({ key: date.toISOString(), label: formatWeekday(date, locale, "narrow"), filled: hearts[index] }));
+  // Sunday to Saturday; past days filled when Buddy ended them on 2+ hearts (lib/rules.ts weekRhythm).
+  const streakDays = weekRhythm(now, data.summary.dayHearts).map((day) => ({ key: day.date.toISOString(), label: formatWeekday(day.date, locale, "narrow"), filled: day.filled }));
 
 
   const [latestQuestion, ...earlierQuestions] = doctorQuestions;
@@ -111,9 +112,9 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
           title={t("care.web.week.streakEyebrow")}
           badge={dog.streak >= hearts.length ? <CareBadge tone="rose">{t("care.web.week.streakBadge")}</CareBadge> : null}
         >
-          {/* "7-day streak" under the title; the hearts below are the same days, so they always match. */}
+          {/* "N-day streak" under the title; the hearts below are this week, Sunday to Saturday, filled by Buddy's hearts. */}
           <p className="care-streak__count">{t("care.web.week.streakTitle", { count: dog.streak })}</p>
-          <StreakHearts days={streakDays} label={t("care.web.week.streakLabel", { count: dog.streak, days: hearts.length })} />
+          <StreakHearts days={streakDays} label={t("care.web.week.rhythmLabel", { dog: dog.name, count: RHYTHM_MIN_HEARTS })} />
         </CareCard>
 
 

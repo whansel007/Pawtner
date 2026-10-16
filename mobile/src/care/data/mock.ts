@@ -72,6 +72,7 @@ export function buildMockCareData(now: Date = new Date()): CareData {
         { note: "Ask a healthcare professional about: feeling sleepy at night", occurredAt: at(now, -1, 20, 10) },
       ],
       checkIn: null,
+      dayHearts: [3, 2, 4, 1, 3, 2, 3].map((hearts, index) => ({ date: at(now, index - 7, 12, 0).slice(0, 10), hearts })),
     },
     escalation: { optedIn: true, threshold: DEMO_RULES.defaultCaretakerThreshold },
   };
