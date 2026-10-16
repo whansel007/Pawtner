@@ -7,9 +7,12 @@ import type { WeekSummary } from "../types";
 export function WeeklySummaryScreen({
   back,
   weekSummary,
+  onVisitNotes,
 }: {
   back: BackAction;
   weekSummary: WeekSummary;
+  /** Opens "For my next visit" so the note can be added or edited there. */
+  onVisitNotes: () => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -22,7 +25,7 @@ export function WeeklySummaryScreen({
           <article key={metric.label}><strong>{metric.value}</strong><small>{metric.label}</small></article>
         ))}
       </div>
-      <div className="doctor-question"><Icon name="note" /><div><small>{t("summary.askDoctor")}</small><p>{weekSummary.doctorQuestion}</p></div></div>
+      <button type="button" className="doctor-question" onClick={onVisitNotes}><Icon name="note" /><div><small>{t("summary.askDoctor")}</small><p>{weekSummary.doctorQuestion}</p></div><Icon name="chevron" className="doctor-question__chevron" /></button>
       <button className="primary-button" onClick={back.onBack}>{t("summary.doneReading")}</button>
     </FullCard>
   );

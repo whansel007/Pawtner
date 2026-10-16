@@ -610,6 +610,10 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .doctor-question { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 14px; border-radius: var(--radius-3xl); color: #805b46; background: var(--color-surface-cream); }
 .doctor-question small { font-size: var(--font-size-2xs); font-weight: var(--font-weight-black); letter-spacing: 1px; }
 .doctor-question p { margin: 3px 0 0; font-size: var(--font-size-md); }
+/* Tappable: opens "For my next visit" to add or edit notes. */
+button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit; cursor: pointer; }
+.doctor-question > div { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.doctor-question__chevron { flex: 0 0 auto; color: #a07a63; }
 
 /* ═══════════════════════════════════════════════════════════════════════
    Settings
