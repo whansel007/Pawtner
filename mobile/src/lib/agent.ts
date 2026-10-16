@@ -25,7 +25,6 @@ export function buildAgentInputFromState(params: {
   doses: DerivedDose[];
   healthMetrics: HealthMetric[];
   daysOfSupplyByMedicationId?: Record<string, number | null>;
-  consecutiveMissedDoses?: number;
   walkFinished?: boolean;
   /** The dose event that triggered this decision; "taken" lets the rules celebrate. */
   latestDoseEvent?: DoseEvent | null;
@@ -43,7 +42,10 @@ export function buildAgentInputFromState(params: {
     latestDoseEvent: params.latestDoseEvent ?? null,
     healthMetrics: params.healthMetrics,
     daysOfSupplyByMedicationId: params.daysOfSupplyByMedicationId ?? {},
-    consecutiveMissedDoses: params.consecutiveMissedDoses ?? 0,
+    // Offline there is no history: no missed days, so never a caretaker check-in.
+    consecutiveMissedDays: 0,
+    lastMissedDay: null,
+    lastCheckInDay: null,
     caretaker: null,
     walkFinished: params.walkFinished,
   };

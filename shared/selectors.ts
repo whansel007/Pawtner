@@ -68,6 +68,8 @@ export interface AgentSelectionSource {
   /** Set only when this selection follows a newly recorded event that should trigger a celebration. */
   triggeringDoseEventId?: string;
   caretaker: AgentInput["caretaker"];
+  /** The missed day the latest caretaker check-in was sent for (its `lastMissedDay` observation), or null. */
+  lastCheckInDay: string | null;
 }
 
 export function computeStreak(days: StreakDay[], today: string): number {
@@ -83,6 +85,26 @@ export function computeStreak(days: StreakDay[], today: string): number {
     streak += 1;
     cursor.setUTCDate(cursor.getUTCDate() - 1);
   }
+}
+
+/**
+ * Days in a row before `today` with at least one scheduled dose not taken, counting back from yesterday; stops at a
+ * fully taken day or a day with nothing scheduled. Same day grouping as `computeStreak`.
+ */
+export function computeMissedDays(days: StreakDay[], today: string): { count: number; lastMissedDay: string | null } {
+  const byDate = new Map<string, StreakDay[]>();
+  for (const item of days) byDate.set(item.date, [...(byDate.get(item.date) ?? []), item]);
+  let count = 0;
+  const cursor = new Date(`${today}T00:00:00.000Z`);
+  cursor.setUTCDate(cursor.getUTCDate() - 1);
+  const yesterday = cursor.toISOString().slice(0, 10);
+  for (;;) {
+    const scheduled = byDate.get(cursor.toISOString().slice(0, 10));
+    if (!scheduled?.length || scheduled.every((dose) => dose.taken)) break;
+    count += 1;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+  return { count, lastMissedDay: count > 0 ? yesterday : null };
 }
 
 export function hasBloodPressureToday(metrics: HealthMetric[], today: string): boolean {
@@ -158,17 +180,13 @@ export function computeHeartsTotal(doses: DerivedDose[], metrics: HealthMetric[]
 export function selectAgentInput(source: AgentSelectionSource): AgentInput {
   const { derived, metrics } = deriveSelection(source);
   const todayDoses = derived.filter((dose) => dose.scheduledAt.slice(0, 10) === source.today);
-  const streak = computeStreak(derived.map((dose) => ({
+  const doseDays = derived.map((dose) => ({
     date: dose.scheduledAt.slice(0, 10),
     scheduleId: dose.id,
     taken: dose.status === "taken",
-  })), source.today);
-  const completedOrMissed = derived.filter((dose) => Date.parse(dose.scheduledAt) <= Date.parse(source.now));
-  let consecutiveMissedDoses = 0;
-  for (const dose of [...completedOrMissed].reverse()) {
-    if (dose.status !== "missed") break;
-    consecutiveMissedDoses += 1;
-  }
+  }));
+  const streak = computeStreak(doseDays, source.today);
+  const missedDays = computeMissedDays(doseDays, source.today);
   const latestDoseEvent = source.triggeringDoseEventId
     ? source.doseEvents.find((event) => event.id === source.triggeringDoseEventId
       && Date.parse(event.occurredAt) <= Date.parse(source.now)) ?? null
@@ -185,7 +203,9 @@ export function selectAgentInput(source: AgentSelectionSource): AgentInput {
     latestDoseEvent,
     healthMetrics: metrics,
     daysOfSupplyByMedicationId: source.daysOfSupplyByMedicationId,
-    consecutiveMissedDoses,
+    consecutiveMissedDays: missedDays.count,
+    lastMissedDay: missedDays.lastMissedDay,
+    lastCheckInDay: source.lastCheckInDay,
     caretaker: source.caretaker,
   });
 }

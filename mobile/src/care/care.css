@@ -971,6 +971,20 @@ button.care-brand {
   background: rgba(216, 223, 191, 0.5);
 }
 
+/* The caretaker's on/off switch for check-ins (a button styled as the same row). */
+.care-consent--switch {
+  width: 100%;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.care-consent--switch:disabled {
+  cursor: progress;
+}
+
 .care-consent__mark {
   display: grid;
   width: 36px;
@@ -989,10 +1003,12 @@ button.care-brand {
 }
 
 .care-consent strong {
+  display: block;
   font-size: var(--care-text-md);
 }
 
-.care-consent p {
+.care-consent__sub {
+  display: block;
   margin-top: 2px;
   color: var(--care-muted);
   font-size: var(--care-text-sm);

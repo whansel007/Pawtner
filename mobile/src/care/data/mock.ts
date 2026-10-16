@@ -70,6 +70,7 @@ export function buildMockCareData(now: Date = new Date()): CareData {
       doctorQuestions: [
         { note: "Ask a healthcare professional about: feeling sleepy at night", occurredAt: at(now, -1, 20, 10) },
       ],
+      checkIn: null,
     },
     escalation: { optedIn: true, threshold: DEMO_RULES.defaultCaretakerThreshold },
   };

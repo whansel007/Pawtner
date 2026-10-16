@@ -284,6 +284,13 @@ export class PawtnerRepository {
       `SELECT opted_in, threshold FROM user_caregivers WHERE user_id = $1 ORDER BY caregiver_id LIMIT 1`,
       [userId],
     );
+    // One check-in per missed day: the day the latest one was sent for (rule repeated_misses_caretaker_check_in).
+    const checkInResult = await client.query(
+      `SELECT observations->>'lastMissedDay' AS last_missed_day FROM agent_decisions
+       WHERE user_id = $1 AND caretaker_ping = true AND created_at <= $2::timestamptz
+       ORDER BY created_at DESC LIMIT 1`,
+      [userId, now],
+    );
     const nudgeRows = nudgesResult.rows.map((row) => ({
       scheduleId: row.schedule_id,
       scheduledFor: iso(row.scheduled_for),
@@ -302,6 +309,7 @@ export class PawtnerRepository {
       caretaker: caregiverResult.rows[0]
         ? { optedIn: caregiverResult.rows[0].opted_in, threshold: caregiverResult.rows[0].threshold }
         : null,
+      lastCheckInDay: checkInResult.rows[0]?.last_missed_day ?? null,
       ...(triggeringDoseEventId ? { triggeringDoseEventId } : {}),
     };
   }
@@ -524,6 +532,15 @@ export class PawtnerRepository {
        ORDER BY created_at DESC LIMIT 20`,
       [userId, start, today, person.timezone],
     );
+    // Latest check-in of the week. No upper time bound: a demo clock may have run the agent ahead of real time.
+    const checkInResult = await this.pool.query(
+      `SELECT observations, created_at FROM agent_decisions
+       WHERE user_id = $1 AND caretaker_ping = true AND observations ? 'lastMissedDay'
+         AND created_at >= ($2::date::timestamp AT TIME ZONE $3)
+       ORDER BY created_at DESC LIMIT 1`,
+      [userId, start, person.timezone],
+    );
+    const checkInRow = checkInResult.rows[0];
     const questionsResult = await this.pool.query(
       `SELECT note, recorded_at FROM health_metrics
        WHERE user_id = $1 AND note IS NOT NULL AND note <> ''
@@ -563,6 +580,9 @@ export class PawtnerRepository {
         note: `Ask a healthcare professional about: ${row.note}`,
         occurredAt: iso(row.recorded_at),
       })),
+      checkIn: checkInRow
+        ? { missedDays: Number(checkInRow.observations.consecutiveMissedDays), lastMissedDay: String(checkInRow.observations.lastMissedDay), sentAt: iso(checkInRow.created_at) }
+        : null,
     };
   }
 

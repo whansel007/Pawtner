@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAgentInput, computeHeart, computeHeartsTotal, computeStreak, deriveDoseStatus, hasBloodPressureToday, selectAgentInput, selectHeartsTotal } from "../../shared/selectors.js";
+import { buildAgentInput, computeHeart, computeHeartsTotal, computeMissedDays, computeStreak, deriveDoseStatus, hasBloodPressureToday, selectAgentInput, selectHeartsTotal } from "../../shared/selectors.js";
 import type { DerivedDose, DoseSchedule, HealthMetric } from "../../shared/contract.js";
 import type { AgentSelectionSource } from "../../shared/selectors.js";
 
@@ -41,15 +41,26 @@ describe("selectors", () => {
     ], "2026-10-13")).toBe(3);
   });
 
-  it("detects BP logged today and rejects caretaker thresholds below two", () => {
+  it("counts days in a row with a missed dose, back from yesterday (today never counts)", () => {
+    const day = (date: string, ...taken: boolean[]) => taken.map((value, index) => ({ date, scheduleId: `s${index}`, taken: value }));
+    expect(computeMissedDays([...day("2026-10-12", true, false), ...day("2026-10-13", false)], "2026-10-13"))
+      .toEqual({ count: 1, lastMissedDay: "2026-10-12" });
+    expect(computeMissedDays([...day("2026-10-10", true, true), ...day("2026-10-11", false, false), ...day("2026-10-12", true, false)], "2026-10-13"))
+      .toEqual({ count: 2, lastMissedDay: "2026-10-12" });
+    expect(computeMissedDays([...day("2026-10-11", false), ...day("2026-10-12", true, true)], "2026-10-13"))
+      .toEqual({ count: 0, lastMissedDay: null });
+    expect(computeMissedDays([], "2026-10-13")).toEqual({ count: 0, lastMissedDay: null });
+  });
+
+  it("detects BP logged today and rejects caretaker thresholds below one day", () => {
     const metric: HealthMetric = { id: "bp", kind: "blood_pressure", systolic: 120, diastolic: 80, note: null, recordedAt: "2026-10-13T08:00:00+08:00" };
     expect(hasBloodPressureToday([metric], "2026-10-13")).toBe(true);
     expect(hasBloodPressureToday([metric], "2026-10-14")).toBe(false);
     expect(() => buildAgentInput({
       now: "2026-10-13T10:00:00+08:00", userId: "u", dog: { id: "d", name: "Buddy", heart: 2, streak: 0 },
-      doses: [], healthMetrics: [], daysOfSupplyByMedicationId: {}, consecutiveMissedDoses: 0,
-      caretaker: { optedIn: true, threshold: 1 },
-    })).toThrow(/at least 2/);
+      doses: [], healthMetrics: [], daysOfSupplyByMedicationId: {}, consecutiveMissedDays: 0,
+      lastMissedDay: null, lastCheckInDay: null, caretaker: { optedIn: true, threshold: 0 },
+    })).toThrow(/at least 1/);
   });
 
   it("assembles AgentInput from fictional schedule, ledger, nudge, and health rows", () => {
@@ -74,13 +85,15 @@ describe("selectors", () => {
       healthMetrics: [{ id: "seed-bp", kind: "blood_pressure", systolic: 120, diastolic: 80, note: null, recordedAt: "2026-10-13T08:00:00+08:00" }],
       daysOfSupplyByMedicationId: { "00000000-0000-4000-8000-000000000004": 14 },
       caretaker: { optedIn: true, threshold: 2 },
+      lastCheckInDay: null,
     };
     const input = selectAgentInput(source);
 
     expect(input.doses.map((dose) => dose.status)).toEqual(["missed", "upcoming"]);
     expect(input.doses[0]).toMatchObject({ nudgeCount: 1, lastNudgeAt: "2026-10-13T11:00:00+08:00" });
     expect(input.dog).toMatchObject({ heart: 1, streak: 1 });
-    expect(input.consecutiveMissedDoses).toBe(1);
+    // Yesterday was taken, so no missed days (today's missed morning dose doesn't count until the day is over).
+    expect(input).toMatchObject({ consecutiveMissedDays: 0, lastMissedDay: null });
     expect(input.latestDoseEvent).toBeNull();
     expect(selectAgentInput({ ...source, triggeringDoseEventId: "seed-event" }).latestDoseEvent?.scheduledFor).toBe(yesterday);
   });
@@ -143,6 +156,7 @@ describe("selectors", () => {
         healthMetrics: [bp("2026-10-13T08:00:00.000Z")],
         daysOfSupplyByMedicationId: {},
         caretaker: null,
+        lastCheckInDay: null,
       };
       const input = selectAgentInput(source);
       expect(input.dog.heart).toBe(4);

@@ -38,13 +38,18 @@ export function useCareData() {
     return () => { cancelled = true; };
   }, []);
 
-  /** Saves the one shared threshold through the existing endpoint; consent is sent back unchanged. */
-  const saveThreshold = useCallback(async (threshold: number) => {
+  /**
+   * Saves the check-in settings (on/off and the number of missed days) through the one existing endpoint.
+   * Both live here on /care since 16 Oct (user: the caretaker sets them, not the senior's phone).
+   */
+  const saveEscalation = useCallback(async (next: { optedIn?: boolean; threshold?: number }) => {
     if (!data || offline) return;
+    const optedIn = next.optedIn ?? data.escalation.optedIn;
+    const threshold = next.threshold ?? data.escalation.threshold;
     setPendingThreshold(threshold);
     setSaveStatus("saving");
     try {
-      const escalation = await api.updateEscalationSettings({ optedIn: data.escalation.optedIn, threshold });
+      const escalation = await api.updateEscalationSettings({ optedIn, threshold });
       setData((current) => (current ? { ...current, escalation } : current));
       setSaveStatus("saved");
     } catch (error) {
@@ -55,5 +60,8 @@ export function useCareData() {
     }
   }, [data, offline]);
 
-  return { data, offline, saveStatus, pendingThreshold, saveThreshold };
+  const saveThreshold = useCallback((threshold: number) => saveEscalation({ threshold }), [saveEscalation]);
+  const saveConsent = useCallback((optedIn: boolean) => saveEscalation({ optedIn }), [saveEscalation]);
+
+  return { data, offline, saveStatus, pendingThreshold, saveThreshold, saveConsent };
 }

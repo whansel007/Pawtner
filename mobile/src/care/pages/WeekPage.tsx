@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { CareData, Caretaker } from "../data/types";
 import type { TreatStatus } from "../hooks/useCareTreat";
 import type { RestockHelpEntry } from "../../lib/restockHelp";
-import { formatWeekday } from "../lib/format";
+import { formatCalendarDay, formatWeekday } from "../lib/format";
 import { progressPercent, recentDays, streakHearts, todayProgress, todayState } from "../lib/rules";
 import { CareBadge, CareCard, PageWelcome } from "../components/CareCard";
 import { CareNotice } from "../components/CareNotice";
@@ -45,6 +45,8 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
 
 
   const [latestQuestion, ...earlierQuestions] = doctorQuestions;
+  // The agent's latest check-in (missed days, never a medicine name); only for caretakers who get check-ins.
+  const checkIn = viewer.receivesCheckIns ? data.summary.checkIn : null;
 
   return (
     <div className="care-content care-page-enter">
@@ -56,6 +58,16 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
       />
 
       <div className="care-grid care-grid--week">
+        {checkIn && (
+          <CareCard
+            eyebrow={t("care.web.week.checkInEyebrow")}
+            title={t("care.web.week.checkInTitle", { name: senior, count: checkIn.missedDays, day: formatCalendarDay(checkIn.lastMissedDay, locale) })}
+            stitched
+            className="care-restock care-checkin"
+          >
+            <p className="care-hint">{t("care.web.week.checkInBody", { name: senior })}</p>
+          </CareCard>
+        )}
         {(restockRequest || handledRestock) && (
           <CareCard
             eyebrow={t("care.web.week.restockEyebrow")}

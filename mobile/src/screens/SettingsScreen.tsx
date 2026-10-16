@@ -5,10 +5,8 @@ import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
 import type { BackAction } from "../lib/navigation";
 import type { Caregiver } from "../types";
-import type { EscalationSettingsResponse } from "../../../shared/contract";
 import { DEMO_RESET_PRESET, DEMO_TIME_PRESETS, type DemoTimePreset, DEMO_UNLOCKS, type DemoUnlockKey } from "../config/demo";
 import { formatClockTime, parseDemoTime } from "../lib/demoTime";
-import { useEffect, useState } from "react";
 
 export function SettingsScreen({
   back,
@@ -21,8 +19,6 @@ export function SettingsScreen({
   onDemoClockChange,
   onRunDemoClock,
   agentBusy,
-  escalationSettings,
-  onSaveEscalationSettings,
   demoUnlocks,
   onToggleDemoUnlock,
   activeTimePreset,
@@ -43,8 +39,6 @@ export function SettingsScreen({
   onDemoClockChange: (value: string) => void;
   onRunDemoClock: () => void;
   agentBusy: boolean;
-  escalationSettings: EscalationSettingsResponse | null;
-  onSaveEscalationSettings: (settings: EscalationSettingsResponse) => void;
   /** Demo tick boxes that are on ("7 days", "20 hearts", "40 hearts", config/demo.ts DEMO_UNLOCKS). */
   demoUnlocks: ReadonlySet<DemoUnlockKey>;
   onToggleDemoUnlock: (key: DemoUnlockKey) => void;
@@ -62,9 +56,6 @@ export function SettingsScreen({
 }) {
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
-  const [escalationDraft, setEscalationDraft] = useState<EscalationSettingsResponse>({ optedIn: false, threshold: 2 });
-  const [settingsBusy, setSettingsBusy] = useState(false);
-  useEffect(() => { if (escalationSettings) setEscalationDraft(escalationSettings); }, [escalationSettings]);
   const resetTime = parseDemoTime(DEMO_TIME_PRESETS[DEMO_RESET_PRESET], DEMO_TIME_PRESETS);
   return (
     <FullCard back={back} className="settings-card">
@@ -88,18 +79,7 @@ export function SettingsScreen({
         </span>
       </label>
       <div className="settings-note"><Icon name="heart" /><p><strong>{t("settings.privacyTitle")}</strong></p></div>
-            <div className="demo-clock-card escalation-settings-card">
-        <p className="eyebrow green">Caretaker check-ins</p>
-        <h3>Escalation settings</h3>
-        <label className="consent-toggle"><input type="checkbox" checked={escalationDraft.optedIn} onChange={(event) => setEscalationDraft((current) => ({ ...current, optedIn: event.target.checked }))} /> Allow {caretakerName} to check in after repeated missed doses</label>
-        <label htmlFor="missed-dose-threshold">Check in after</label>
-        <select id="missed-dose-threshold" value={escalationDraft.threshold} onChange={(event) => setEscalationDraft((current) => ({ ...current, threshold: Math.max(2, Number(event.target.value)) }))}>
-          {[2, 3, 4, 5].map((threshold) => <option key={threshold} value={threshold}>{threshold} consecutive missed doses</option>)}
-        </select>
-        <p>Check-ins never include medicine names. The minimum threshold is two missed doses.</p>
-        <button className="primary-button" disabled={!escalationSettings || settingsBusy} onClick={async () => { setSettingsBusy(true); try { await onSaveEscalationSettings(escalationDraft); } finally { setSettingsBusy(false); } }}>{settingsBusy ? "Saving…" : "Save check-in settings"}</button>
-      </div>
-      {/* Every demo-only control in one closed card (user, 16 Oct: people kept tapping them by mistake). */}
+            {/* Every demo-only control in one closed card (user, 16 Oct: people kept tapping them by mistake). */}
       <details className="demo-clock-card demo-panel">
         <summary>
           <span>

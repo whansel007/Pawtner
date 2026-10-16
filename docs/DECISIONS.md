@@ -1,5 +1,16 @@
 # Decisions
 
+## 2026-10-16 — Demo card, one streak, Reset to morning, check-ins by missed days on /care (branch `claude/demo-settings`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Settings: every demo control (Reset to morning, garden time, unlock ticks, agent clock) sits in one closed "For demo only" card (`<details>`), closed each time Settings opens. | User: people kept tapping demo options by mistake. | One extra tap for the presenter. | Final (wording tentative) |
+| The "7 days" / "20 hearts" ticks raise the **one** streak and lifetime-hearts number App passes everywhere on the phone (fire chip, Milestones lines, trick cards and notes, wardrobe); `demoStreak` / `demoHeartsTotal` in `lib/demoUnlocks.ts`. Nothing is saved; /care shows the API's numbers. | User: ticking 7 days didn't change the fire. | /care and the phone can differ while a tick is on. | Final |
+| "today" after the four hearts at the top (`topZone.heartsToday`). | User: make clear the hearts are per day. | — | Final (wording tentative) |
+| "Reset to morning (9:00)": `POST /api/demo/reset-day` deletes the demo user's dose taps (by scheduled time), readings and agent decisions **from the start of that local day on** (also rows a demo clock dated later), then the agent decides once at 9:00; the phone clears its demo storage and reloads with `?clock=morning` (agent clock at 9:00). Earlier days, seed readings, walks and treats stay. | User: reset should put the day back to the morning with no medicine taken. | A data delete on every tap (scoped to the fictional demo user and today). | Final |
+| Short landscape (≤ 430 px tall): smaller name (30 px) and hearts (22 px), top bar 76 px instead of 112 px, so Buddy has room. | User: landscape Home felt cramped. | Name is smaller sideways than upright. | Tentative |
+| Caretaker check-ins count **missed days**: days in a row (back from yesterday) with any dose not taken. The caretaker sets on/off and the number of days (minimum 1, default 1) on /care Alerts; the phone's Settings card is gone. One check-in per missed day (`lastCheckInDay`), so the rest of the day still nudges and celebrates. /care This week shows the latest check-in of the week ("Rose missed some medicine on Fri, Oct 16"), only to caretakers who get check-ins (`summary.checkIn`). Needs **migration 006** (`threshold >= 1`). | User: Jamie decides how many missed days, and is told accordingly; e.g. missed yesterday → check-in today. | Consent moved from the senior to the caretaker (**deviates from PRD consent-by-senior**). An existing threshold of 2 now means 2 days. | Final (wording tentative) |
+
 ## 2026-10-16 — /care polish (branch `claude/care-polish`)
 
 | Decision | Reason | Tradeoff | Status |

@@ -42,7 +42,7 @@ export default function CareApp() {
   const { t } = useTranslation();
   const pathname = usePathname();
   const { slot, signIn, signOut } = useCaretakerSlot();
-  const { data, offline, saveStatus, pendingThreshold, saveThreshold } = useCareData();
+  const { data, offline, saveStatus, pendingThreshold, saveThreshold, saveConsent } = useCareData();
   const treat = useCareTreat(offline);
   const restock = usePendingRestockRequest();
   // Rose's "For my next visit" notes she shared (demo: same browser, lib/visitNotes.ts).
@@ -142,6 +142,7 @@ export default function CareApp() {
             saveStatus={saveStatus}
             pendingThreshold={pendingThreshold}
             onSaveThreshold={(threshold) => void saveThreshold(threshold)}
+            onSaveConsent={(optedIn) => void saveConsent(optedIn)}
           />
         )}
         {signedInPage && route === "settings" && <SettingsPage data={data} viewer={viewer} />}
