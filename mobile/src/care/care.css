@@ -1416,8 +1416,14 @@ button.care-brand {
 /* Wide screens: three columns, so even with the blood-pressure and refill cards This week stays on one screen.
    Row 1: Today (double width) + the streak; row 2: treat, blood pressure, questions; a refill request spans the top. */
 @media (min-width: 1200px) {
-  .care-grid:not(.care-grid--alerts) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .care-grid--week { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .care-today { grid-column: span 2; }
   .care-restock { grid-column: 1 / -1; }
-  .care-hearts { --care-heart-size: clamp(18px, 1.7vw, 26px); }
+  /* No blood-pressure card: the questions card takes its slot too, so the row has no gap. */
+  .care-grid--week .care-treat + .care-questions { grid-column: span 2; }
 }
+
+/* Hearts are sized from their own card's width (the shape is about twice as wide as its size), so seven always
+   fit side by side, whatever the column layout. */
+.care-hearts { container-type: inline-size; }
+.care-hearts__day { --care-heart-size: min(32px, 6.4cqi); }

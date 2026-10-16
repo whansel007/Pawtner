@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import type { CareData, Caretaker } from "../data/types";
-import { visibleMoments } from "../lib/rules";
 import { CareCard, PageWelcome } from "../components/CareCard";
 import { CareDog } from "../components/CareDog";
 
@@ -9,11 +8,7 @@ export function SettingsPage({ data, viewer }: { data: CareData; viewer: Caretak
   const { t } = useTranslation();
   const senior = data.summary.senior.name;
   const dog = data.today.dog;
-  const momentCount = visibleMoments(data.summary.caringMoments, viewer).length;
-  const weeklyNote = [
-    t("care.web.settings.walks", { count: data.summary.walkCount, dog: dog.name }),
-    t("care.web.settings.questions", { count: data.summary.doctorQuestions.length }),
-  ].join(" · ");
+  const weeklyNote = t("care.web.settings.questions", { count: data.summary.doctorQuestions.length });
 
   return (
     <div className="care-content care-page-enter">
@@ -50,12 +45,12 @@ export function SettingsPage({ data, viewer }: { data: CareData; viewer: Caretak
             <p className="care-summary__names">{t("care.web.settings.previewNames", { senior, dog: dog.name })}</p>
             <dl className="care-summary__stats">
               <div>
-                <dt>{t("care.web.settings.momentsStat", { count: momentCount })}</dt>
-                <dd>{momentCount}</dd>
-              </div>
-              <div>
                 <dt>{t("care.web.settings.streakStatLabel")}</dt>
                 <dd>{t("care.web.settings.streakStat", { count: dog.streak })}</dd>
+              </div>
+              <div>
+                <dt>{t("care.web.settings.walksStatLabel", { dog: dog.name })}</dt>
+                <dd>{data.summary.walkCount}</dd>
               </div>
             </dl>
             <p className="care-summary__note">{weeklyNote}</p>

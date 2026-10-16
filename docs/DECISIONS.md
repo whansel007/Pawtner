@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-16 — /care polish (branch `claude/care-polish`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Streak hearts are sized from their card's width (container query, `min(32px, 6.4cqi)`; the shape is ~2× its size), so seven never overlap in any column layout. The three-column layout applies to This week only (`care-grid--week`); without a blood-pressure card the questions card spans two columns. Settings' weekly summary shows steady rhythm and walks (no caring moments) and one notes line. | User: hearts overlapped again; empty gaps on This week and Settings. | Hearts are a little smaller in the narrow streak card. | Final |
+
 ## 2026-10-16 — Demo first reading 160/95 (branch `claude/seed-first-reading`)
 
 | Decision | Reason | Tradeoff | Status |
