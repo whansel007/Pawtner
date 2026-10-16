@@ -22,23 +22,23 @@ Every decision (a nudge, a check-in, a warning) comes from fixed, tested rules. 
 
 Rose opens the app to her garden and her dog.
 
-[![Pawtner cover](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/cover.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/cover.jpg)
+<a href="https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/cover.jpg"><img src="https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/cover.jpg" alt="Pawtner cover" width="390"></a>
 
 Home shows Buddy, today's hearts and the next medicine. Each heart comes from something she did today.
 
-[![Home with Buddy and the next dose](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/home.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/home.jpg)
+<a href="https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/home.jpg"><img src="https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/home.jpg" alt="Home with Buddy and the next dose" width="390"></a>
 
 Drag the card up and the whole screen becomes her medicines for today, in large type. Drag it down for Buddy alone.
 
-[![Today's medicines on the full screen](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/full-form.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/full-form.jpg)
+<a href="https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/full-form.jpg"><img src="https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/full-form.jpg" alt="Today's medicines on the full screen" width="390"></a>
 
 Buddy alone keeps the next medicine in sight on a slim strip.
 
-[![Buddy on the full screen with the next dose strip](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/buddy-only.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/buddy-only.jpg)
+<a href="https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/buddy-only.jpg"><img src="https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/buddy-only.jpg" alt="Buddy on the full screen with the next dose strip" width="390"></a>
 
 Blood pressure is compared with her own first reading, and "How do you feel?" uses tick boxes, so she never has to think of the right words.
 
-[![Logging blood pressure](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/health.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/health.jpg)
+<a href="https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/health.jpg"><img src="https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/health.jpg" alt="Logging blood pressure" width="390"></a>
 
 ## What Jamie sees
 
@@ -54,13 +54,13 @@ Jamie decides when to be told: check-ins on or off, and after how many days in a
 
 1. **At the dose time**, if the medicine isn't taken, Buddy barks once and a message says it's time. The time comes from her saved schedule.
 
-   [![The dose-time reminder](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/reminder.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/reminder.jpg)
+   <a href="https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/reminder.jpg"><img src="https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/reminder.jpg" alt="The dose-time reminder" width="390"></a>
 
 2. **If it's still not taken**, Buddy nudges 60 minutes later, and once more 60 minutes after that. Never more than twice.
 3. **Hearts carry over.** Each of three activities earns one, up to four: all of the day's medicines, a blood-pressure reading, a walk with Buddy. Every 12 hours without a new heart, Buddy loses one, never below one. Our first version gave a heart for one medicine out of three; we changed it so all of them count.
-4. **Each reading is compared with her first one.** More than 5 points above it, or any ticked emergency sign, shows a calm Warning with the plain reason.
+4. **Each reading is compared with her first one.** About the same or lower says "Keep at it", 120/80 or below says "Good job", and more than 5 points above it, or any ticked emergency sign, shows a calm Warning.
 
-   [![A calm warning after a high reading](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/warning.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/warning.jpg)
+   <a href="https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/bp-reading.jpg"><img src="https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/bp-reading.jpg" alt="A reading compared with her first one: Keep at it" width="390"></a>
 
 5. **Jamie hears only what Rose allows.** A check-in goes out once per missed day, after the number of days Jamie chose. Sharing blood pressure is Rose's switch.
 
