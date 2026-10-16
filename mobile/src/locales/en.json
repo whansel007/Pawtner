@@ -235,7 +235,8 @@
         "walks_other": "{{count}} walks with {{dog}}",
         "questions_zero": "no notes for the next visit",
         "questions_one": "{{count}} note for the next visit",
-        "questions_other": "{{count}} notes for the next visit"
+        "questions_other": "{{count}} notes for the next visit",
+        "walksStatLabel": "walks with {{dog}}"
       },
       "footer": {
         "tagline": "Gentle care, thoughtfully connected.",

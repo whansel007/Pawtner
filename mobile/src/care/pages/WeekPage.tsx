@@ -55,7 +55,7 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
         aside={<CareDog name={dog.name} mood={dog.mood} size="small" />}
       />
 
-      <div className="care-grid">
+      <div className="care-grid care-grid--week">
         {(restockRequest || handledRestock) && (
           <CareCard
             eyebrow={t("care.web.week.restockEyebrow")}
