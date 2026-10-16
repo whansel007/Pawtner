@@ -426,6 +426,8 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 /* The Morning / Evening button that is on: filled; tap it again for real time. */
 .demo-time-buttons .secondary-button.is-active { color: white; background: var(--color-primary); }
 .demo-unlocks { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.demo-unlock-group { display: grid; gap: 6px; }
+.demo-unlock-group__title { margin: 0; color: #52685a; font-size: var(--font-size-sm); font-weight: var(--font-weight-black); letter-spacing: .6px; text-transform: uppercase; }
 /* Settings > For demo only: one closed card; its summary row is the only thing showing until tapped. */
 .demo-panel { gap: 0; }
 .demo-panel summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; list-style: none; cursor: pointer; }

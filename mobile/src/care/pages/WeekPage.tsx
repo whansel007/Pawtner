@@ -35,7 +35,7 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
   const senior = data.summary.senior.name;
   const dog = data.today.dog;
 
-  const progress = todayProgress(data.today.doses);
+  const progress = todayProgress(data.today.activities, data.today.doses);
   const state = todayState(progress);
   const stateText = (part: string) => t(`care.web.week.state.${state}.${part}`, { done: progress.done, total: progress.total, dog: dog.name });
   const stateBadge = state === "allDone" || state === "onTrack" ? <CareBadge>{stateText("badge")}</CareBadge> : null;

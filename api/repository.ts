@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient, QueryResultRow } from "pg";
 import { DEMO_RULES } from "../shared/config.js";
 import { decide, selectDogMood, firstReadingOf } from "../shared/rules.js";
-import { selectAgentInput, selectHeartsTotal, type AgentSelectionSource } from "../shared/selectors.js";
+import { selectAgentInput, selectHeartActivities, selectHeartsTotal, type AgentSelectionSource } from "../shared/selectors.js";
 import { applyModelWording } from "../shared/wording.js";
 import { SOUVENIR_TIERS, unlockedSouvenirs, nextSouvenir } from "../shared/souvenirs.js";
 import { FALLBACK_EXPLANATION, HEALTHHUB_MEDICATIONS_URL, NDF_URL, validateRephrase } from "../shared/medlineplus.js";
@@ -20,6 +20,7 @@ import type {
   EscalationSettingsRequest,
   EscalationSettingsResponse,
   HealthMetric,
+  HeartActivities,
   HealthMetricRequest,
   HealthMetricResponse,
   MedicationDetail,
@@ -205,11 +206,11 @@ export class PawtnerRepository {
     return selectAgentInput(await this.loadSource(client, userId, now, triggeringDoseEventId));
   }
 
-  /** Today's agent input plus the dog's lifetime hearts, both from one read of the full dose history. */
+  /** Today's agent input, the dog's lifetime hearts and today's heart activities, all from one read of the history. */
   private async loadDogState(client: PoolClient | Pool, userId: string, now: string, triggeringDoseEventId?: string)
-    : Promise<{ input: AgentInput; heartsTotal: number }> {
+    : Promise<{ input: AgentInput; heartsTotal: number; activities: HeartActivities }> {
     const source = await this.loadSource(client, userId, now, triggeringDoseEventId);
-    return { input: selectAgentInput(source), heartsTotal: selectHeartsTotal(source) };
+    return { input: selectAgentInput(source), heartsTotal: selectHeartsTotal(source), activities: selectHeartActivities(source) };
   }
 
   /** Reads everything the selectors need: every occurrence since each active schedule started (no history cap), ledger, nudges, readings. */
@@ -284,6 +285,11 @@ export class PawtnerRepository {
       `SELECT opted_in, threshold FROM user_caregivers WHERE user_id = $1 ORDER BY caregiver_id LIMIT 1`,
       [userId],
     );
+    // A finished walk earns that day's walk heart (shared/selectors.ts heartActivities).
+    const walksResult = await client.query(
+      "SELECT finished_at FROM walk_sessions WHERE user_id = $1 AND finished_at <= $2::timestamptz ORDER BY finished_at",
+      [userId, now],
+    );
     // One check-in per missed day: the day the latest one was sent for (rule repeated_misses_caretaker_check_in).
     const checkInResult = await client.query(
       `SELECT observations->>'lastMissedDay' AS last_missed_day FROM agent_decisions
@@ -306,6 +312,7 @@ export class PawtnerRepository {
       nudges: nudgeRows,
       healthMetrics: metricsResult.rows.map((row) => ({ ...mapMetric(row), kind: "blood_pressure" as const })),
       daysOfSupplyByMedicationId: Object.fromEntries(medsResult.rows.map((row) => [row.id, row.days_of_supply] as const)),
+      walkFinishedAt: walksResult.rows.map((row) => iso(row.finished_at)),
       caretaker: caregiverResult.rows[0]
         ? { optedIn: caregiverResult.rows[0].opted_in, threshold: caregiverResult.rows[0].threshold }
         : null,
@@ -324,7 +331,7 @@ export class PawtnerRepository {
   }
 
   private async today(client: PoolClient | Pool, userId: string, now: string, triggerEventId?: string): Promise<TodayResponse> {
-    const { input, heartsTotal } = await this.loadDogState(client, userId, now, triggerEventId);
+    const { input, heartsTotal, activities } = await this.loadDogState(client, userId, now, triggerEventId);
     const userResult = await client.query("SELECT id::text, name FROM users WHERE id = $1", [userId]);
     const dogResult = await client.query("SELECT id::text, name, mood FROM dogs WHERE user_id = $1", [userId]);
     const timezoneResult = await client.query("SELECT timezone FROM users WHERE id = $1", [userId]);
@@ -338,6 +345,7 @@ export class PawtnerRepository {
       doses: input.doses,
       healthMetrics,
       bloodPressureLoggedToday: healthMetrics.length > 0,
+      activities,
       latestDecision,
       firstBloodPressure: firstReadingOf(input.healthMetrics),
     };

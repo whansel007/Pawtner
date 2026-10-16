@@ -112,7 +112,7 @@
         "todayEyebrow": "Today",
         "ringValue": "{{done}} of {{total}}",
         "ringCaption": "done",
-        "ringLabel": "{{done}} of {{total}} doses taken today",
+        "ringLabel": "{{done}} of {{total}} activities is done today",
         "state": {
           "none": {
             "title": "A quiet day",
@@ -122,18 +122,18 @@
           "allDone": {
             "title": "All done today",
             "badge": "All done",
-            "lead": "Every dose is taken today.",
+            "lead": "{{done}} of {{total}} activities is done today",
             "body": "{{dog}} is having a lovely day."
           },
           "missed": {
             "title": "A gentle day",
-            "lead": "{{done}} of {{total}} doses taken",
+            "lead": "{{done}} of {{total}} activities is done today",
             "body": "A dose was missed. {{dog}} nudges gently first; a check-in comes only after the missed days you chose."
           },
           "onTrack": {
             "title": "A steady day",
             "badge": "On track",
-            "lead": "{{done}} of {{total}} doses taken",
+            "lead": "{{done}} of {{total}} activities is done today",
             "body": "There is plenty of time for the rest of today."
           }
         },
@@ -545,11 +545,19 @@
     "demoResetHint": "Back to {{time}} today: today's doses, readings and {{name}}'s answers are cleared, plus this phone's demo choices (restock answer, clinic memo photo, visit notes, sharing switch, ticks, garden time). Earlier days stay.",
     "demoTimeTitle": "Garden time",
     "demoTimeHint": "Jump the garden to a time of day; tap it again for real time. Doesn't run the agent or save anything.",
-    "demoUnlockTitle": "Unlock rewards",
-    "demoUnlockHint": "Show the app as if Rose reached:",
+    "demoUnlockTitle": "Pretend numbers",
+    "demoUnlockHint": "Show the app as if Rose had:",
+    "demoGroup": {
+      "today": "Today's hearts",
+      "total": "In total"
+    },
     "demoUnlock": {
-      "days7": "7 days",
-      "hearts20": "20 hearts"
+      "today1": "1 heart",
+      "today2": "2 hearts",
+      "today3": "3 hearts",
+      "today4": "4 hearts",
+      "days7": "7-day streak",
+      "hearts20": "20 hearts in total"
     },
     "demoClockTitle": "Agent clock",
     "demoClockHint": "Choose a time to check the dose rules at. Nudges are limited to two per scheduled dose.",

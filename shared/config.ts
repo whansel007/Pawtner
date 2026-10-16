@@ -15,11 +15,12 @@ export const DEMO_RULES = {
   /** At or below both of these, a reading is "in the normal range" (Good job). Demo values, not clinical advice. */
   bpNormalSystolic: 120,
   bpNormalDiastolic: 80,
-  heartMinimum: 0,
+  /**
+   * Hearts (user, 16 Oct): every day starts at `heartDayStart`, and each of the three activities adds one, up to
+   * `heartMaximum`: all of the day's medicines taken, a blood-pressure measurement logged, a walk with the dog.
+   */
+  heartDayStart: 1,
   heartMaximum: 4,
-  heartScale: 4,
-  heartWhenNothingDue: 2,
-  heartBloodPressureBonus: 1,
   /**
    * At or below this many hearts Buddy is sad (sleepy face) whatever the latest decision, and doesn't play
    * (the phone asks for a heart instead). User, 16 Oct. One source for shared/rules.ts and mobile/src/config/pet.ts.

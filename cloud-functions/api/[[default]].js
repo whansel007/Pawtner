@@ -5372,11 +5372,12 @@ var DEMO_RULES = {
   /** At or below both of these, a reading is "in the normal range" (Good job). Demo values, not clinical advice. */
   bpNormalSystolic: 120,
   bpNormalDiastolic: 80,
-  heartMinimum: 0,
+  /**
+   * Hearts (user, 16 Oct): every day starts at `heartDayStart`, and each of the three activities adds one, up to
+   * `heartMaximum`: all of the day's medicines taken, a blood-pressure measurement logged, a walk with the dog.
+   */
+  heartDayStart: 1,
   heartMaximum: 4,
-  heartScale: 4,
-  heartWhenNothingDue: 2,
-  heartBloodPressureBonus: 1,
   /**
    * At or below this many hearts Buddy is sad (sleepy face) whatever the latest decision, and doesn't play
    * (the phone asks for a heart instead). User, 16 Oct. One source for shared/rules.ts and mobile/src/config/pet.ts.
@@ -5557,13 +5558,14 @@ function deriveDoseStatus(schedule, events, now, nudgeHistory = { count: 0, last
     lastNudgeAt: nudgeHistory.lastAt
   };
 }
-function computeHeart(doses, bloodPressureLoggedToday) {
-  const due = doses.filter((dose) => dose.status !== "upcoming");
-  const base = due.length === 0 ? DEMO_RULES.heartWhenNothingDue : Math.floor(due.filter((dose) => dose.status === "taken").length / due.length * DEMO_RULES.heartScale);
-  return Math.min(
-    DEMO_RULES.heartMaximum,
-    Math.max(DEMO_RULES.heartMinimum, base + (bloodPressureLoggedToday ? DEMO_RULES.heartBloodPressureBonus : 0))
-  );
+function heartActivities(doses, bloodPressureLogged, walked) {
+  return { medicines: doses.every((dose) => dose.status === "taken"), bloodPressure: bloodPressureLogged, walk: walked };
+}
+function countActivitiesDone(activities) {
+  return Object.values(activities).filter(Boolean).length;
+}
+function computeHeart(activities) {
+  return Math.min(DEMO_RULES.heartMaximum, DEMO_RULES.heartDayStart + countActivitiesDone(activities));
 }
 function computeStreak(days, today) {
   const byDate = /* @__PURE__ */ new Map();
@@ -5631,18 +5633,28 @@ function deriveSelection(source) {
   const metrics = source.healthMetrics.filter((metric) => Date.parse(metric.recordedAt) <= Date.parse(source.now));
   return { derived, metrics };
 }
-function computeHeartsTotal(doses, metrics, today) {
+function computeHeartsTotal(doses, metrics, today, walkFinishedAt = []) {
   const dosesByDate = groupBy(doses.filter((dose) => dose.scheduledAt.slice(0, 10) <= today), (dose) => dose.scheduledAt.slice(0, 10));
   const firstDate = [...dosesByDate.keys()].sort()[0];
   if (!firstDate) return 0;
   const bloodPressureDates = new Set(metrics.map((metric) => metric.recordedAt.slice(0, 10)));
+  const walkDates = new Set(walkFinishedAt.map((finishedAt) => finishedAt.slice(0, 10)));
   let total = 0;
   const cursor = /* @__PURE__ */ new Date(`${firstDate}T00:00:00.000Z`);
   for (let date = firstDate; date <= today; date = cursor.toISOString().slice(0, 10)) {
-    total += computeHeart(dosesByDate.get(date) ?? [], bloodPressureDates.has(date));
+    total += computeHeart(heartActivities(dosesByDate.get(date) ?? [], bloodPressureDates.has(date), walkDates.has(date)));
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
   return total;
+}
+function selectHeartActivities(source) {
+  const { derived, metrics } = deriveSelection(source);
+  return todayActivities(derived, metrics, source);
+}
+function todayActivities(derived, metrics, source) {
+  const todayDoses = derived.filter((dose) => dose.scheduledAt.slice(0, 10) === source.today);
+  const walkedToday = source.walkFinishedAt.some((finishedAt) => finishedAt.slice(0, 10) === source.today && Date.parse(finishedAt) <= Date.parse(source.now));
+  return heartActivities(todayDoses, hasBloodPressureToday(metrics, source.today), walkedToday);
 }
 function selectAgentInput(source) {
   const { derived, metrics } = deriveSelection(source);
@@ -5660,7 +5672,7 @@ function selectAgentInput(source) {
     userId: source.userId,
     dog: {
       ...source.dog,
-      heart: computeHeart(todayDoses, hasBloodPressureToday(metrics, source.today)),
+      heart: computeHeart(todayActivities(derived, metrics, source)),
       streak
     },
     doses: todayDoses,
@@ -5675,7 +5687,7 @@ function selectAgentInput(source) {
 }
 function selectHeartsTotal(source) {
   const { derived, metrics } = deriveSelection(source);
-  return computeHeartsTotal(derived, metrics, source.today);
+  return computeHeartsTotal(derived, metrics, source.today, source.walkFinishedAt.filter((finishedAt) => Date.parse(finishedAt) <= Date.parse(source.now)));
 }
 
 // shared/wording.ts
@@ -5897,10 +5909,10 @@ var PawtnerRepository = class {
   async loadInput(client, userId, now, triggeringDoseEventId) {
     return selectAgentInput(await this.loadSource(client, userId, now, triggeringDoseEventId));
   }
-  /** Today's agent input plus the dog's lifetime hearts, both from one read of the full dose history. */
+  /** Today's agent input, the dog's lifetime hearts and today's heart activities, all from one read of the history. */
   async loadDogState(client, userId, now, triggeringDoseEventId) {
     const source = await this.loadSource(client, userId, now, triggeringDoseEventId);
-    return { input: selectAgentInput(source), heartsTotal: selectHeartsTotal(source) };
+    return { input: selectAgentInput(source), heartsTotal: selectHeartsTotal(source), activities: selectHeartActivities(source) };
   }
   /** Reads everything the selectors need: every occurrence since each active schedule started (no history cap), ledger, nudges, readings. */
   async loadSource(client, userId, now, triggeringDoseEventId) {
@@ -5969,6 +5981,10 @@ var PawtnerRepository = class {
       `SELECT opted_in, threshold FROM user_caregivers WHERE user_id = $1 ORDER BY caregiver_id LIMIT 1`,
       [userId]
     );
+    const walksResult = await client.query(
+      "SELECT finished_at FROM walk_sessions WHERE user_id = $1 AND finished_at <= $2::timestamptz ORDER BY finished_at",
+      [userId, now]
+    );
     const checkInResult = await client.query(
       `SELECT observations->>'lastMissedDay' AS last_missed_day FROM agent_decisions
        WHERE user_id = $1 AND caretaker_ping = true AND created_at <= $2::timestamptz
@@ -5990,6 +6006,7 @@ var PawtnerRepository = class {
       nudges: nudgeRows,
       healthMetrics: metricsResult.rows.map((row) => ({ ...mapMetric(row), kind: "blood_pressure" })),
       daysOfSupplyByMedicationId: Object.fromEntries(medsResult.rows.map((row) => [row.id, row.days_of_supply])),
+      walkFinishedAt: walksResult.rows.map((row) => iso(row.finished_at)),
       caretaker: caregiverResult.rows[0] ? { optedIn: caregiverResult.rows[0].opted_in, threshold: caregiverResult.rows[0].threshold } : null,
       lastCheckInDay: checkInResult.rows[0]?.last_missed_day ?? null,
       ...triggeringDoseEventId ? { triggeringDoseEventId } : {}
@@ -6004,7 +6021,7 @@ var PawtnerRepository = class {
     return mapDecision(result.rows[0]);
   }
   async today(client, userId, now, triggerEventId) {
-    const { input, heartsTotal } = await this.loadDogState(client, userId, now, triggerEventId);
+    const { input, heartsTotal, activities } = await this.loadDogState(client, userId, now, triggerEventId);
     const userResult = await client.query("SELECT id::text, name FROM users WHERE id = $1", [userId]);
     const dogResult = await client.query("SELECT id::text, name, mood FROM dogs WHERE user_id = $1", [userId]);
     const timezoneResult = await client.query("SELECT timezone FROM users WHERE id = $1", [userId]);
@@ -6018,6 +6035,7 @@ var PawtnerRepository = class {
       doses: input.doses,
       healthMetrics,
       bloodPressureLoggedToday: healthMetrics.length > 0,
+      activities,
       latestDecision,
       firstBloodPressure: firstReadingOf(input.healthMetrics)
     };

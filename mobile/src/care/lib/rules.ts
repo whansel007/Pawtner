@@ -1,5 +1,6 @@
 import { DEMO_RULES } from "../../../../shared/config.js";
-import type { DerivedDose } from "../../../../shared/contract.js";
+import type { DerivedDose, HeartActivities } from "../../../../shared/contract.js";
+import { countActivitiesDone } from "../../../../shared/selectors.js";
 import type { CaringMoment } from "../data/types.js";
 
 /**
@@ -36,11 +37,14 @@ export interface TodayProgress {
   missed: number;
 }
 
-/** Counts only; caretaker pages never show which medicine (PRD §11). */
-export function todayProgress(doses: readonly Pick<DerivedDose, "status">[]): TodayProgress {
+/**
+ * Today's three heart activities (all medicines, a measurement, a walk; user, 16 Oct): how many are done, out of how
+ * many, and how many doses were missed. Counts only; caretaker pages never show which medicine (PRD §11).
+ */
+export function todayProgress(activities: HeartActivities, doses: readonly Pick<DerivedDose, "status">[]): TodayProgress {
   return {
-    done: doses.filter((dose) => dose.status === "taken").length,
-    total: doses.length,
+    done: countActivitiesDone(activities),
+    total: Object.keys(activities).length,
     missed: doses.filter((dose) => dose.status === "missed").length,
   };
 }

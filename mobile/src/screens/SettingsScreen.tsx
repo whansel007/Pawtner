@@ -5,7 +5,7 @@ import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
 import type { BackAction } from "../lib/navigation";
 import type { Caregiver } from "../types";
-import { DEMO_RESET_PRESET, DEMO_TIME_PRESETS, type DemoTimePreset, DEMO_UNLOCKS, type DemoUnlockKey } from "../config/demo";
+import { DEMO_RESET_PRESET, DEMO_TIME_PRESETS, type DemoTimePreset, DEMO_UNLOCK_GROUPS, DEMO_UNLOCKS, type DemoUnlockKey } from "../config/demo";
 import { formatClockTime, parseDemoTime } from "../lib/demoTime";
 
 export function SettingsScreen({
@@ -112,14 +112,19 @@ export function SettingsScreen({
           <section className="demo-panel__section">
             <h3>{t("settings.demoUnlockTitle")}</h3>
             <p>{t("settings.demoUnlockHint")}</p>
-            <div className="demo-unlocks">
-              {DEMO_UNLOCKS.map((unlock) => (
-                <label className="consent-toggle" key={unlock.key}>
-                  <input type="checkbox" checked={demoUnlocks.has(unlock.key)} onChange={() => onToggleDemoUnlock(unlock.key)} />
-                  {t(`settings.demoUnlock.${unlock.key}`)}
-                </label>
-              ))}
-            </div>
+            {DEMO_UNLOCK_GROUPS.map((group) => (
+              <div className="demo-unlock-group" key={group.id}>
+                <p className="demo-unlock-group__title">{t(`settings.demoGroup.${group.id}`)}</p>
+                <div className="demo-unlocks">
+                  {DEMO_UNLOCKS.filter((unlock) => (group.kinds as readonly string[]).includes(unlock.kind)).map((unlock) => (
+                    <label className="consent-toggle" key={unlock.key}>
+                      <input type="checkbox" checked={demoUnlocks.has(unlock.key)} onChange={() => onToggleDemoUnlock(unlock.key)} />
+                      {t(`settings.demoUnlock.${unlock.key}`)}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
           </section>
           <section className="demo-panel__section">
             <h3>{t("settings.demoClockTitle")}</h3>
