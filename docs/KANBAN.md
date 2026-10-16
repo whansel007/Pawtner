@@ -44,6 +44,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Migration 006 (check-in threshold minimum 1 day) applied on Supabase by the user, 16 Oct | — |
 | — | Drag Home's card: full-screen Buddy (next-dose strip) / both / full-screen form, portrait and landscape; tap the bar for both | [#66](https://github.com/whansel007/Pawtner/pull/66) |
 | — | Settings "For demo only" closed card; demo ticks drive the one streak/hearts number; "today" after the hearts; Reset to morning (API deletes today's doses, readings, decisions; clock 9:00); roomier short landscape; check-ins by missed days, set by Jamie on /care (switch + days stepper), check-in card on This week; Rose's check-in card removed; landscape Home card centred and scaled to the pane (portrait unchanged; tablets fill the pane); signed-in /care follows the phone's clock and refreshes every 15 s (landing Buddy fixed); two footer lines removed | [#65](https://github.com/whansel007/Pawtner/pull/65) |
 | T1-10 | BP judged against the first reading (+5 slack): Warning / Keep at it / Good job; "How do you feel?" tick boxes (I feel fine + 6 emergency signs); first reading on Settings | Branch `claude/bp-first-reading` |
@@ -87,7 +88,6 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | Item | Blocked on |
 |---|---|
-| Check-ins by missed day on the hosted site | User: run `migrations/006_check_in_days.sql` in the Supabase SQL Editor (schema only: allows threshold 1, default 1) and record it in `schema_migrations`. Until then `/care` can't save 1 day (database refuses), 2+ days work. |
 | HSA import script date bug (P1) | `scripts/import-hsa-products.ts` passes day-first HSA dates (`13/10/1992`) to a `date` column; Postgres reads them month-first, so the import fails (rollback) or stores wrong dates. Not urgent: the hosted table was filled by CSV import (5,511 rows, 15 Oct night). Fix: convert to ISO before insert. |
 | T1-17 production URL | P1: host the API and run migrations + fictional seed on the hosted database (Supabase has no Pawtner schema yet). Message drafted for the user to send 14 Oct. |
 | T1-15 caretaker list on the web (real data) | P1: `caregivers: { id, name, receivesCheckIns }[]` in `CaretakerSummaryResponse`, 3–4 seeded caretakers, check-in template in `shared/templates.ts`. Until then `/care` shows the API caregiver (gets check-ins) plus the mock updates-only slot `MOCK_UPDATES_ONLY_CARETAKER` in `mobile/src/care/data/mock.ts`. Also wanted: the senior's time zone in the summary (moment times use the viewer's zone). |
