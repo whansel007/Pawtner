@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "./Icon";
 import type { DerivedDose } from "../../../shared/contract";
 import { selectNextDose, countTaken, formatDoseTime } from "../lib/doses";
+import { formatStrength } from "../lib/strength";
 import "./NextDoseCard.css";
 
 interface NextDoseCardProps {
@@ -43,7 +44,7 @@ export function NextDoseCard({
         </span>
         {dose.strength && (
           <span className="next-dose-card__strength">
-            {dose.strength}
+            {formatStrength(dose.strength)}
           </span>
         )}
       </div>

@@ -6,6 +6,7 @@ import type { BackAction } from "../lib/navigation";
 import type { DerivedDose } from "../../../shared/contract";
 import { formatDayDate, formatDoseTime, minutesUntil, selectNextDose } from "../lib/doses";
 import { SENIOR_TIMEZONE } from "../config/scene";
+import { formatStrength } from "../lib/strength";
 
 export function RemindersScreen({
   back,
@@ -46,7 +47,7 @@ export function RemindersScreen({
           <article key={dose.id}>
             <span className={`timeline-dot ${dose.status === "taken" ? "complete" : ""}`} />
             <time>{formatDoseTime(dose.scheduledAt)}</time>
-            <div><h3>{dose.medicationName}</h3><p>{dose.strength ?? ""}</p></div>
+            <div><h3>{dose.medicationName}</h3><p>{formatStrength(dose.strength)}</p></div>
             <span className={`status-tag ${dose.status === "due" ? "now" : ""}`}>{dose.status === "taken" ? t("reminders.statusDone") : dose.status === "due" ? t("reminders.statusSoon") : t("reminders.statusLater")}</span>
           </article>
         ))}
