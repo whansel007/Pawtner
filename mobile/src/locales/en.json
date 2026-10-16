@@ -1,7 +1,8 @@
 {
   "intro": {
     "coverAlt": "Pawtner cover image",
-    "coverHint": "Tap to begin",
+    "brand": "Pawtner",
+    "coverHint": "Tap to Begin",
     "coverAria": "Tap anywhere to begin",
     "dedicationText": "For Mom",
     "dedicationAria": "Dedication. Continues to home automatically. Tap to skip."

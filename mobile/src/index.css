@@ -938,9 +938,9 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
-  padding: 22px 32px;
-  border-radius: 999px;
+  gap: 10px;
+  padding: 24px 36px 22px;
+  border-radius: 32px;
   background: rgba(255, 253, 247, 0.10);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -962,14 +962,29 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
   pointer-events: none;
 }
 
+/* Wordmark: paw + "Pawtner", like the /care brand. */
+.intro-cover-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: #fffdf7;
+  font-family: var(--font-family-base);
+  font-size: clamp(36px, 11vw, 48px);
+  font-weight: var(--font-weight-black);
+  line-height: 1;
+  letter-spacing: -1px;
+  text-shadow: 0 2px 18px rgba(18, 43, 29, 0.6);
+}
+.intro-cover-brand__paw { color: #ffca74; filter: drop-shadow(0 2px 10px rgba(18, 43, 29, 0.5)); }
+
 .intro-cover-hint {
   margin: 0;
   color: rgba(255, 253, 247, 0.96);
   font-family: var(--font-family-base);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
+  letter-spacing: .4px;
   text-shadow: 0 2px 14px rgba(18, 43, 29, 0.55);
 }
 

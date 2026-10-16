@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Icon } from "../components/Icon";
 
 export function CoverScreen({ onContinue }: { onContinue: () => void }) {
   const { t } = useTranslation();
@@ -21,6 +22,8 @@ export function CoverScreen({ onContinue }: { onContinue: () => void }) {
 
       <div className="intro-cover-cta">
         <span className="intro-cover-pulse" aria-hidden="true" />
+        {/* The app's name on the way in (user, 16 Oct: there was no logo anywhere). */}
+        <p className="intro-cover-brand"><Icon name="paw" size={34} className="intro-cover-brand__paw" />{t("intro.brand")}</p>
         <p className="intro-cover-hint">{t("intro.coverHint")}</p>
       </div>
     </div>
