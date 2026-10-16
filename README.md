@@ -34,6 +34,10 @@ Drag the card up and the whole screen becomes her medicines for today, in large 
 
 [![Today's medicines on the full screen](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/full-form.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/full-form.jpg)
 
+Buddy alone keeps the next medicine in sight on a slim strip.
+
+[![Buddy on the full screen with the next dose strip](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/buddy-only.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/buddy-only.jpg)
+
 Blood pressure is compared with her own first reading, and "How do you feel?" uses tick boxes, so she never has to think of the right words.
 
 [![Logging blood pressure](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/health.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/health.jpg)
@@ -51,12 +55,20 @@ Jamie decides when to be told: check-ins on or off, and after how many days in a
 ## How it works
 
 1. **At the dose time**, if the medicine isn't taken, Buddy barks once and a message says it's time. The time comes from her saved schedule.
+
+   [![The dose-time reminder](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/reminder.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/reminder.jpg)
+
 2. **If it's still not taken**, Buddy nudges 60 minutes later, and once more 60 minutes after that. Never more than twice.
 3. **Hearts carry over.** Each of three activities earns one, up to four: all of the day's medicines, a blood-pressure reading, a walk with Buddy. Every 12 hours without a new heart, Buddy loses one, never below one. Our first version gave a heart for one medicine out of three; we changed it so all of them count.
-4. **Each reading is compared with her first one.** More than 5 points above it is a calm warning, and any ticked emergency sign shows a "Call 995" button.
+4. **Each reading is compared with her first one.** More than 5 points above it, or any ticked emergency sign, shows a calm Warning with the plain reason.
+
+   [![A calm warning after a high reading](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/warning.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/warning.jpg)
+
 5. **Jamie hears only what Rose allows.** A check-in goes out once per missed day, after the number of days Jamie chose. Sharing blood pressure is Rose's switch.
 
-Evidence, as of 16 Oct 2026: 169 unit tests pass (`npm run test:unit`) without a database, a model or a network, covering these rules, the hearts and the reminders. The live demo runs on the hosted database.
+   [![A gentle check-in on Jamie's page](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/care-checkin.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/care-checkin.jpg)
+
+Evidence, as of 16 Oct 2026: 169 unit tests pass (`npm run test:unit`) without a database, a model or a network, covering these rules and the hearts. The live demo runs on the hosted database.
 
 ## By the numbers
 
