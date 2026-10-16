@@ -449,31 +449,39 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 /* Room for the grab bar: on top in portrait, down the left edge in landscape. */
 .home-sheet--portrait .next-dose-card { padding-top: calc(16 * var(--ndc-u, 1px) + 10px); }
 .home-sheet--landscape .next-dose-card { padding-left: calc(16 * var(--ndc-u, 1px) + 16px); }
+/* Full-screen Buddy's strip: the card's own type (NextDoseCard.css), on the same scale unit. */
 .home-sheet__peek {
+  --u: var(--ndc-u, 1px);
+  display: grid;
+  justify-items: center;
+  gap: calc(4 * var(--u));
   margin: 0;
-  padding: 26px 18px 16px;
-  border-radius: 24px;
-  color: var(--color-text-heading);
+  padding: calc(16 * var(--u) + 10px) calc(18 * var(--u)) calc(14 * var(--u));
+  border-radius: calc(24 * var(--u));
   background: var(--color-surface-card);
   box-shadow: var(--shadow-card);
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-black);
   text-align: center;
 }
 .home-sheet--landscape .home-sheet__peek {
-  padding: calc(14 * var(--ndc-u, 1px)) calc(16 * var(--ndc-u, 1px)) calc(14 * var(--ndc-u, 1px)) calc(16 * var(--ndc-u, 1px) + 20px);
-  border-radius: calc(24 * var(--ndc-u, 1px));
-  font-size: calc(16 * var(--ndc-u, 1px));
+  justify-items: start;
+  padding: calc(14 * var(--u)) calc(16 * var(--u)) calc(14 * var(--u)) calc(16 * var(--u) + 20px);
   text-align: left;
 }
+.home-sheet--landscape .home-sheet__peek-dose { justify-content: flex-start; }
+.home-sheet__peek-label { color: var(--color-text-eyebrow-green, #4a7a5a); font-size: calc(12 * var(--u)); font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+.home-sheet__peek-dose { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 0 calc(8 * var(--u)); }
+.home-sheet__peek-dose time { color: #6f7d73; font-size: calc(12 * var(--u)); font-weight: 700; white-space: nowrap; }
+.home-sheet__peek-dose strong { color: var(--color-text-heading, #1c3a2a); font-size: calc(14 * var(--u)); font-weight: 800; }
+.home-sheet__peek-empty { color: #6c806f; font-size: calc(11 * var(--u)); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .home-sheet { transition: none; } }
 
-/* Full-screen form (portrait and landscape): no Buddy, no chips; the sheet takes the column and the card grows with it. */
+/* Full-screen form (portrait and landscape): no Buddy, no chips; the card grows with the column but keeps its natural
+   height, pinned to the top like /care's pages (user, 16 Oct), so a short day doesn't spread out. */
 .app-shell.home-view-medicines .dog-layer,
 .app-shell.home-view-medicines .scene-ground { display: none; }
 .app-shell.home-view-medicines .home-layout__cards { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; container-type: size; }
-.app-shell.home-view-medicines .home-sheet { flex: 1 1 auto; --ndc-u: clamp(1px, min(0.4cqh, 0.36cqi), 2.4px); }
-.app-shell.home-view-medicines .home-sheet .next-dose-card { flex: 1 1 auto; justify-content: space-evenly; }
+.app-shell.home-view-medicines .home-sheet { flex: none; --ndc-u: clamp(1px, min(0.4cqh, 0.36cqi), 2.4px); }
+.app-shell.home-view-medicines .home-sheet .next-dose-card { flex: none; justify-content: flex-start; }
 .role-strip { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-bottom: 12px; padding: 12px 14px; border-radius: var(--radius-3xl); color: #426653; background: var(--color-surface-sage-light); }
 .role-strip div { display: grid; }
 .role-strip small { color: #76847b; font-size: var(--font-size-sm); }
@@ -1173,7 +1181,7 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
   .app-shell.home-view-medicines .scene-backdrop,
   .app-shell.home-view-medicines .scene-shade { right: 0; }
   .app-shell.home-view-medicines .home-layout__cards { align-items: center; padding-top: calc(var(--top-bar-space) - var(--pane-top)); }
-  .app-shell.home-view-medicines .home-layout__cards > .home-sheet { width: min(100%, 680px); max-height: none; --ndc-u: clamp(1px, min(0.6cqh, 0.2cqi), 2.4px); }
+  .app-shell.home-view-medicines .home-layout__cards > .home-sheet { flex: none; margin: 0; width: min(100%, 680px); max-height: none; --ndc-u: clamp(1px, min(0.6cqh, 0.2cqi), 2.4px); }
 
   /* Full-screen Buddy sideways: the garden runs behind the pane too and the card is only the next-dose strip. The pane
      keeps its width, so the dock below it stays roomy. */

@@ -77,6 +77,8 @@
   line-clamp: 2;
   overflow: hidden;
   overflow-wrap: break-word;
+  /* Two even lines ("Fictional / Tablet A"), not a lone last word. */
+  text-wrap: balance;
 }
 
 .next-dose-card__strength {

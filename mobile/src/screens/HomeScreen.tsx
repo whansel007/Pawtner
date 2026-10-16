@@ -41,10 +41,19 @@ export function HomeScreen({
   // How far the sheet follows the finger toward the form while the grab bar is dragged (0 at rest).
   const [follow, setFollow] = useState(0);
   const nextDose = selectNextDose(todayDoses);
-  // Full-screen Buddy keeps the next dose in sight on the strip that's left of the card.
-  const nextLine = nextDose
-    ? t(nextDose.status === "missed" ? "home.sheet.stillToTake" : "home.sheet.next", { time: formatDoseTime(nextDose.scheduledAt), name: nextDose.medicationName })
-    : t(todayDoses.length === 0 ? "home.noDoses" : "home.allDone");
+  // Full-screen Buddy keeps the next dose in sight on the strip that's left of the card, in the card's own type:
+  // the label as on the card, the time in grey, only the medicine name bold.
+  const peek = nextDose ? (
+    <>
+      <span className="home-sheet__peek-label">{t(nextDose.status === "missed" ? "home.stillToTake" : "home.next")}</span>
+      <span className="home-sheet__peek-dose">
+        <time>{formatDoseTime(nextDose.scheduledAt)}</time>
+        <strong>{nextDose.medicationName}</strong>
+      </span>
+    </>
+  ) : (
+    <span className="home-sheet__peek-empty">{t(todayDoses.length === 0 ? "home.noDoses" : "home.allDone")}</span>
+  );
   return (
     // Stacked column: the dog (shared DogLayer) stands in the leftover space, so its paws always sit just above the chips.
     // In landscape the stage and chips form the left column and the cards move to the right pane (index.css).
@@ -71,7 +80,7 @@ export function HomeScreen({
         >
           <HomeSheetHandle view={view} layout={layout} petName={pet.name} onView={onView} onFollow={setFollow} />
           {view === "buddy" ? (
-            <p className="home-sheet__peek">{nextLine}</p>
+            <p className="home-sheet__peek">{peek}</p>
           ) : (
             <NextDoseCard
               doses={todayDoses}
