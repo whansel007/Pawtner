@@ -119,7 +119,7 @@ export interface DogView {
   id: string;
   name: string;
   mood: DogMood;
-  /** Today's hearts so far, 1-4: the day's start heart plus one per activity done (`computeHeart`). */
+  /** Hearts now, 1-4: +1 per activity done, -1 every 12 hours without a new heart (`heartsAt`). */
   heart: number;
   /** Consecutive fully taken days before today (`computeStreak`). */
   streak: number;

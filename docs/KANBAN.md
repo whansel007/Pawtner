@@ -44,6 +44,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Hearts carry over: +1 per activity (max 4), -1 every 12 hours without a new heart (min 1); lifetime = each day's hearts at its end | Branch `claude/hearts-carry-over` |
 | — | Hearts: start 1 + all medicines / measurement / walk (max 4), lifetime hearts the same; /care "x of 3 activities is done today"; demo ticks Today's hearts 1–4, "7-day streak", "20 hearts in total" | Branch `claude/hearts-activities` |
 | — | Migration 006 (check-in threshold minimum 1 day) applied on Supabase by the user, 16 Oct | — |
 | — | Drag Home's card: full-screen Buddy (next-dose strip) / both / full-screen form, portrait and landscape; tap the bar for both | [#66](https://github.com/whansel007/Pawtner/pull/66) |
