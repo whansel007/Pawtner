@@ -1394,3 +1394,30 @@ button.care-brand {
 /* Shared blood pressure (only when the senior turns sharing on). */
 .care-root .care-bp__value { margin: 4px 0 2px; font-size: 2rem; font-weight: 800; color: var(--care-ink); }
 .care-root .care-streak__count { margin: 2px 0 6px; font-size: 1rem; font-weight: 600; color: var(--care-muted); }
+
+/*
+ * Desktop: This week fits a typical laptop screen without scrolling (user, 16 Oct): a slimmer welcome banner and
+ * tighter cards, ring and hearts. Phones keep the roomier layout above.
+ */
+@media (min-width: 900px) {
+  .care-content { padding-top: 20px; padding-bottom: 28px; }
+  .care-welcome { min-height: 0; padding: 16px 32px; }
+  .care-welcome h1 { margin-top: 4px; font-size: clamp(1.6rem, 1.1rem + 1vw, 2.1rem); }
+  .care-welcome__copy > p:last-child { margin-top: 4px; }
+  .care-welcome .care-dog--small { width: 76px; }
+  .care-grid { margin-top: 16px; gap: 16px; }
+  .care-card { padding: 20px 24px; }
+  .care-progress { min-height: 0; padding-top: 8px; gap: 16px 32px; }
+  .care-ring { width: 118px; }
+  .care-hearts { min-height: 0; padding-top: 14px; }
+  .care-questions blockquote { margin-top: 14px; font-size: 1.3rem; }
+}
+
+/* Wide screens: three columns, so even with the blood-pressure and refill cards This week stays on one screen.
+   Row 1: Today (double width) + the streak; row 2: treat, blood pressure, questions; a refill request spans the top. */
+@media (min-width: 1200px) {
+  .care-grid:not(.care-grid--alerts) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .care-today { grid-column: span 2; }
+  .care-restock { grid-column: 1 / -1; }
+  .care-hearts { --care-heart-size: clamp(18px, 1.7vw, 26px); }
+}
