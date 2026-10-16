@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-16 — Demo first reading 160/95 (branch `claude/seed-first-reading`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| The seed's three readings become 160/95 (first, Rose's "normal"), 156/93, 150/90, so the medicine visibly brings it down ("Keep at it"); a 185/120 entry is then a Warning (more than 5 above 160). The hosted rows are updated in place by their fixed ids (SQL run by the user; nothing deleted). | User: her mother's normal reading is about 160, a realistic baseline for the demo. | Demo values, not clinical advice. The bottom number 95 is assumed. | Final |
+
 ## 2026-10-16 — /care This week on one screen (branch `claude/care-compact`)
 
 | Decision | Reason | Tradeoff | Status |
