@@ -44,6 +44,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Repo clean-up: unused `max-garden.jpg` removed, `playwright` moved to devDependencies, stale `functions/` ignore line dropped, CLAUDE.md PRD path fixed, favicon linked, `Pawtner.csv` → `docs/user-stories.csv`; old local worktrees and merged local branches removed (CodeBuddy ones kept) | Branch `claude/repo-cleanup` |
 | — | Combination strengths: "&&" shows as " / " on every strength (Home, Reminders, My medicines, product search); Twynsta row → "80 mg / 10 mg" (SQL by the user) | Branch `claude/strength-display` |
 | — | Hearts carry over: +1 per activity (max 4), -1 every 12 hours without a new heart (min 1); lifetime = each day's hearts at its end | [#70](https://github.com/whansel007/Pawtner/pull/70) |
 | — | Hearts: start 1 + all medicines / measurement / walk (max 4), lifetime hearts the same; /care "x of 3 activities is done today"; demo ticks Today's hearts 1–4, "7-day streak", "20 hearts in total" | [#69](https://github.com/whansel007/Pawtner/pull/69) (heart rule replaced by #70) |
@@ -118,9 +119,5 @@ Today's plan (agreed 13 Oct evening), in order:
 | `viewport-fit=cover` not set | `mobile/index.html` lacks it, so the `env(safe-area-inset-*)` paddings are 0 on iPhones (the browser letterboxes instead). Adding it is a separate, all-screens change. |
 | Stale checkouts mislead tools | On 14 Oct the main folder was still on the merged `cb/names-from-data` (no KANBAN/HANDOFF) and CodeBuddy tried to restart T1-08. Main folder switched to `main` the same morning. Start new work from `origin/main` in a worktree. |
 | Dedication cross-fade into Home | Deferred by the user; needs Home rendered under the dedication overlay. |
-| `CLAUDE.md` paths | Points to `docs/PRD.md` and `docs/ARCHITECTURE.md`; the PRD is at the repo root and ARCHITECTURE.md doesn't exist. |
 | `docs/ARCHITECTURE.md`, `docs/BRIEF.md`, `docs/DOG_BIBLE.md` missing | Referenced by the PRD. |
-| `mobile/.vercel` | Old, untracked link in the main folder's `mobile/`; deploys must run from the repo root. Remove later. |
-| `mobile/public/assets/max-garden.jpg` | No longer referenced; can be deleted. |
-| `playwright` in `mobile` `dependencies` | Should be a devDependency. |
 | Proof screenshots | 13 in `proof/`; add the 1.1 s round, the names round, the 14 Oct context reset and Miora chats. |

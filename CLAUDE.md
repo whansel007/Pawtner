@@ -2,7 +2,7 @@
 
 ## Roles
 - Advisor (separate chat) plans and writes tasks. CodeBuddy builds most features: it is the team's required build tool for judging. Claude Code does targeted, reviewable fixes only.
-- Source of truth for product scope: docs/PRD.md (tiers in section 9). Architecture: docs/ARCHITECTURE.md. Interface between app and agent: shared/contract.ts.
+- Source of truth for product scope: PRD.md (tiers in section 9). Hosting and handoff: docs/HANDOFF.md. Interface between app and agent: shared/contract.ts.
 
 ## Before editing
 Briefly explain: the current data flow, the smallest practical change, and assumptions that could change the implementation.
