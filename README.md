@@ -1,109 +1,120 @@
 # Pawtner
 
-Pawtner is a phone-first medication-adherence companion where a senior cares for a virtual dog and a caretaker can support the routine. This repository contains a Vite mobile UI, a local PostgreSQL API, deterministic backend rules, and fictional seed data.
+A Tencent Cloud AI CAN DO IT Hackathon Singapore 2026 prototype for seniors who take medicine every day: a knitted dog named Buddy on their phone, and a calm page for the family who cares for them.
 
-Built for the Tencent Cloud AI CAN DO IT Hackathon Singapore 2026, healthcare track. **All sample data is fictional. The thresholds are demo values, not clinical advice.** The project is not ready for a deployed demo: API handlers and UI are pending design review and contract confirmation.
+**[Try Pawtner](https://pawtner.edgeone.dev)** · **[Watch the demo](YOUTUBE_LINK_HERE)**
 
-## Safety design
+<!-- Video: replace YOUTUBE_LINK_HERE above with the YouTube link, e.g. https://www.youtube.com/watch?v=... -->
 
-Rules decide; the model only words things. Every current decision has pre-written wording. Model wording is optional, has a timeout, and falls back to the template on missing keys, timeouts, or errors. `emergency_995` never calls the model. No model integration or network call is currently configured.
+All people and data in the demo are fictional. Thresholds are demo values, not clinical advice.
 
-Thresholds and symptom terms are in [`shared/config.ts`](shared/config.ts). The API contract is in [`shared/contract.ts`](shared/contract.ts) and was reviewed against the exported UI. The mobile UI is now wired to the API for today's doses, dose events, blood pressure entry, walks, caregiver summary, weekly summary, and caretaker escalation settings. Settings includes a demo clock that evaluates the agent rules; Home shows the decision log. Other screens still use their existing prototype data.
+## Why this problem
 
-## Architecture
+My mom's normal blood pressure is about 160. With her medicine, it comes down to 137/75. That is why Pawtner opens with two words: "For Mom".
 
-- `shared/` — provisional types, demo configuration, fixtures, selectors, rules, refusals, and wording fallback.
-- `api/` — host-agnostic route handlers, PostgreSQL repository, and local Node server.
-- `mobile/` — Vite/React prototype UI; core screens use the local API.
-- `migrations/` — plain PostgreSQL schema and fictional seed data.
-- `scripts/` — direct-connection migration and seed runners.
-- `tests/unit/` — deterministic tests without a database, model, or network.
-- `tests/integration/` — PostgreSQL checks; API response tests wait for contract confirmation and handlers.
-- `docs/` — decisions and later design/architecture documentation.
-- `proof/` — location for the required CodeBuddy and Miora chat screenshots.
+Taking medicine on time, every day, is quiet and lonely work. Families want to help without hovering, and reminders that only beep are easy to ignore.
 
-Database choice: hosted Supabase Postgres in Singapore, used as plain PostgreSQL with the `pg` driver. There is no Supabase client, Auth, or row-level security. Migrations use `DATABASE_URL_DIRECT`; deployed API connections will use `DATABASE_URL`.
+## The idea in one line
 
-## Prerequisites and setup
+**Rules decide. Buddy only speaks.**
 
-Prerequisites: Node.js 24+ and npm. Install dependencies and prepare the environment:
+Every decision (a nudge, a check-in, a warning) comes from fixed, tested rules. A language model may only reword the message, with a pre-written fallback, and the emergency message never uses a model.
 
-```sh
-npm install
-cp .env.example .env
-```
+## What Rose sees
 
-Set `DATABASE_URL` to the pooled PostgreSQL URL and `DATABASE_URL_DIRECT` for migration/seed commands. Apply the schema and fictional seed with `npm run db:migrate` and `npm run db:seed`. Run `npm run typecheck` and `npm run test:unit` without a database. Set `DATABASE_URL` to run `npm run test:integration`; integration tests skip when it is empty.
+Rose opens the app to her garden and her dog.
 
-To refresh the HSA registered therapeutic product catalog, apply migrations and run `npm run db:import:hsa-products`. The importer downloads the official data.gov.sg dataset, validates a nonempty response, and replaces the catalog in a single database transaction. Search it with `GET /api/products/search?q=...`; searches shorter than two characters return no matches. The imported register is a lookup aid and does not establish that a product is appropriate for an individual.
+[![Pawtner cover](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/cover.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/cover.jpg)
 
-Start the API with `npm run dev` and the UI in a second terminal with `npm run dev:mobile`. Vite proxies `/api` requests to `http://localhost:3001`. Seed the configured database before opening the UI. The proof scanner and walk tracking remain prototype interactions; no image is uploaded and no GPS distance is collected.
+Home shows Buddy, today's hearts and the next medicine. Each heart comes from something she did today.
 
-### Environment variables
+[![Home with Buddy and the next dose](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/home.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/home.jpg)
 
-All values in `.env.example` are blank. Never commit a real `.env` or a credential.
+Drag the card up and the whole screen becomes her medicines for today, in large type. Drag it down for Buddy alone.
 
-| Variable | Purpose |
-|---|---|
-| `DATABASE_URL` | Pooled Supabase Postgres connection for the deployed API and optional integration tests. |
-| `DATABASE_URL_DIRECT` | Direct Supabase Postgres connection for migrations and seeding. |
-| `LLM_BASE_URL` | OpenAI-compatible LLM API base URL. NVIDIA free endpoint: `https://integrate.api.nvidia.com/v1` (get a key at [build.nvidia.com](https://build.nvidia.com)). |
-| `LLM_MODEL` | Text model identifier for rephrasing/wording. NVIDIA recommendation: `nvidia/nemotron-3-ultra-550b-a55b` (high quality) or `nvidia/nemotron-3.5-lightning-30b-a3b` (reasoning, fast). |
-| `LLM_VISION_MODEL` | Vision model identifier for pill description/verification. Falls back to `LLM_MODEL`. NVIDIA recommendation: `meta/muse-glimmer-30b` (multimodal reasoning). |
-| `LLM_API_KEY` | LLM API key; optional for deterministic rules and templates. |
-| `VITE_API_BASE_URL` | API base URL used by the Vite application. |
+[![Today's medicines on the full screen](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/full-form.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/full-form.jpg)
 
-## Demo thresholds and decisions
+Buddy alone keeps the next medicine in sight on a slim strip.
 
-All thresholds below are configurable demo values, not clinical advice. These values are defined in `shared/config.ts`.
+[![Buddy on the full screen with the next dose strip](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/buddy-only.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/buddy-only.jpg)
 
-| Decision | Trigger | Mood |
-|---|---|---|
-| `nudge` (first) | Dose remains untaken 60 minutes after schedule time. | sleepy |
-| `nudge` (second) | Still untaken 60 minutes after first nudge; maximum two per dose. | sleepy |
-| `nudge` + caretaker check-in | Consecutive missed doses meet opted-in caretaker threshold; minimum threshold 2. | sleepy |
-| `celebrate` | Dose taken, walk finished, or streak milestone. | joyful |
-| `restock_reminder` | Days of supply is 5 or fewer. | content |
-| `doctor_question` | Note includes a configured possible-side-effect term. | content |
-| `see_gp_soon` | At least 180 systolic or 120 diastolic without a symptom, or 3+ readings at/above 140/90 within 7 days. | attentive |
-| `emergency_995` | High reading with a symptom, or a note contains a configured emergency symptom. | attentive |
-| `stay_quiet` | No configured rule needs attention. | selected from heart score |
+Blood pressure is compared with her own first reading, and "How do you feel?" uses tick boxes, so she never has to think of the right words.
 
-Every decision is designed to include its rule ID, observations, reasoning, wording source, mood, and caretaker-ping flag. “Missed” is derived from schedules and the dose-event ledger; it is never stored as a dose event. Dose events and nudge decisions include the scheduled occurrence timestamp so recurring schedules do not mix events from different days. `selectAgentInput` assembles current scores and history from those occurrences; a celebration requires the just-recorded event to be passed explicitly. Caretaker messages do not include medication names.
+[![Logging blood pressure](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/health.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/health.jpg)
 
-### Refusals
+## What Jamie sees
 
-The rules refuse double dosing after a miss, changing/skipping/stopping medication, reassurance about a reading, symptom diagnosis, pill identification from a photo, and medication interaction advice. Each refusal is marked `refused` with a category and fixed template.
+Jamie, her caregiver, gets a gentle web page: how many of today's activities are done, the week as hearts, and the latest reading Rose chose to share. It never names a medicine.
 
-## Running the fixtures and demo
+[![This week on the caregiver's page](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/care-week.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/care-week.jpg)
 
-Run the four shared rule fixtures:
+Jamie decides when to be told: check-ins on or off, and after how many days in a row with a missed dose.
 
-```sh
-npm run demo:rules
-npm exec vitest run tests/unit/fixtures.test.ts
-```
+[![Check-in preferences](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/care-alerts.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/care-alerts.jpg)
 
-`demo:rules` prints each decision, rule ID, dog mood, caretaker-ping flag, and wording source. It stays on templates when `LLM_API_KEY` is blank.
+## How it works
 
-The local prototype is runnable after database setup. The required demo beats remain: (1) pass 10:00 with a missed dose, show two gentle nudges and an opted-in caretaker check-in without a medicine name; (2) record fictional 185/120 with “bad headache” and show calm “Call 995 now” wording without a model call; (3) draft a weekly doctor question from “feel sleepy at night” and simulate a walk with a fast stretch.
+1. **At the dose time**, if the medicine isn't taken, Buddy barks once and a message says it's time. The time comes from her saved schedule.
 
-### API surface
+   [![The dose-time reminder](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/reminder.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/reminder.jpg)
 
-The API implements seven operations: `GET /api/today`, `POST /api/dose-event`, `POST /api/health-metric`, `POST /api/agent/decide`, `GET /api/caretaker/summary`, `GET|PUT /api/escalation-settings`, and `POST /api/walk-session`. Model wording remains on templates unless a model client is explicitly configured; decision rules remain deterministic.
+2. **If it's still not taken**, Buddy nudges 60 minutes later, and once more 60 minutes after that. Never more than twice.
+3. **Hearts carry over.** Each of three activities earns one, up to four: all of the day's medicines, a blood-pressure reading, a walk with Buddy. Every 12 hours without a new heart, Buddy loses one, never below one. Our first version gave a heart for one medicine out of three; we changed it so all of them count.
+4. **Each reading is compared with her first one.** More than 5 points above it, or any ticked emergency sign, shows a calm Warning with the plain reason.
 
-## Attributions
+   [![A calm warning after a high reading](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/warning.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/warning.jpg)
 
-- HSA, *Listing of Registered Therapeutic Products* — Open Data Licence (planned Tier 2 import; no HSA product data is included yet).
-- “Information from MedlinePlus.gov” (planned Tier 2 source use; no content is included yet).
-- Singapore National Drug Formulary (NDF) and HealthHub are link-only references. Their content is not copied into this app.
+5. **Jamie hears only what Rose allows.** A check-in goes out once per missed day, after the number of days Jamie chose. Sharing blood pressure is Rose's switch.
+
+   [![A gentle check-in on Jamie's page](https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/care-checkin.jpg)](https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/care-checkin.jpg)
+
+Evidence, as of 16 Oct 2026: 175 unit tests pass (`npm run test:unit`) without a database, a model or a network, covering these rules, the hearts and the reminders. The live demo runs on the hosted database.
+
+## By the numbers
+
+As of 16 Oct 2026, built from 13 Oct:
+
+- 302 commits and 75 merged pull requests
+- 5,511 registered medicines searchable when adding a medicine
 
 ## Built with
 
-The hackathon team uses CodeBuddy and Miora. Add chat screenshots to [`proof/`](proof/README.md); none have been added yet.
+William built the API, the agent rules and the hosting; I built the phone app and the caregiver's page. We use CodeBuddy and Miora for this project; Miora is the backdrop and the pet dog companion. Claude Code helped with fixes and reviews. Screenshots of the CodeBuddy chats are in [`proof/`](proof/), and the full chat histories in [`proof/chat-history/`](proof/chat-history/).
 
-## Roadmap and current limits
+React 19, TypeScript, Vite 6, Tailwind CSS 4 and i18next for the app; a TypeScript API on Tencent EdgeOne Pages cloud functions; PostgreSQL on Supabase.
 
-The PRD's Tier 3 roadmap includes push notifications, authentication and roles, background GPS, nightly score recomputation, in-app NDF content (requires permission), HealthHub integration, screening festival days, partnerships/premium, and multilingual support.
+Medicine data: HSA *Listing of Registered Therapeutic Products* from data.gov.sg (Open Data Licence).
 
-Current limitations: no authentication/roles, hosting configuration, deployment, real model client, HSA import, or automated proof photo/GPS capture. The contract and API payloads remain subject to design review. Database connection verification is pending because this environment could not resolve the configured Supabase hostname.
+## Run it locally
+
+Requirements: Node.js 24+, npm, and a PostgreSQL database.
+
+```sh
+git clone https://github.com/whansel007/Pawtner.git
+cd Pawtner
+npm install
+npm --prefix mobile install
+cp .env.example .env
+```
+
+In `.env`, set `DATABASE_URL` and `DATABASE_URL_DIRECT` to your database. The `LLM_*` values are optional: without them every message uses its pre-written wording.
+
+```sh
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
+
+In a second terminal:
+
+```sh
+npm run dev:mobile
+```
+
+Open the address Vite prints. The phone app is at `/`, the caregiver's page at `/care`. Checks: `npm run typecheck` and `npm run test:unit`.
+
+## Why it matters
+
+Medicine works only if it is taken. Pawtner makes the daily routine a little warmer for the person taking it, and a little lighter for those who love them.
+
+**[Try Pawtner](https://pawtner.edgeone.dev)**
