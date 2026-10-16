@@ -42,16 +42,16 @@ describe("trick performances", () => {
 
 describe("tapRotation", () => {
   it("Sit only: the original hop, hearts, bubble, bark", () => {
-    expect(tapRotation(BASIC, earnedPerformances([sit, waveLocked]), true)).toEqual(["hop", "hearts", "bubble", "bark"]);
+    expect(tapRotation(BASIC, earnedPerformances([sit, waveLocked]), true)).toEqual(["hop", "hearts", "bubble"]);
   });
 
   it("Wave earned and playable: the wave closes each cycle", () => {
-    expect(tapRotation(BASIC, earnedPerformances([sit, wave]), true)).toEqual(["hop", "hearts", "bubble", "bark", "wave"]);
+    expect(tapRotation(BASIC, earnedPerformances([sit, wave]), true)).toEqual(["hop", "hearts", "bubble", "wave"]);
   });
 
   it("Wave earned but can't play (sleepy, dizzy, reduced motion, too few hearts, no clip format): skipped", () => {
-    expect(tapRotation(BASIC, earnedPerformances([sit, wave]), false)).toEqual(["hop", "hearts", "bubble", "bark"]);
-    expect(tapRotation(PET_REACTIONS_REDUCED_MOTION, earnedPerformances([sit, wave]), false)).toEqual(["bubble", "bark"]);
+    expect(tapRotation(BASIC, earnedPerformances([sit, wave]), false)).toEqual(["hop", "hearts", "bubble"]);
+    expect(tapRotation(PET_REACTIONS_REDUCED_MOTION, earnedPerformances([sit, wave]), false)).toEqual(["bubble"]);
   });
 
   it("works without bark (sound off)", () => {

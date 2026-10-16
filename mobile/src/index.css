@@ -635,6 +635,7 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
 .settings-share span { display: grid; gap: 2px; min-width: 0; }
 .settings-share strong { color: var(--color-text-heading); }
 .settings-share small { color: #7a847c; font-size: var(--font-size-sm); }
+.settings-share .settings-share__first { color: var(--color-text-heading); font-weight: var(--font-weight-bold); }
 
 /* ═══════════════════════════════════════════════════════════════════════
    World picker / wardrobe
@@ -1160,3 +1161,10 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
   .add-button { bottom: var(--dock-paw-bottom); width: var(--dock-paw); height: var(--dock-paw); }
   .woof-bubble { bottom: calc(var(--dock-paw-bottom) + var(--dock-paw)); padding: 4px 9px; }
 }
+
+/* Blood-pressure form: "How do you feel?" tick boxes, two columns, "I feel fine" across the top. */
+.bp-form__feelings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; margin: 12px 0 0; padding: 0; border: 0; }
+.bp-form__feelings legend { grid-column: 1 / -1; margin-bottom: 4px; padding: 0; }
+.bp-form__feeling { display: flex; align-items: center; gap: 8px; min-height: 40px; color: var(--color-text-heading); font-size: var(--font-size-sm); }
+.bp-form__feeling input { flex: 0 0 auto; width: 20px; height: 20px; margin: 0; accent-color: #668b70; }
+.bp-form__feeling--fine { grid-column: 1 / -1; font-weight: var(--font-weight-bold); }

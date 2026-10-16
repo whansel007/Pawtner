@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decide, selectDogMood } from "../../shared/rules.js";
+import { decide, selectDogMood, bloodPressureProgress, firstReadingOf } from "../../shared/rules.js";
 import type { AgentInput } from "../../shared/contract.js";
 
 const base: AgentInput = {
@@ -47,18 +47,35 @@ describe("deterministic decision rules", () => {
     expect(decide({ ...base, healthMetrics: [high(120, 80, "feel sleepy at night")] })).toMatchObject({ decision: "doctor_question", mood: "content" });
   });
 
-  it("uses 180/120 boundaries and distinguishes symptoms from no symptoms", () => {
-    expect(decide({ ...base, healthMetrics: [high(179, 119)] }).decision).toBe("stay_quiet");
-    expect(decide({ ...base, healthMetrics: [high(180, 80)] })).toMatchObject({ decision: "see_gp_soon", mood: "attentive" });
-    expect(decide({ ...base, healthMetrics: [high(179, 120)] }).decision).toBe("see_gp_soon");
-    expect(decide({ ...base, healthMetrics: [high(185, 120, "bad headache")] })).toMatchObject({ decision: "emergency_995", mood: "attentive" });
-    expect(decide({ ...base, healthMetrics: [high(120, 80, "chest pain")] }).decision).toBe("emergency_995");
+  it("judges blood pressure against the first reading with 5 points of slack (user, 16 Oct)", () => {
+    const first = high(185, 120, null, -48);
+    // Same, lower, or within +5 of the first reading: no Warning.
+    for (const latest of [high(185, 120), high(190, 125), high(165, 100), high(118, 78)]) {
+      expect(decide({ ...base, healthMetrics: [first, latest] }).decision).toBe("stay_quiet");
+    }
+    // More than 5 above on either number: Warning (see_gp_soon).
+    expect(decide({ ...base, healthMetrics: [first, high(191, 110)] })).toMatchObject({ decision: "see_gp_soon", ruleId: "bp_above_first_reading", mood: "attentive" });
+    expect(decide({ ...base, healthMetrics: [first, high(170, 126)] }).decision).toBe("see_gp_soon");
+    // One reading only: it is the first, nothing to compare.
+    expect(decide({ ...base, healthMetrics: [high(200, 130)] }).decision).toBe("stay_quiet");
   });
 
-  it("uses three qualifying readings in seven days for see-GP-soon", () => {
-    const readings = [high(140, 90, null, -24), high(141, 91, null, -48), high(140, 90, null, -72)];
-    expect(decide({ ...base, healthMetrics: readings })).toMatchObject({ decision: "see_gp_soon", ruleId: "repeated_high_readings_7d" });
-    expect(decide({ ...base, healthMetrics: readings.slice(1) }).decision).toBe("stay_quiet");
+  it("an emergency sign in the latest note is a Warning at any numbers; a headache alone is not", () => {
+    expect(decide({ ...base, healthMetrics: [high(120, 80, "Chest pain")] })).toMatchObject({ decision: "emergency_995", ruleId: "emergency_symptom_note" });
+    expect(decide({ ...base, healthMetrics: [high(185, 120, "bad headache")] }).decision).toBe("stay_quiet");
+    // Only the latest note counts, so an old symptom doesn't stay stuck.
+    expect(decide({ ...base, healthMetrics: [high(150, 95, "Fainting", -24), high(150, 95)] }).decision).toBe("stay_quiet");
+  });
+
+  it("names a reading first, warning, keep going or good job", () => {
+    const first = high(185, 120, null, -48);
+    expect(bloodPressureProgress(first, first)).toBe("first");
+    expect(bloodPressureProgress(high(185, 120), null)).toBe("first");
+    expect(bloodPressureProgress(high(191, 120), first)).toBe("warning");
+    expect(bloodPressureProgress(high(165, 100), first)).toBe("keepGoing");
+    expect(bloodPressureProgress(high(120, 80), first)).toBe("goodJob");
+    expect(bloodPressureProgress(high(121, 80), first)).toBe("keepGoing");
+    expect(firstReadingOf([high(150, 95), first, high(160, 99, null, -24)])).toBe(first);
   });
 
   it("resolves only the four allowed moods", () => {

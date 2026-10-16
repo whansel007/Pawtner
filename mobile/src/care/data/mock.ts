@@ -46,6 +46,7 @@ export function buildMockCareData(now: Date = new Date()): CareData {
       healthMetrics: [],
       bloodPressureLoggedToday: false,
       latestDecision: null,
+      firstBloodPressure: null,
     },
     summary: {
       period: { start: at(now, -6, 0, 0).slice(0, 10), end: at(now, 0, 0, 0).slice(0, 10) },

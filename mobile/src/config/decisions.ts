@@ -16,6 +16,8 @@ export const URGENT_DECISIONS: readonly DecisionKind[] = ["emergency_995", "see_
  */
 export const RULES_WITH_PLAIN_REASON: readonly string[] = [
   "emergency_symptom_note",
+  "bp_above_first_reading",
+  // Older rules: still explain decisions saved before 16 Oct.
   "bp_high_with_symptom",
   "bp_high_without_symptom",
   "repeated_high_readings_7d",

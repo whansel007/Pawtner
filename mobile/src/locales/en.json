@@ -393,7 +393,9 @@
     "lockedNote_other": "{{count}} hearts",
     "lockedToast": "{{name}} unlocks this at {{count}} hearts.",
     "lockedToast_one": "{{name}} unlocks this at {{count}} heart.",
-    "worldLevelNote": "{{level}} · {{hearts}}"
+    "worldLevelNote": "{{level}} · {{hearts}}",
+    "comingSoon": "Coming soon",
+    "comingSoonGift": "Soon: a gift from {{name}}"
   },
   "health": {
     "eyebrow": "This week",
@@ -428,7 +430,23 @@
     "bpLastReading": "Last reading",
     "bpNoReadingYet": "No reading logged yet",
     "resultTitle": "What the app noticed",
-    "warning": "Warning"
+    "warning": "Warning",
+    "symptomsTitle": "How do you feel?",
+    "symptoms": {
+      "fine": "I feel fine",
+      "chestPain": "Chest pain",
+      "breath": "Shortness of breath",
+      "fainting": "Fainting",
+      "confusion": "Confusion",
+      "weakness": "One-sided weakness",
+      "speech": "Slurred speech"
+    },
+    "bpProgress": {
+      "first": "Your first reading. Buddy will compare the next ones with it.",
+      "keepGoing": "Keep at it! About the same as or lower than your first reading.",
+      "goodJob": "Good job! Your reading is in the normal range.",
+      "warning": "This reading is higher than your first reading."
+    }
   },
   "decisionLog": {
     "whyButton": "Why?",
@@ -436,7 +454,7 @@
     "emptyTitle": "Agent decision",
     "emptyBody": "No rule has triggered yet.",
     "why": {
-      "emergency_symptom_note": "A note mentioned a symptom that can be serious, so the emergency number is shown.",
+      "emergency_symptom_note": "Your note mentioned a sign that can be serious.",
       "bp_high_with_symptom": "The latest blood pressure reading was high and the note mentioned a symptom.",
       "bp_high_without_symptom": "The latest blood pressure reading was higher than the level Pawtner watches for.",
       "repeated_high_readings_7d": "Several readings this past week were higher than the level Pawtner watches for.",
@@ -447,7 +465,8 @@
       "low_days_of_supply": "One medicine is running low.",
       "care_milestone_completed": "A dose was taken, a walk was finished or the streak grew.",
       "nothing_needs_attention": "Nothing needs attention right now.",
-      "generic": "Pawtner chose this from today's care activity."
+      "generic": "Pawtner chose this from today's care activity.",
+      "bp_above_first_reading": "This reading is higher than your first reading."
     }
   },
   "pet": {
@@ -509,8 +528,7 @@
     "demoUnlockHint": "Unlock as if Rose reached:",
     "demoUnlock": {
       "days7": "7 days",
-      "hearts20": "20 hearts",
-      "hearts40": "40 hearts"
+      "hearts20": "20 hearts"
     },
     "demoReset": "Reset demo",
     "demoResetHint": "Clears this phone's demo choices: restock answer, clinic memo photo, demo ticks and garden time. Saved doses and readings stay.",
@@ -518,7 +536,8 @@
     "demoTime": {
       "morning": "Morning ({{time}})",
       "evening": "Evening ({{time}})"
-    }
+    },
+    "firstReading": "First reading: {{systolic}} / {{diastolic}} ({{day}})"
   },
   "medicines": {
     "eyebrow": "{{name}}'s care",

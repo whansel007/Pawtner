@@ -3,7 +3,8 @@ import { FullCard } from "../components/FullCard";
 import type { BackAction } from "../lib/navigation";
 import { AccessoryMark } from "../components/AccessoryMark";
 import { Icon } from "../components/Icon";
-import { isUnlocked, unlockThreshold } from "../lib/rewards";
+import { isComingSoon, isUnlocked, unlockThreshold } from "../lib/rewards";
+import { COMING_SOON_NOTE } from "../config/rewards";
 import type { WorldOption, AccessoryOption, World, Accessory } from "../types";
 
 export function CustomizeScreen({
@@ -48,6 +49,10 @@ export function CustomizeScreen({
   }
 
   function handleAccessoryClick(item: AccessoryOption) {
+    if (isComingSoon(item.id)) {
+      notify(t(COMING_SOON_NOTE[item.id] ?? "customize.comingSoon", { name: caretakerName }));
+      return;
+    }
     if (!isUnlocked(item.id, heartsTotal)) {
       const threshold = unlockThreshold(item.id);
       notify(t("customize.lockedToast", { name: petName, count: threshold }));
@@ -63,6 +68,7 @@ export function CustomizeScreen({
   }
 
   function itemNote(item: WorldOption | AccessoryOption): string {
+    if (isComingSoon(item.id)) return t(COMING_SOON_NOTE[item.id] ?? "customize.comingSoon", { name: caretakerName });
     const threshold = unlockThreshold(item.id);
     if (threshold !== undefined) {
       return t("customize.lockedNote", { count: threshold });

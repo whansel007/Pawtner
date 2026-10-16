@@ -1,7 +1,12 @@
-import { REWARD_THRESHOLDS } from "../config/rewards.js";
+import { COMING_SOON, REWARD_THRESHOLDS } from "../config/rewards.js";
 
 /** `heartsTotal` already includes any Demo hearts tick (lib/demoUnlocks.ts demoHeartsTotal). */
+export function isComingSoon(itemId: string): boolean {
+  return COMING_SOON.includes(itemId);
+}
+
 export function isUnlocked(itemId: string, heartsTotal: number): boolean {
+  if (isComingSoon(itemId)) return false;
   const threshold = REWARD_THRESHOLDS[itemId];
   if (threshold === undefined) return true;
   return heartsTotal >= threshold;

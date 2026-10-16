@@ -35,10 +35,10 @@ export interface WaveClip {
  * Rules:
  * - Too few hearts (`canPlay` false, lib/tricks.ts hasHeartsToPlay) → a tap or trick shows the "needs a heart" bubble
  *   (`prompt`) instead of playing. Mood never blocks play (attentive from readings plays as normal; user, 16 Oct).
- * - Sit (always earned first) gives the basic reactions: hop, hearts, bubble, bark; under prefers-reduced-motion
- *   only bubble and bark. bark is dropped when sound is off or the file failed to load; never throws.
+ * - Sit (always earned first) gives the basic reactions: hop, hearts, bubble; under prefers-reduced-motion only the
+ *   bubble. No bark: the woof belongs to the paw button (user, 16 Oct).
  * - Wave, once earned (`earned` from Milestones' tricks), joins the dog-tap rotation after the basic reactions:
- *   hop → hearts → bubble → bark → wave. It is skipped whenever the wave clip can't play (lib/tricks.ts tapRotation).
+ *   hop → hearts → bubble → wave. It is skipped whenever the wave clip can't play (lib/tricks.ts tapRotation).
  * - perform("basic") (Sit card) plays the next basic reaction from its own counter, so Sit always shows a basic one;
  *   perform("wave") (Wave card) plays the clip, or the next basic reaction if the clip can't play right now.
  * - The bubble line advances on every bubble; the first bubble shows line 1.
