@@ -40,7 +40,6 @@ import { useRestockHelp } from "./lib/useRestockHelp";
 import { pickRestockAlert } from "./lib/restockHelp";
 import { resetDemoStorage } from "./lib/demoReset";
 import { saveDemoClock } from "./lib/demoClock";
-import { useHomeView } from "./lib/useHomeView";
 import { shouldBarkFor } from "./lib/nudgeBark";
 import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
@@ -129,8 +128,6 @@ export default function App() {
   // Set when a trick card on Milestones is tapped; DogLayer performs the trick once per id.
   const [trickRequest, setTrickRequest] = useState<TrickRequest | null>(null);
   const { bark } = useBark();
-  // Settings > What Home shows: both, just Buddy, or just the medicines (config/homeView.ts).
-  const [homeView, setHomeView] = useHomeView();
   // A new dose nudge while the app is open: Buddy barks once (in-app stand-in for a phone notification).
   // The decision already there on first load counts as seen, so opening the app never barks.
   const seenDecisionId = useRef<string | null | undefined>(undefined);
@@ -436,7 +433,7 @@ export default function App() {
   return (
     <>
     <DesktopBackdrop phase={phase} />
-    <main className={`app-shell world-${world} ${screen === "home" ? `home-view-${homeView}` : ""}`}>
+    <main className={`app-shell world-${world}`}>
       {screen === "cover" && <CoverScreen onContinue={() => navigate("dedication")} />}
       {screen === "dedication" && <DedicationScreen onContinue={() => navigate("home")} />}
       {screen !== "cover" && screen !== "dedication" && (
@@ -478,8 +475,6 @@ export default function App() {
             onWalk={() => navigate("walk")}
             onBloodPressure={() => navigate("health")}
             onStreak={() => navigate("milestones")}
-            view={homeView}
-            onShowBoth={() => setHomeView("both")}
           />
         )}
         {screen === "reminders" && (
@@ -500,7 +495,7 @@ export default function App() {
         {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={{ ...(careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }] } : weekSummary), doctorQuestion: visitNotes.latest?.text ?? t("visitNotes.empty") }} onVisitNotes={() => navigate("visitNotes")} warning={isUrgentDecision(latestDecision) ? latestDecision : null} />}
-        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => { const next = new Set(current); if (next.has(key)) next.delete(key); else next.add(key); return next; })} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} homeView={homeView} onHomeView={setHomeView} firstReading={firstReading} />}
+        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => { const next = new Set(current); if (next.has(key)) next.delete(key); else next.add(key); return next; })} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} />}
         {screen === "medicines" && <MedicinesScreen back={back} petName={dogName} />}
         {screen === "visitNotes" && <VisitNotesScreen back={back} notes={visitNotes.notes} caretakerName={caretakerName} maxLength={visitNotes.maxLength} onAdd={visitNotes.add} onEdit={visitNotes.edit} onRemove={visitNotes.remove} />}
         {screen === "customize" && <CustomizeScreen back={back} onHome={goHome} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(t(`toast.worlds.${nextWorld}`, { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: t(`accessory.${nextAccessory}`) })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} caretakerName={caretakerName} heartsTotal={heartsTotal} notify={notify} />}
