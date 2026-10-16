@@ -3,12 +3,11 @@ import { useState } from "react";
 import type { CareData, Caretaker } from "../data/types";
 import type { TreatStatus } from "../hooks/useCareTreat";
 import type { RestockHelpEntry } from "../../lib/restockHelp";
-import { formatMomentTime, formatWeekday } from "../lib/format";
-import { progressPercent, recentDays, streakHearts, todayProgress, todayState, visibleMoments } from "../lib/rules";
+import { formatWeekday } from "../lib/format";
+import { progressPercent, recentDays, streakHearts, todayProgress, todayState } from "../lib/rules";
 import { CareBadge, CareCard, PageWelcome } from "../components/CareCard";
 import { CareNotice } from "../components/CareNotice";
 import { CareDog } from "../components/CareDog";
-import { MomentList } from "../components/MomentList";
 import { ProgressRing } from "../components/ProgressRing";
 import { StreakHearts } from "../components/StreakHearts";
 
@@ -44,11 +43,6 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
   const hearts = streakHearts(dog.streak);
   const streakDays = recentDays(now).map((date, index) => ({ key: date.toISOString(), label: formatWeekday(date, locale, "narrow"), filled: hearts[index] }));
 
-  const moments = visibleMoments(data.summary.caringMoments, viewer).map((moment) => ({
-    moment,
-    kindLabel: t(`care.web.week.momentKind.${moment.kind}`),
-    time: formatMomentTime(moment.occurredAt, locale),
-  }));
 
   const [latestQuestion, ...earlierQuestions] = doctorQuestions;
 
@@ -86,7 +80,7 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
           </CareCard>
         )}
 
-        <CareCard eyebrow={t("care.web.week.todayEyebrow")} title={stateText("title")} badge={stateBadge} stitched>
+        <CareCard eyebrow={t("care.web.week.todayEyebrow")} title={stateText("title")} badge={stateBadge} stitched className="care-today">
           <div className="care-progress">
             <ProgressRing
               percent={progressPercent(progress)}
@@ -110,13 +104,6 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
           <StreakHearts days={streakDays} label={t("care.web.week.streakLabel", { count: dog.streak, days: hearts.length })} />
         </CareCard>
 
-        <CareCard
-          eyebrow={t("care.web.week.momentsEyebrow")}
-          title={t("care.web.week.momentsTitle")}
-          badge={<span className="care-card__meta">{t("care.web.week.momentsWhen")}</span>}
-        >
-          <MomentList rows={moments} emptyText={t("care.web.week.momentsEmpty")} />
-        </CareCard>
 
         <CareCard eyebrow={t("care.web.week.treatEyebrow")} title={t("care.web.week.treatTitle", { dog: dog.name })} className="care-treat">
           <p className="care-hint">{t("care.web.week.treatBody", { name: senior })}</p>

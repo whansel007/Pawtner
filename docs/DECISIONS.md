@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-16 — /care This week on one screen (branch `claude/care-compact`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| "Caring moments" card removed from This week (Today ring and streak already say it). Desktop (≥ 900 px) is compacted (slim welcome banner, tighter cards, smaller ring); wide screens (≥ 1200 px) use three columns: Today (double width) + streak, then treat / blood pressure / questions; a refill request spans the top. Measured: the cards end at 687 px at 1280×720 and 1366×768 (was ~1160 px). Phones unchanged. | User: redundant card; the page needed scrolling on a laptop. | Caring moments (check-in history) no longer shown on This week. | Final |
+
 ## 2026-10-16 — Blood pressure against the first reading (branch `claude/bp-first-reading`)
 
 | Decision | Reason | Tradeoff | Status |
