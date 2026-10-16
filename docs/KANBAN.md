@@ -45,6 +45,7 @@ Today's plan (agreed 13 Oct evening), in order:
 | ID | Item | PR |
 |---|---|---|
 | — | /care "A lovely rhythm": Sunday to Saturday; a past day filled when Buddy ended it on 2+ hearts (`dayHearts` in the summary) | Branch `claude/care-week-sunday` |
+| — | Dose-time reminder: Buddy barks once + toast at each saved dose time if not taken (once per dose, before the nudges); demo clock runs forward from when it is set | Branch `claude/dose-reminder` |
 | — | Combination strengths: "&&" shows as " / " on every strength (Home, Reminders, My medicines, product search); Twynsta row → "80 mg / 10 mg" (SQL by the user) | Branch `claude/strength-display` |
 | — | Hearts carry over: +1 per activity (max 4), -1 every 12 hours without a new heart (min 1); lifetime = each day's hearts at its end | [#70](https://github.com/whansel007/Pawtner/pull/70) |
 | — | Hearts: start 1 + all medicines / measurement / walk (max 4), lifetime hearts the same; /care "x of 3 activities is done today"; demo ticks Today's hearts 1–4, "7-day streak", "20 hearts in total" | [#69](https://github.com/whansel007/Pawtner/pull/69) (heart rule replaced by #70) |

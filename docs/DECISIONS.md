@@ -5,6 +5,12 @@
 | Decision | Reason | Tradeoff | Status |
 |---|---|---|---|
 | "A lovely rhythm" shows this week, Sunday to Saturday (`weekRhythm` in `care/lib/rules.ts`). A day before today is filled when Buddy ended it on 2 or more hearts (`RHYTHM_MIN_HEARTS`); today and later stay empty. The API adds `CaretakerSummaryResponse.dayHearts` (Buddy's hearts at the end of each of the 7 days before today, senior's time zone, from the same hearts rule as the phone). The "N-day streak" line and "All week" badge still follow the dose streak. Hearts label: "This week, Sunday to Saturday. A filled heart is a day {{dog}} ended with {{count}} or more hearts." | User: on a Friday the hearts should be filled until Thursday, starting from Sunday; filled when Buddy is 2, 3 or 4 (demo). | The hearts and the streak line can disagree (a 2-heart day with a missed dose is filled but breaks the streak). | Final (label wording tentative) |
+## 2026-10-16 — Dose-time reminder and a running demo clock (branch `claude/dose-reminder`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| At each saved dose time (from the schedules, never a fixed hour), if that dose isn't taken, Buddy barks once and a toast says "It's time for your medicine: {{medicine}}." (6 s). A timer checks every 5 s (`useDoseReminder`, `dosesDueForReminder`, `config/reminders.ts`); each dose is reminded once (kept in localStorage `pawtner.doseReminders`, cleared by Reset to morning), from its time until the first nudge would be due (60 min). The agent's nudges (60 min, then 60 min more, max 2), missed-day rules and Jamie's check-ins are unchanged. | User: a gentle reminder right at the dose time, before the nudges. | It runs only while the app is open (no push notification). | Final (toast wording tentative) |
+| The demo clock (Current Time of Demo, Reset to morning, `?clock=`) runs forward from when it is set, like a real clock (`runningClock` in `lib/demoClock.ts`); taps are saved at the running time and /care in the same browser follows it. | The clock must reach a dose time for the reminder to fire. | Before, the demo clock stayed frozen at the set time. | Final |
 
 ## 2026-10-16 — Combination strengths read with a slash (branch `claude/strength-display`)
 
