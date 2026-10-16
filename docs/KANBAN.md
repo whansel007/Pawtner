@@ -44,8 +44,8 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | PR |
 |---|---|---|
-| — | Hearts carry over: +1 per activity (max 4), -1 every 12 hours without a new heart (min 1); lifetime = each day's hearts at its end | Branch `claude/hearts-carry-over` |
-| — | Hearts: start 1 + all medicines / measurement / walk (max 4), lifetime hearts the same; /care "x of 3 activities is done today"; demo ticks Today's hearts 1–4, "7-day streak", "20 hearts in total" | Branch `claude/hearts-activities` |
+| — | Hearts carry over: +1 per activity (max 4), -1 every 12 hours without a new heart (min 1); lifetime = each day's hearts at its end | [#70](https://github.com/whansel007/Pawtner/pull/70) |
+| — | Hearts: start 1 + all medicines / measurement / walk (max 4), lifetime hearts the same; /care "x of 3 activities is done today"; demo ticks Today's hearts 1–4, "7-day streak", "20 hearts in total" | [#69](https://github.com/whansel007/Pawtner/pull/69) (heart rule replaced by #70) |
 | — | Migration 006 (check-in threshold minimum 1 day) applied on Supabase by the user, 16 Oct | — |
 | — | Drag Home's card: full-screen Buddy (next-dose strip) / both / full-screen form, portrait and landscape; tap the bar for both | [#66](https://github.com/whansel007/Pawtner/pull/66) |
 | — | Settings "For demo only" closed card; demo ticks drive the one streak/hearts number; "today" after the hearts; Reset to morning (API deletes today's doses, readings, decisions; clock 9:00); roomier short landscape; check-ins by missed days, set by Jamie on /care (switch + days stepper), check-in card on This week; Rose's check-in card removed; landscape Home card centred and scaled to the pane (portrait unchanged; tablets fill the pane); signed-in /care follows the phone's clock and refreshes every 15 s (landing Buddy fixed); two footer lines removed | [#65](https://github.com/whansel007/Pawtner/pull/65) |
