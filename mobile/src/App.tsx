@@ -28,7 +28,7 @@ import { DogLayer } from "./components/DogLayer";
 import { PetAccessory } from "./components/PetAccessory";
 import { SceneChips } from "./components/SceneChips";
 import { RestockCard } from "./components/RestockCard";
-import { selectDogMood } from "../../shared/rules";
+import { selectDogMood, firstReadingOf } from "../../shared/rules";
 import { DEMO_RULES } from "../../shared/config";
 import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, DoseEvent, EscalationSettingsResponse, HealthMetric, MedicationDetail, TodayResponse } from "../../shared/contract";
 import { api } from "./lib/api";
@@ -176,6 +176,8 @@ export default function App() {
   const restock = useRestockHelp(liveRestockAlert);
   // "For my next visit" notes (this phone only): Health row, their own screen, and the Weekly Summary.
   const visitNotes = useVisitNotes();
+  // Her first blood-pressure reading ever: the server's (today.firstBloodPressure) or, offline, the earliest local one.
+  const firstReading = firstReadingOf([...(today?.firstBloodPressure ? [today.firstBloodPressure] : []), ...healthMetrics]);
   // "Share my blood pressure with {{caretaker}}" (Settings; /care follows it in the same browser).
   const [shareBloodPressure, setShareBloodPressure] = useShareBloodPressure();
 
@@ -200,9 +202,11 @@ export default function App() {
    * If the API call fails (no server), falls back to requestDecision() in lib/agent.ts
    * so the beat still works offline, and shows the one-time offline notice.
    */
-  async function handleLogBp(metric: HealthMetric) {
-    setHealthMetrics((prev) => [...prev, metric]);
+  async function handleLogBp(logged: HealthMetric) {
     const recordedAt = demoNow ?? new Date().toISOString();
+    // The local copy carries the same time the API gets, so it matches the server's row (first-reading check).
+    const metric = { ...logged, recordedAt };
+    setHealthMetrics((prev) => [...prev, metric]);
     let decision: AgentDecision;
     try {
       const result = await api.healthMetric({
@@ -467,10 +471,10 @@ export default function App() {
         {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} medicationId={pendingDose?.medicationId} />}
         {screen === "walk" && <WalkScreen back={back} walkStats={walkStats} petName={dogName} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
         {screen === "milestones" && <MilestonesScreen back={back} onWalk={() => navigate("walk")} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} heartsTotal={heartsTotal} mood={mood} decision={routineDecision(latestDecision)} onTrick={(performance) => setTrickRequest((prev) => ({ id: (prev?.id ?? 0) + 1, performance }))} demoUnlocks={demoUnlocks} />}
-        {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
+        {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={{ ...(careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }] } : weekSummary), doctorQuestion: visitNotes.latest?.text ?? t("visitNotes.empty") }} onVisitNotes={() => navigate("visitNotes")} />}
-        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => { const next = new Set(current); if (next.has(key)) next.delete(key); else next.add(key); return next; })} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={() => { resetDemoStorage(); window.location.assign(window.location.pathname); }} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} />}
+        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} escalationSettings={escalationSettings} onSaveEscalationSettings={async (settings) => { try { setEscalationSettings(await api.updateEscalationSettings(settings)); notify("Check-in settings saved."); } catch (error) { reportApiProblem(error, true); } }} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => { const next = new Set(current); if (next.has(key)) next.delete(key); else next.add(key); return next; })} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={() => { resetDemoStorage(); window.location.assign(window.location.pathname); }} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} />}
         {screen === "medicines" && <MedicinesScreen back={back} petName={dogName} />}
         {screen === "visitNotes" && <VisitNotesScreen back={back} notes={visitNotes.notes} caretakerName={caretakerName} maxLength={visitNotes.maxLength} onAdd={visitNotes.add} onEdit={visitNotes.edit} onRemove={visitNotes.remove} />}
         {screen === "customize" && <CustomizeScreen back={back} onHome={goHome} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(t(`toast.worlds.${nextWorld}`, { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: t(`accessory.${nextAccessory}`) })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} caretakerName={caretakerName} heartsTotal={demoHeartsTotal(heartsTotal, demoUnlocks)} notify={notify} />}

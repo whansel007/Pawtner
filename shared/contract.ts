@@ -119,6 +119,8 @@ export interface TodayResponse {
   healthMetrics: HealthMetric[];
   bloodPressureLoggedToday: boolean;
   latestDecision: AgentDecision | null;
+  /** The person's first blood-pressure reading ever (every reading is compared with it), or null. */
+  firstBloodPressure: HealthMetric | null;
 }
 
 export interface DoseEventRequest {

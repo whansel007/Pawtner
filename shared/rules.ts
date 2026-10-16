@@ -26,8 +26,14 @@ export type BloodPressureProgress = "first" | "warning" | "keepGoing" | "goodJob
  * Warning; at or below the normal line on both numbers is Good job; anything else is Keep at it. The first reading
  * itself is "first". One rule for the agent (decide) and the phone (Health feedback).
  */
+/** The same reading: same id, or (a phone's local copy vs the server's row) same numbers within a minute. */
+function isSameReading(a: Reading, b: Reading): boolean {
+  return a.id === b.id || (a.systolic === b.systolic && a.diastolic === b.diastolic
+    && Math.abs(Date.parse(a.recordedAt) - Date.parse(b.recordedAt)) < 60_000);
+}
+
 export function bloodPressureProgress(reading: Reading, first: Reading | null): BloodPressureProgress {
-  if (!first || reading.id === first.id) return "first";
+  if (!first || isSameReading(reading, first)) return "first";
   if (reading.systolic > first.systolic + DEMO_RULES.bpFirstReadingSlack
     || reading.diastolic > first.diastolic + DEMO_RULES.bpFirstReadingSlack) return "warning";
   if (reading.systolic <= DEMO_RULES.bpNormalSystolic && reading.diastolic <= DEMO_RULES.bpNormalDiastolic) return "goodJob";

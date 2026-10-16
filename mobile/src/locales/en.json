@@ -428,7 +428,23 @@
     "bpLastReading": "Last reading",
     "bpNoReadingYet": "No reading logged yet",
     "resultTitle": "What the app noticed",
-    "warning": "Warning"
+    "warning": "Warning",
+    "symptomsTitle": "How do you feel?",
+    "symptoms": {
+      "fine": "I feel fine",
+      "chestPain": "Chest pain",
+      "breath": "Shortness of breath",
+      "fainting": "Fainting",
+      "confusion": "Confusion",
+      "weakness": "One-sided weakness",
+      "speech": "Slurred speech"
+    },
+    "bpProgress": {
+      "first": "Your first reading. Buddy will compare the next ones with it.",
+      "keepGoing": "Keep at it! About the same as or lower than your first reading.",
+      "goodJob": "Good job! Your reading is in the normal range.",
+      "warning": "This reading is higher than your first reading."
+    }
   },
   "decisionLog": {
     "whyButton": "Why?",
@@ -519,7 +535,8 @@
     "demoTime": {
       "morning": "Morning ({{time}})",
       "evening": "Evening ({{time}})"
-    }
+    },
+    "firstReading": "First reading: {{systolic}} / {{diastolic}} ({{day}})"
   },
   "medicines": {
     "eyebrow": "{{name}}'s care",
