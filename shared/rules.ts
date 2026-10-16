@@ -112,11 +112,13 @@ export function decide(input: AgentInput): AgentDecision {
   }
 
   const caretaker = input.caretaker;
+  // Days, not doses (user, 16 Oct): once per missed day, so the rest of today still nudges and celebrates.
   if (caretaker?.optedIn && caretaker.threshold >= DEMO_RULES.caretakerMinimumThreshold
-      && input.consecutiveMissedDoses >= caretaker.threshold) {
+      && input.consecutiveMissedDays >= caretaker.threshold
+      && input.lastMissedDay !== null && input.lastMissedDay !== input.lastCheckInDay) {
     return decision(input, "nudge", "repeated_misses_caretaker_check_in",
-      "Consecutive missed doses reached the opted-in caretaker threshold.",
-      { consecutiveMissedDoses: input.consecutiveMissedDoses, caretakerThreshold: caretaker.threshold }, true);
+      "Days in a row with a missed dose reached the caretaker's chosen number; one check-in per missed day.",
+      { consecutiveMissedDays: input.consecutiveMissedDays, lastMissedDay: input.lastMissedDay, caretakerThreshold: caretaker.threshold }, true);
   }
 
   const missedDose = input.doses.find((dose) => {

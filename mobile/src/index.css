@@ -233,6 +233,9 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .dog-name { display: block; margin: 0; font-size: var(--font-size-9xl); line-height: 1; font-weight: var(--font-weight-black); letter-spacing: -1.4px; }
 .hearts { display: flex; gap: 2px; margin-top: 7px; color: var(--color-accent-heart); font-size: 28px; line-height: .92; filter: var(--shadow-hearts); }
 .heart-empty { color: white; }
+.hearts-row { display: flex; align-items: flex-end; gap: 8px; margin-top: 7px; }
+.hearts-row .hearts { margin-top: 0; }
+.hearts-today { font-size: var(--font-size-5xl); font-weight: var(--font-weight-black); line-height: 1; letter-spacing: .2px; }
 .glass-button, .scene-chip {
   border: 1px solid rgba(255,255,255,.4);
   color: white;
@@ -422,7 +425,21 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .demo-time-buttons .secondary-button { flex: 1 1 auto; width: auto; min-height: 48px; padding: 0 12px; font-size: var(--font-size-sm); white-space: nowrap; }
 /* The Morning / Evening button that is on: filled; tap it again for real time. */
 .demo-time-buttons .secondary-button.is-active { color: white; background: var(--color-primary); }
-.demo-unlocks { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 12px; }
+.demo-unlocks { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+/* Settings > For demo only: one closed card; its summary row is the only thing showing until tapped. */
+.demo-panel { gap: 0; }
+.demo-panel summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; list-style: none; cursor: pointer; }
+.demo-panel summary::-webkit-details-marker { display: none; }
+.demo-panel summary > span { display: grid; gap: 3px; }
+.demo-panel summary strong { color: #294a3a; font-size: var(--font-size-3xl); }
+.demo-panel summary small { color: #78857c; font-size: var(--font-size-sm); }
+.demo-panel summary svg { flex: none; transition: transform .2s ease; }
+.demo-panel[open] summary svg { transform: rotate(90deg); }
+.demo-panel__body { display: grid; gap: 14px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--color-border-card); }
+.demo-panel__section { display: grid; gap: 8px; }
+.demo-panel__section h3 { margin: 0; color: #294a3a; font-size: var(--font-size-2xl); }
+.demo-panel__section p { margin: 0; color: #78857c; font-size: var(--font-size-sm); line-height: 1.4; }
+@media (prefers-reduced-motion: reduce) { .demo-panel summary svg { transition: none; } }
 .role-strip { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-bottom: 12px; padding: 12px 14px; border-radius: var(--radius-3xl); color: #426653; background: var(--color-surface-sage-light); }
 .role-strip div { display: grid; }
 .role-strip small { color: #76847b; font-size: var(--font-size-sm); }
@@ -1055,9 +1072,9 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
    ═══════════════════════════════════════════════════════════════════════ */
 @media (orientation: landscape) and (hover: none) and (pointer: coarse), (orientation: landscape) and (max-height: 520px) {
   .app-shell {
-    /* Right pane: never narrower than a 360 px phone's card, never wider than a roomy one.
-       vw, not %: the shell is full-width here, and % would resolve against each element's own container. */
-    --pane-w: clamp(360px, 48vw, 480px);
+    /* Right pane: never narrower than a 360 px phone's card; tablets get up to 600 px so the card can grow (phones stay
+       under 480). vw, not %: the shell is full-width here, and % would resolve against each element's own container. */
+    --pane-w: clamp(360px, 48vw, 600px);
     --pane-top: max(12px, env(safe-area-inset-top));
     --scene-bottom: max(12px, env(safe-area-inset-bottom));
     --top-pad: max(clamp(12px, 3dvh, 30px), env(safe-area-inset-top));
@@ -1108,9 +1125,16 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
     scrollbar-width: none;
   }
   .home-layout__cards::-webkit-scrollbar { display: none; }
-  /* Home's cards rest just above the dock (gap = --nav-space, as in portrait); spare height stays at the top of the
-     pane. An auto margin rather than justify-content: flex-end, so a column taller than the pane still scrolls from its top. */
+  /* The right pane is a size container: the next-dose card's scale unit grows with the pane's height and width, so the
+     card is bigger sideways: it fills the pane on phones and grows with tablets (user, 16 Oct). 1px = the portrait size. */
+  .home-layout__cards { container-type: size; }
+  .next-dose-card { --ndc-u: clamp(1px, min(0.5cqh, 0.36cqi), 2.4px); }
+  /* Taller panes (tablets): the card grows to fill the height, up to a size its content still reads as one card. */
+  .home-layout__cards .next-dose-card { flex: 1 1 auto; justify-content: space-evenly; max-height: calc(320 * var(--ndc-u)); }
+  /* Home's cards sit in the middle of the pane, between the top and the dock (user, 16 Oct: the gap above the card was
+     too big). Auto margins rather than justify-content: center, so a column taller than the pane still scrolls from its top. */
   .home-layout__cards > :first-child { margin-top: auto; }
+  .home-layout__cards > :last-child { margin-bottom: auto; }
   .full-card {
     top: var(--pane-top);
     left: calc(100% - var(--pane-w) + var(--side-gutter));
@@ -1149,7 +1173,13 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
     --dock-paw-bottom: calc(var(--dock-bottom) + 10px);
     /* Card ends just above the woof bubble, which sits on top of the paw button. */
     --nav-space: calc(var(--dock-bottom) + var(--dock-h) + 16px);
+    /* Smaller name and hearts (below) give Buddy the height back (user, 16 Oct: landscape Home felt cramped). */
+    --top-bar-space: calc(var(--top-pad) + 76px);
   }
+  .dog-name { font-size: var(--font-size-8xl); letter-spacing: -1px; }
+  .hearts-row { margin-top: 4px; gap: 6px; }
+  .hearts { font-size: 22px; }
+  .hearts-today { font-size: var(--font-size-3xl); }
   .bottom-dock { height: var(--dock-h); }
   .bottom-nav {
     bottom: calc(var(--dock-bottom) + (var(--dock-h) - var(--dock-nav-h)) / 2);

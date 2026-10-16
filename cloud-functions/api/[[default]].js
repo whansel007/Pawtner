@@ -5360,8 +5360,9 @@ var DEMO_RULES = {
   nudgeDelayMinutes: 60,
   nudgeIntervalMinutes: 60,
   maxNudgesPerDose: 2,
-  caretakerMinimumThreshold: 2,
-  defaultCaretakerThreshold: 2,
+  /** Caretaker check-ins: days in a row with a missed dose (user, 16 Oct). One day is allowed (migration 006). */
+  caretakerMinimumThreshold: 1,
+  defaultCaretakerThreshold: 1,
   restockDaysOfSupply: 5,
   /**
    * Blood pressure is judged against the person's FIRST reading (user, 16 Oct): more than this many points
@@ -5485,13 +5486,13 @@ function decide(input) {
     );
   }
   const caretaker = input.caretaker;
-  if (caretaker?.optedIn && caretaker.threshold >= DEMO_RULES.caretakerMinimumThreshold && input.consecutiveMissedDoses >= caretaker.threshold) {
+  if (caretaker?.optedIn && caretaker.threshold >= DEMO_RULES.caretakerMinimumThreshold && input.consecutiveMissedDays >= caretaker.threshold && input.lastMissedDay !== null && input.lastMissedDay !== input.lastCheckInDay) {
     return decision(
       input,
       "nudge",
       "repeated_misses_caretaker_check_in",
-      "Consecutive missed doses reached the opted-in caretaker threshold.",
-      { consecutiveMissedDoses: input.consecutiveMissedDoses, caretakerThreshold: caretaker.threshold },
+      "Days in a row with a missed dose reached the caretaker's chosen number; one check-in per missed day.",
+      { consecutiveMissedDays: input.consecutiveMissedDays, lastMissedDay: input.lastMissedDay, caretakerThreshold: caretaker.threshold },
       true
     );
   }
@@ -5578,6 +5579,21 @@ function computeStreak(days, today) {
     cursor.setUTCDate(cursor.getUTCDate() - 1);
   }
 }
+function computeMissedDays(days, today) {
+  const byDate = /* @__PURE__ */ new Map();
+  for (const item of days) byDate.set(item.date, [...byDate.get(item.date) ?? [], item]);
+  let count = 0;
+  const cursor = /* @__PURE__ */ new Date(`${today}T00:00:00.000Z`);
+  cursor.setUTCDate(cursor.getUTCDate() - 1);
+  const yesterday = cursor.toISOString().slice(0, 10);
+  for (; ; ) {
+    const scheduled = byDate.get(cursor.toISOString().slice(0, 10));
+    if (!scheduled?.length || scheduled.every((dose) => dose.taken)) break;
+    count += 1;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+  return { count, lastMissedDay: count > 0 ? yesterday : null };
+}
 function hasBloodPressureToday(metrics, today) {
   return metrics.some((metric) => metric.recordedAt.slice(0, 10) === today);
 }
@@ -5631,17 +5647,13 @@ function computeHeartsTotal(doses, metrics, today) {
 function selectAgentInput(source) {
   const { derived, metrics } = deriveSelection(source);
   const todayDoses = derived.filter((dose) => dose.scheduledAt.slice(0, 10) === source.today);
-  const streak = computeStreak(derived.map((dose) => ({
+  const doseDays = derived.map((dose) => ({
     date: dose.scheduledAt.slice(0, 10),
     scheduleId: dose.id,
     taken: dose.status === "taken"
-  })), source.today);
-  const completedOrMissed = derived.filter((dose) => Date.parse(dose.scheduledAt) <= Date.parse(source.now));
-  let consecutiveMissedDoses = 0;
-  for (const dose of [...completedOrMissed].reverse()) {
-    if (dose.status !== "missed") break;
-    consecutiveMissedDoses += 1;
-  }
+  }));
+  const streak = computeStreak(doseDays, source.today);
+  const missedDays = computeMissedDays(doseDays, source.today);
   const latestDoseEvent = source.triggeringDoseEventId ? source.doseEvents.find((event) => event.id === source.triggeringDoseEventId && Date.parse(event.occurredAt) <= Date.parse(source.now)) ?? null : null;
   return buildAgentInput({
     now: source.now,
@@ -5655,7 +5667,9 @@ function selectAgentInput(source) {
     latestDoseEvent,
     healthMetrics: metrics,
     daysOfSupplyByMedicationId: source.daysOfSupplyByMedicationId,
-    consecutiveMissedDoses,
+    consecutiveMissedDays: missedDays.count,
+    lastMissedDay: missedDays.lastMissedDay,
+    lastCheckInDay: source.lastCheckInDay,
     caretaker: source.caretaker
   });
 }
@@ -5955,6 +5969,12 @@ var PawtnerRepository = class {
       `SELECT opted_in, threshold FROM user_caregivers WHERE user_id = $1 ORDER BY caregiver_id LIMIT 1`,
       [userId]
     );
+    const checkInResult = await client.query(
+      `SELECT observations->>'lastMissedDay' AS last_missed_day FROM agent_decisions
+       WHERE user_id = $1 AND caretaker_ping = true AND created_at <= $2::timestamptz
+       ORDER BY created_at DESC LIMIT 1`,
+      [userId, now]
+    );
     const nudgeRows = nudgesResult.rows.map((row) => ({
       scheduleId: row.schedule_id,
       scheduledFor: iso(row.scheduled_for),
@@ -5971,6 +5991,7 @@ var PawtnerRepository = class {
       healthMetrics: metricsResult.rows.map((row) => ({ ...mapMetric(row), kind: "blood_pressure" })),
       daysOfSupplyByMedicationId: Object.fromEntries(medsResult.rows.map((row) => [row.id, row.days_of_supply])),
       caretaker: caregiverResult.rows[0] ? { optedIn: caregiverResult.rows[0].opted_in, threshold: caregiverResult.rows[0].threshold } : null,
+      lastCheckInDay: checkInResult.rows[0]?.last_missed_day ?? null,
       ...triggeringDoseEventId ? { triggeringDoseEventId } : {}
     };
   }
@@ -6096,6 +6117,36 @@ var PawtnerRepository = class {
       return (await this.decideAndPersist(client, userId, now)).decision;
     });
   }
+  /**
+   * Demo only (Settings > For demo only > Reset to morning). DATA DELETE, scoped to the demo user: removes their dose
+   * taps (by scheduled time), readings and agent decisions from the start of `now`'s local day on, including rows a
+   * demo clock dated later. Earlier days, the seed readings, walks and treats stay. Then the agent decides once at `now`,
+   * so Buddy's mood comes from the fresh state rather than an older decision.
+   */
+  async resetDemoDay(now) {
+    return this.transaction(async (client) => {
+      const userId = await this.getDefaultUserId(client);
+      const dayStart = "((($2::timestamptz AT TIME ZONE u.timezone)::date)::timestamp AT TIME ZONE u.timezone)";
+      await client.query(
+        `DELETE FROM dose_events de USING med_schedules ms, medications m, users u
+         WHERE ms.id = de.schedule_id AND m.id = ms.medication_id AND u.id = m.user_id
+           AND u.id = $1 AND de.scheduled_for >= ${dayStart}`,
+        [userId, now]
+      );
+      await client.query(
+        `DELETE FROM health_metrics hm USING users u
+         WHERE u.id = hm.user_id AND u.id = $1 AND hm.recorded_at >= ${dayStart}`,
+        [userId, now]
+      );
+      await client.query(
+        `DELETE FROM agent_decisions ad USING users u
+         WHERE u.id = ad.user_id AND u.id = $1 AND ad.created_at >= ${dayStart}`,
+        [userId, now]
+      );
+      await this.decideAndPersist(client, userId, now);
+      return this.today(client, userId, now);
+    });
+  }
   async getCaretakerSummary(now = (/* @__PURE__ */ new Date()).toISOString()) {
     const userId = await this.getDefaultUserId();
     const identity = await this.pool.query(
@@ -6160,6 +6211,14 @@ var PawtnerRepository = class {
        ORDER BY created_at DESC LIMIT 20`,
       [userId, start, today, person.timezone]
     );
+    const checkInResult = await this.pool.query(
+      `SELECT observations, created_at FROM agent_decisions
+       WHERE user_id = $1 AND caretaker_ping = true AND observations ? 'lastMissedDay'
+         AND created_at >= ($2::date::timestamp AT TIME ZONE $3)
+       ORDER BY created_at DESC LIMIT 1`,
+      [userId, start, person.timezone]
+    );
+    const checkInRow = checkInResult.rows[0];
     const questionsResult = await this.pool.query(
       `SELECT note, recorded_at FROM health_metrics
        WHERE user_id = $1 AND note IS NOT NULL AND note <> ''
@@ -6197,7 +6256,8 @@ var PawtnerRepository = class {
       doctorQuestions: questionsResult.rows.map((row) => ({
         note: `Ask a healthcare professional about: ${row.note}`,
         occurredAt: iso(row.recorded_at)
-      }))
+      })),
+      checkIn: checkInRow ? { missedDays: Number(checkInRow.observations.consecutiveMissedDays), lastMissedDay: String(checkInRow.observations.lastMissedDay), sentAt: iso(checkInRow.created_at) } : null
     };
   }
   async getEscalationSettings() {
@@ -6786,6 +6846,11 @@ function createApiHandler(repository) {
         const data = await body(request);
         if (!requiredString(data.userId) || !validDate(data.now)) throw new ApiError(400, "userId and ISO now are required.");
         return json({ decision: await repository.decideNow(data.userId, data.now) });
+      }
+      if (request.method === "POST" && url.pathname === "/api/demo/reset-day") {
+        const data = await body(request);
+        if (!validDate(data.now)) throw new ApiError(400, "ISO now is required.");
+        return json(await repository.resetDemoDay(data.now));
       }
       if (request.method === "POST" && url.pathname === "/api/walk-session") {
         const data = await body(request);

@@ -5,10 +5,8 @@ import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
 import type { BackAction } from "../lib/navigation";
 import type { Caregiver } from "../types";
-import type { EscalationSettingsResponse } from "../../../shared/contract";
-import { DEMO_TIME_PRESETS, type DemoTimePreset, DEMO_UNLOCKS, type DemoUnlockKey } from "../config/demo";
+import { DEMO_RESET_PRESET, DEMO_TIME_PRESETS, type DemoTimePreset, DEMO_UNLOCKS, type DemoUnlockKey } from "../config/demo";
 import { formatClockTime, parseDemoTime } from "../lib/demoTime";
-import { useEffect, useState } from "react";
 
 export function SettingsScreen({
   back,
@@ -21,8 +19,6 @@ export function SettingsScreen({
   onDemoClockChange,
   onRunDemoClock,
   agentBusy,
-  escalationSettings,
-  onSaveEscalationSettings,
   demoUnlocks,
   onToggleDemoUnlock,
   activeTimePreset,
@@ -43,8 +39,6 @@ export function SettingsScreen({
   onDemoClockChange: (value: string) => void;
   onRunDemoClock: () => void;
   agentBusy: boolean;
-  escalationSettings: EscalationSettingsResponse | null;
-  onSaveEscalationSettings: (settings: EscalationSettingsResponse) => void;
   /** Demo tick boxes that are on ("7 days", "20 hearts", "40 hearts", config/demo.ts DEMO_UNLOCKS). */
   demoUnlocks: ReadonlySet<DemoUnlockKey>;
   onToggleDemoUnlock: (key: DemoUnlockKey) => void;
@@ -52,7 +46,7 @@ export function SettingsScreen({
   activeTimePreset: DemoTimePreset | null;
   /** Jump to a preset time today, or back to real time (null). Never runs the agent. */
   onDemoTime: (preset: DemoTimePreset | null) => void;
-  /** "Reset demo": clears this phone's demo choices and reloads the app. */
+  /** "Reset to morning": today's doses, readings and decisions cleared (API), this phone's demo choices too, clock at 9:00. */
   onResetDemo: () => void;
   /** "Share my blood pressure with {{caretaker}}" (lib/sharing.ts). */
   shareBloodPressure: boolean;
@@ -62,9 +56,7 @@ export function SettingsScreen({
 }) {
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
-  const [escalationDraft, setEscalationDraft] = useState<EscalationSettingsResponse>({ optedIn: false, threshold: 2 });
-  const [settingsBusy, setSettingsBusy] = useState(false);
-  useEffect(() => { if (escalationSettings) setEscalationDraft(escalationSettings); }, [escalationSettings]);
+  const resetTime = parseDemoTime(DEMO_TIME_PRESETS[DEMO_RESET_PRESET], DEMO_TIME_PRESETS);
   return (
     <FullCard back={back} className="settings-card">
       <p className="eyebrow green">{t("settings.eyebrow", { name: petName })}</p>
@@ -87,50 +79,57 @@ export function SettingsScreen({
         </span>
       </label>
       <div className="settings-note"><Icon name="heart" /><p><strong>{t("settings.privacyTitle")}</strong></p></div>
-      <div className="demo-clock-card">
-        <p className="eyebrow green">Agent demo</p>
-        <h3>Demo clock</h3>
-        <p>Choose a time to evaluate the dose rules. Nudges are limited to two per scheduled dose.</p>
-        <label htmlFor="demo-clock">Simulated local time</label>
-        <input id="demo-clock" type="datetime-local" value={demoClockValue} onChange={(event) => onDemoClockChange(event.target.value)} />
-        <button className="primary-button" disabled={agentBusy || !demoClockValue} onClick={onRunDemoClock}>{agentBusy ? "Checking…" : "Run agent at this time"}</button>
-      </div>
-      <div className="demo-clock-card escalation-settings-card">
-        <p className="eyebrow green">Caretaker check-ins</p>
-        <h3>Escalation settings</h3>
-        <label className="consent-toggle"><input type="checkbox" checked={escalationDraft.optedIn} onChange={(event) => setEscalationDraft((current) => ({ ...current, optedIn: event.target.checked }))} /> Allow {caretakerName} to check in after repeated missed doses</label>
-        <label htmlFor="missed-dose-threshold">Check in after</label>
-        <select id="missed-dose-threshold" value={escalationDraft.threshold} onChange={(event) => setEscalationDraft((current) => ({ ...current, threshold: Math.max(2, Number(event.target.value)) }))}>
-          {[2, 3, 4, 5].map((threshold) => <option key={threshold} value={threshold}>{threshold} consecutive missed doses</option>)}
-        </select>
-        <p>Check-ins never include medicine names. The minimum threshold is two missed doses.</p>
-        <button className="primary-button" disabled={!escalationSettings || settingsBusy} onClick={async () => { setSettingsBusy(true); try { await onSaveEscalationSettings(escalationDraft); } finally { setSettingsBusy(false); } }}>{settingsBusy ? "Saving…" : "Save check-in settings"}</button>
-      </div>
-      <div className="demo-clock-card demo-unlock-card">
-        <p className="eyebrow green">{t("settings.demoEyebrow")}</p>
-        <p>{t("settings.demoUnlockHint")}</p>
-        <div className="demo-unlocks">
-          {DEMO_UNLOCKS.map((unlock) => (
-            <label className="consent-toggle" key={unlock.key}>
-              <input type="checkbox" checked={demoUnlocks.has(unlock.key)} onChange={() => onToggleDemoUnlock(unlock.key)} />
-              {t(`settings.demoUnlock.${unlock.key}`)}
-            </label>
-          ))}
+            {/* Every demo-only control in one closed card (user, 16 Oct: people kept tapping them by mistake). */}
+      <details className="demo-clock-card demo-panel">
+        <summary>
+          <span>
+            <span className="eyebrow green">{t("settings.demoEyebrow")}</span>
+            <strong>{t("settings.demoTitle")}</strong>
+            <small>{t("settings.demoSub")}</small>
+          </span>
+          <Icon name="chevron" />
+        </summary>
+        <div className="demo-panel__body">
+          <section className="demo-panel__section">
+            <h3>{t("settings.demoResetTitle")}</h3>
+            <p>{t("settings.demoResetHint", { time: resetTime ? formatClockTime(resetTime) : DEMO_TIME_PRESETS[DEMO_RESET_PRESET], name: petName })}</p>
+            <button type="button" className="secondary-button" onClick={onResetDemo}>{t("settings.demoReset", { time: resetTime ? formatClockTime(resetTime) : DEMO_TIME_PRESETS[DEMO_RESET_PRESET] })}</button>
+          </section>
+          <section className="demo-panel__section">
+            <h3>{t("settings.demoTimeTitle")}</h3>
+            <p>{t("settings.demoTimeHint")}</p>
+            <div className="demo-time-buttons">
+              {(Object.keys(DEMO_TIME_PRESETS) as DemoTimePreset[]).map((preset) => {
+                const time = parseDemoTime(DEMO_TIME_PRESETS[preset], DEMO_TIME_PRESETS);
+                return (
+                  <button key={preset} type="button" className={`secondary-button ${activeTimePreset === preset ? "is-active" : ""}`} aria-pressed={activeTimePreset === preset} onClick={() => onDemoTime(activeTimePreset === preset ? null : preset)}>
+                    {t(`settings.demoTime.${preset}`, { time: time ? formatClockTime(time) : DEMO_TIME_PRESETS[preset] })}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+          <section className="demo-panel__section">
+            <h3>{t("settings.demoUnlockTitle")}</h3>
+            <p>{t("settings.demoUnlockHint")}</p>
+            <div className="demo-unlocks">
+              {DEMO_UNLOCKS.map((unlock) => (
+                <label className="consent-toggle" key={unlock.key}>
+                  <input type="checkbox" checked={demoUnlocks.has(unlock.key)} onChange={() => onToggleDemoUnlock(unlock.key)} />
+                  {t(`settings.demoUnlock.${unlock.key}`)}
+                </label>
+              ))}
+            </div>
+          </section>
+          <section className="demo-panel__section">
+            <h3>{t("settings.demoClockTitle")}</h3>
+            <p>{t("settings.demoClockHint")}</p>
+            <label htmlFor="demo-clock">{t("settings.demoClockLabel")}</label>
+            <input id="demo-clock" type="datetime-local" value={demoClockValue} onChange={(event) => onDemoClockChange(event.target.value)} />
+            <button className="primary-button" disabled={agentBusy || !demoClockValue} onClick={onRunDemoClock}>{agentBusy ? t("settings.demoClockBusy") : t("settings.demoClockRun")}</button>
+          </section>
         </div>
-        <p>{t("settings.demoTimeHint")}</p>
-        <div className="demo-time-buttons">
-          {(Object.keys(DEMO_TIME_PRESETS) as DemoTimePreset[]).map((preset) => {
-            const time = parseDemoTime(DEMO_TIME_PRESETS[preset], DEMO_TIME_PRESETS);
-            return (
-              <button key={preset} type="button" className={`secondary-button ${activeTimePreset === preset ? "is-active" : ""}`} aria-pressed={activeTimePreset === preset} onClick={() => onDemoTime(activeTimePreset === preset ? null : preset)}>
-                {t(`settings.demoTime.${preset}`, { time: time ? formatClockTime(time) : DEMO_TIME_PRESETS[preset] })}
-              </button>
-            );
-          })}
-        </div>
-        <p>{t("settings.demoResetHint")}</p>
-        <button type="button" className="secondary-button" onClick={onResetDemo}>{t("settings.demoReset")}</button>
-      </div>
+      </details>
     </FullCard>
   );
 }

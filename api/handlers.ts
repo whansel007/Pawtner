@@ -1,5 +1,5 @@
 import { ApiError, PawtnerRepository } from "./repository.js";
-import type { AgentDecideRequest, CreateMedicationRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, PillReferenceRequest, PillVerifyRequest, WalkSessionRequest } from "../shared/contract.js";
+import type { AgentDecideRequest, CreateMedicationRequest, DemoResetDayRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, PillReferenceRequest, PillVerifyRequest, WalkSessionRequest } from "../shared/contract.js";
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 async function body<T>(request: Request): Promise<T> {
@@ -41,6 +41,11 @@ export function createApiHandler(repository: PawtnerRepository) {
         const data = await body<AgentDecideRequest>(request);
         if (!requiredString(data.userId) || !validDate(data.now)) throw new ApiError(400, "userId and ISO now are required.");
         return json({ decision: await repository.decideNow(data.userId, data.now) });
+      }
+      if (request.method === "POST" && url.pathname === "/api/demo/reset-day") {
+        const data = await body<DemoResetDayRequest>(request);
+        if (!validDate(data.now)) throw new ApiError(400, "ISO now is required.");
+        return json(await repository.resetDemoDay(data.now));
       }
       if (request.method === "POST" && url.pathname === "/api/walk-session") {
         const data = await body<WalkSessionRequest>(request);

@@ -16,15 +16,19 @@ interface AlertsPageProps {
   saveStatus: SaveStatus;
   pendingThreshold: number | null;
   onSaveThreshold: (threshold: number) => void;
+  /** Turns check-ins on or off (the caretaker decides here; the senior's phone no longer has this setting). */
+  onSaveConsent: (optedIn: boolean) => void;
 }
 
-export function AlertsPage({ data, caretakers, viewer, offline, saveStatus, pendingThreshold, onSaveThreshold }: AlertsPageProps) {
+export function AlertsPage({ data, caretakers, viewer, offline, saveStatus, pendingThreshold, onSaveThreshold, onSaveConsent }: AlertsPageProps) {
   const { t } = useTranslation();
   const senior = data.summary.senior.name;
   const dog = data.today.dog;
   const { optedIn } = data.escalation;
   const threshold = pendingThreshold ?? data.escalation.threshold;
   const lock = checkInLock({ receivesCheckIns: viewer.receivesCheckIns, optedIn, offline });
+  // The on/off switch: check-ins caretakers only, and saving needs the API.
+  const canSwitch = viewer.receivesCheckIns && !offline;
 
   const saveMessage = {
     idle: null,
@@ -49,13 +53,23 @@ export function AlertsPage({ data, caretakers, viewer, offline, saveStatus, pend
           stitched
           badge={<CareBadge tone={optedIn ? "moss" : "rose"}>{t(optedIn ? "care.web.alerts.consentBadge" : "care.web.alerts.noConsentBadge")}</CareBadge>}
         >
-          <div className={`care-consent ${optedIn ? "is-on" : ""}`}>
-            <span className="care-consent__mark" aria-hidden="true">{optedIn ? "✓" : "·"}</span>
-            <div>
-              <strong>{t(optedIn ? "care.web.alerts.consentOn" : "care.web.alerts.consentOff", { name: senior })}</strong>
-              <p>{t(optedIn ? "care.web.alerts.consentOnSub" : "care.web.alerts.consentOffSub", { name: senior })}</p>
-            </div>
-          </div>
+          {(() => {
+            const content = (
+              <>
+                <span className="care-consent__mark" aria-hidden="true">{optedIn ? "✓" : "·"}</span>
+                <span>
+                  <strong>{t(optedIn ? "care.web.alerts.consentOn" : "care.web.alerts.consentOff", { name: senior })}</strong>
+                  <span className="care-consent__sub">{t(canSwitch ? "care.web.alerts.consentSwitchSub" : optedIn ? "care.web.alerts.consentOnSub" : "care.web.alerts.consentOffSub", { name: senior })}</span>
+                </span>
+              </>
+            );
+            return canSwitch ? (
+              <button type="button" role="switch" aria-checked={optedIn} aria-label={t("care.web.alerts.consentSwitchLabel")} className={`care-consent care-consent--switch ${optedIn ? "is-on" : ""}`}
+                disabled={saveStatus === "saving"} onClick={() => onSaveConsent(!optedIn)}>
+                {content}
+              </button>
+            ) : <div className={`care-consent ${optedIn ? "is-on" : ""}`}>{content}</div>;
+          })()}
 
           <ThresholdStepper
             value={threshold}

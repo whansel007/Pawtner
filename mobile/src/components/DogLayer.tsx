@@ -8,8 +8,7 @@ import { useSceneLayout } from "../lib/useSceneLayout";
 import { usePetReaction } from "../lib/usePetReaction";
 import { useBuddyClip } from "../lib/useBuddyClip";
 import { useMilestones } from "../lib/useMilestones";
-import { withDemoStreak } from "../lib/demoUnlocks";
-import type { DemoUnlockKey } from "../config/demo";
+import { withStreak } from "../lib/demoUnlocks";
 import { earnedPerformances, hasHeartsToPlay, type TrickRequest } from "../lib/tricks";
 import type { Screen } from "../types";
 import { DogStage } from "./DogStage";
@@ -34,7 +33,7 @@ export function DogLayer({
   celebrateRequest = 0,
   trickRequest = null,
   heartCount,
-  demoUnlocks,
+  streak,
 }: {
   screen: Screen;
   mood: DogMood;
@@ -47,8 +46,8 @@ export function DogLayer({
   trickRequest?: TrickRequest | null;
   /** Today's hearts (0–4): Buddy plays from PLAY_MIN_HEARTS up. */
   heartCount: number;
-  /** Settings > Demo ticks; "7 days" counts Wave as earned (lib/demoUnlocks.ts). */
-  demoUnlocks: ReadonlySet<DemoUnlockKey>;
+  /** The streak shown on the phone (App: real, or the Settings demo days tick); earns tricks such as Wave. */
+  streak: number;
 }) {
   const { t } = useTranslation();
   const anchor = useRef<HTMLDivElement>(null);
@@ -57,7 +56,7 @@ export function DogLayer({
   useSceneGround(anchor, placement, screen);
   const clip = useBuddyClip({ mood, screen, dizzy: Boolean(dizzy), celebrateRequest });
   const { tricks } = useMilestones();
-  const earned = useMemo(() => earnedPerformances(tricks ? withDemoStreak(tricks, demoUnlocks) : tricks), [tricks, demoUnlocks]);
+  const earned = useMemo(() => earnedPerformances(tricks ? withStreak(tricks, streak) : tricks), [tricks, streak]);
   // Hearts decide play (config/pet.ts PLAY_MIN_HEARTS); mood from readings never does.
   const canPlay = hasHeartsToPlay(heartCount);
   const reaction = usePetReaction(earned, canPlay, { kind: canPlay ? clip.waveClip : null, busy: clip.view !== null, play: clip.play });

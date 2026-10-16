@@ -66,7 +66,12 @@ export interface AgentInput {
   latestDoseEvent?: DoseEvent | null;
   healthMetrics: HealthMetric[];
   daysOfSupplyByMedicationId: Record<string, number | null>;
-  consecutiveMissedDoses: number;
+  /** Days in a row, counting back from yesterday, with at least one scheduled dose not taken (today is not over yet). */
+  consecutiveMissedDays: number;
+  /** Local date (YYYY-MM-DD) of the most recent of those days, or null when none. */
+  lastMissedDay: string | null;
+  /** The missed day the latest caretaker check-in was sent for, or null. One check-in per missed day. */
+  lastCheckInDay: string | null;
   caretaker: {
     optedIn: boolean;
     threshold: number;
@@ -158,6 +163,14 @@ export interface AgentDecideResponse {
   decision: AgentDecision;
 }
 
+/**
+ * Demo only (Settings > For demo only > Reset to morning). `now` is the morning instant to restart at; the API
+ * deletes the demo user's dose taps, readings and decisions from the start of that local day on, then decides once at `now`.
+ */
+export interface DemoResetDayRequest {
+  now: string;
+}
+
 export interface CaretakerSummaryResponse {
   period: { start: string; end: string };
   senior: { id: string; name: string };
@@ -173,6 +186,11 @@ export interface CaretakerSummaryResponse {
   latestBloodPressure: HealthMetric | null;
   caringMoments: Array<{ id: string; kind: "celebration" | "check_in"; message: string; occurredAt: string }>;
   doctorQuestions: Array<{ note: string; occurredAt: string }>;
+  /**
+   * The latest caretaker check-in of the past week (agent rule `repeated_misses_caretaker_check_in`), or null.
+   * `lastMissedDay` is the senior's local date; `sentAt` may be later than now when a demo clock ran the agent ahead.
+   */
+  checkIn: { missedDays: number; lastMissedDay: string; sentAt: string } | null;
 }
 
 export interface EscalationSettingsRequest {

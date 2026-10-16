@@ -42,7 +42,9 @@ export const api = {
   // T1 endpoints
   today: (now?: string) => request<TodayResponse>(`/today${now ? `?now=${encodeURIComponent(now)}` : ""}`),
   decide: (userId: string, now: string) => request<{ decision: AgentDecision }>("/agent/decide", { method: "POST", body: JSON.stringify({ userId, now }) }),
-  caretakerSummary: () => request<CaretakerSummaryResponse>("/caretaker/summary"),
+  /** Demo only: deletes today's dose taps, readings and decisions (from the start of `now`'s day), then decides at `now`. */
+  resetDemoDay: (now: string) => request<TodayResponse>("/demo/reset-day", { method: "POST", body: JSON.stringify({ now }) }),
+  caretakerSummary: (now?: string) => request<CaretakerSummaryResponse>(`/caretaker/summary${now ? `?now=${encodeURIComponent(now)}` : ""}`),
   escalationSettings: () => request<EscalationSettingsResponse>("/escalation-settings"),
   updateEscalationSettings: (data: EscalationSettingsRequest) => request<EscalationSettingsResponse>("/escalation-settings", { method: "PUT", body: JSON.stringify(data) }),
   doseEvent: (data: { scheduleId: string; scheduledFor: string; event: "taken"; occurredAt: string; proofPhotoUrl?: string | null }) => request<DoseEventResponse>("/dose-event", { method: "POST", body: JSON.stringify(data) }),

@@ -3,8 +3,9 @@ export const DEMO_RULES = {
   nudgeDelayMinutes: 60,
   nudgeIntervalMinutes: 60,
   maxNudgesPerDose: 2,
-  caretakerMinimumThreshold: 2,
-  defaultCaretakerThreshold: 2,
+  /** Caretaker check-ins: days in a row with a missed dose (user, 16 Oct). One day is allowed (migration 006). */
+  caretakerMinimumThreshold: 1,
+  defaultCaretakerThreshold: 1,
   restockDaysOfSupply: 5,
   /**
    * Blood pressure is judged against the person's FIRST reading (user, 16 Oct): more than this many points

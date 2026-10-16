@@ -1,10 +1,15 @@
+/*
+ * One scale unit for every size in the card (user, 16 Oct: bigger when there's room). 1px in portrait, so the
+ * portrait card is unchanged; landscape raises it from the right pane's size (index.css, --ndc-u).
+ */
 .next-dose-card {
-  --ndc-gap: 10px;
-  --ndc-pad: 16px 16px 14px;
+  --u: var(--ndc-u, 1px);
+  --ndc-gap: calc(10 * var(--u));
+  --ndc-pad: calc(16 * var(--u)) calc(16 * var(--u)) calc(14 * var(--u));
 
   position: relative;
   flex: none;
-  border-radius: 24px;
+  border-radius: calc(24 * var(--u));
   padding: var(--ndc-pad);
   background: var(--color-surface-card, #fffdf7);
   box-shadow: var(--shadow-card, 0 2px 16px rgba(0, 0, 0, 0.08));
@@ -19,11 +24,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: calc(12 * var(--u));
 }
 
 .next-dose-card__label {
-  font-size: var(--font-size-base, 14px);
+  font-size: calc(12 * var(--u));
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -31,7 +36,7 @@
 }
 
 .next-dose-card__progress {
-  font-size: var(--font-size-base, 14px);
+  font-size: calc(12 * var(--u));
   font-weight: 700;
   color: #6c806f;
 }
@@ -41,13 +46,13 @@
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 10px;
-  min-height: 48px;
-  padding: 4px 0;
+  gap: calc(10 * var(--u));
+  min-height: calc(48 * var(--u));
+  padding: calc(4 * var(--u)) 0;
 }
 
 .next-dose-card__time {
-  font-size: var(--font-size-base, 14px);
+  font-size: calc(12 * var(--u));
   font-weight: 700;
   color: #6f7d73;
   white-space: nowrap;
@@ -61,29 +66,34 @@
 }
 
 .next-dose-card__name {
-  font-size: var(--font-size-xl, 18px);
+  font-size: calc(14 * var(--u));
   font-weight: 800;
   color: var(--color-text-heading, #1c3a2a);
+  line-height: 1.2;
+  /* Up to two lines, so a scaled-up landscape card shows the whole name instead of "Fictional Ta…". */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .next-dose-card__strength {
-  font-size: var(--font-size-md, 15px);
+  font-size: calc(11 * var(--u));
   color: var(--color-text-muted, #79867e);
 }
 
 /* Taken button */
 .next-dose-card__taken-btn {
-  min-width: 64px;
-  min-height: 48px;
+  min-width: calc(64 * var(--u));
+  min-height: calc(48 * var(--u));
   border: 0;
-  border-radius: var(--radius-lg, 12px);
+  border-radius: calc(14 * var(--u));
   color: #fff;
   background: var(--color-primary-deep, #2d6b4a);
   font-family: inherit;
-  font-size: var(--font-size-md, 15px);
+  font-size: calc(11 * var(--u));
   font-weight: 800;
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease;
@@ -102,8 +112,8 @@
 /* Empty / all-done state */
 .next-dose-card__empty {
   margin: 0;
-  padding: 6px 0;
-  font-size: var(--font-size-md, 15px);
+  padding: calc(6 * var(--u)) 0;
+  font-size: calc(11 * var(--u));
   font-weight: 600;
   color: #6c806f;
 }
@@ -111,7 +121,7 @@
 /* Pill buttons row */
 .next-dose-card__pills {
   display: flex;
-  gap: 8px;
+  gap: calc(8 * var(--u));
 }
 
 .next-dose-card__pill {
@@ -119,15 +129,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 38px;
+  gap: calc(6 * var(--u));
+  height: calc(38 * var(--u));
   border: 0;
   border-radius: var(--radius-pill, 999px);
   font-family: inherit;
-  font-size: var(--font-size-md, 15px);
+  font-size: calc(11 * var(--u));
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.next-dose-card__pill svg {
+  flex: none;
+  width: calc(16 * var(--u));
+  height: calc(16 * var(--u));
 }
 
 .next-dose-card__pill:active {
@@ -154,10 +170,10 @@
 .next-dose-card__see-all {
   align-self: flex-start;
   border: 0;
-  padding: 2px 0 0;
+  padding: calc(2 * var(--u)) 0 0;
   background: transparent;
   font-family: inherit;
-  font-size: var(--font-size-base, 14px);
+  font-size: calc(12 * var(--u));
   font-weight: 700;
   color: var(--color-text-muted, #79867e);
   cursor: pointer;

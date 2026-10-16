@@ -14,8 +14,10 @@ const baseInput: AgentInput = {
   latestDoseEvent: null,
   healthMetrics: [],
   daysOfSupplyByMedicationId: {},
-  consecutiveMissedDoses: 0,
-  caretaker: { optedIn: false, threshold: 2 },
+  consecutiveMissedDays: 0,
+  lastMissedDay: null,
+  lastCheckInDay: null,
+  caretaker: { optedIn: false, threshold: 1 },
 };
 
 export const sharedFixtures: AgentFixture[] = [
@@ -31,8 +33,9 @@ export const sharedFixtures: AgentFixture[] = [
     name: "caretaker-check-in",
     input: {
       ...baseInput,
-      consecutiveMissedDoses: 2,
-      caretaker: { optedIn: true, threshold: 2 },
+      consecutiveMissedDays: 1,
+      lastMissedDay: "2026-10-13",
+      caretaker: { optedIn: true, threshold: 1 },
       doses: [{ id: "schedule-am", medicationId: "med-a", medicationName: "Fictional Tablet A", strength: null, scheduledAt: "2026-10-14T08:00:00+08:00", status: "missed", eventAt: null, nudgeCount: 2, lastNudgeAt: "2026-10-14T09:00:00+08:00" }],
     },
     expected: { decision: "nudge", ruleId: "repeated_misses_caretaker_check_in", mood: "sleepy", caretakerPing: true },

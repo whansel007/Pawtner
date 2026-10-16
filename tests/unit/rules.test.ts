@@ -4,8 +4,8 @@ import type { AgentInput } from "../../shared/contract.js";
 
 const base: AgentInput = {
   now: "2026-10-14T12:00:00+08:00", userId: "u", dog: { id: "d", name: "Buddy", heart: 2, streak: 0 },
-  doses: [], healthMetrics: [], daysOfSupplyByMedicationId: {}, consecutiveMissedDoses: 0,
-  caretaker: { optedIn: false, threshold: 2 },
+  doses: [], healthMetrics: [], daysOfSupplyByMedicationId: {}, consecutiveMissedDays: 0,
+  lastMissedDay: null, lastCheckInDay: null, caretaker: { optedIn: false, threshold: 1 },
 };
 const high = (systolic: number, diastolic: number, note: string | null = null, offsetHours = 0) => ({
   id: `bp-${systolic}-${diastolic}-${offsetHours}`, kind: "blood_pressure" as const, systolic, diastolic, note,
@@ -24,11 +24,18 @@ describe("deterministic decision rules", () => {
     expect(decide({ ...base, doses: [{ ...dose, nudgeCount: 2, lastNudgeAt: "2026-10-14T11:00:00+08:00" }] }).decision).toBe("stay_quiet");
   });
 
-  it("sends a privacy-safe opted-in caretaker check-in at threshold two", () => {
-    const result = decide({ ...base, consecutiveMissedDoses: 2, caretaker: { optedIn: true, threshold: 2 } });
+  it("sends one privacy-safe check-in per missed day once the caretaker's number of days is reached", () => {
+    const missedYesterday = { ...base, consecutiveMissedDays: 1, lastMissedDay: "2026-10-13" };
+    const result = decide({ ...missedYesterday, caretaker: { optedIn: true, threshold: 1 } });
     expect(result).toMatchObject({ decision: "nudge", ruleId: "repeated_misses_caretaker_check_in", caretakerPing: true, mood: "sleepy" });
+    expect(result.observations).toMatchObject({ consecutiveMissedDays: 1, lastMissedDay: "2026-10-13" });
     expect(result.wording).not.toMatch(/Fictional Tablet [AB]/);
-    expect(decide({ ...base, consecutiveMissedDoses: 2, caretaker: { optedIn: false, threshold: 2 } }).caretakerPing).toBe(false);
+    // Not turned on, or fewer days than the caretaker chose: no check-in.
+    expect(decide({ ...missedYesterday, caretaker: { optedIn: false, threshold: 1 } }).caretakerPing).toBe(false);
+    expect(decide({ ...missedYesterday, caretaker: { optedIn: true, threshold: 2 } }).caretakerPing).toBe(false);
+    // Already sent for that day: the rest of today goes on as usual (here, a celebration).
+    const taken = { id: "e", scheduleId: "s", scheduledFor: base.now, event: "taken" as const, occurredAt: base.now };
+    expect(decide({ ...missedYesterday, lastCheckInDay: "2026-10-13", latestDoseEvent: taken, caretaker: { optedIn: true, threshold: 1 } }).decision).toBe("celebrate");
   });
 
   it("celebrates taken doses, walks and streak milestones", () => {
