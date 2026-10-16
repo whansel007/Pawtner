@@ -393,7 +393,8 @@
     "lockedNote_other": "{{count}} hearts",
     "lockedToast": "{{name}} unlocks this at {{count}} hearts.",
     "lockedToast_one": "{{name}} unlocks this at {{count}} heart.",
-    "worldLevelNote": "{{level}} · {{hearts}}"
+    "worldLevelNote": "{{level}} · {{hearts}}",
+    "comingSoon": "Coming soon"
   },
   "health": {
     "eyebrow": "This week",
@@ -526,8 +527,7 @@
     "demoUnlockHint": "Unlock as if Rose reached:",
     "demoUnlock": {
       "days7": "7 days",
-      "hearts20": "20 hearts",
-      "hearts40": "40 hearts"
+      "hearts20": "20 hearts"
     },
     "demoReset": "Reset demo",
     "demoResetHint": "Clears this phone's demo choices: restock answer, clinic memo photo, demo ticks and garden time. Saved doses and readings stay.",

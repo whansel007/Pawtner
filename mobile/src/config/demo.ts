@@ -23,7 +23,6 @@ export type DemoTimePreset = keyof typeof DEMO_TIME_PRESETS;
 export const DEMO_UNLOCKS = [
   { key: "days7", kind: "streakDays", value: 7 },
   { key: "hearts20", kind: "hearts", value: 20 },
-  { key: "hearts40", kind: "hearts", value: 40 },
 ] as const;
 
 export type DemoUnlockKey = (typeof DEMO_UNLOCKS)[number]["key"];
