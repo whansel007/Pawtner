@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient, QueryResultRow } from "pg";
 import { DEMO_RULES } from "../shared/config.js";
-import { decide, selectDogMood } from "../shared/rules.js";
+import { decide, selectDogMood, firstReadingOf } from "../shared/rules.js";
 import { selectAgentInput, selectHeartsTotal, type AgentSelectionSource } from "../shared/selectors.js";
 import { applyModelWording } from "../shared/wording.js";
 import { SOUVENIR_TIERS, unlockedSouvenirs, nextSouvenir } from "../shared/souvenirs.js";
@@ -331,6 +331,7 @@ export class PawtnerRepository {
       healthMetrics,
       bloodPressureLoggedToday: healthMetrics.length > 0,
       latestDecision,
+      firstBloodPressure: firstReadingOf(input.healthMetrics),
     };
   }
 

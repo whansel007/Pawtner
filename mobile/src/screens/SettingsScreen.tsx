@@ -1,3 +1,5 @@
+import { SENIOR_TIMEZONE } from "../config/scene";
+import type { HealthMetric } from "../../../shared/contract";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
@@ -28,6 +30,7 @@ export function SettingsScreen({
   onResetDemo,
   shareBloodPressure,
   onShareBloodPressure,
+  firstReading,
 }: {
   back: BackAction;
   /** "My medicines": the medicine list with Edit and the original pill photo (T2-08). */
@@ -54,6 +57,8 @@ export function SettingsScreen({
   /** "Share my blood pressure with {{caretaker}}" (lib/sharing.ts). */
   shareBloodPressure: boolean;
   onShareBloodPressure: (value: boolean) => void;
+  /** Her first blood-pressure reading (every reading is compared with it), or null before any. */
+  firstReading: HealthMetric | null;
 }) {
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
@@ -73,7 +78,13 @@ export function SettingsScreen({
       </div>
       <label className="settings-share">
         <input type="checkbox" checked={shareBloodPressure} onChange={(event) => onShareBloodPressure(event.target.checked)} />
-        <span><strong>{t("settings.shareBp", { caretaker: caretakerName })}</strong><small>{t("settings.shareBpSub", { caretaker: caretakerName })}</small></span>
+        <span>
+          <strong>{t("settings.shareBp", { caretaker: caretakerName })}</strong>
+          <small>{t("settings.shareBpSub", { caretaker: caretakerName })}</small>
+          {firstReading && (
+            <small className="settings-share__first">{t("settings.firstReading", { systolic: firstReading.systolic, diastolic: firstReading.diastolic, day: new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", timeZone: SENIOR_TIMEZONE }).format(new Date(firstReading.recordedAt)) })}</small>
+          )}
+        </span>
       </label>
       <div className="settings-note"><Icon name="heart" /><p><strong>{t("settings.privacyTitle")}</strong></p></div>
       <div className="demo-clock-card">

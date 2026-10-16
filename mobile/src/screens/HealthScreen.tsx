@@ -7,6 +7,9 @@ import { ClinicMemoRow } from "../components/ClinicMemoRow";
 import type { BackAction } from "../lib/navigation";
 import { explainDecision } from "../lib/decisions";
 import { BP_RANGE } from "../config/bp";
+import { SYMPTOM_KEYS, type SymptomKey } from "../config/health";
+import { buildBpNote } from "../lib/bpNote";
+import { bloodPressureProgress } from "../../../shared/rules";
 import type { AgentDecision, HealthMetric } from "../../../shared/contract";
 import type { BloodPressureReading, ScreeningInfo, ActivityLink, ClinicTask, WeekSummary } from "../types";
 import "./HealthScreen.css";
@@ -27,6 +30,7 @@ export function HealthScreen({
   petName,
   visitNoteLatest,
   onVisitNotes,
+  firstReading,
 }: {
   back: BackAction;
   bpLogged: boolean;
@@ -44,11 +48,21 @@ export function HealthScreen({
   /** Newest "For my next visit" note (her own words), or null. */
   visitNoteLatest: string | null;
   onVisitNotes: () => void;
+  /** Her first blood-pressure reading ever (today.firstBloodPressure, or the earliest local one offline). */
+  firstReading: HealthMetric | null;
 }) {
   const { t } = useTranslation();
   const [systolic, setSystolic] = useState("");
   const [diastolic, setDiastolic] = useState("");
   const [note, setNote] = useState("");
+  // "How do you feel?" tick boxes: "I feel fine" or any emergency signs (config/health.ts SYMPTOM_KEYS).
+  const [feelFine, setFeelFine] = useState(false);
+  const [symptoms, setSymptoms] = useState<ReadonlySet<SymptomKey>>(() => new Set());
+  const toggleSymptom = (key: SymptomKey) => {
+    setFeelFine(false);
+    setSymptoms((current) => { const next = new Set(current); if (next.has(key)) next.delete(key); else next.add(key); return next; });
+  };
+  const toggleFine = () => { setFeelFine((v) => !v); setSymptoms(new Set()); };
   const [error, setError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
@@ -90,13 +104,15 @@ export function HealthScreen({
       kind: "blood_pressure",
       systolic: result.sys,
       diastolic: result.dia,
-      note: note.trim() || null,
+      note: buildBpNote(feelFine ? [t("health.symptoms.fine")] : SYMPTOM_KEYS.filter((key) => symptoms.has(key)).map((key) => t(`health.symptoms.${key}`)), note),
       recordedAt: new Date().toISOString(),
     };
     onLogBp(metric);
     setSystolic("");
     setDiastolic("");
     setNote("");
+    setFeelFine(false);
+    setSymptoms(new Set());
   }
 
   const isEmergency = latestDecision?.decision === "emergency_995";
@@ -123,7 +139,8 @@ export function HealthScreen({
         <div>
           <small>{t("health.bpLabel")}</small>
           <h3>{lastMetric ? `${lastMetric.systolic} / ${lastMetric.diastolic}` : t("health.bpNeedsReading", { name: petName })}</h3>
-          <p>{lastMetric?.note ?? (bpLogged ? bloodPressureReading.note : bloodPressureReading.pendingNote)}</p>
+          {/* Compared with her first reading (shared/rules.ts bloodPressureProgress): first / keep at it / good job / warning. */}
+          <p>{lastMetric ? t(`health.bpProgress.${bloodPressureProgress(lastMetric, firstReading)}`) : (bpLogged ? bloodPressureReading.note : bloodPressureReading.pendingNote)}</p>
         </div>
       </div>
 
@@ -166,6 +183,19 @@ export function HealthScreen({
             />
           </label>
         </div>
+        <fieldset className="bp-form__feelings">
+          <legend className="bp-form__label">{t("health.symptomsTitle")}</legend>
+          <label className="bp-form__feeling bp-form__feeling--fine">
+            <input type="checkbox" checked={feelFine} onChange={toggleFine} />
+            {t("health.symptoms.fine")}
+          </label>
+          {SYMPTOM_KEYS.map((key) => (
+            <label className="bp-form__feeling" key={key}>
+              <input type="checkbox" checked={symptoms.has(key)} onChange={() => toggleSymptom(key)} />
+              {t(`health.symptoms.${key}`)}
+            </label>
+          ))}
+        </fieldset>
         <label className="bp-form__field">
           <span className="bp-form__label">{t("health.bpNoteLabel")}</span>
           <input

@@ -41,16 +41,21 @@ export const sharedFixtures: AgentFixture[] = [
     name: "emergency-995",
     input: {
       ...baseInput,
-      healthMetrics: [{ id: "bp-emergency", kind: "blood_pressure", systolic: 185, diastolic: 120, note: "bad headache", recordedAt: "2026-10-14T10:00:00+08:00" }],
+      // Emergency sign ticked on the BP form (lands in the note): Warning whatever the numbers.
+      healthMetrics: [{ id: "bp-emergency", kind: "blood_pressure", systolic: 150, diastolic: 95, note: "Chest pain", recordedAt: "2026-10-14T10:00:00+08:00" }],
     },
-    expected: { decision: "emergency_995", ruleId: "bp_high_with_symptom", mood: "attentive", caretakerPing: false },
+    expected: { decision: "emergency_995", ruleId: "emergency_symptom_note", mood: "attentive", caretakerPing: false },
   },
   {
     name: "see-gp-soon",
     input: {
       ...baseInput,
-      healthMetrics: [{ id: "bp-high", kind: "blood_pressure", systolic: 180, diastolic: 80, note: null, recordedAt: "2026-10-14T10:00:00+08:00" }],
+      // First reading 185/120; the latest is more than 5 above it on the top number.
+      healthMetrics: [
+        { id: "bp-first", kind: "blood_pressure", systolic: 185, diastolic: 120, note: null, recordedAt: "2026-10-12T10:00:00+08:00" },
+        { id: "bp-high", kind: "blood_pressure", systolic: 192, diastolic: 118, note: null, recordedAt: "2026-10-14T10:00:00+08:00" },
+      ],
     },
-    expected: { decision: "see_gp_soon", ruleId: "bp_high_without_symptom", mood: "attentive", caretakerPing: false },
+    expected: { decision: "see_gp_soon", ruleId: "bp_above_first_reading", mood: "attentive", caretakerPing: false },
   },
 ];

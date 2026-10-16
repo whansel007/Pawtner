@@ -16,12 +16,11 @@ describe("Settings > Demo ticks", () => {
   it("hearts ticks raise the total used for unlocking, never lower it", () => {
     expect(demoHeartsTotal(5, ticks())).toBe(5);
     expect(demoHeartsTotal(5, ticks("hearts20"))).toBe(20);
-    expect(demoHeartsTotal(5, ticks("hearts20", "hearts40"))).toBe(40);
-    expect(demoHeartsTotal(90, ticks("hearts40"))).toBe(90);
+    expect(demoHeartsTotal(90, ticks("hearts20"))).toBe(90);
     expect(isUnlocked("hat", demoHeartsTotal(0, ticks("hearts20")))).toBe(true);
-    expect(isUnlocked("glasses", demoHeartsTotal(0, ticks("hearts20")))).toBe(false);
-    expect(isUnlocked("glasses", demoHeartsTotal(0, ticks("hearts40")))).toBe(true);
-    expect(isUnlocked("flower", 0)).toBe(true);
+    // Sunglasses are "Coming soon": locked at any hearts.
+    expect(isUnlocked("glasses", 1000)).toBe(false);
+    expect(isUnlocked("flower", 1000)).toBe(false);
   });
 
   it("the 7 days tick earns Wave only", () => {

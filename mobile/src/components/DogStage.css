@@ -150,17 +150,27 @@
 
 /*
  * The accessory (hat, glasses, flower) is placed on the still art and can't follow the clip's moving head,
- * so it fades out when the clip shows and back in when the still returns. Same box as the dog image.
+ * so while a clip shows it flies up off his head, bobs in the air, and lands back when the still returns
+ * (user, 16 Oct). Transform/translate only; reduced motion keeps it still. Same box as the dog image.
  */
 .dog-stage__accessory {
-  --accessory-fade: 150ms;
+  --accessory-flight: 450ms;
   position: absolute;
   inset: 0;
   pointer-events: none;
-  transition: opacity var(--accessory-fade) ease;
+  transform-origin: 50% 30%;
+  transition: transform var(--accessory-flight) cubic-bezier(.2, .8, .3, 1.15);
 }
 
-.dog-stage.is-clip-visible .dog-stage__accessory { opacity: 0; }
+.dog-stage.is-clip-visible .dog-stage__accessory {
+  transform: translateY(-24%) rotate(-12deg);
+  animation: accessory-bob 1.4s ease-in-out var(--accessory-flight) infinite;
+}
+
+@keyframes accessory-bob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -3%; }
+}
 
 /* ── Mood motion: transform and opacity only ── */
 .dog-stage--content .dog-stage__body { animation: dog-breathe 3.6s ease-in-out infinite; }
@@ -368,7 +378,7 @@
   /* No clips under reduced motion (useBuddyClip never starts one); this is the still fallback if one slips through. */
   .dog-stage__clip-canvas { display: none; }
   .dog-stage.is-clip-visible .dog-stage__image,
-  .dog-stage.is-clip-visible .dog-stage__accessory { opacity: 1; }
+  .dog-stage.is-clip-visible .dog-stage__accessory { opacity: 1; transform: none; animation: none; }
   .dog-stage__accessory { transition: none; }
   /* Its own rule: a browser without :has() drops only this one. */
   .dog-stage__figure:has(.is-hop) .dog-stage__ground,
