@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAgentInput, computeHeart, computeHeartsTotal, computeMissedDays, computeStreak, deriveDoseStatus, hasBloodPressureToday, selectAgentInput, selectHeartsTotal } from "../../shared/selectors.js";
+import { buildAgentInput, computeHeart, computeHeartsTotal, heartActivities, computeMissedDays, computeStreak, deriveDoseStatus, hasBloodPressureToday, selectAgentInput, selectHeartActivities, selectHeartsTotal } from "../../shared/selectors.js";
 import type { DerivedDose, DoseSchedule, HealthMetric } from "../../shared/contract.js";
 import type { AgentSelectionSource } from "../../shared/selectors.js";
 
@@ -22,13 +22,18 @@ describe("selectors", () => {
     expect("missed" in deriveDoseStatus(seedSchedule, [], "2026-10-13T11:00:00+08:00")).toBe(false);
   });
 
-  it("computes heart from taken share and today's blood-pressure log", () => {
+  it("starts the day at 1 heart and adds one per activity: all medicines, a measurement, a walk", () => {
     const taken = deriveDoseStatus(seedSchedule, [{ id: "e1", scheduleId: seedSchedule.id, scheduledFor: seedSchedule.scheduledAt, event: "taken", occurredAt: "2026-10-13T10:10:00+08:00" }], "2026-10-13T10:11:00+08:00");
     const missed = deriveDoseStatus({ ...seedSchedule, id: "second" }, [], "2026-10-13T12:00:00+08:00");
-    expect(computeHeart([taken, missed], false)).toBe(2);
-    expect(computeHeart([taken, missed], true)).toBe(3);
-    expect(computeHeart([], false)).toBe(2);
-    expect(computeHeart([], true)).toBe(3);
+    const upcoming = deriveDoseStatus({ ...seedSchedule, id: "third" }, [], "2026-10-13T09:00:00+08:00");
+    // 1 of 3 medicines taken earns no medicine heart: all of them must be taken.
+    expect(computeHeart(heartActivities([taken, missed, upcoming], false, false))).toBe(1);
+    expect(computeHeart(heartActivities([taken], false, false))).toBe(2);
+    expect(computeHeart(heartActivities([taken, missed], true, false))).toBe(2);
+    expect(computeHeart(heartActivities([taken], true, true))).toBe(4);
+    // Nothing scheduled: the medicines count as done.
+    expect(computeHeart(heartActivities([], false, false))).toBe(2);
+    expect(heartActivities([taken, missed], true, true)).toEqual({ medicines: false, bloodPressure: true, walk: true });
   });
 
   it("computes consecutive complete days from ledger-derived taken values", () => {
@@ -86,12 +91,14 @@ describe("selectors", () => {
       daysOfSupplyByMedicationId: { "00000000-0000-4000-8000-000000000004": 14 },
       caretaker: { optedIn: true, threshold: 2 },
       lastCheckInDay: null,
+      walkFinishedAt: [],
     };
     const input = selectAgentInput(source);
 
     expect(input.doses.map((dose) => dose.status)).toEqual(["missed", "upcoming"]);
     expect(input.doses[0]).toMatchObject({ nudgeCount: 1, lastNudgeAt: "2026-10-13T11:00:00+08:00" });
-    expect(input.dog).toMatchObject({ heart: 1, streak: 1 });
+    // Start heart + the measurement logged this morning; the medicines aren't all taken yet.
+    expect(input.dog).toMatchObject({ heart: 2, streak: 1 });
     // Yesterday was taken, so no missed days (today's missed morning dose doesn't count until the day is over).
     expect(input).toMatchObject({ consecutiveMissedDays: 0, lastMissedDay: null });
     expect(input.latestDoseEvent).toBeNull();
@@ -111,28 +118,30 @@ describe("selectors", () => {
 
     it("sums each day's heart across several days, today included", () => {
       const doses = [
-        dose("a", "2026-10-11T02:00:00.000Z", "taken"), dose("b", "2026-10-11T12:00:00.000Z", "taken"), // 4
-        dose("a", "2026-10-12T02:00:00.000Z", "taken"), dose("b", "2026-10-12T12:00:00.000Z", "missed"), // 2
-        dose("a", "2026-10-13T02:00:00.000Z", "skipped"), dose("b", "2026-10-13T12:00:00.000Z", "upcoming"), // 0
+        dose("a", "2026-10-11T02:00:00.000Z", "taken"), dose("b", "2026-10-11T12:00:00.000Z", "taken"), // 1 + medicines = 2
+        dose("a", "2026-10-12T02:00:00.000Z", "taken"), dose("b", "2026-10-12T12:00:00.000Z", "missed"), // 1
+        dose("a", "2026-10-13T02:00:00.000Z", "skipped"), dose("b", "2026-10-13T12:00:00.000Z", "upcoming"), // 1
       ];
-      expect(computeHeartsTotal(doses, [], "2026-10-13")).toBe(6);
+      expect(computeHeartsTotal(doses, [], "2026-10-13")).toBe(4);
+      // A walk on the 12th adds that day's walk heart.
+      expect(computeHeartsTotal(doses, [], "2026-10-13", ["2026-10-12T09:00:00.000Z"])).toBe(5);
     });
 
-    it("adds the blood-pressure bonus on the days a reading was logged, capped at the maximum", () => {
+    it("adds the measurement heart on the days a reading was logged", () => {
       const doses = [dose("a", "2026-10-11T02:00:00.000Z", "missed"), dose("a", "2026-10-12T02:00:00.000Z", "taken")];
-      expect(computeHeartsTotal(doses, [bp("2026-10-11T08:00:00.000Z"), bp("2026-10-12T08:00:00.000Z")], "2026-10-12")).toBe(1 + 4);
+      expect(computeHeartsTotal(doses, [bp("2026-10-11T08:00:00.000Z"), bp("2026-10-12T08:00:00.000Z")], "2026-10-12")).toBe(2 + 3);
       // Readings before the first scheduled dose add nothing.
-      expect(computeHeartsTotal(doses, [bp("2026-10-10T08:00:00.000Z")], "2026-10-12")).toBe(0 + 4);
+      expect(computeHeartsTotal(doses, [bp("2026-10-10T08:00:00.000Z")], "2026-10-12")).toBe(1 + 2);
     });
 
-    it("counts gap days and an all-upcoming today as nothing due, and ignores anything after today", () => {
+    it("counts gap days as medicines done, an untaken today as not yet, and ignores anything after today", () => {
       const doses = [
-        dose("a", "2026-10-10T02:00:00.000Z", "taken"), // 4
-        // 2026-10-11 and 2026-10-12: no occurrences -> 2 each
-        dose("a", "2026-10-13T12:00:00.000Z", "upcoming"), // today, nothing due yet -> 2
+        dose("a", "2026-10-10T02:00:00.000Z", "taken"), // 2
+        // 2026-10-11 and 2026-10-12: nothing scheduled -> 2 each
+        dose("a", "2026-10-13T12:00:00.000Z", "upcoming"), // today, not taken yet -> 1
         dose("a", "2026-10-14T02:00:00.000Z", "taken"), // future: ignored
       ];
-      expect(computeHeartsTotal(doses, [bp("2026-10-14T08:00:00.000Z")], "2026-10-13")).toBe(4 + 2 + 2 + 2);
+      expect(computeHeartsTotal(doses, [bp("2026-10-14T08:00:00.000Z")], "2026-10-13", ["2026-10-14T09:00:00.000Z"])).toBe(2 + 2 + 2 + 1);
     });
 
     it("selects a total whose today's share equals the dog's heart", () => {
@@ -157,10 +166,13 @@ describe("selectors", () => {
         daysOfSupplyByMedicationId: {},
         caretaker: null,
         lastCheckInDay: null,
+        // Today's walk counts; tomorrow's (after `now`) doesn't.
+        walkFinishedAt: ["2026-10-13T09:00:00.000Z", "2026-10-14T09:00:00.000Z"],
       };
       const input = selectAgentInput(source);
       expect(input.dog.heart).toBe(4);
-      expect(selectHeartsTotal(source)).toBe(4 + input.dog.heart);
+      expect(selectHeartActivities(source)).toEqual({ medicines: true, bloodPressure: true, walk: true });
+      expect(selectHeartsTotal(source)).toBe(2 + input.dog.heart);
     });
   });
 });

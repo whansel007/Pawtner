@@ -1,4 +1,4 @@
-import { DEMO_UNLOCKS, type DemoUnlockKey } from "../config/demo.js";
+import { DEMO_EXCLUSIVE_KINDS, DEMO_UNLOCKS, type DemoUnlockKey } from "../config/demo.js";
 import { TRICK_STREAK_DAYS } from "../config/tricks.js";
 
 /**
@@ -7,9 +7,31 @@ import { TRICK_STREAK_DAYS } from "../config/tricks.js";
  * numbers are untouched, so /care still shows the real ones.
  */
 
-function tickedValue(ticked: ReadonlySet<DemoUnlockKey>, kind: "streakDays" | "hearts"): number {
+function tickedValue(ticked: ReadonlySet<DemoUnlockKey>, kind: (typeof DEMO_UNLOCKS)[number]["kind"]): number {
   return DEMO_UNLOCKS.filter((unlock) => unlock.kind === kind && ticked.has(unlock.key))
     .reduce((max, unlock) => Math.max(max, unlock.value), 0);
+}
+
+/** Today's hearts shown everywhere on the phone: a "Today" tick's number (higher or lower), else the real hearts. */
+export function demoTodayHearts(real: number, ticked: ReadonlySet<DemoUnlockKey>): number {
+  return hasDemoTodayHearts(ticked) ? tickedValue(ticked, "todayHearts") : real;
+}
+
+/** True while a "Today" hearts tick is on (the phone then works out Buddy's mood from those hearts). */
+export function hasDemoTodayHearts(ticked: ReadonlySet<DemoUnlockKey>): boolean {
+  return DEMO_UNLOCKS.some((unlock) => unlock.kind === "todayHearts" && ticked.has(unlock.key));
+}
+
+/** Turns a tick on or off; in an exclusive kind (today's hearts) turning one on clears the others. */
+export function toggleDemoTick(ticked: ReadonlySet<DemoUnlockKey>, key: DemoUnlockKey): Set<DemoUnlockKey> {
+  const next = new Set(ticked);
+  if (next.has(key)) { next.delete(key); return next; }
+  const kind = DEMO_UNLOCKS.find((unlock) => unlock.key === key)?.kind;
+  if (kind && DEMO_EXCLUSIVE_KINDS.includes(kind)) {
+    DEMO_UNLOCKS.forEach((unlock) => { if (unlock.kind === kind) next.delete(unlock.key); });
+  }
+  next.add(key);
+  return next;
 }
 
 /** Streak days shown everywhere on the phone: the real streak, or more if a days tick says so. */

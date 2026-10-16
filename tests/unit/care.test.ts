@@ -40,15 +40,16 @@ describe("care streak hearts", () => {
 });
 
 describe("care today progress", () => {
-  it("counts taken doses only and picks a calm state", () => {
-    const progress = todayProgress([{ status: "taken" }, { status: "taken" }, { status: "upcoming" }, { status: "due" }]);
-    expect(progress).toEqual({ done: 2, total: 4, missed: 0 });
-    expect(progressPercent(progress)).toBe(50);
+  it("counts the three heart activities and picks a calm state", () => {
+    const none = { medicines: false, bloodPressure: false, walk: false };
+    const progress = todayProgress({ ...none, bloodPressure: true }, [{ status: "taken" }, { status: "upcoming" }, { status: "due" }]);
+    expect(progress).toEqual({ done: 1, total: 3, missed: 0 });
+    expect(progressPercent(progress)).toBe(33);
     expect(todayState(progress)).toBe("onTrack");
-    expect(todayState(todayProgress([{ status: "taken" }, { status: "missed" }]))).toBe("missed");
-    expect(todayState(todayProgress([{ status: "taken" }]))).toBe("allDone");
-    expect(todayState(todayProgress([]))).toBe("none");
-    expect(progressPercent(todayProgress([]))).toBe(0);
+    expect(todayState(todayProgress(none, [{ status: "taken" }, { status: "missed" }]))).toBe("missed");
+    expect(todayState(todayProgress({ medicines: true, bloodPressure: true, walk: true }, [{ status: "taken" }]))).toBe("allDone");
+    expect(todayState({ done: 0, total: 0, missed: 0 })).toBe("none");
+    expect(progressPercent({ done: 0, total: 0, missed: 0 })).toBe(0);
   });
 });
 

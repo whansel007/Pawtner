@@ -1,7 +1,8 @@
 {
   "intro": {
     "coverAlt": "Pawtner cover image",
-    "coverHint": "Tap to begin",
+    "brand": "Pawtner",
+    "coverHint": "Tap to Begin",
     "coverAria": "Tap anywhere to begin",
     "dedicationText": "For Mom",
     "dedicationAria": "Dedication. Continues to home automatically. Tap to skip."
@@ -112,7 +113,7 @@
         "todayEyebrow": "Today",
         "ringValue": "{{done}} of {{total}}",
         "ringCaption": "done",
-        "ringLabel": "{{done}} of {{total}} doses taken today",
+        "ringLabel": "{{done}} of {{total}} activities is done today",
         "state": {
           "none": {
             "title": "A quiet day",
@@ -122,18 +123,18 @@
           "allDone": {
             "title": "All done today",
             "badge": "All done",
-            "lead": "Every dose is taken today.",
+            "lead": "{{done}} of {{total}} activities is done today",
             "body": "{{dog}} is having a lovely day."
           },
           "missed": {
             "title": "A gentle day",
-            "lead": "{{done}} of {{total}} doses taken",
+            "lead": "{{done}} of {{total}} activities is done today",
             "body": "A dose was missed. {{dog}} nudges gently first; a check-in comes only after the missed days you chose."
           },
           "onTrack": {
             "title": "A steady day",
             "badge": "On track",
-            "lead": "{{done}} of {{total}} doses taken",
+            "lead": "{{done}} of {{total}} activities is done today",
             "body": "There is plenty of time for the rest of today."
           }
         },
@@ -545,16 +546,24 @@
     "demoResetHint": "Back to {{time}} today: today's doses, readings and {{name}}'s answers are cleared, plus this phone's demo choices (restock answer, clinic memo photo, visit notes, sharing switch, ticks, garden time). Earlier days stay.",
     "demoTimeTitle": "Garden time",
     "demoTimeHint": "Jump the garden to a time of day; tap it again for real time. Doesn't run the agent or save anything.",
-    "demoUnlockTitle": "Unlock rewards",
-    "demoUnlockHint": "Show the app as if Rose reached:",
-    "demoUnlock": {
-      "days7": "7 days",
-      "hearts20": "20 hearts"
+    "demoUnlockTitle": "Pretend numbers",
+    "demoUnlockHint": "Show the app as if Rose had:",
+    "demoGroup": {
+      "today": "Today's hearts",
+      "total": "In total"
     },
-    "demoClockTitle": "Agent clock",
-    "demoClockHint": "Choose a time to check the dose rules at. Nudges are limited to two per scheduled dose.",
+    "demoUnlock": {
+      "today1": "1 heart",
+      "today2": "2 hearts",
+      "today3": "3 hearts",
+      "today4": "4 hearts",
+      "days7": "7-day streak",
+      "hearts20": "20 hearts in total"
+    },
+    "demoClockTitle": "Current Time of Demo",
+    "demoClockHint": "The phone acts as if it is this time: doses, readings and walks are saved at it, and Buddy checks his rules (nudges, check-ins) when you run him. Nudges are limited to two per scheduled dose.",
     "demoClockLabel": "Simulated local time",
-    "demoClockRun": "Run agent at this time",
+    "demoClockRun": "Run Buddy's check at this time",
     "demoClockBusy": "Checking…",
     "demoTime": {
       "morning": "Morning ({{time}})",

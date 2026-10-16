@@ -29,7 +29,6 @@ import { PetAccessory } from "./components/PetAccessory";
 import { SceneChips } from "./components/SceneChips";
 import { RestockCard } from "./components/RestockCard";
 import { selectDogMood, firstReadingOf } from "../../shared/rules";
-import { DEMO_RULES } from "../../shared/config";
 import type { AgentDecision, CaretakerSummaryResponse, DerivedDose, DoseEvent, HealthMetric, MedicationDetail, TodayResponse } from "../../shared/contract";
 import { api } from "./lib/api";
 import { requestDecision, buildAgentInputFromState } from "./lib/agent";
@@ -45,7 +44,8 @@ import { shouldBarkFor } from "./lib/nudgeBark";
 import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
 import { DEMO_CLOCK_PARAM, DEMO_RESET_PRESET, DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset, type DemoUnlockKey } from "./config/demo";
-import { demoHeartsTotal, demoStreak } from "./lib/demoUnlocks";
+import { demoHeartsTotal, demoStreak, demoTodayHearts, hasDemoTodayHearts, toggleDemoTick } from "./lib/demoUnlocks";
+import { computeHeart, heartActivities } from "../../shared/selectors";
 import { SENIOR_TIMEZONE } from "./config/scene";
 import type { World, Accessory } from "./types";
 import type { WalkCompletion } from "./lib/walkState";
@@ -86,9 +86,9 @@ function initialAgentClock(): string | null {
   return demoNowFromSearch(window.location.search, DEMO_CLOCK_PARAM, DEMO_TIME_PRESETS, new Date(), SENIOR_TIMEZONE).demoNow;
 }
 
-/** Heart count from the local dose list; used only until /api/today has answered. */
-function localHeartCount(doses: DerivedDose[], bpLogged: boolean): number {
-  return Math.min(DEMO_RULES.heartMaximum, 1 + doses.filter((d) => d.status === "taken").length + (bpLogged ? 1 : 0));
+/** Hearts from the local state (same rule as the API, shared/selectors.ts); used only until /api/today has answered. */
+function localHeartCount(doses: DerivedDose[], bpLogged: boolean, walked: boolean): number {
+  return computeHeart(heartActivities(doses, bpLogged, walked));
 }
 
 export default function App() {
@@ -109,7 +109,7 @@ export default function App() {
   const [dizzy, setDizzy] = useState(false);
   // One friendly notice per outage; the technical error goes to the console, never to the senior.
   const apiWarned = useRef(false);
-  // Agent demo clock (Settings > "Run agent at this time"): reads and writes happen at this instant. null = real time.
+  // Agent demo clock (Settings > "Current Time of Demo"): reads and writes happen at this instant. null = real time.
   const [demoNow, setDemoNow] = useState<string | null>(initialAgentClock);
   // Scene time (`?time=`, Settings > Demo time buttons): day/night look only. Hearts, mood and doses stay on the one
   // real state; switching morning ↔ evening must never re-read /api/today at another time.
@@ -162,12 +162,13 @@ export default function App() {
   }, [screen]);
 
   const pendingDose = doseList.find((item) => item.id === pendingDoseId);
-  const heartCount = today?.dog.heart ?? localHeartCount(doseList, bpLogged);
+  // Today's hearts: the API's, or a Settings "Today" demo tick (then Buddy's mood follows those hearts below).
+  const heartCount = demoTodayHearts(today?.dog.heart ?? localHeartCount(doseList, bpLogged, today?.activities.walk ?? false), demoUnlocks);
   // One number each for the whole phone app: the API's (or mock) value, raised by a Settings demo tick if one is on.
   const heartsTotal = demoHeartsTotal(today?.dog?.heartsTotal ?? mockHeartsTotal, demoUnlocks);
   const streak = demoStreak(today?.dog.streak ?? pet.streak, demoUnlocks);
   // selectDogMood needs the current time: a celebrate keeps the dog joyful only for DEMO_RULES.celebrateJoyfulMinutes.
-  const mood = today ? today.dog.mood : selectDogMood(heartCount, latestDecision, demoNow ?? new Date().toISOString());
+  const mood = today && !hasDemoTodayHearts(demoUnlocks) ? today.dog.mood : selectDogMood(heartCount, latestDecision, demoNow ?? new Date().toISOString());
   // T2-10: day/night follows the real clock, or the Settings demo clock when one is set.
   const phase = useDayPhase(sceneTime ?? demoNow);
 
@@ -372,7 +373,7 @@ export default function App() {
         userId: demoUser.id,
         dogId: demoDog.id,
         dogName,
-        heart: today?.dog.heart ?? localHeartCount(localDoses, bpLogged),
+        heart: today?.dog.heart ?? localHeartCount(localDoses, bpLogged, today?.activities.walk ?? false),
         streak: today?.dog.streak ?? pet.streak,
         doses: localDoses,
         healthMetrics,
@@ -500,7 +501,7 @@ export default function App() {
         {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={{ ...(careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }] } : weekSummary), doctorQuestion: visitNotes.latest?.text ?? t("visitNotes.empty") }} onVisitNotes={() => navigate("visitNotes")} warning={isUrgentDecision(latestDecision) ? latestDecision : null} />}
-        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => { const next = new Set(current); if (next.has(key)) next.delete(key); else next.add(key); return next; })} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} />}
+        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => toggleDemoTick(current, key))} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} />}
         {screen === "medicines" && <MedicinesScreen back={back} petName={dogName} />}
         {screen === "visitNotes" && <VisitNotesScreen back={back} notes={visitNotes.notes} caretakerName={caretakerName} maxLength={visitNotes.maxLength} onAdd={visitNotes.add} onEdit={visitNotes.edit} onRemove={visitNotes.remove} />}
         {screen === "customize" && <CustomizeScreen back={back} onHome={goHome} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(t(`toast.worlds.${nextWorld}`, { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: t(`accessory.${nextAccessory}`) })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} caretakerName={caretakerName} heartsTotal={heartsTotal} notify={notify} />}

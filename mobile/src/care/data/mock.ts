@@ -45,6 +45,7 @@ export function buildMockCareData(now: Date = new Date()): CareData {
       ],
       healthMetrics: [],
       bloodPressureLoggedToday: false,
+      activities: { medicines: false, bloodPressure: false, walk: false },
       latestDecision: null,
       firstBloodPressure: null,
     },

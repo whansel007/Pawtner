@@ -104,12 +104,22 @@ export interface AgentRefusal {
   decision: AgentDecision;
 }
 
+/** The three activities that earn a heart each day (user, 16 Oct). */
+export interface HeartActivities {
+  /** Every dose scheduled that day is taken (a day with nothing scheduled counts as done). */
+  medicines: boolean;
+  /** A blood-pressure measurement was logged that day. */
+  bloodPressure: boolean;
+  /** A walk with the dog was finished that day. */
+  walk: boolean;
+}
+
 /** The dog as the phone and the caretaker page read it. All numbers are derived on read from the dose ledger and readings. */
 export interface DogView {
   id: string;
   name: string;
   mood: DogMood;
-  /** Today's hearts so far, 0-4 (`computeHeart`). */
+  /** Today's hearts so far, 1-4: the day's start heart plus one per activity done (`computeHeart`). */
   heart: number;
   /** Consecutive fully taken days before today (`computeStreak`). */
   streak: number;
@@ -123,6 +133,8 @@ export interface TodayResponse {
   doses: DerivedDose[];
   healthMetrics: HealthMetric[];
   bloodPressureLoggedToday: boolean;
+  /** Today's three heart activities and whether each is done (`heartActivities`); hearts = start + done. */
+  activities: HeartActivities;
   latestDecision: AgentDecision | null;
   /** The person's first blood-pressure reading ever (every reading is compared with it), or null. */
   firstBloodPressure: HealthMetric | null;

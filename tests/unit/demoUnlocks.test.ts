@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { demoHeartsTotal, demoStreak, withStreak } from "../../mobile/src/lib/demoUnlocks.js";
+import { demoHeartsTotal, demoStreak, demoTodayHearts, hasDemoTodayHearts, toggleDemoTick, withStreak } from "../../mobile/src/lib/demoUnlocks.js";
 import { TRICK_STREAK_DAYS } from "../../mobile/src/config/tricks.js";
 import { isUnlocked } from "../../mobile/src/lib/rewards.js";
 import type { DemoUnlockKey } from "../../mobile/src/config/demo.js";
@@ -34,6 +34,17 @@ describe("Settings > Demo ticks", () => {
     expect(withStreak(tricks, demoStreak(2, ticks("days7"))).map((t) => [t.earned, t.note])).toEqual([
       [true, "1 day streak"], [true, "7 day streak"], [false, "7 days to go"],
     ]);
+  });
+
+  it("a Today tick sets today's hearts (one at a time), and leaves the totals alone", () => {
+    expect(demoTodayHearts(3, ticks())).toBe(3);
+    expect(hasDemoTodayHearts(ticks())).toBe(false);
+    expect(demoTodayHearts(3, ticks("today1"))).toBe(1);
+    const two = toggleDemoTick(ticks("today1", "days7"), "today2");
+    expect([...two].sort()).toEqual(["days7", "today2"]);
+    expect(demoTodayHearts(0, two)).toBe(2);
+    expect([...toggleDemoTick(two, "today2")]).toEqual(["days7"]);
+    expect([...toggleDemoTick(ticks("days7"), "hearts20")].sort()).toEqual(["days7", "hearts20"]);
   });
 
   it("trick days match api/repository.ts trickDefs", () => {

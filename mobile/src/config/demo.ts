@@ -28,13 +28,27 @@ export const DEMO_TIME_PRESETS = {
 export type DemoTimePreset = keyof typeof DEMO_TIME_PRESETS;
 
 /**
- * Settings > Demo tick boxes (user, 16 Oct): unlock rewards as if Rose had reached these, without changing
- * her real streak or hearts anywhere else. Labels in en.json settings.demoUnlock.<key>.
- * "streakDays" unlocks tricks (config/tricks.ts TRICK_STREAK_DAYS); "hearts" unlocks wardrobe/worlds (config/rewards.ts).
+ * Settings > For demo only tick boxes (user, 16 Oct): show the phone as if Rose had these numbers; nothing is saved.
+ * Labels in en.json settings.demoUnlock.<key>, grouped by DEMO_UNLOCK_GROUPS.
+ * "todayHearts" sets today's hearts (one at a time; mood and play follow); "streakDays" raises the streak (tricks,
+ * config/tricks.ts TRICK_STREAK_DAYS); "hearts" raises the lifetime total (wardrobe/worlds, config/rewards.ts).
  */
 export const DEMO_UNLOCKS = [
+  { key: "today1", kind: "todayHearts", value: 1 },
+  { key: "today2", kind: "todayHearts", value: 2 },
+  { key: "today3", kind: "todayHearts", value: 3 },
+  { key: "today4", kind: "todayHearts", value: 4 },
   { key: "days7", kind: "streakDays", value: 7 },
   { key: "hearts20", kind: "hearts", value: 20 },
 ] as const;
+
+/** Settings shows the ticks in these groups (headings in en.json settings.demoGroup.<id>). */
+export const DEMO_UNLOCK_GROUPS = [
+  { id: "today", kinds: ["todayHearts"] },
+  { id: "total", kinds: ["streakDays", "hearts"] },
+] as const;
+
+/** Kinds where only one tick can be on at a time (picking one clears the others). */
+export const DEMO_EXCLUSIVE_KINDS: readonly string[] = ["todayHearts"];
 
 export type DemoUnlockKey = (typeof DEMO_UNLOCKS)[number]["key"];
