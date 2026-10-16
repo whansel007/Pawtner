@@ -1125,6 +1125,10 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
     scrollbar-width: none;
   }
   .home-layout__cards::-webkit-scrollbar { display: none; }
+  /* The right pane is a size container: the next-dose card's scale unit grows with the pane's height and width, so the
+     card is bigger sideways and fills the pane on phones (user, 16 Oct). 1px = the portrait size; 1.8px at most. */
+  .home-layout__cards { container-type: size; }
+  .next-dose-card { --ndc-u: clamp(1px, min(0.5cqh, 0.42cqi), 1.8px); }
   /* Home's cards sit in the middle of the pane, between the top and the dock (user, 16 Oct: the gap above the card was
      too big). Auto margins rather than justify-content: center, so a column taller than the pane still scrolls from its top. */
   .home-layout__cards > :first-child { margin-top: auto; }
