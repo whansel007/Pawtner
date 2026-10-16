@@ -1,5 +1,10 @@
 # Decisions
 
+## 2026-10-16 — Demo video link slot on /care (branch `claude/demo-video-link`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Every /care page's footer has "Watch the demo video" under the tagline, from one setting `DEMO_VIDEO_URL` in `mobile/src/care/config.ts`, opening in a new tab; it is `"#"` (shown, does nothing when tapped) until the YouTube link exists. Same pattern as JagaOS's footer links. | User: a space on the website to slot in the YouTube link later. | A visible link that does nothing until the URL is set. | Final (wording tentative) |
 ## 2026-10-16 — /care rhythm week: Sunday to Saturday, filled by Buddy's hearts (branch `claude/care-week-sunday`)
 
 | Decision | Reason | Tradeoff | Status |
