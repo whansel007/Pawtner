@@ -15,4 +15,4 @@ export const LANDING_DOG_MOOD = "content" satisfies DogMood;
  * "Watch the demo video" in the footer of every /care page, like JagaOS's footer links (user, 16 Oct). Paste the YouTube
  * link here when the video is up; until then it is "#": the link shows but does nothing when tapped. Opens in a new tab.
  */
-export const DEMO_VIDEO_URL: string = "#";
+export const DEMO_VIDEO_URL: string = "https://youtu.be/xlip3x6tUjk";
