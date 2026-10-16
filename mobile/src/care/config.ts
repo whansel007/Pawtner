@@ -1,4 +1,4 @@
-import type { DogMood } from "../../../shared/contract";
+import type { DogMood } from "../../../shared/contract.js";
 
 /** Caretaker web assets. The dog comes from config/scene.ts (DOG_IMAGE_BY_MOOD), like on the phone. */
 
@@ -12,7 +12,7 @@ export const CARE_GARDEN_IMAGE = "/assets/care-garden.webp";
 export const LANDING_DOG_MOOD = "content" satisfies DogMood;
 
 /**
- * "Watch the demo video" in the footer of every /care page, like JagaOS's footer links (user, 16 Oct). Paste the YouTube
- * link here when the video is up; until then it is "#": the link shows but does nothing when tapped. Opens in a new tab.
+ * The demo video (user, 16 Oct). "Watch the demo video" in every /care footer opens /care/video, which plays this
+ * YouTube link embedded on our own page (lib/video.ts). "#" hides the footer link.
  */
 export const DEMO_VIDEO_URL: string = "https://youtu.be/xlip3x6tUjk";

@@ -44,6 +44,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Demo video https://youtu.be/xlip3x6tUjk: plays embedded at /care/video (address stays Pawtner's); footer link goes there; README links to it | Branch `claude/video-link-set` |
 | — | Repo clean-up: unused `max-garden.jpg` removed, `playwright` moved to devDependencies, stale `functions/` ignore line dropped, CLAUDE.md PRD path fixed, favicon linked, `Pawtner.csv` → `docs/user-stories.csv`; old local worktrees and merged local branches removed (CodeBuddy ones kept) | [#75](https://github.com/whansel007/Pawtner/pull/75) |
 | — | /care footer "Watch the demo video" slot (`DEMO_VIDEO_URL`, "#" until the YouTube link exists) | [#76](https://github.com/whansel007/Pawtner/pull/76) |
 | — | /care "A lovely rhythm": Sunday to Saturday; a past day filled when Buddy ended it on 2+ hearts (`dayHearts` in the summary) | [#74](https://github.com/whansel007/Pawtner/pull/74) |

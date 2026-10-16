@@ -20,6 +20,7 @@ import { AlertsPage } from "./pages/AlertsPage";
 import { LandingPage } from "./pages/LandingPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SignInPage } from "./pages/SignInPage";
+import { VideoPage } from "./pages/VideoPage";
 import { WeekPage } from "./pages/WeekPage";
 import "./care.css";
 
@@ -32,6 +33,7 @@ const PAGE_TITLE_KEY: Record<CareRoute, string> = {
   week: "care.web.nav.week",
   alerts: "care.web.nav.alerts",
   settings: "care.web.nav.settings",
+  video: "care.web.video.title",
 };
 
 /**
@@ -120,6 +122,7 @@ export default function CareApp() {
             onStart={() => go(viewer ? "week" : "signIn")}
           />
         )}
+        {route === "video" && <VideoPage onNavigate={go} />}
         {route === "signIn" && <SignInPage personas={buildPersonas(data.summary)} onChoose={choosePersona} onNavigate={go} />}
         {signedInPage && route === "week" && (
           <WeekPage

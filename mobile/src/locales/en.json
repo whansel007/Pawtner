@@ -255,6 +255,15 @@
         "questions_other": "{{count}} notes for the next visit",
         "walksStatLabel": "walks with {{dog}}"
       },
+      "video": {
+        "eyebrow": "Demo video",
+        "title": "See Pawtner in action",
+        "intro": "A short tour of Rose's phone and Jamie's page.",
+        "cardTitle": "The Pawtner demo",
+        "playerTitle": "Pawtner demo video",
+        "openElsewhere": "Watch the demo video",
+        "back": "Back to Pawtner"
+      },
       "footer": {
         "tagline": "Gentle care, thoughtfully connected.",
         "video": "Watch the demo video",

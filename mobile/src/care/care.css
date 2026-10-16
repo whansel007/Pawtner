@@ -1364,6 +1364,28 @@ button.care-brand {
   gap: 6px;
 }
 
+/* /care/video: the embedded player, full card width at 16:9. */
+.care-video {
+  display: block;
+  /* 16:9, as wide as the card but short enough that the whole player fits on screen with the header above it. */
+  width: min(100%, calc((100dvh - 330px) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  margin-inline: auto;
+  margin-top: 16px;
+  border: 0;
+  border-radius: var(--care-radius-md);
+  background: var(--care-forest-950);
+}
+
+.care-video__back {
+  display: inline-flex;
+  min-height: 44px;
+  margin-top: 14px;
+  align-items: center;
+  color: var(--care-forest-800);
+  font-weight: 700;
+}
+
 .care-footer__video {
   margin-top: 12px;
   gap: 6px;
