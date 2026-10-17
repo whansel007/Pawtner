@@ -168,16 +168,19 @@ export function MedicinesScreen({ back, petName, caretakerName, onMedicinesChang
                 </div>
               ) : (
                 <>
+                  {/* Name on its own line; each detail is one unbreakable piece; the actions sit underneath. */}
                   <div className="med-head">
-                    <div>
-                      <strong>{med.name}</strong>
-                      {med.strength && <small> · {formatStrength(med.strength)}</small>}
-                      {med.prescribedFor && <small><br />{t("medicines.doctorSaid", { reason: med.prescribedFor })}</small>}
-                      {med.daysOfSupply !== null && <small> · {t("medicines.daysLeft", { count: med.daysOfSupply })}</small>}
-                      {med.pillReferenceSet && (
-                        <small> · <button type="button" className="pill-ref-set pill-ref-view" disabled={loadingRefId === med.id} onClick={() => void viewRef(med)}>{t("medicines.pillRef.setBadge")}</button></small>
-                      )}
-                    </div>
+                    <strong className="med-name">{med.name}</strong>
+                    {(med.strength || med.daysOfSupply !== null || med.pillReferenceSet) && (
+                      <p className="med-details">
+                        {med.strength && <small className="med-detail">{formatStrength(med.strength)}</small>}{" "}
+                        {med.daysOfSupply !== null && <small className="med-detail">{t("medicines.daysLeft", { count: med.daysOfSupply })}</small>}{" "}
+                        {med.pillReferenceSet && (
+                          <small className="med-detail"><button type="button" className="pill-ref-set pill-ref-view" disabled={loadingRefId === med.id} onClick={() => void viewRef(med)}>{t("medicines.pillRef.setBadge")}</button></small>
+                        )}
+                      </p>
+                    )}
+                    {med.prescribedFor && <p className="med-doctor"><small>{t("medicines.doctorSaid", { reason: med.prescribedFor })}</small></p>}
                     <div className="med-actions">
                       <button className="text-button" onClick={() => startEdit(med)}>{t("medicines.edit.button")}</button>
                       <button className="text-button" onClick={() => { if (settingRefMed === med.id) closeRef(); else { stops.cancel(med.id); setSettingRefMed(med.id); setRefFile(null); setRefPreview(null); } setRefMsg(null); }}>{med.pillReferenceSet ? t("medicines.pillRef.replace") : t("medicines.pillRef.set")}</button>

@@ -865,9 +865,14 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
 .edit-actions .primary-button { margin-top: 0; min-height: 40px; flex: 1; }
 .edit-actions .text-button { margin-top: 0; }
 /* T2-08: set original pill photo in medicine settings */
-.med-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; width: 100%; }
-.med-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-.med-actions .text-button { margin-top: 0; }
+/* My medicines row: name on its own line, details below as unbreakable pieces (" · " between), then the actions. */
+.med-head { display: grid; gap: 4px; width: 100%; min-width: 0; }
+.med-name { overflow-wrap: anywhere; }
+.med-details, .med-doctor { margin: 0; }
+.med-detail { white-space: nowrap; }
+.med-detail:not(:last-child)::after { content: " ·"; }
+.med-actions { display: flex; flex-wrap: wrap; justify-content: flex-start; column-gap: 4px; margin-left: -10px; }
+.med-actions .text-button { margin-top: 0; min-height: 48px; }
 /* "Stop this medicine": a quiet text button at the bottom of the Edit panel, then a confirm panel in the row's place (MedicinesScreen). */
 .med-stop__divider { width: 100%; margin: 6px 0 0; border: 0; border-top: 1px solid var(--color-border-card); }
 .med-stop__open { width: 100%; min-height: 48px; padding: 0 12px; border: 0; border-radius: var(--radius-3xl); color: var(--color-action-stop); background: transparent; font: inherit; font-weight: var(--font-weight-black); cursor: pointer; }
