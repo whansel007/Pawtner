@@ -177,6 +177,7 @@
         "checkInTitle_one": "{{name}} missed some medicine on {{day}}",
         "checkInTitle_other": "{{name}} missed some medicine {{count}} days in a row, up to {{day}}",
         "checkInBody": "A friendly call may help. Pawtner never says which medicine.",
+        "updatesTitle": "Updates for you",
         "stoppedTitle": "A medicine is stopped.",
         "stoppedDay": "{{day}}",
         "restockEyebrow": "A small favour",

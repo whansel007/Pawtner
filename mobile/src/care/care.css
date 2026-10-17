@@ -175,6 +175,35 @@ html:has(.care-root) {
   font-size: var(--care-text-sm);
 }
 
+/* "Updates for you" (This week): one card, one row per update, a thin divider between rows. */
+.care-updates__list {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.care-updates__item {
+  padding: 14px 0;
+}
+
+.care-updates__item + .care-updates__item {
+  border-top: 1px dashed var(--care-stitch);
+}
+
+.care-updates__item:last-child {
+  padding-bottom: 0;
+}
+
+.care-updates__title {
+  margin-top: 4px;
+  font-size: var(--care-text-lg);
+  line-height: 1.25;
+}
+
+.care-updates__item .care-hint {
+  margin-top: 6px;
+}
+
 /* ── Buttons and links ── */
 .care-brand {
   display: inline-flex;

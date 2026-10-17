@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DEMO_RULES } from "../../shared/config.js";
 import {
   canDecreaseThreshold,
+  careUpdates,
   checkInLock,
   initialOf,
   progressPercent,
@@ -165,5 +166,37 @@ describe("stoppedMedicineDay", () => {
     // 16:30 UTC on 17 Oct is already 00:30 on 18 Oct in Singapore.
     expect(stoppedMedicineDay({ stoppedAt: "2026-10-17T16:30:00.000Z" }, "Asia/Singapore")).toBe("2026-10-18");
     expect(stoppedMedicineDay({ stoppedAt: "2026-10-17T15:30:00.000Z" }, "Asia/Singapore")).toBe("2026-10-17");
+  });
+});
+
+describe("careUpdates (one Updates card on This week)", () => {
+  const checkIn = { missedDays: 2, lastMissedDay: "2026-10-16", sentAt: "2026-10-17T01:00:00.000Z" };
+  const stoppedMedicine = { stoppedAt: "2026-10-18T02:00:00.000Z" };
+  const request = { medicationId: "m1", medicationName: "Tablet B", daysLeft: 4, requestedAt: "2026-10-16T03:00:00.000Z", status: "pending" as const, handledAt: null };
+  const checkIns = { receivesCheckIns: true };
+  const updatesOnly = { receivesCheckIns: false };
+
+  it("is empty when there is nothing to tell (no card)", () => {
+    expect(careUpdates({ checkIn: null, stoppedMedicine: null }, checkIns, null, null)).toEqual([]);
+  });
+
+  it("lists every update newest first", () => {
+    const updates = careUpdates({ checkIn, stoppedMedicine }, checkIns, request, null);
+    expect(updates.map((u) => u.kind)).toEqual(["stopped", "checkIn", "refill"]);
+    expect(updates.map((u) => u.at)).toEqual([stoppedMedicine.stoppedAt, checkIn.sentAt, request.requestedAt]);
+  });
+
+  it("never shows the check-in to an updates-only caretaker", () => {
+    expect(careUpdates({ checkIn, stoppedMedicine }, updatesOnly, null, null).map((u) => u.kind)).toEqual(["stopped"]);
+  });
+
+  it("shows the handled line once the refill is handled, at the time it was handled", () => {
+    const handledAt = "2026-10-18T05:00:00.000Z";
+    const updates = careUpdates({ checkIn, stoppedMedicine: null }, checkIns, null, handledAt);
+    expect(updates).toEqual([{ kind: "refillHandled", at: handledAt }, { kind: "checkIn", at: checkIn.sentAt, checkIn }]);
+  });
+
+  it("never carries the stopped medicine's name", () => {
+    expect(JSON.stringify(careUpdates({ checkIn: null, stoppedMedicine }, checkIns, null, null))).not.toMatch(/Tablet/);
   });
 });
