@@ -617,6 +617,17 @@
       "saved": "Original pill photo saved.",
       "failed": "{{name}} can't save the photo right now. Please try again in a moment.",
       "viewFailed": "Couldn't open the original photo right now."
+    },
+    "stop": {
+      "button": "Stop this medicine",
+      "confirmTitle": "Stop {{medicine}}?",
+      "confirmBody": "{{name}} won't remind you about it any more, and {{caretaker}} will be told. You can undo this straight after.",
+      "yes": "Yes, stop it",
+      "no": "No, keep it",
+      "stopping": "Stopping…",
+      "done": "{{medicine}} is stopped.",
+      "undo": "Undo",
+      "failed": "That didn't work. Please try again."
     }
   },
   "toast": {
