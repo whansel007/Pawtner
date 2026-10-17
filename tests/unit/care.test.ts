@@ -9,6 +9,7 @@ import {
   weekRhythm,
   RHYTHM_MIN_HEARTS,
   stepThreshold,
+  stoppedMedicineDay,
   streakHearts,
   todayProgress,
   todayState,
@@ -152,5 +153,17 @@ describe("care routes", () => {
     expect(guardRoute("week", true)).toBe("week");
     expect(guardRoute("landing", false)).toBe("landing");
     expect(CARE_PATHS.signIn).toBe("/care/sign-in");
+  });
+});
+
+describe("stoppedMedicineDay", () => {
+  it("shows no card when nothing was stopped this week", () => {
+    expect(stoppedMedicineDay(null, "Asia/Singapore")).toBeNull();
+  });
+
+  it("gives the senior's calendar day, not the viewer's or UTC's", () => {
+    // 16:30 UTC on 17 Oct is already 00:30 on 18 Oct in Singapore.
+    expect(stoppedMedicineDay({ stoppedAt: "2026-10-17T16:30:00.000Z" }, "Asia/Singapore")).toBe("2026-10-18");
+    expect(stoppedMedicineDay({ stoppedAt: "2026-10-17T15:30:00.000Z" }, "Asia/Singapore")).toBe("2026-10-17");
   });
 });

@@ -2,6 +2,7 @@ import { DEMO_RULES } from "../../../../shared/config.js";
 import type { DerivedDose, HeartActivities } from "../../../../shared/contract.js";
 import { countActivitiesDone } from "../../../../shared/selectors.js";
 import type { CaringMoment } from "../data/types.js";
+import { zonedDate } from "../../lib/demoTime.js";
 
 /**
  * Caretaker web rules (pure, no React or DOM), shared by the pages and the unit tests.
@@ -117,4 +118,14 @@ export function canDecreaseThreshold(current: number): boolean {
 export function initialOf(name: string): string {
   const first = Array.from(name.trim())[0];
   return first ? first.toLocaleUpperCase() : "?";
+}
+
+/**
+ * "A medicine is stopped." card: the senior's calendar day ("YYYY-MM-DD") of the latest stop this week, or null for no card.
+ * Shown to every signed-in caretaker; the API never sends the medicine's name or a count.
+ */
+export function stoppedMedicineDay(stopped: { stoppedAt: string } | null, timeZone: string): string | null {
+  if (!stopped) return null;
+  const { year, month, day } = zonedDate(new Date(stopped.stoppedAt), timeZone);
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }

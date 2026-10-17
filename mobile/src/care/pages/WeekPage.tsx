@@ -4,7 +4,8 @@ import type { CareData, Caretaker } from "../data/types";
 import type { TreatStatus } from "../hooks/useCareTreat";
 import type { RestockHelpEntry } from "../../lib/restockHelp";
 import { formatCalendarDay, formatWeekday } from "../lib/format";
-import { progressPercent, RHYTHM_MIN_HEARTS, streakHearts, todayProgress, todayState, weekRhythm } from "../lib/rules";
+import { progressPercent, RHYTHM_MIN_HEARTS, stoppedMedicineDay, streakHearts, todayProgress, todayState, weekRhythm } from "../lib/rules";
+import { SENIOR_TIMEZONE } from "../../config/scene";
 import { CareBadge, CareCard, PageWelcome } from "../components/CareCard";
 import { CareNotice } from "../components/CareNotice";
 import { CareDog } from "../components/CareDog";
@@ -48,6 +49,8 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
   const [latestQuestion, ...earlierQuestions] = doctorQuestions;
   // The agent's latest check-in (missed days, never a medicine name); only for caretakers who get check-ins.
   const checkIn = viewer.receivesCheckIns ? data.summary.checkIn : null;
+  // A medicine the senior stopped this week (never its name); every caretaker sees it.
+  const stoppedDay = stoppedMedicineDay(data.summary.stoppedMedicine, SENIOR_TIMEZONE);
 
   return (
     <div className="care-content care-page-enter">
@@ -67,6 +70,11 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
             className="care-restock care-checkin"
           >
             <p className="care-hint">{t("care.web.week.checkInBody", { name: senior })}</p>
+          </CareCard>
+        )}
+        {stoppedDay && (
+          <CareCard title={t("care.web.week.stoppedTitle")} stitched className="care-restock care-checkin">
+            <p className="care-hint">{t("care.web.week.stoppedDay", { day: formatCalendarDay(stoppedDay, locale) })}</p>
           </CareCard>
         )}
         {(restockRequest || handledRestock) && (
