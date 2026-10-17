@@ -88,7 +88,7 @@ export function MedicinesScreen({ back, petName, caretakerName, onMedicinesChang
 
   const closeRef = () => { setSettingRefMed(null); setRefFile(null); setRefPreview(null); };
 
-  // The confirm panel replaces the row, so Edit and the photo step on that row close.
+  // From the Edit panel: the confirm panel replaces the row, so Edit and the photo step on that row close.
   const openStop = (medId: string) => {
     if (editingMed === medId) setEditingMed(null);
     if (settingRefMed === medId) closeRef();
@@ -162,6 +162,9 @@ export function MedicinesScreen({ back, petName, caretakerName, onMedicinesChang
                     <button className="primary-button" disabled={saving} onClick={() => void saveEdit(med.id)}>{saving ? t("medicines.edit.saving") : t("medicines.edit.save")}</button>
                     <button className="text-button" onClick={() => setEditingMed(null)}>{t("medicines.cancel")}</button>
                   </div>
+                  {/* Rare action, so it lives here, quiet, not on every row; it opens the confirm panel (double-tap guard starts then). */}
+                  <hr className="med-stop__divider" />
+                  <button type="button" className="med-stop__open" onClick={() => openStop(med.id)}>{t("medicines.stop.button")}</button>
                 </div>
               ) : (
                 <>
@@ -217,7 +220,6 @@ export function MedicinesScreen({ back, petName, caretakerName, onMedicinesChang
                   {refMsg && refMsg.id === med.id && (
                     <p className={refMsg.ok ? "pill-ref-ok" : "error-text"}>{refMsg.text}</p>
                   )}
-                  <button type="button" className="secondary-button med-stop__open" onClick={() => openStop(med.id)}>{t("medicines.stop.button")}</button>
                 </>
               )}
             </div>
