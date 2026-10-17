@@ -203,6 +203,11 @@ export interface CaretakerSummaryResponse {
    * `lastMissedDay` is the senior's local date; `sentAt` may be later than now when a demo clock ran the agent ahead.
    */
   checkIn: { missedDays: number; lastMissedDay: string; sentAt: string } | null;
+  /**
+   * The latest stop of a medicine that is still stopped, within the past week (same window as `checkIn`), or null.
+   * Never the medicine's name and never a count: /care only says "A medicine is stopped."
+   */
+  stoppedMedicine: { stoppedAt: string } | null;
   /** Buddy's hearts at the end of each of the 7 days before today (the senior's local dates, oldest first). */
   dayHearts: Array<{ date: string; hearts: number }>;
 }
@@ -263,6 +268,12 @@ export interface CreateMedicationRequest {
   daysOfSupply?: number | null;
   photoUrl?: string | null;
 }
+
+/**
+ * PUT /api/medications/:id. `active: false` stops the medicine (soft: nothing is erased, `stopped_at` is set);
+ * `active: true` starts it again and clears `stopped_at`.
+ */
+export type UpdateMedicationRequest = Partial<CreateMedicationRequest> & { active?: boolean };
 
 export interface CreateMedicationResponse {
   medication: MedicationDetail;

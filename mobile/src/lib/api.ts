@@ -2,6 +2,7 @@ import type {
   AgentDecision,
   CaretakerSummaryResponse,
   CreateMedicationRequest,
+  UpdateMedicationRequest,
   CreateScheduleRequest,
   DoseEventResponse,
   EscalationSettingsRequest,
@@ -57,7 +58,7 @@ export const api = {
   // T2-02/T2-06: Medication CRUD
   listMedications: () => request<MedicationListResponse>("/medications"),
   createMedication: (data: CreateMedicationRequest) => request<{ medication: MedicationListResponse["medications"][number] }>("/medications", { method: "POST", body: JSON.stringify(data) }),
-  updateMedication: (id: string, data: Partial<CreateMedicationRequest>) => request<{ medication: MedicationListResponse["medications"][number] }>(`/medications/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  updateMedication: (id: string, data: UpdateMedicationRequest) => request<{ medication: MedicationListResponse["medications"][number] }>(`/medications/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   createSchedule: (data: CreateScheduleRequest) => request<{ schedule: { id: string; medicationId: string; scheduledTime: string; startsOn: string; endsOn: string | null } }>("/schedules", { method: "POST", body: JSON.stringify(data) }),
 
   // T2-03: Medicine explanation
