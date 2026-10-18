@@ -646,6 +646,7 @@
     "nudgeSet": "{{name}} knows when to nudge you.",
     "heartGained": "{{name}} gained a heart!",
     "bpLogged": "Reading logged. {{name}}'s heart is full!",
+    "bpSeeGp": "uh-oh, but thank you for the information",
     "worlds": {
       "garden": "The garden is now behind {{name}}.",
       "beach": "The beach is now behind {{name}}.",
