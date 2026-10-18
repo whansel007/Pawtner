@@ -38,6 +38,7 @@ import { useDayPhase } from "./lib/useDayPhase";
 import { useRestockHelp } from "./lib/useRestockHelp";
 import { pickRestockAlert } from "./lib/restockHelp";
 import { resetDemoStorage } from "./lib/demoReset";
+import { mergeHealthMetrics } from "./lib/healthReadings";
 import { runningClock, saveDemoClock, type DemoClockAnchor } from "./lib/demoClock";
 import { useHomeView } from "./lib/useHomeView";
 import { useDoseReminder } from "./lib/useDoseReminder";
@@ -100,6 +101,8 @@ export default function App() {
   const [pendingDoseId, setPendingDoseId] = useState<string | null>(null);
   const [bpLogged, setBpLogged] = useState(false);
   const [healthMetrics, setHealthMetrics] = useState<HealthMetric[]>([]);
+  // Today's readings from the last /api/today answer, so the next answer can replace them (lib/healthReadings.ts).
+  const serverMetrics = useRef<HealthMetric[]>([]);
   const [latestDecision, setLatestDecision] = useState<AgentDecision | null>(null);
   const [world, setWorld] = useState<World>("garden");
   const [accessory, setAccessory] = useState<Accessory>("none");
@@ -158,7 +161,15 @@ export default function App() {
   };
   const loadToday = async (now?: string | null) => {
     const at = now === undefined ? demoNow() : now;
-    try { const result = await api.today(at ?? undefined); setToday(result); setDoseList(result.doses); setBpLogged(result.bloodPressureLoggedToday); setLatestDecision(result.latestDecision); apiWarned.current = false; }
+    try {
+      const result = await api.today(at ?? undefined);
+      setToday(result); setDoseList(result.doses); setBpLogged(result.bloodPressureLoggedToday); setLatestDecision(result.latestDecision);
+      // The Health card's readings: today's from the server, plus any saved on this phone the server doesn't have yet.
+      const previousServer = serverMetrics.current;
+      serverMetrics.current = result.healthMetrics;
+      setHealthMetrics((prev) => mergeHealthMetrics(result.healthMetrics, prev, previousServer));
+      apiWarned.current = false;
+    }
     catch (error) { reportApiProblem(error); }
   };
   useEffect(() => { void refreshToday(); }, []);
