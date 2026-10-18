@@ -49,7 +49,7 @@ import { DEMO_CLOCK_PARAM, DEMO_RESET_PRESET, DEMO_TIME_PARAM, DEMO_TIME_PRESETS
 import { demoHeartsTotal, demoStreak, demoTodayHearts, hasDemoTodayHearts, toggleDemoTick } from "./lib/demoUnlocks";
 import { computeHeart, heartActivities } from "../../shared/selectors";
 import { SENIOR_TIMEZONE } from "./config/scene";
-import type { World, Accessory } from "./types";
+import type { World, Accessory, Screen } from "./types";
 import type { WalkCompletion } from "./lib/walkState";
 import { isUrgentDecision, routineDecision } from "./lib/decisions";
 import type { TrickRequest } from "./lib/tricks";
@@ -93,10 +93,10 @@ function localHeartCount(doses: DerivedDose[], bpLogged: boolean, walked: boolea
   return computeHeart(heartActivities(doses, bpLogged, walked));
 }
 
-export default function App() {
+export default function App({ startScreen, onRestart }: { startScreen?: Screen; onRestart?: (screen: Screen) => void } = {}) {
   const { t } = useTranslation();
   // Screen plus a small history: drilled-down screens go "Back" to where they came from (lib/navigation.ts).
-  const { screen, navigate, goHome, back } = useNavigation("cover");
+  const { screen, navigate, goHome, back } = useNavigation(startScreen ?? "cover");
   const [doseList, setDoseList] = useState<DerivedDose[]>(todayDoses);
   const [pendingDoseId, setPendingDoseId] = useState<string | null>(null);
   const [bpLogged, setBpLogged] = useState(false);
@@ -440,7 +440,8 @@ export default function App() {
 
   /**
    * Settings > For demo only > Reset to morning: the API deletes today's dose taps, readings and decisions and decides
-   * at 9:00 (lib/api.ts resetDemoDay); this phone's demo choices are cleared; the reload starts with the agent clock at 9:00.
+   * at 9:00 (lib/api.ts resetDemoDay); this phone's demo choices are cleared; the app restarts in place (no page reload,
+   * owner 18 Oct) on Settings, with the agent clock at 9:00 from the ?clock= link.
    * If the API is unreachable, the phone side still resets (the toast says the action failed).
    */
   const resetDemoToMorning = async () => {
@@ -449,7 +450,8 @@ export default function App() {
     try { await api.resetDemoDay(demoInstantToday(morning, new Date(), SENIOR_TIMEZONE)); }
     catch (error) { reportApiProblem(error, true); }
     resetDemoStorage();
-    window.location.assign(`${window.location.pathname}?${DEMO_CLOCK_PARAM}=${DEMO_RESET_PRESET}`);
+    window.history.replaceState(null, "", `${window.location.pathname}?${DEMO_CLOCK_PARAM}=${DEMO_RESET_PRESET}`);
+    if (onRestart) onRestart("settings"); else window.location.reload();
   };
 
   /**

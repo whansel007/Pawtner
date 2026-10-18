@@ -561,6 +561,7 @@
     "demoEyebrow": "Demo",
     "demoTitle": "For demo only",
     "demoSub": "Tools for showing Pawtner. Tap to open.",
+    "demoBackToSettings": "Back to Settings",
     "demoResetTitle": "Start the day again",
     "demoReset": "Reset to morning ({{time}})",
     "demoResetHint": "Back to {{time}} today: today's doses, readings and {{name}}'s answers are cleared, plus this phone's demo choices (restock answer, clinic memo photo, visit notes, sharing switch, ticks, garden time). Earlier days stay.",
