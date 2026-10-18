@@ -65,6 +65,14 @@ export function HealthScreen({
   const toggleFine = () => { setFeelFine((v) => !v); setSymptoms(new Set()); };
   const [error, setError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+  const diastolicRef = useRef<HTMLInputElement>(null);
+  // A phone keyboard's Enter/Go would submit the whole form from any box (and show "enter both numbers" too early):
+  // here it moves to the next box, or closes the keyboard; only "Save reading" saves.
+  const enterMovesTo = (next: HTMLInputElement | null) => (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    if (next) next.focus(); else event.currentTarget.blur();
+  };
 
   const lastMetric = healthMetrics.length > 0
     ? [...healthMetrics].sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))[0]
@@ -167,7 +175,9 @@ export function HealthScreen({
               type="text"
               inputMode="numeric"
               value={systolic}
-              onChange={(e) => setSystolic(e.target.value)}
+              onChange={(e) => { setSystolic(e.target.value); setError(null); }}
+              onKeyDown={(e) => enterMovesTo(diastolicRef.current)(e)}
+              enterKeyHint="next"
               autoComplete="off"
             />
           </label>
@@ -177,8 +187,11 @@ export function HealthScreen({
               className="bp-form__input"
               type="text"
               inputMode="numeric"
+              ref={diastolicRef}
               value={diastolic}
-              onChange={(e) => setDiastolic(e.target.value)}
+              onChange={(e) => { setDiastolic(e.target.value); setError(null); }}
+              onKeyDown={enterMovesTo(null)}
+              enterKeyHint="done"
               autoComplete="off"
             />
           </label>
@@ -203,6 +216,8 @@ export function HealthScreen({
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            onKeyDown={enterMovesTo(null)}
+            enterKeyHint="done"
             placeholder={t("health.bpNotePlaceholder")}
             autoComplete="off"
           />
