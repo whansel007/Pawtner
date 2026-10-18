@@ -5,13 +5,12 @@ Updated 2026-10-18. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 
 ## Doing
 
-Today's plan (agreed 13 Oct evening), in order:
-1. Morning: message P1 for the hosting decision, the first endpoints (`today`, `dose event`) and the contract additions for `/care`.
-2. T1-10 + T1-12 emergency beat.
-3. T1-15 `/care` from the Figma Make export, wired to the API with a mock fallback (PR from `claude/care-web`).
-4. Afternoon: T1-16 simulated walk.
-5. Evening: connect to the API if it's ready, then deploy to production.
-6. Later, if there's time: T2-10 morning/night from one shared helper (done on `claude/night-stars`, see Done).
+Now (18 Oct), in order:
+1. `claude/single-undo`: on My medicines only the latest stop keeps its Undo (coder, in progress).
+2. `claude/names-from-data`: no hardcoded names in code; fallback demo names only in the locales (brief drafted, waiting for the owner's OK).
+3. `claude/care-cross-browser`: refill requests (several medicines), shared notes, blood-pressure sharing and the demo clock through the API, so /care works from any browser (brief approved; starts after 2).
+
+Earlier items still listed below:
 
 | ID | Item | Owner | State |
 |---|---|---|---|
@@ -44,8 +43,8 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | PR |
 |---|---|---|
-| — | Revision (design "A", 18 Oct): Stop moves inside each medicine's Edit panel (quiet text button, no Stop on the list); /care This week shows one "{{dog}}'s updates" card, e.g. "Buddy's updates" (check-in, stopped medicine, refill request, newest first) | [#83](https://github.com/whansel007/Pawtner/pull/83), not pushed yet |
-| — | Stop a medicine: My medicines "Stop this medicine" → confirm → "is stopped." + Undo (soft stop, `active` + `stopped_at`, migration 007); Home refreshes; /care This week "A medicine is stopped." (no name) for every caretaker. **Migration 007 must run on Supabase before the merge.** | [#83](https://github.com/whansel007/Pawtner/pull/83) (open) |
+| — | Revision (design "A", 18 Oct): Stop moves inside each medicine's Edit panel (quiet text button, no Stop on the list); /care This week shows one "{{dog}}'s updates" card, e.g. "Buddy's updates" (check-in, stopped medicine, refill request, newest first) | [#83](https://github.com/whansel007/Pawtner/pull/83), merged 18 Oct |
+| — | Stop a medicine: My medicines "Stop this medicine" → confirm → "is stopped." + Undo (soft stop, `active` + `stopped_at`, migration 007); Home refreshes; /care This week "A medicine is stopped." (no name) for every caretaker. Migration 007 run on Supabase by the owner before the merge. | [#83](https://github.com/whansel007/Pawtner/pull/83), merged 18 Oct |
 | — | Health card ignores readings already saved today after a reload (found 17 Oct): `loadToday` now fills App's `healthMetrics` from `/api/today` (`today.healthMetrics`) via `mergeHealthMetrics` (`lib/healthReadings.ts`, tested), keeping readings saved offline and replacing the phone's copy with the server's row; after a reload the card shows the latest reading and its feedback line | [#82](https://github.com/whansel007/Pawtner/pull/82) (open, not merged) |
 | — | Demo video https://youtu.be/xlip3x6tUjk: plays embedded at /care/video (address stays Pawtner's); footer link goes there; README links to it | [#79](https://github.com/whansel007/Pawtner/pull/79) |
 | — | Repo clean-up: unused `max-garden.jpg` removed, `playwright` moved to devDependencies, stale `functions/` ignore line dropped, CLAUDE.md PRD path fixed, favicon linked, `Pawtner.csv` → `docs/user-stories.csv`; old local worktrees and merged local branches removed (CodeBuddy ones kept) | [#75](https://github.com/whansel007/Pawtner/pull/75) |
@@ -100,7 +99,6 @@ Today's plan (agreed 13 Oct evening), in order:
 | Item | Blocked on |
 |---|---|
 | HSA import script date bug (P1) | `scripts/import-hsa-products.ts` passes day-first HSA dates (`13/10/1992`) to a `date` column; Postgres reads them month-first, so the import fails (rollback) or stores wrong dates. Not urgent: the hosted table was filled by CSV import (5,511 rows, 15 Oct night). Fix: convert to ISO before insert. |
-| T1-17 production URL | P1: host the API and run migrations + fictional seed on the hosted database (Supabase has no Pawtner schema yet). Message drafted for the user to send 14 Oct. |
 | T1-15 caretaker list on the web (real data) | P1: `caregivers: { id, name, receivesCheckIns }[]` in `CaretakerSummaryResponse`, 3–4 seeded caretakers, check-in template in `shared/templates.ts`. Until then `/care` shows the API caregiver (gets check-ins) plus the mock updates-only slot `MOCK_UPDATES_ONLY_CARETAKER` in `mobile/src/care/data/mock.ts`. Also wanted: the senior's time zone in the summary (moment times use the viewer's zone). |
 
 ## Kept in view (KIV) / follow-ups
