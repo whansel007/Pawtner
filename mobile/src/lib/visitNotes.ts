@@ -16,7 +16,7 @@ export interface VisitNote {
   shared: boolean;
   /** Earlier wordings, newest first: editing never loses what she wrote before. */
   earlier: Array<{ text: string; updatedAt: string }>;
-  /** Set by Reset to morning: the note is hidden (lib/demoDayReset.ts). */
+  /** Set by Reset to morning: the note is hidden (shared/dayReset.ts). */
   resetAt?: string;
   /** Wordings a Reset to morning took back (kept, hidden), newest first. */
   resetVersions?: Array<{ text: string; updatedAt: string; resetAt: string }>;

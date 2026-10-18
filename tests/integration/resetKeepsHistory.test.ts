@@ -185,6 +185,25 @@ testApi("Reset to morning hides the day, never deletes it", () => {
     expect(lists.shared_visit_notes.filter((item: { id: string }) => item.id === "note-today")).toHaveLength(2);
   }, 60_000);
 
+  it("(f) a note shared yesterday and edited today shows yesterday's wording again after a reset; a note shared today is hidden", async () => {
+    const yesterday = shift(today, -1);
+    expect((await call("PUT", "/api/shared-notes/n1", { text: "Ask about my knee", updatedAt: sgt(yesterday, "18:00") })).status).toBe(200);
+    expect((await call("PUT", "/api/shared-notes/n1", { text: "Ask about my knee and hip", updatedAt: sgt(today, "10:00") })).status).toBe(200);
+    expect((await call("PUT", "/api/shared-notes/n2", { text: "New today", updatedAt: sgt(today, "10:05") })).status).toBe(200);
+    expect((await get("/api/caretaker/summary", MORNING)).sharedNotes.map((note: { text: string }) => note.text)).toEqual(["New today", "Ask about my knee and hip"]);
+    await reset();
+    expect((await get("/api/caretaker/summary", MORNING)).sharedNotes).toEqual([{ id: "n1", text: "Ask about my knee", updatedAt: sgt(yesterday, "18:00") }]);
+    // Nothing deleted: today's wording is kept (hidden) on the note, the new note is kept with resetAt.
+    const stored = (await jsonbLists()).shared_visit_notes;
+    expect(stored.find((note: { id: string }) => note.id === "n1").resetVersions.map((wording: { text: string }) => wording.text)).toEqual(["Ask about my knee and hip"]);
+    expect(stored.find((note: { id: string }) => note.id === "n2").resetAt).toBeTruthy();
+    // Editing again after the reset keeps yesterday's wording as the earlier one.
+    await call("PUT", "/api/shared-notes/n1", { text: "Ask about my hip", updatedAt: sgt(today, "11:00") });
+    const edited = (await jsonbLists()).shared_visit_notes.find((note: { id: string }) => note.id === "n1");
+    expect(edited.earlier.map((wording: { text: string }) => wording.text)).toEqual(["Ask about my knee"]);
+    expect((await get("/api/caretaker/summary", MORNING)).sharedNotes.map((note: { text: string }) => note.text)).toEqual(["Ask about my hip"]);
+  }, 60_000);
+
   it("(e) a row a demo clock dated tomorrow is stamped too", async () => {
     const tomorrow = sgt(shift(today, 1), "09:30");
     expect((await call("POST", "/api/health-metric", { systolic: 135, diastolic: 82, note: null, recordedAt: tomorrow })).status).toBe(201);

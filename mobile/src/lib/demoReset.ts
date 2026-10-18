@@ -6,7 +6,7 @@ import { DOSE_REMINDER } from "../config/reminders.js";
 import { browserStore, removeItem, type KeyValueStore } from "./localStore.js";
 import { readClinicMemos, writeClinicMemos } from "./clinicMemo.js";
 import { readVisitNotes, writeVisitNotes } from "./visitNotes.js";
-import { resetClinicMemos, resetVisitNotes } from "./demoDayReset.js";
+import { resetItems, resetNotes } from "../../../shared/dayReset.js";
 import { zonedDate, zonedTimeToInstant } from "./demoTime.js";
 
 /**
@@ -26,7 +26,7 @@ export const DEMO_STORAGE_KEYS: readonly string[] = [
 
 /**
  * Reset to morning on this phone: clears the demo keys, and hides today's visit notes, wordings and clinic memo photos
- * (today = from local midnight in `timeZone`, the senior's, same day as the server's reset; lib/demoDayReset.ts).
+ * (today = from local midnight in `timeZone`, the senior's, same day as the server's reset; shared/dayReset.ts).
  * Earlier ones stay.
  */
 export function resetDemoStorage(timeZone: string, store: KeyValueStore | null = browserStore(), now: Date = new Date()): void {
@@ -34,7 +34,7 @@ export function resetDemoStorage(timeZone: string, store: KeyValueStore | null =
   const dayStart = zonedTimeToInstant(zonedDate(now, timeZone), { hour: 0, minute: 0 }, timeZone).getTime();
   const stampedAt = now.toISOString();
   const notes = readVisitNotes(VISIT_NOTES.storageKey, store);
-  if (notes.length) writeVisitNotes(VISIT_NOTES.storageKey, resetVisitNotes(notes, dayStart, stampedAt), store);
+  if (notes.length) writeVisitNotes(VISIT_NOTES.storageKey, resetNotes(notes, dayStart, stampedAt), store);
   const photos = readClinicMemos(CLINIC_MEMO.storageKey, store);
-  if (photos.length) writeClinicMemos(CLINIC_MEMO.storageKey, resetClinicMemos(photos, dayStart, stampedAt), store);
+  if (photos.length) writeClinicMemos(CLINIC_MEMO.storageKey, resetItems(photos, (photo) => photo.addedAt, dayStart, stampedAt), store);
 }

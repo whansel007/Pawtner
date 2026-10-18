@@ -4,6 +4,7 @@ import { DEMO_RULES } from "../shared/config.js";
 import { decide, selectDogMood, firstReadingOf } from "../shared/rules.js";
 import { selectAgentInput, selectHeartActivities, selectHeartsAtInstants, selectHeartsTotal, type AgentSelectionSource } from "../shared/selectors.js";
 import { applyModelWording } from "../shared/wording.js";
+import { isLive, resetItems, resetNotes, type Resettable, type VersionedNote } from "../shared/dayReset.js";
 import { SOUVENIR_TIERS, unlockedSouvenirs, nextSouvenir } from "../shared/souvenirs.js";
 import { FALLBACK_EXPLANATION, HEALTHHUB_MEDICATIONS_URL, NDF_URL, validateRephrase } from "../shared/medlineplus.js";
 import type {
@@ -96,15 +97,12 @@ function countsInHistory(medication: string, scheduledAt: string): string {
 function notReset(table: string): string {
   return `${table}.reset_at IS NULL`;
 }
-/** Same rule for the jsonb lists on `users` (refill requests, shared notes): an item with `resetAt` is hidden. */
-type Resettable = { resetAt?: string | null };
-function notResetItem(item: Resettable): boolean {
-  return !item.resetAt;
-}
+/** Same rule for the jsonb lists on `users` (refill requests, shared notes): shared/dayReset.ts, also used by the phone. */
+const notResetItem = isLive;
 /** A refill request as stored in `users.restock_requests` (the name is looked up on read). */
 type StoredRestockRequest = Omit<RestockRequest, "medicationName"> & Resettable;
-/** A shared note as stored in `users.shared_visit_notes`. */
-type StoredSharedNote = SharedNote & Resettable;
+/** A shared note as stored in `users.shared_visit_notes`: like the phone's notes, it keeps its earlier wordings. */
+type StoredSharedNote = SharedNote & VersionedNote;
 /** Medicines whose occurrences a history query reads: active ones and stopped ones (up to their stop). */
 function readsHistory(medication: string): string {
   return `(${medication}.active OR ${medication}.stopped_at IS NOT NULL)`;
@@ -783,10 +781,8 @@ export class PawtnerRepository {
     )).rows[0];
     const dayStart = Date.parse(iso(dayStartValue));
     const stampedAt = iso(stampedAtValue);
-    const stamp = <T extends Resettable>(items: T[], timeOf: (item: T) => string): T[] =>
-      items.map((item) => (notResetItem(item) && Date.parse(timeOf(item)) >= dayStart ? { ...item, resetAt: stampedAt } : item));
-    const restock = stamp(await this.readRestockItems(client, userId, true), (item) => item.requestedAt);
-    const notes = stamp(await this.readSharedNoteItems(client, userId, true), (item) => item.updatedAt);
+    const restock = resetItems(await this.readRestockItems(client, userId, true), (item) => item.requestedAt, dayStart, stampedAt);
+    const notes = resetNotes(await this.readSharedNoteItems(client, userId, true), dayStart, stampedAt);
     await client.query(
       `UPDATE users SET restock_requests = $3::jsonb, shared_visit_notes = $4::jsonb, share_blood_pressure = true,
               demo_clock_at = $2::timestamptz, demo_clock_set_at = now()
@@ -867,13 +863,14 @@ export class PawtnerRepository {
   /** Every stored shared note, hidden ones included (for writes, which must keep them). */
   private async readSharedNoteItems(client: PoolClient | Pool, userId: string, forUpdate = false): Promise<StoredSharedNote[]> {
     const row = (await client.query(`SELECT shared_visit_notes FROM users WHERE id = $1${forUpdate ? " FOR UPDATE" : ""}`, [userId])).rows[0];
-    return row.shared_visit_notes as StoredSharedNote[];
+    // Notes shared before wordings were kept have no `earlier`.
+    return (row.shared_visit_notes as StoredSharedNote[]).map((note) => ({ ...note, earlier: note.earlier ?? [] }));
   }
 
   /** The senior's shared notes that count (not hidden by a reset), newest first. */
   private async listSharedNotes(client: PoolClient | Pool, userId: string): Promise<SharedNote[]> {
     return (await this.readSharedNoteItems(client, userId)).filter(notResetItem)
-      .map(({ resetAt: _reset, ...note }) => note)
+      .map(({ id, text, updatedAt }) => ({ id, text, updatedAt }))
       .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
   }
 
@@ -884,11 +881,16 @@ export class PawtnerRepository {
     if (text.length > DEMO_RULES.visitNoteMaxLength) throw new ApiError(400, `Note text must be at most ${DEMO_RULES.visitNoteMaxLength} characters.`);
     return this.transaction(async (client) => {
       const userId = await this.getDefaultUserId(client);
-      const note: SharedNote = { id, text, updatedAt: new Date(request.updatedAt).toISOString() };
-      // Replaces the note that counts; a hidden copy (same id, stamped by a reset) stays as it is.
-      const notes = (await this.readSharedNoteItems(client, userId, true)).filter((item) => !(item.id === id && notResetItem(item)));
-      await client.query("UPDATE users SET shared_visit_notes = $2::jsonb WHERE id = $1", [userId, JSON.stringify([note, ...notes])]);
-      return note;
+      const updatedAt = new Date(request.updatedAt).toISOString();
+      const items = await this.readSharedNoteItems(client, userId, true);
+      // Replaces the note that counts and keeps its wording in `earlier` (like the phone), so a reset can show it
+      // again; a hidden copy (same id, stamped by a reset) stays as it is.
+      const current = items.find((item) => item.id === id && notResetItem(item));
+      const earlier = current && current.text !== text ? [{ text: current.text, updatedAt: current.updatedAt }, ...current.earlier] : current?.earlier ?? [];
+      const note: StoredSharedNote = { id, text, updatedAt, earlier, ...(current?.resetVersions ? { resetVersions: current.resetVersions } : {}) };
+      const rest = items.filter((item) => item !== current);
+      await client.query("UPDATE users SET shared_visit_notes = $2::jsonb WHERE id = $1", [userId, JSON.stringify([note, ...rest])]);
+      return { id, text, updatedAt };
     });
   }
 

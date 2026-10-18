@@ -24,7 +24,7 @@ export interface MemoPhoto {
   dataUrl: string;
   /** ISO time it was added ("" for a photo saved before the list existed). */
   addedAt: string;
-  /** Set by Reset to morning: the photo is hidden (lib/demoDayReset.ts). */
+  /** Set by Reset to morning: the photo is hidden (shared/dayReset.ts). */
   resetAt?: string;
 }
 

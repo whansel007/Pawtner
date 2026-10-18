@@ -5771,6 +5771,35 @@ async function applyModelWording(decision2, options) {
   }
 }
 
+// shared/dayReset.ts
+function isLive(item) {
+  return !item.resetAt;
+}
+function onOrAfter(time, dayStart) {
+  const ms = Date.parse(time);
+  return Number.isFinite(ms) && ms >= dayStart;
+}
+function resetItems(items, timeOf, dayStart, stampedAt) {
+  return items.map((item) => isLive(item) && onOrAfter(timeOf(item), dayStart) ? { ...item, resetAt: stampedAt } : item);
+}
+function resetNotes(notes, dayStart, stampedAt) {
+  return notes.map((note) => {
+    if (!isLive(note)) return note;
+    const wordings = [{ text: note.text, updatedAt: note.updatedAt }, ...note.earlier ?? []];
+    const today = wordings.filter((wording) => onOrAfter(wording.updatedAt, dayStart));
+    if (today.length === 0) return note;
+    const before = wordings.filter((wording) => !onOrAfter(wording.updatedAt, dayStart));
+    if (before.length === 0) return { ...note, resetAt: stampedAt };
+    return {
+      ...note,
+      text: before[0].text,
+      updatedAt: before[0].updatedAt,
+      earlier: before.slice(1),
+      resetVersions: [...today.map((wording) => ({ ...wording, resetAt: stampedAt })), ...note.resetVersions ?? []]
+    };
+  });
+}
+
 // shared/souvenirs.ts
 var SOUVENIR_TIERS = [
   { key: "marina_bay", name: "Marina Bay sparkle", note: "Walked 1 km together", cumulativeMeters: 1e3 },
@@ -5853,9 +5882,7 @@ function countsInHistory(medication, scheduledAt) {
 function notReset(table) {
   return `${table}.reset_at IS NULL`;
 }
-function notResetItem(item) {
-  return !item.resetAt;
-}
+var notResetItem = isLive;
 function readsHistory(medication) {
   return `(${medication}.active OR ${medication}.stopped_at IS NOT NULL)`;
 }
@@ -6486,9 +6513,8 @@ var PawtnerRepository = class {
     )).rows[0];
     const dayStart = Date.parse(iso(dayStartValue));
     const stampedAt = iso(stampedAtValue);
-    const stamp = (items, timeOf) => items.map((item) => notResetItem(item) && Date.parse(timeOf(item)) >= dayStart ? { ...item, resetAt: stampedAt } : item);
-    const restock = stamp(await this.readRestockItems(client, userId, true), (item) => item.requestedAt);
-    const notes = stamp(await this.readSharedNoteItems(client, userId, true), (item) => item.updatedAt);
+    const restock = resetItems(await this.readRestockItems(client, userId, true), (item) => item.requestedAt, dayStart, stampedAt);
+    const notes = resetNotes(await this.readSharedNoteItems(client, userId, true), dayStart, stampedAt);
     await client.query(
       `UPDATE users SET restock_requests = $3::jsonb, shared_visit_notes = $4::jsonb, share_blood_pressure = true,
               demo_clock_at = $2::timestamptz, demo_clock_set_at = now()
@@ -6559,11 +6585,11 @@ var PawtnerRepository = class {
   /** Every stored shared note, hidden ones included (for writes, which must keep them). */
   async readSharedNoteItems(client, userId, forUpdate = false) {
     const row = (await client.query(`SELECT shared_visit_notes FROM users WHERE id = $1${forUpdate ? " FOR UPDATE" : ""}`, [userId])).rows[0];
-    return row.shared_visit_notes;
+    return row.shared_visit_notes.map((note) => ({ ...note, earlier: note.earlier ?? [] }));
   }
   /** The senior's shared notes that count (not hidden by a reset), newest first. */
   async listSharedNotes(client, userId) {
-    return (await this.readSharedNoteItems(client, userId)).filter(notResetItem).map(({ resetAt: _reset, ...note }) => note).sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+    return (await this.readSharedNoteItems(client, userId)).filter(notResetItem).map(({ id, text, updatedAt }) => ({ id, text, updatedAt })).sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
   }
   /** PUT /api/shared-notes/:id: create or replace one shared note (text 1–visitNoteMaxLength characters). */
   async upsertSharedNote(id, request) {
@@ -6572,10 +6598,14 @@ var PawtnerRepository = class {
     if (text.length > DEMO_RULES.visitNoteMaxLength) throw new ApiError(400, `Note text must be at most ${DEMO_RULES.visitNoteMaxLength} characters.`);
     return this.transaction(async (client) => {
       const userId = await this.getDefaultUserId(client);
-      const note = { id, text, updatedAt: new Date(request.updatedAt).toISOString() };
-      const notes = (await this.readSharedNoteItems(client, userId, true)).filter((item) => !(item.id === id && notResetItem(item)));
-      await client.query("UPDATE users SET shared_visit_notes = $2::jsonb WHERE id = $1", [userId, JSON.stringify([note, ...notes])]);
-      return note;
+      const updatedAt = new Date(request.updatedAt).toISOString();
+      const items = await this.readSharedNoteItems(client, userId, true);
+      const current = items.find((item) => item.id === id && notResetItem(item));
+      const earlier = current && current.text !== text ? [{ text: current.text, updatedAt: current.updatedAt }, ...current.earlier] : current?.earlier ?? [];
+      const note = { id, text, updatedAt, earlier, ...current?.resetVersions ? { resetVersions: current.resetVersions } : {} };
+      const rest = items.filter((item) => item !== current);
+      await client.query("UPDATE users SET shared_visit_notes = $2::jsonb WHERE id = $1", [userId, JSON.stringify([note, ...rest])]);
+      return { id, text, updatedAt };
     });
   }
   /** DELETE /api/shared-notes/:id (no error when it is already gone). */

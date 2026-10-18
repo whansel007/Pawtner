@@ -563,7 +563,7 @@
     "demoBackToSettings": "Back to Settings",
     "demoResetTitle": "Start the day again",
     "demoReset": "Reset to morning ({{time}})",
-    "demoResetHint": "Back to {{time}} today: today's doses, readings and {{name}}'s answers are cleared, plus this phone's demo choices (restock answer, clinic memo photo, visit notes, sharing switch, ticks, garden time). Earlier days stay.",
+    "demoResetHint": "Today starts over at {{time}}. Earlier days stay.",
     "demoTimeTitle": "Garden time",
     "demoTimeHint": "Jump the garden to a time of day; tap it again for real time. Doesn't run the agent or save anything.",
     "demoUnlockTitle": "Pretend numbers",

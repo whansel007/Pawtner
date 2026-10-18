@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isLive, liveItems, resetClinicMemos, resetVisitNotes } from "../../mobile/src/lib/demoDayReset.js";
+import { isLive, liveItems, resetItems, resetNotes } from "../../shared/dayReset.js";
 import { editVisitNote, readVisitNotes, writeVisitNotes, type VisitNote } from "../../mobile/src/lib/visitNotes.js";
 import { readClinicMemos, type MemoPhoto } from "../../mobile/src/lib/clinicMemo.js";
 import { resetDemoStorage } from "../../mobile/src/lib/demoReset.js";
@@ -24,9 +24,9 @@ const TODAY_LATER = "2026-10-18T02:00:00.000Z";
 const note = (id: string, text: string, updatedAt: string, earlier: VisitNote["earlier"] = []): VisitNote => ({ id, text, updatedAt, shared: false, earlier });
 const photo = (id: string, addedAt: string): MemoPhoto => ({ id, dataUrl: "data:image/jpeg;base64,AA", addedAt });
 
-describe("Reset to morning on the phone (hide, never delete)", () => {
+describe("Reset to morning (shared/dayReset.ts, phone and server): hide, never delete", () => {
   it("hides a note written today, keeps yesterday's", () => {
-    const result = resetVisitNotes([note("t", "today", TODAY), note("y", "yesterday", YESTERDAY_LATE)], DAY_START, STAMP);
+    const result = resetNotes([note("t", "today", TODAY), note("y", "yesterday", YESTERDAY_LATE)], DAY_START, STAMP);
     expect(result).toHaveLength(2);
     expect(result[0].resetAt).toBe(STAMP);
     expect(result[1]).toEqual(note("y", "yesterday", YESTERDAY_LATE));
@@ -35,7 +35,7 @@ describe("Reset to morning on the phone (hide, never delete)", () => {
 
   it("a note written earlier but edited today shows its newest wording from before today; today's wordings are kept, hidden", () => {
     const edited = note("n", "today v2", TODAY_LATER, [{ text: "today v1", updatedAt: TODAY }, { text: "yesterday v2", updatedAt: YESTERDAY_LATE }, { text: "yesterday v1", updatedAt: YESTERDAY }]);
-    const [result] = resetVisitNotes([edited], DAY_START, STAMP);
+    const [result] = resetNotes([edited], DAY_START, STAMP);
     expect(isLive(result)).toBe(true);
     expect(result.text).toBe("yesterday v2");
     expect(result.updatedAt).toBe(YESTERDAY_LATE);
@@ -47,15 +47,15 @@ describe("Reset to morning on the phone (hide, never delete)", () => {
   });
 
   it("a second reset never restamps hidden notes, and later edits keep the hidden wordings", () => {
-    const once = resetVisitNotes([note("t", "today", TODAY), note("n", "today", TODAY, [{ text: "old", updatedAt: YESTERDAY }])], DAY_START, STAMP);
-    const twice = resetVisitNotes(once, DAY_START, "2026-10-18T10:00:00.000Z");
+    const once = resetNotes([note("t", "today", TODAY), note("n", "today", TODAY, [{ text: "old", updatedAt: YESTERDAY }])], DAY_START, STAMP);
+    const twice = resetNotes(once, DAY_START, "2026-10-18T10:00:00.000Z");
     expect(twice).toEqual(once);
     const editedAgain = editVisitNote(twice, "n", "new today", TODAY_LATER);
     expect(editedAgain[0].resetVersions).toEqual(once[1].resetVersions);
   });
 
   it("hides photos added today; yesterday's and old photos with no time stay", () => {
-    const result = resetClinicMemos([photo("t", TODAY), photo("y", YESTERDAY), photo("old", "")], DAY_START, STAMP);
+    const result = resetItems([photo("t", TODAY), photo("y", YESTERDAY), photo("old", "")], (item) => item.addedAt, DAY_START, STAMP);
     expect(liveItems(result).map((item) => item.id)).toEqual(["y", "old"]);
     expect(result[0].resetAt).toBe(STAMP);
   });
@@ -71,5 +71,17 @@ describe("Reset to morning on the phone (hide, never delete)", () => {
     expect(readVisitNotes(VISIT_NOTES.storageKey, store)).toEqual(notes);
     const photos = readClinicMemos(CLINIC_MEMO.storageKey, store);
     expect(photos.map((item) => [item.id, item.resetAt ?? null])).toEqual([["t", STAMP], ["y", null]]);
+  });
+
+  it("refill-style items (one time each): today's hidden, yesterday's kept, an earlier stamp never changes", () => {
+    const items = [{ id: "a", requestedAt: TODAY }, { id: "b", requestedAt: YESTERDAY }, { id: "c", requestedAt: TODAY, resetAt: "2026-10-18T05:00:00.000Z" }];
+    const result = resetItems(items, (item) => item.requestedAt, DAY_START, STAMP);
+    expect(result.map((item) => [item.id, item.resetAt ?? null])).toEqual([["a", STAMP], ["b", null], ["c", "2026-10-18T05:00:00.000Z"]]);
+  });
+
+  it("a note with no earlier list (stored before wordings were kept) is handled", () => {
+    const [result] = resetNotes([{ id: "s", text: "old", updatedAt: YESTERDAY } as unknown as VisitNote], DAY_START, STAMP);
+    expect(isLive(result)).toBe(true);
+    expect(result.text).toBe("old");
   });
 });

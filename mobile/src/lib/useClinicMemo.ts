@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { CLINIC_MEMO } from "../config/health";
-import { liveItems } from "./demoDayReset";
+import { liveItems } from "../../../shared/dayReset";
 import { addClinicMemo, fitWithin, readClinicMemos, removeClinicMemo, writeClinicMemos, type MemoPhoto } from "./clinicMemo";
 
 function loadImage(src: string): Promise<HTMLImageElement> {

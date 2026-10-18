@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { VISIT_NOTES } from "../config/health";
 import { api } from "./api";
-import { liveItems } from "./demoDayReset";
+import { liveItems } from "../../../shared/dayReset";
 import { addVisitNote, cleanNoteText, editVisitNote, readVisitNotes, removeVisitNote, writeVisitNotes, type VisitNote } from "./visitNotes";
 
 /** Stored notes, kept in sync with other tabs of the same origin. */
