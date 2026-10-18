@@ -5,10 +5,9 @@ Updated 2026-10-18. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 
 ## Doing
 
-Now (18 Oct), in order:
-1. `claude/single-undo`: on My medicines only the latest stop keeps its Undo (coder, in progress).
-2. `claude/names-from-data`: no hardcoded names in code; fallback demo names only in the locales (built, not pushed; was: brief drafted, waiting for the owner's OK).
-3. `claude/care-cross-browser` (built, not pushed): refill requests (several medicines), shared notes, blood-pressure sharing and the demo clock through the API, so /care works from any browser (brief approved; starts after 2).
+Now (18 Oct, afternoon):
+1. Bug fixes the owner raises (coder, each on its own branch off `main`).
+2. Non-destructive Reset to morning: today's actions hidden with a `reset_at` column instead of deleted (migration 009). Brief drafted, waiting for the owner's OK.
 
 Earlier items still listed below:
 
@@ -27,6 +26,7 @@ Earlier items still listed below:
 | ID | Item | Owner | Note |
 |---|---|---|---|
 | T1-07 | APIs (today, dose event, health metric, agent decide, caretaker summary, escalation, walk) | P1 | Implemented in `api/`; integration test covers today, BP emergency rule and dose event. |
+| — | Medicines Rose adds by hand can be vitamins too (owner, 18 Oct) | P2 | Not designed yet. |
 
 ## In repo, owned by P1 (not re-verified by the advisor)
 
@@ -43,11 +43,12 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
-| — | Demo mode: Settings shows only the demo card ("Back to Settings"); Reset to morning restarts the app in place (no page reload, no confirm) | Branch `claude/demo-focus` (on `claude/care-cross-browser`), not pushed |
-| — | /care from any browser: refill requests (one card per low medicine, one row each on /care), shared notes, the BP switch (enforced by the server) and the demo clock move to the API (migration 008, columns on `users`); Reset to morning brings back the morning state; closes KIV "Restock help: wire to the API". **Migration 008 before the merge.** | Branch `claude/care-cross-browser`, not pushed |
-| — | My medicines: one medicine at a time while it is being worked on, "Back to Medicine list"; schedule step without the "no loud alarm" line | Branch `claude/medicine-focus`, not pushed |
-| — | No hardcoded names: fallback demo names only in en.json "demoNames" (`lib/demoNames.ts`), names on screen from data, placeholders in en.json, guard test; closes the KIV rows "Fixed names left in mock data" and "Offline sample text still names people" | Branch `claude/names-from-data`, not pushed |
-| — | A stop is a moment: a stopped medicine's earlier doses keep counting (past hearts, lifetime, streak, check-ins never move), a stop never backdates a heart, its earlier doses leave today's list and nudges | Branch `claude/stop-keeps-history`, not pushed |
+| — | Only the latest stop keeps its Undo on My medicines (an earlier stopped row leaves the list) | [#85](https://github.com/whansel007/Pawtner/pull/85), merged 18 Oct |
+| — | Demo mode: Settings shows only the demo card ("Back to Settings"); Reset to morning restarts the app in place (no page reload, no confirm) | [#89](https://github.com/whansel007/Pawtner/pull/89), merged 18 Oct |
+| — | /care from any browser: refill requests (one card per low medicine, one row each on /care), shared notes, the BP switch (enforced by the server) and the demo clock move to the API (migration 008, columns on `users`); Reset to morning brings back the morning state; closes KIV "Restock help: wire to the API". **Migration 008 before the merge.** | [#89](https://github.com/whansel007/Pawtner/pull/89), merged 18 Oct (migration 008 run first) |
+| — | My medicines: one medicine at a time while it is being worked on, "Back to Medicine list"; schedule step without the "no loud alarm" line | [#88](https://github.com/whansel007/Pawtner/pull/88), merged 18 Oct |
+| — | No hardcoded names: fallback demo names only in en.json "demoNames" (`lib/demoNames.ts`), names on screen from data, placeholders in en.json, guard test; closes the KIV rows "Fixed names left in mock data" and "Offline sample text still names people" | [#87](https://github.com/whansel007/Pawtner/pull/87), merged 18 Oct |
+| — | A stop is a moment: a stopped medicine's earlier doses keep counting (past hearts, lifetime, streak, check-ins never move), a stop never backdates a heart, its earlier doses leave today's list and nudges | [#86](https://github.com/whansel007/Pawtner/pull/86), merged 18 Oct |
 | — | Revision (design "A", 18 Oct): Stop moves inside each medicine's Edit panel (quiet text button, no Stop on the list); /care This week shows one "{{dog}}'s updates" card, e.g. "Buddy's updates" (check-in, stopped medicine, refill request, newest first) | [#83](https://github.com/whansel007/Pawtner/pull/83), merged 18 Oct |
 | — | Stop a medicine: My medicines "Stop this medicine" → confirm → "is stopped." + Undo (soft stop, `active` + `stopped_at`, migration 007); Home refreshes; /care This week "A medicine is stopped." (no name) for every caretaker. Migration 007 run on Supabase by the owner before the merge. | [#83](https://github.com/whansel007/Pawtner/pull/83), merged 18 Oct |
 | — | Health card ignores readings already saved today after a reload (found 17 Oct): `loadToday` now fills App's `healthMetrics` from `/api/today` (`today.healthMetrics`) via `mergeHealthMetrics` (`lib/healthReadings.ts`, tested), keeping readings saved offline and replacing the phone's copy with the server's row; after a reload the card shows the latest reading and its feedback line | [#82](https://github.com/whansel007/Pawtner/pull/82) (open, not merged) |
