@@ -29,10 +29,5 @@ export const accessoryOptions: AccessoryOption[] = [
 ];
 
 export const walkStats: WalkStats = {
-  duration: "18:24",
-  distance: "0.92 km",
-  steps: "1,842",
-  calories: "48",
-  speed: "4.2",
   goal: "Today's goal · 30 minutes · speed check on",
 };

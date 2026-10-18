@@ -210,16 +210,6 @@ export interface WorldOption {
 }
 
 export interface WalkStats {
-  /** Duration string, e.g. "18:24" */
-  duration: string;
-  /** Distance string, e.g. "0.92 km" */
-  distance: string;
-  /** Step count */
-  steps: string;
-  /** Calories burned */
-  calories: string;
-  /** Speed string */
-  speed: string;
   /** Today's goal text */
   goal: string;
 }
