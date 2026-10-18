@@ -1,12 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
 import { KCAL_PER_KM, STRIDE_METERS } from "../config/walk";
 import type { BackAction } from "../lib/navigation";
-import type { WalkStats } from "../types";
 import { useSimulatedWalk } from "../lib/simulatedWalk";
-import type { WalkCompletion } from "../lib/walkState";
+import { simulationFor, type WalkCompletion } from "../lib/walkState";
 import { elapsedSeconds, formatDuration } from "../lib/walkTimer";
 import { useWalkTimer } from "../lib/useWalkTimer";
 
@@ -22,7 +21,9 @@ interface FinishedWalk {
 
 export function WalkScreen({
   back,
-  walkStats,
+  goalMinutes,
+  simulateRequested,
+  onSimulateStarted,
   petName,
   walkStartedAt,
   clockNow,
@@ -30,7 +31,11 @@ export function WalkScreen({
   onDizzyChange,
 }: {
   back: BackAction;
-  walkStats: WalkStats;
+  /** The walk goal's minutes (Settings): the goal line, and how long Simulate walk lasts in simulated time. */
+  goalMinutes: number;
+  /** Settings > For demo only > Simulate walk asked for a simulation: start it on opening, then onSimulateStarted. */
+  simulateRequested: boolean;
+  onSimulateStarted: () => void;
   petName: string;
   /** When the current walk started (App's walk handler, on the app's clock); null when no walk runs. */
   walkStartedAt: string | null;
@@ -42,13 +47,14 @@ export function WalkScreen({
   const { t } = useTranslation();
   const [walking, setWalking] = useState(false);
   const [finishedWalk, setFinishedWalk] = useState<FinishedWalk | null>(null);
+  const simulation = useMemo(() => simulationFor(goalMinutes), [goalMinutes]);
   const {
     state: simState,
     start: startSim,
     finish: finishSim,
     started: simStarted,
     forceFinished,
-  } = useSimulatedWalk();
+  } = useSimulatedWalk(simulation.points, simulation.playbackRate);
 
   useEffect(() => {
     onDizzyChange?.(simState.dizzy);
@@ -59,6 +65,15 @@ export function WalkScreen({
   useEffect(() => {
     onWalkStateRef.current = onWalkState;
   }, [onWalkState]);
+
+  // Simulate walk lives on Settings > For demo only (owner, 18 Oct): it opens this screen and the simulation runs here.
+  useEffect(() => {
+    if (!simulateRequested) return;
+    onSimulateStarted();
+    setFinishedWalk(null);
+    onWalkStateRef.current(true);
+    startSim();
+  }, [simulateRequested, onSimulateStarted, startSim]);
 
   // Report completion exactly once per simulated walk; re-arm when a new simulation starts.
   const completionReportedRef = useRef(false);
@@ -75,6 +90,7 @@ export function WalkScreen({
     onWalkStateRef.current(false, {
       distanceMeters: simState.distanceMeters,
       fastStretchOccurred: simState.fastStretchOccurred,
+      durationSeconds: simState.durationSeconds,
     });
   }, [simStarted, simDone, simState.durationSeconds, simState.distanceMeters, simState.fastStretchOccurred]);
 
@@ -148,15 +164,10 @@ export function WalkScreen({
           {t("walk.finishWalk")}
         </button>
       )}
-      {!walking && !isSimulating && (
-        <button className="primary-button" onClick={() => { setFinishedWalk(null); onWalkState(true); startSim(); }}>
-          {t("walk.simulateWalk")}
-        </button>
-      )}
       {isSimulating && simState.dizzy && (
         <p className="walk-dizzy">{t("walk.dizzyMessage", { name: petName })}</p>
       )}
-      <p className="walk-note">{walkStats.goal}</p>
+      <p className="walk-note">{t("walk.heartGoal", { minutes: goalMinutes })}</p>
       <p className="gentle-note">{t("walk.gentleNote", { name: petName })}</p>
     </FullCard>
   );

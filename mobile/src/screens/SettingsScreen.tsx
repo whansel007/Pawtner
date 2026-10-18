@@ -8,6 +8,7 @@ import type { BackAction } from "../lib/navigation";
 import type { Caregiver } from "../types";
 import { DEMO_RESET_PRESET, DEMO_TIME_PRESETS, type DemoTimePreset, DEMO_UNLOCK_GROUPS, DEMO_UNLOCKS, type DemoUnlockKey } from "../config/demo";
 import { formatClockTime, parseDemoTime } from "../lib/demoTime";
+import { WALK_GOALS } from "../lib/walkGoals";
 
 export function SettingsScreen({
   back,
@@ -28,6 +29,9 @@ export function SettingsScreen({
   shareBloodPressure,
   onShareBloodPressure,
   firstReading,
+  walkGoalKey,
+  onWalkGoal,
+  onSimulateWalk,
 }: {
   back: BackAction;
   /** "My medicines": the medicine list with Edit and the original pill photo (T2-08). */
@@ -54,6 +58,11 @@ export function SettingsScreen({
   onShareBloodPressure: (value: boolean) => void;
   /** Her first blood-pressure reading (every reading is compared with it), or null before any. */
   firstReading: HealthMetric | null;
+  /** The walk goal chosen on this phone (lib/walkGoals.ts) and how to change it. */
+  walkGoalKey: string;
+  onWalkGoal: (key: string) => void;
+  /** Demo card: open the Walk screen and run Simulate walk there. */
+  onSimulateWalk: () => void;
 }) {
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
@@ -83,6 +92,17 @@ export function SettingsScreen({
           )}
         </span>
       </label>
+      {/* Walk goal (owner, 18 Oct): how long a walk must last to earn the walk heart; options from en.json "walkGoals". */}
+      <div className="settings-walk-goal" role="group" aria-labelledby="settings-walk-goal-title">
+        <strong id="settings-walk-goal-title">{t("settings.walkGoal")}</strong>
+        <div className="settings-walk-goal__options">
+          {WALK_GOALS.map((goal) => (
+            <button key={goal.key} type="button" className={`secondary-button ${goal.key === walkGoalKey ? "is-active" : ""}`} aria-pressed={goal.key === walkGoalKey} onClick={() => onWalkGoal(goal.key)}>
+              {t("settings.walkGoalOption", { key: goal.key, minutes: goal.minutes })}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="settings-note"><Icon name="heart" /><p><strong>{t("settings.privacyTitle")}</strong></p></div>
       </>)}
             {/* Every demo-only control in one closed card (user, 16 Oct: people kept tapping them by mistake). */}
@@ -100,6 +120,7 @@ export function SettingsScreen({
             <h3>{t("settings.demoResetTitle")}</h3>
             <p>{t("settings.demoResetHint", { time: resetTime ? formatClockTime(resetTime) : DEMO_TIME_PRESETS[DEMO_RESET_PRESET], name: petName })}</p>
             <button type="button" className="secondary-button" onClick={onResetDemo}>{t("settings.demoReset", { time: resetTime ? formatClockTime(resetTime) : DEMO_TIME_PRESETS[DEMO_RESET_PRESET] })}</button>
+            <button type="button" className="secondary-button" onClick={onSimulateWalk}>{t("walk.simulateWalk")}</button>
           </section>
           <section className="demo-panel__section">
             <h3>{t("settings.demoTimeTitle")}</h3>

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient, QueryResultRow } from "pg";
 import { DEMO_RULES } from "../shared/config.js";
 import { decide, selectDogMood, firstReadingOf } from "../shared/rules.js";
-import { selectAgentInput, selectHeartActivities, selectHeartsAtInstants, selectHeartsTotal, type AgentSelectionSource } from "../shared/selectors.js";
+import { selectAgentInput, selectHeartActivities, selectHeartsAtInstants, selectHeartsTotal, walkEarnsHeart, type AgentSelectionSource } from "../shared/selectors.js";
 import { applyModelWording } from "../shared/wording.js";
 import { SOUVENIR_TIERS, unlockedSouvenirs, nextSouvenir } from "../shared/souvenirs.js";
 import { FALLBACK_EXPLANATION, HEALTHHUB_MEDICATIONS_URL, NDF_URL, validateRephrase } from "../shared/medlineplus.js";
@@ -320,9 +320,9 @@ export class PawtnerRepository {
       `SELECT opted_in, threshold FROM user_caregivers WHERE user_id = $1 ORDER BY caregiver_id LIMIT 1`,
       [userId],
     );
-    // A finished walk earns that day's walk heart (shared/selectors.ts heartActivities).
+    // A walk that reached its goal earns that day's walk heart (shared/selectors.ts walkEarnsHeart, heartActivities).
     const walksResult = await client.query(
-      "SELECT finished_at FROM walk_sessions WHERE user_id = $1 AND finished_at <= $2::timestamptz ORDER BY finished_at",
+      "SELECT started_at, finished_at, goal_minutes FROM walk_sessions WHERE user_id = $1 AND finished_at <= $2::timestamptz ORDER BY finished_at",
       [userId, now],
     );
     // One check-in per missed day: the day the latest one was sent for (rule repeated_misses_caretaker_check_in).
@@ -349,7 +349,10 @@ export class PawtnerRepository {
       nudges: nudgeRows,
       healthMetrics: metricsResult.rows.map((row) => ({ ...mapMetric(row), kind: "blood_pressure" as const })),
       daysOfSupplyByMedicationId: Object.fromEntries(medsResult.rows.map((row) => [row.id, row.days_of_supply] as const)),
-      walkFinishedAt: walksResult.rows.map((row) => iso(row.finished_at)),
+      walkFinishedAt: walksResult.rows
+        .map((row) => ({ startedAt: iso(row.started_at), finishedAt: iso(row.finished_at), goalMinutes: row.goal_minutes as number | null }))
+        .filter(walkEarnsHeart)
+        .map((walk) => walk.finishedAt),
       caretaker: caregiverResult.rows[0]
         ? { optedIn: caregiverResult.rows[0].opted_in, threshold: caregiverResult.rows[0].threshold }
         : null,
@@ -690,10 +693,10 @@ export class PawtnerRepository {
       const userId = await this.getDefaultUserId(client);
       const id = randomUUID();
       const result = await client.query(
-        `INSERT INTO walk_sessions (id, user_id, started_at, finished_at, distance_meters, fast_stretch_occurred)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO walk_sessions (id, user_id, started_at, finished_at, distance_meters, fast_stretch_occurred, goal_minutes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id::text, started_at, finished_at, distance_meters, fast_stretch_occurred`,
-        [id, userId, request.startedAt, request.finishedAt, request.distanceMeters, request.fastStretchOccurred],
+        [id, userId, request.startedAt, request.finishedAt, request.distanceMeters, request.fastStretchOccurred, request.goalMinutes ?? null],
       );
       const { decision } = await this.decideAndPersist(client, userId, request.finishedAt, undefined, { walkFinished: true });
       const row = result.rows[0];

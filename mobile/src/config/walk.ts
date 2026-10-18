@@ -10,6 +10,9 @@ export interface WalkPoint {
   meters: number;
 }
 
+/** Where this phone keeps the walk goal chosen in Settings (lib/walkGoals.ts); not cleared by Reset to morning. */
+export const WALK_GOAL_STORAGE_KEY = "pawtner.walkGoal";
+
 /** Speed threshold: above this the dog gets dizzy and distance pauses. */
 export const FAST_SPEED_KMH = 12;
 

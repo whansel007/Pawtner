@@ -30,6 +30,16 @@ export function deriveDoseStatus(
   };
 }
 
+/**
+ * The walk heart rule (owner, 18 Oct): a walk earns the day's walk heart when it lasts at least its own goal's minutes
+ * (stored on the walk, so a later goal change never rewrites it). No goal (walks from before goals, older phones) = any
+ * length counts, as before. The one rule for the server's hearts and the phone's offline count.
+ */
+export function walkEarnsHeart(walk: { startedAt: string; finishedAt: string; goalMinutes?: number | null }): boolean {
+  if (walk.goalMinutes === null || walk.goalMinutes === undefined) return true;
+  return Date.parse(walk.finishedAt) - Date.parse(walk.startedAt) >= walk.goalMinutes * 60_000;
+}
+
 /** Today's (or any day's) three heart activities from that day's doses, readings and walks. */
 export function heartActivities(doses: Pick<DerivedDose, "status">[], bloodPressureLogged: boolean, walked: boolean): HeartActivities {
   return { medicines: doses.length > 0 && doses.every((dose) => dose.status === "taken"), bloodPressure: bloodPressureLogged, walk: walked };
@@ -139,7 +149,7 @@ export interface AgentSelectionSource {
   nudges: NudgeRecord[];
   healthMetrics: HealthMetric[];
   daysOfSupplyByMedicationId: Record<string, number | null>;
-  /** Finish times of the user's walks up to `now` (a walk earns that day's walk heart). */
+  /** Finish times of the user's walks that earn the walk heart (`walkEarnsHeart`); each earns that day's walk heart. */
   walkFinishedAt: string[];
   /** Set only when this selection follows a newly recorded event that should trigger a celebration. */
   triggeringDoseEventId?: string;
