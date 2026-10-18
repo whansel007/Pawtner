@@ -6274,6 +6274,12 @@ var PawtnerRepository = class {
       [userId, start, person.timezone]
     );
     const checkInRow = checkInResult.rows[0];
+    const stoppedResult = await this.pool.query(
+      `SELECT max(stopped_at) AS stopped_at FROM medications
+       WHERE user_id = $1 AND active = false AND stopped_at >= ($2::date::timestamp AT TIME ZONE $3)`,
+      [userId, start, person.timezone]
+    );
+    const stoppedAt = stoppedResult.rows[0]?.stopped_at;
     const questionsResult = await this.pool.query(
       `SELECT note, recorded_at FROM health_metrics
        WHERE user_id = $1 AND note IS NOT NULL AND note <> ''
@@ -6320,6 +6326,7 @@ var PawtnerRepository = class {
         occurredAt: iso(row.recorded_at)
       })),
       checkIn: checkInRow ? { missedDays: Number(checkInRow.observations.consecutiveMissedDays), lastMissedDay: String(checkInRow.observations.lastMissedDay), sentAt: iso(checkInRow.created_at) } : null,
+      stoppedMedicine: stoppedAt ? { stoppedAt: iso(stoppedAt) } : null,
       dayHearts: dayEnds.rows.map((row, index) => ({ date: row.day, hearts: endHearts[index] }))
     };
   }
@@ -6405,7 +6412,7 @@ var PawtnerRepository = class {
               active_ingredients, generic_name, prescribed_for, days_of_supply,
               photo_url, active,
               (pill_reference_description IS NOT NULL) AS pill_reference_set
-       FROM medications WHERE user_id = $1 ORDER BY created_at`,
+       FROM medications WHERE user_id = $1 AND active = true ORDER BY created_at`,
       [userId]
     );
     return { medications: result.rows.map(mapMedication) };
@@ -6469,6 +6476,10 @@ var PawtnerRepository = class {
           fields.push(`${column} = $${paramIndex++}`);
           params.push(typeof value === "string" ? value.trim() || null : value ?? null);
         }
+      }
+      if (typeof request.active === "boolean") {
+        fields.push(`active = $${paramIndex++}`, `stopped_at = ${request.active ? "NULL" : "now()"}`);
+        params.push(request.active);
       }
       if (fields.length === 0) throw new ApiError(400, "No fields to update.");
       params.push(medicationId, userId);
@@ -6931,6 +6942,7 @@ function createApiHandler(repository) {
         const medicationId = url.pathname.slice("/api/medications/".length);
         if (!requiredString(medicationId)) throw new ApiError(400, "Medication id is required.");
         const data = await body(request);
+        if ("active" in data && typeof data.active !== "boolean") throw new ApiError(400, "active must be true or false.");
         return json(await repository.updateMedication(medicationId, data));
       }
       if (request.method === "POST" && url.pathname === "/api/schedules") {

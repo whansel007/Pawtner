@@ -4,7 +4,8 @@ import type { CareData, Caretaker } from "../data/types";
 import type { TreatStatus } from "../hooks/useCareTreat";
 import type { RestockHelpEntry } from "../../lib/restockHelp";
 import { formatCalendarDay, formatWeekday } from "../lib/format";
-import { progressPercent, RHYTHM_MIN_HEARTS, streakHearts, todayProgress, todayState, weekRhythm } from "../lib/rules";
+import { careUpdates, progressPercent, RHYTHM_MIN_HEARTS, stoppedMedicineDay, streakHearts, todayProgress, todayState, weekRhythm } from "../lib/rules";
+import { SENIOR_TIMEZONE } from "../../config/scene";
 import { CareBadge, CareCard, PageWelcome } from "../components/CareCard";
 import { CareNotice } from "../components/CareNotice";
 import { CareDog } from "../components/CareDog";
@@ -28,8 +29,8 @@ interface WeekPageProps {
 
 export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, restockRequest, onHandleRestock, doctorQuestions, latestBloodPressure }: WeekPageProps) {
   const { t, i18n } = useTranslation();
-  // Thank-you line after "I'll handle it", until the page changes.
-  const [handledRestock, setHandledRestock] = useState(false);
+  // Thank-you line after "I'll handle it" (and when it was tapped, to order it among the updates), until the page changes.
+  const [handledRestockAt, setHandledRestockAt] = useState<string | null>(null);
   const locale = i18n.language;
   const now = new Date();
   const senior = data.summary.senior.name;
@@ -46,8 +47,8 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
 
 
   const [latestQuestion, ...earlierQuestions] = doctorQuestions;
-  // The agent's latest check-in (missed days, never a medicine name); only for caretakers who get check-ins.
-  const checkIn = viewer.receivesCheckIns ? data.summary.checkIn : null;
+  // One "{{dog}}'s updates" card: check-in (check-ins caretakers only), a stopped medicine (never its name), the refill request.
+  const updates = careUpdates(data.summary, viewer, restockRequest, handledRestockAt);
 
   return (
     <div className="care-content care-page-enter">
@@ -59,37 +60,47 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
       />
 
       <div className="care-grid care-grid--week">
-        {checkIn && (
-          <CareCard
-            eyebrow={t("care.web.week.checkInEyebrow")}
-            title={t("care.web.week.checkInTitle", { name: senior, count: checkIn.missedDays, day: formatCalendarDay(checkIn.lastMissedDay, locale) })}
-            stitched
-            className="care-restock care-checkin"
-          >
-            <p className="care-hint">{t("care.web.week.checkInBody", { name: senior })}</p>
-          </CareCard>
-        )}
-        {(restockRequest || handledRestock) && (
-          <CareCard
-            eyebrow={t("care.web.week.restockEyebrow")}
-            title={restockRequest
-              ? t("care.web.week.restockTitle", { name: senior, medicine: restockRequest.medicationName, count: restockRequest.daysLeft })
-              : t("care.web.week.restockHandled", { name: senior })}
-            stitched
-            className="care-restock"
-          >
-            {restockRequest && (
-              <>
-                <p className="care-hint">{t("care.web.week.restockBody", { name: senior, day: formatWeekday(restockRequest.requestedAt, locale) })}</p>
-                <button
-                  className="care-primary-button care-primary-button--card"
-                  type="button"
-                  onClick={() => { onHandleRestock(); setHandledRestock(true); }}
-                >
-                  {t("care.web.week.restockHandle")}
-                </button>
-              </>
-            )}
+        {updates.length > 0 && (
+          <CareCard title={t("care.web.week.updatesTitle", { dog: dog.name })} stitched className="care-restock care-updates">
+            <ul className="care-updates__list">
+              {updates.map((update) => (
+                <li className="care-updates__item" key={update.kind}>
+                  {update.kind === "checkIn" && (
+                    <>
+                      <p className="care-eyebrow">{t("care.web.week.checkInEyebrow")}</p>
+                      <h3 className="care-updates__title">{t("care.web.week.checkInTitle", { name: senior, count: update.checkIn.missedDays, day: formatCalendarDay(update.checkIn.lastMissedDay, locale) })}</h3>
+                      <p className="care-hint">{t("care.web.week.checkInBody", { name: senior })}</p>
+                    </>
+                  )}
+                  {update.kind === "stopped" && (
+                    <>
+                      <h3 className="care-updates__title">{t("care.web.week.stoppedTitle")}</h3>
+                      <p className="care-hint">{t("care.web.week.stoppedDay", { day: formatCalendarDay(stoppedMedicineDay({ stoppedAt: update.at }, SENIOR_TIMEZONE)!, locale) })}</p>
+                    </>
+                  )}
+                  {update.kind === "refill" && (
+                    <>
+                      <p className="care-eyebrow">{t("care.web.week.restockEyebrow")}</p>
+                      <h3 className="care-updates__title">{t("care.web.week.restockTitle", { name: senior, medicine: update.request.medicationName, count: update.request.daysLeft })}</h3>
+                      <p className="care-hint">{t("care.web.week.restockBody", { name: senior, day: formatWeekday(update.request.requestedAt, locale) })}</p>
+                      <button
+                        className="care-primary-button care-primary-button--card"
+                        type="button"
+                        onClick={() => { onHandleRestock(); setHandledRestockAt(new Date().toISOString()); }}
+                      >
+                        {t("care.web.week.restockHandle")}
+                      </button>
+                    </>
+                  )}
+                  {update.kind === "refillHandled" && (
+                    <>
+                      <p className="care-eyebrow">{t("care.web.week.restockEyebrow")}</p>
+                      <h3 className="care-updates__title">{t("care.web.week.restockHandled", { name: senior })}</h3>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
           </CareCard>
         )}
 

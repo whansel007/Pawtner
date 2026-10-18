@@ -1,5 +1,5 @@
 import { ApiError, PawtnerRepository } from "./repository.js";
-import type { AgentDecideRequest, CreateMedicationRequest, DemoResetDayRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, PillReferenceRequest, PillVerifyRequest, WalkSessionRequest } from "../shared/contract.js";
+import type { AgentDecideRequest, CreateMedicationRequest, DemoResetDayRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, PillReferenceRequest, PillVerifyRequest, UpdateMedicationRequest, WalkSessionRequest } from "../shared/contract.js";
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 async function body<T>(request: Request): Promise<T> {
@@ -63,7 +63,8 @@ export function createApiHandler(repository: PawtnerRepository) {
       if (request.method === "PUT" && url.pathname.startsWith("/api/medications/")) {
         const medicationId = url.pathname.slice("/api/medications/".length);
         if (!requiredString(medicationId)) throw new ApiError(400, "Medication id is required.");
-        const data = await body<Partial<CreateMedicationRequest>>(request);
+        const data = await body<UpdateMedicationRequest>(request);
+        if ("active" in data && typeof data.active !== "boolean") throw new ApiError(400, "active must be true or false.");
         return json(await repository.updateMedication(medicationId, data));
       }
       // ── T2-06: Schedule creation ──

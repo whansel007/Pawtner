@@ -1,6 +1,6 @@
 # Kanban
 
-Updated 2026-10-15. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**. IDs refer to `PRD.md` §9.
+Updated 2026-10-18. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**. IDs refer to `PRD.md` §9.
 "Mock" = works on the phone against mock data in `mobile/src/mock`, not yet wired to the API.
 
 ## Doing
@@ -44,6 +44,8 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Revision (design "A", 18 Oct): Stop moves inside each medicine's Edit panel (quiet text button, no Stop on the list); /care This week shows one "{{dog}}'s updates" card, e.g. "Buddy's updates" (check-in, stopped medicine, refill request, newest first) | [#83](https://github.com/whansel007/Pawtner/pull/83), not pushed yet |
+| — | Stop a medicine: My medicines "Stop this medicine" → confirm → "is stopped." + Undo (soft stop, `active` + `stopped_at`, migration 007); Home refreshes; /care This week "A medicine is stopped." (no name) for every caretaker. **Migration 007 must run on Supabase before the merge.** | [#83](https://github.com/whansel007/Pawtner/pull/83) (open) |
 | — | Health card ignores readings already saved today after a reload (found 17 Oct): `loadToday` now fills App's `healthMetrics` from `/api/today` (`today.healthMetrics`) via `mergeHealthMetrics` (`lib/healthReadings.ts`, tested), keeping readings saved offline and replacing the phone's copy with the server's row; after a reload the card shows the latest reading and its feedback line | [#82](https://github.com/whansel007/Pawtner/pull/82) (open, not merged) |
 | — | Demo video https://youtu.be/xlip3x6tUjk: plays embedded at /care/video (address stays Pawtner's); footer link goes there; README links to it | [#79](https://github.com/whansel007/Pawtner/pull/79) |
 | — | Repo clean-up: unused `max-garden.jpg` removed, `playwright` moved to devDependencies, stale `functions/` ignore line dropped, CLAUDE.md PRD path fixed, favicon linked, `Pawtner.csv` → `docs/user-stories.csv`; old local worktrees and merged local branches removed (CodeBuddy ones kept) | [#75](https://github.com/whansel007/Pawtner/pull/75) |

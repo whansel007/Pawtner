@@ -11,6 +11,7 @@ import type {
   AgentInput,
   CaretakerSummaryResponse,
   CreateMedicationRequest,
+  UpdateMedicationRequest,
   CreateMedicationResponse,
   CreateScheduleRequest,
   CreateScheduleResponse,
@@ -549,6 +550,13 @@ export class PawtnerRepository {
       [userId, start, person.timezone],
     );
     const checkInRow = checkInResult.rows[0];
+    // Latest stop of a still-stopped medicine this week. Only the time leaves the database: never the name or a count.
+    const stoppedResult = await this.pool.query(
+      `SELECT max(stopped_at) AS stopped_at FROM medications
+       WHERE user_id = $1 AND active = false AND stopped_at >= ($2::date::timestamp AT TIME ZONE $3)`,
+      [userId, start, person.timezone],
+    );
+    const stoppedAt = stoppedResult.rows[0]?.stopped_at;
     const questionsResult = await this.pool.query(
       `SELECT note, recorded_at FROM health_metrics
        WHERE user_id = $1 AND note IS NOT NULL AND note <> ''
@@ -599,6 +607,7 @@ export class PawtnerRepository {
       checkIn: checkInRow
         ? { missedDays: Number(checkInRow.observations.consecutiveMissedDays), lastMissedDay: String(checkInRow.observations.lastMissedDay), sentAt: iso(checkInRow.created_at) }
         : null,
+      stoppedMedicine: stoppedAt ? { stoppedAt: iso(stoppedAt) } : null,
       dayHearts: dayEnds.rows.map((row, index) => ({ date: row.day, hearts: endHearts[index]! })),
     };
   }
@@ -694,7 +703,7 @@ export class PawtnerRepository {
               active_ingredients, generic_name, prescribed_for, days_of_supply,
               photo_url, active,
               (pill_reference_description IS NOT NULL) AS pill_reference_set
-       FROM medications WHERE user_id = $1 ORDER BY created_at`,
+       FROM medications WHERE user_id = $1 AND active = true ORDER BY created_at`,
       [userId],
     );
     return { medications: result.rows.map(mapMedication) };
@@ -730,7 +739,7 @@ export class PawtnerRepository {
     });
   }
 
-  async updateMedication(medicationId: string, request: Partial<CreateMedicationRequest>): Promise<{ medication: MedicationDetail }> {
+  async updateMedication(medicationId: string, request: UpdateMedicationRequest): Promise<{ medication: MedicationDetail }> {
     return this.transaction(async (client) => {
       const userId = await this.getDefaultUserId(client);
       const existing = await client.query(
@@ -758,6 +767,11 @@ export class PawtnerRepository {
           fields.push(`${column} = $${paramIndex++}`);
           params.push(typeof value === "string" ? (value.trim() || null) : value ?? null);
         }
+      }
+      // Stop (soft: nothing is erased) or start again. The handler has already checked that `active` is a boolean.
+      if (typeof request.active === "boolean") {
+        fields.push(`active = $${paramIndex++}`, `stopped_at = ${request.active ? "NULL" : "now()"}`);
+        params.push(request.active);
       }
       if (fields.length === 0) throw new ApiError(400, "No fields to update.");
       params.push(medicationId, userId);

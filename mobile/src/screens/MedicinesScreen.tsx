@@ -8,14 +8,24 @@ import { api } from "../lib/api";
 import { fileToBase64 } from "../lib/imageBase64";
 import type { MedicationDetail } from "../../../shared/contract";
 import { formatStrength } from "../lib/strength";
+import { isStopBusy } from "../lib/stopMedicine";
+import { useStopMedicine } from "../lib/useStopMedicine";
 
 /**
  * "My medicines" (Settings): the senior's medicine list with Edit (T2-06) and the
  * settings-defined original pill photo (T2-08) that every proof check is compared to.
  * Moved here from the old caretaker-style Care screen (William's medicine settings).
+ * "Stop this medicine" (soft stop, two separate taps, Undo while on this screen): lib/useStopMedicine.ts.
  */
-export function MedicinesScreen({ back, petName }: { back: BackAction; petName: string }) {
+export function MedicinesScreen({ back, petName, caretakerName, onMedicinesChanged }: {
+  back: BackAction;
+  petName: string;
+  caretakerName: string;
+  /** After a successful stop or undo, so Home's doses are fresh. */
+  onMedicinesChanged: () => void;
+}) {
   const { t } = useTranslation();
+  const stops = useStopMedicine(onMedicinesChanged);
   const [medications, setMedications] = useState<MedicationDetail[]>([]);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [editingMed, setEditingMed] = useState<string | null>(null);
@@ -54,6 +64,7 @@ export function MedicinesScreen({ back, petName }: { back: BackAction; petName: 
   }, []);
 
   const startEdit = (med: MedicationDetail) => {
+    stops.cancel(med.id);
     setEditingMed(med.id);
     setEditDays(med.daysOfSupply?.toString() ?? "");
     setEditPrescribed(med.prescribedFor ?? "");
@@ -76,6 +87,14 @@ export function MedicinesScreen({ back, petName }: { back: BackAction; petName: 
   };
 
   const closeRef = () => { setSettingRefMed(null); setRefFile(null); setRefPreview(null); };
+
+  // From the Edit panel: the confirm panel replaces the row, so Edit and the photo step on that row close.
+  const openStop = (medId: string) => {
+    if (editingMed === medId) setEditingMed(null);
+    if (settingRefMed === medId) closeRef();
+    setRefMsg(null);
+    stops.open(medId);
+  };
 
   // Save the SETTINGS-defined original pill photo; every check-in is later compared to it.
   const setRef = async (medId: string) => {
@@ -108,9 +127,30 @@ export function MedicinesScreen({ back, petName }: { back: BackAction; petName: 
       {loadState === "ready" && medications.length === 0 && <p className="supporting">{t("medicines.empty")}</p>}
       {loadState === "ready" && medications.length > 0 && (
         <div className="medication-list">
-          {medications.map((med) => (
+          {medications.map((med) => {
+            const stopRow = stops.rows[med.id];
+            const busy = isStopBusy(stopRow);
+            return (
             <div className="medication-edit-row" key={med.id}>
-              {editingMed === med.id ? (
+              {stopRow?.status === "stopped" || stopRow?.status === "undoing" ? (
+                <div className="med-stop">
+                  <p className="med-stop__done" role="status">{t("medicines.stop.done", { medicine: med.name })}</p>
+                  {stopRow.failed && <p className="error-text">{t("medicines.stop.failed")}</p>}
+                  <button type="button" className="secondary-button" disabled={busy} onClick={() => void stops.undo(med.id)}>{t("medicines.stop.undo")}</button>
+                </div>
+              ) : stopRow ? (
+                <div className="med-stop" role="group" aria-labelledby={`stop-title-${med.id}`}>
+                  <h3 className="med-stop__title" id={`stop-title-${med.id}`}>{t("medicines.stop.confirmTitle", { medicine: med.name })}</h3>
+                  {med.strength && <p className="med-stop__strength">{formatStrength(med.strength)}</p>}
+                  <p className="supporting">{t("medicines.stop.confirmBody", { name: petName, caretaker: caretakerName })}</p>
+                  {stopRow.failed && <p className="error-text">{t("medicines.stop.failed")}</p>}
+                  {/* The calm choice comes first; "Yes, stop it" sits below the text, never where "Stop this medicine" was tapped. */}
+                  <div className="med-stop__actions">
+                    <button type="button" className="secondary-button" disabled={busy} onClick={() => stops.cancel(med.id)}>{t("medicines.stop.no")}</button>
+                    <button type="button" className="primary-button stop-button" disabled={busy} onClick={() => void stops.stop(med.id)}>{busy ? t("medicines.stop.stopping") : t("medicines.stop.yes")}</button>
+                  </div>
+                </div>
+              ) : editingMed === med.id ? (
                 <div className="medication-edit-form">
                   <strong>{med.name}</strong>
                   {med.strength && <small>{formatStrength(med.strength)}</small>}
@@ -122,22 +162,28 @@ export function MedicinesScreen({ back, petName }: { back: BackAction; petName: 
                     <button className="primary-button" disabled={saving} onClick={() => void saveEdit(med.id)}>{saving ? t("medicines.edit.saving") : t("medicines.edit.save")}</button>
                     <button className="text-button" onClick={() => setEditingMed(null)}>{t("medicines.cancel")}</button>
                   </div>
+                  {/* Rare action, so it lives here, quiet, not on every row; it opens the confirm panel (double-tap guard starts then). */}
+                  <hr className="med-stop__divider" />
+                  <button type="button" className="med-stop__open" onClick={() => openStop(med.id)}>{t("medicines.stop.button")}</button>
                 </div>
               ) : (
                 <>
+                  {/* Name on its own line; each detail is one unbreakable piece; the actions sit underneath. */}
                   <div className="med-head">
-                    <div>
-                      <strong>{med.name}</strong>
-                      {med.strength && <small> · {formatStrength(med.strength)}</small>}
-                      {med.prescribedFor && <small><br />{t("medicines.doctorSaid", { reason: med.prescribedFor })}</small>}
-                      {med.daysOfSupply !== null && <small> · {t("medicines.daysLeft", { count: med.daysOfSupply })}</small>}
-                      {med.pillReferenceSet && (
-                        <small> · <button type="button" className="pill-ref-set pill-ref-view" disabled={loadingRefId === med.id} onClick={() => void viewRef(med)}>{t("medicines.pillRef.setBadge")}</button></small>
-                      )}
-                    </div>
+                    <strong className="med-name">{med.name}</strong>
+                    {(med.strength || med.daysOfSupply !== null || med.pillReferenceSet) && (
+                      <p className="med-details">
+                        {med.strength && <small className="med-detail">{formatStrength(med.strength)}</small>}{" "}
+                        {med.daysOfSupply !== null && <small className="med-detail">{t("medicines.daysLeft", { count: med.daysOfSupply })}</small>}{" "}
+                        {med.pillReferenceSet && (
+                          <small className="med-detail"><button type="button" className="pill-ref-set pill-ref-view" disabled={loadingRefId === med.id} onClick={() => void viewRef(med)}>{t("medicines.pillRef.setBadge")}</button></small>
+                        )}
+                      </p>
+                    )}
+                    {med.prescribedFor && <p className="med-doctor"><small>{t("medicines.doctorSaid", { reason: med.prescribedFor })}</small></p>}
                     <div className="med-actions">
                       <button className="text-button" onClick={() => startEdit(med)}>{t("medicines.edit.button")}</button>
-                      <button className="text-button" onClick={() => { if (settingRefMed === med.id) closeRef(); else { setSettingRefMed(med.id); setRefFile(null); setRefPreview(null); } setRefMsg(null); }}>{med.pillReferenceSet ? t("medicines.pillRef.replace") : t("medicines.pillRef.set")}</button>
+                      <button className="text-button" onClick={() => { if (settingRefMed === med.id) closeRef(); else { stops.cancel(med.id); setSettingRefMed(med.id); setRefFile(null); setRefPreview(null); } setRefMsg(null); }}>{med.pillReferenceSet ? t("medicines.pillRef.replace") : t("medicines.pillRef.set")}</button>
                     </div>
                   </div>
                   {settingRefMed === med.id && (
@@ -180,7 +226,8 @@ export function MedicinesScreen({ back, petName }: { back: BackAction; petName: 
                 </>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
       {viewingRef && (

@@ -1,7 +1,9 @@
 import { DEMO_RULES } from "../../../../shared/config.js";
-import type { DerivedDose, HeartActivities } from "../../../../shared/contract.js";
+import type { CaretakerSummaryResponse, DerivedDose, HeartActivities } from "../../../../shared/contract.js";
 import { countActivitiesDone } from "../../../../shared/selectors.js";
 import type { CaringMoment } from "../data/types.js";
+import { zonedDate } from "../../lib/demoTime.js";
+import type { RestockHelpEntry } from "../../lib/restockHelp.js";
 
 /**
  * Caretaker web rules (pure, no React or DOM), shared by the pages and the unit tests.
@@ -117,4 +119,40 @@ export function canDecreaseThreshold(current: number): boolean {
 export function initialOf(name: string): string {
   const first = Array.from(name.trim())[0];
   return first ? first.toLocaleUpperCase() : "?";
+}
+
+/**
+ * "A medicine is stopped." card: the senior's calendar day ("YYYY-MM-DD") of the latest stop this week, or null for no card.
+ * Shown to every signed-in caretaker; the API never sends the medicine's name or a count.
+ */
+export function stoppedMedicineDay(stopped: { stoppedAt: string } | null, timeZone: string): string | null {
+  if (!stopped) return null;
+  const { year, month, day } = zonedDate(new Date(stopped.stoppedAt), timeZone);
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** One row of the "{{dog}}'s updates" card on This week. `at` (ISO) orders the rows, newest first. */
+export type CareUpdate =
+  | { kind: "checkIn"; at: string; checkIn: NonNullable<CaretakerSummaryResponse["checkIn"]> }
+  | { kind: "stopped"; at: string }
+  | { kind: "refill"; at: string; request: RestockHelpEntry }
+  | { kind: "refillHandled"; at: string };
+
+/**
+ * The rows of the one "{{dog}}'s updates" card, newest first; empty = no card.
+ * Check-ins only for caretakers who get them; a stopped medicine never carries its name;
+ * the refill request (one at a time, demo: lib/restockHelp.ts) is pending, or handled at `handledRestockAt`.
+ */
+export function careUpdates(
+  summary: Pick<CaretakerSummaryResponse, "checkIn" | "stoppedMedicine">,
+  viewer: { receivesCheckIns: boolean },
+  restockRequest: RestockHelpEntry | null,
+  handledRestockAt: string | null,
+): CareUpdate[] {
+  const updates: CareUpdate[] = [];
+  if (viewer.receivesCheckIns && summary.checkIn) updates.push({ kind: "checkIn", at: summary.checkIn.sentAt, checkIn: summary.checkIn });
+  if (summary.stoppedMedicine) updates.push({ kind: "stopped", at: summary.stoppedMedicine.stoppedAt });
+  if (restockRequest) updates.push({ kind: "refill", at: restockRequest.requestedAt, request: restockRequest });
+  else if (handledRestockAt) updates.push({ kind: "refillHandled", at: handledRestockAt });
+  return updates.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
 }
