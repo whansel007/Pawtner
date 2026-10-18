@@ -159,15 +159,6 @@ export interface Trick {
   earned: boolean;
 }
 
-export interface Souvenir {
-  /** Distance label */
-  distance: string;
-  /** Souvenir name */
-  name: string;
-  /** Short note */
-  note: string;
-}
-
 export interface Caregiver {
   /** Senior's display name, used in the pair label on /care */
   seniorName: string;

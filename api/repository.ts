@@ -698,33 +698,6 @@ export class PawtnerRepository {
       const { decision } = await this.decideAndPersist(client, userId, request.finishedAt, undefined, { walkFinished: true });
       const row = result.rows[0];
 
-      // T2-09: unlock souvenirs based on cumulative walk distance
-      const cumulativeResult = await client.query(
-        "SELECT COALESCE(sum(distance_meters), 0)::int AS total FROM walk_sessions WHERE user_id = $1",
-        [userId],
-      );
-      const cumulative = cumulativeResult.rows[0].total;
-      const shouldUnlock = unlockedSouvenirs(cumulative);
-      let souvenirId: string | null = null;
-      if (shouldUnlock.length > 0) {
-        // Insert any newly unlocked souvenirs
-        for (const key of shouldUnlock) {
-          const existing = await client.query(
-            "SELECT 1 FROM souvenirs WHERE user_id = $1 AND souvenir_key = $2",
-            [userId, key],
-          );
-          if (!existing.rowCount) {
-            const souvenirIdRow = randomUUID();
-            await client.query(
-              "INSERT INTO souvenirs (id, user_id, souvenir_key, unlocked_at) VALUES ($1, $2, $3, $4)",
-              [souvenirIdRow, userId, key, request.finishedAt],
-            );
-            // Return the last newly unlocked one
-            souvenirId = souvenirIdRow;
-          }
-        }
-      }
-
       return {
         id: row.id,
         startedAt: iso(row.started_at),
@@ -732,7 +705,8 @@ export class PawtnerRepository {
         distanceMeters: row.distance_meters,
         fastStretchOccurred: row.fast_stretch_occurred,
         decision,
-        souvenirId,
+        // No souvenirs for now (owner, 18 Oct; badges later): a walk unlocks nothing.
+        souvenirId: null,
       };
     });
   }

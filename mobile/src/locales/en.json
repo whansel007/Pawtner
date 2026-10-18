@@ -47,7 +47,6 @@
     "progress_one": "{{count}} of {{total}} done",
     "progress_other": "{{count}} of {{total}} done",
     "walk": "Walk {{name}}",
-    "walkSub": "Earn a souvenir",
     "bp": "Blood pressure",
     "bpSub": "Fill a heart",
     "treatAria": "Open caretaker treat",
@@ -399,8 +398,6 @@
     "worldWardrobeSub": "Revisit scenery and dress {{name}}",
     "tricks": "Tricks",
     "tricksSub": "Practice makes happy",
-    "souvenirs": "Souvenirs",
-    "souvenirsSub": "Earned on walks",
     "waveSleepy": "{{name}} is too sleepy to wave. Give {{name}} a heart first."
   },
   "accessory": {
