@@ -8,9 +8,6 @@ import type { Persona } from "./data/types";
 import { useCareData } from "./hooks/useCareData";
 import { useCaretakerSlot } from "./hooks/useCaretakerSlot";
 import { useCareTreat } from "./hooks/useCareTreat";
-import { usePendingRestockRequest } from "../lib/useRestockHelp";
-import { useCareVisitNotes } from "../lib/useVisitNotes";
-import { useShareBloodPressure } from "../lib/useSharing";
 import { doctorQuestionsForCare } from "../lib/visitNotes";
 import { Brand } from "./components/Brand";
 import { CareFooter } from "./components/CareFooter";
@@ -45,13 +42,8 @@ export default function CareApp() {
   const pathname = usePathname();
   const { slot, signIn, signOut } = useCaretakerSlot();
   // Live refresh only on signed-in pages (a persona chosen); the landing and sign-in picker are everybody's.
-  const { data, offline, saveStatus, pendingThreshold, saveThreshold, saveConsent } = useCareData(slot !== null && isSignedInRoute(routeFromPath(pathname)));
+  const { data, offline, saveStatus, pendingThreshold, saveThreshold, saveConsent, handleRestock } = useCareData(slot !== null && isSignedInRoute(routeFromPath(pathname)));
   const treat = useCareTreat(offline);
-  const restock = usePendingRestockRequest();
-  // Rose's "For my next visit" notes she shared (demo: same browser, lib/visitNotes.ts).
-  const visitNotes = useCareVisitNotes();
-  // Rose's "Share my blood pressure" switch (demo: same browser, lib/sharing.ts): the latest reading and the questions she wrote with readings.
-  const [bloodPressureShared] = useShareBloodPressure();
   const mainRef = useRef<HTMLElement>(null);
   const firstRoute = useRef(true);
 
@@ -131,10 +123,12 @@ export default function CareApp() {
             offline={offline}
             treatStatus={treat.status}
             onSendTreat={(message) => void treat.send(message)}
-            restockRequest={restock.pending}
-            onHandleRestock={restock.handle}
-            doctorQuestions={doctorQuestionsForCare(visitNotes, bloodPressureShared ? data.summary.doctorQuestions : [])}
-            latestBloodPressure={bloodPressureShared ? data.summary.latestBloodPressure : null}
+            restockRequests={data.summary.restockRequests}
+            onHandleRestock={(id) => void handleRestock(id)}
+            // Shared notes and refill requests come from the server (any browser); it also leaves out the reading and the
+            // reading-based questions when Rose doesn't share her blood pressure.
+            doctorQuestions={doctorQuestionsForCare(data.summary.sharedNotes, data.summary.doctorQuestions)}
+            latestBloodPressure={data.summary.latestBloodPressure}
           />
         )}
         {signedInPage && route === "alerts" && (

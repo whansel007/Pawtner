@@ -1,5 +1,5 @@
 import { ApiError, PawtnerRepository } from "./repository.js";
-import type { AgentDecideRequest, CreateMedicationRequest, DemoResetDayRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, PillReferenceRequest, PillVerifyRequest, UpdateMedicationRequest, WalkSessionRequest } from "../shared/contract.js";
+import type { AgentDecideRequest, CreateMedicationRequest, DemoResetDayRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, PillReferenceRequest, PillVerifyRequest, UpdateMedicationRequest, WalkSessionRequest, CreateRestockRequest, SharedNoteRequest, SharingSettings, DemoClockState } from "../shared/contract.js";
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 async function body<T>(request: Request): Promise<T> {
@@ -7,6 +7,11 @@ async function body<T>(request: Request): Promise<T> {
 }
 function validDate(value: unknown): value is string { return typeof value === "string" && Number.isFinite(Date.parse(value)); }
 function requiredString(value: unknown): value is string { return typeof value === "string" && value.length > 0; }
+/** An item id in a path (uuid or the phone's note id): letters, digits and dashes only. */
+function itemId(value: string, label: string): string {
+  if (!/^[A-Za-z0-9-]{1,100}$/.test(value)) throw new ApiError(400, `${label} id is invalid.`);
+  return value;
+}
 
 export function createApiHandler(repository: PawtnerRepository) {
   return async (request: Request): Promise<Response> => {
@@ -52,6 +57,36 @@ export function createApiHandler(repository: PawtnerRepository) {
         if (!validDate(data.startedAt) || !validDate(data.finishedAt) || !Number.isFinite(data.distanceMeters) || data.distanceMeters < 0 || typeof data.fastStretchOccurred !== "boolean") throw new ApiError(400, "Invalid walk session.");
         if (Date.parse(data.finishedAt) < Date.parse(data.startedAt)) throw new ApiError(400, "Walk finish must be after its start.");
         return json(await repository.recordWalkSession(data), 201);
+      }
+      // ── /care from any browser (migration 008) ──
+      if (request.method === "GET" && url.pathname === "/api/restock-requests") return json(await repository.listRestockRequests(now));
+      if (request.method === "POST" && url.pathname === "/api/restock-requests") {
+        const data = await body<CreateRestockRequest>(request);
+        if (!requiredString(data.medicationId) || !Number.isInteger(data.daysLeft) || data.daysLeft < 0 || !validDate(data.requestedAt)) {
+          throw new ApiError(400, "medicationId, a whole number daysLeft (0 or more) and an ISO requestedAt are required.");
+        }
+        return json(await repository.createRestockRequest(data), 201);
+      }
+      const handledMatch = request.method === "POST" ? url.pathname.match(/^\/api\/restock-requests\/([^/]+)\/handled$/) : null;
+      if (handledMatch) return json(await repository.markRestockRequestHandled(itemId(handledMatch[1]!, "Refill request")));
+      if (url.pathname.startsWith("/api/shared-notes/") && (request.method === "PUT" || request.method === "DELETE")) {
+        const id = itemId(url.pathname.slice("/api/shared-notes/".length), "Note");
+        if (request.method === "DELETE") return json(await repository.deleteSharedNote(id));
+        const data = await body<SharedNoteRequest>(request);
+        if (typeof data.text !== "string" || !validDate(data.updatedAt)) throw new ApiError(400, "text and an ISO updatedAt are required.");
+        return json(await repository.upsertSharedNote(id, data));
+      }
+      if (request.method === "GET" && url.pathname === "/api/sharing") return json(await repository.getSharing());
+      if (request.method === "PUT" && url.pathname === "/api/sharing") {
+        const data = await body<SharingSettings>(request);
+        if (typeof data.shareBloodPressure !== "boolean") throw new ApiError(400, "shareBloodPressure must be true or false.");
+        return json(await repository.updateSharing(data));
+      }
+      if (request.method === "GET" && url.pathname === "/api/demo-clock") return json(await repository.getDemoClock());
+      if (request.method === "PUT" && url.pathname === "/api/demo-clock") {
+        const data = await body<DemoClockState>(request);
+        if (data.at !== null && !validDate(data.at)) throw new ApiError(400, "at must be an ISO date or null.");
+        return json(await repository.setDemoClock({ at: data.at }));
       }
       // ── T2-02/T2-06: Medication CRUD ──
       if (request.method === "GET" && url.pathname === "/api/medications") return json(await repository.listMedications());

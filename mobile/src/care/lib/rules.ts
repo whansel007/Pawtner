@@ -1,9 +1,8 @@
 import { DEMO_RULES } from "../../../../shared/config.js";
-import type { CaretakerSummaryResponse, DerivedDose, HeartActivities } from "../../../../shared/contract.js";
+import type { CaretakerSummaryResponse, DerivedDose, HeartActivities, RestockRequest } from "../../../../shared/contract.js";
 import { countActivitiesDone } from "../../../../shared/selectors.js";
 import type { CaringMoment } from "../data/types.js";
 import { zonedDate } from "../../lib/demoTime.js";
-import type { RestockHelpEntry } from "../../lib/restockHelp.js";
 
 /**
  * Caretaker web rules (pure, no React or DOM), shared by the pages and the unit tests.
@@ -135,24 +134,27 @@ export function stoppedMedicineDay(stopped: { stoppedAt: string } | null, timeZo
 export type CareUpdate =
   | { kind: "checkIn"; at: string; checkIn: NonNullable<CaretakerSummaryResponse["checkIn"]> }
   | { kind: "stopped"; at: string }
-  | { kind: "refill"; at: string; request: RestockHelpEntry }
-  | { kind: "refillHandled"; at: string };
+  | { kind: "refill"; at: string; request: RestockRequest }
+  | { kind: "refillHandled"; at: string; id: string };
 
 /**
  * The rows of the one "{{dog}}'s updates" card, newest first; empty = no card.
  * Check-ins only for caretakers who get them; a stopped medicine never carries its name;
- * the refill request (one at a time, demo: lib/restockHelp.ts) is pending, or handled at `handledRestockAt`.
+ * one row per pending refill request (from the server, any browser), each with its own button; a request this caretaker
+ * just handled shows its thank-you line instead (`handledHere`: id → when it was tapped), until the page changes.
  */
 export function careUpdates(
   summary: Pick<CaretakerSummaryResponse, "checkIn" | "stoppedMedicine">,
   viewer: { receivesCheckIns: boolean },
-  restockRequest: RestockHelpEntry | null,
-  handledRestockAt: string | null,
+  restockRequests: readonly RestockRequest[],
+  handledHere: Readonly<Record<string, string>>,
 ): CareUpdate[] {
   const updates: CareUpdate[] = [];
   if (viewer.receivesCheckIns && summary.checkIn) updates.push({ kind: "checkIn", at: summary.checkIn.sentAt, checkIn: summary.checkIn });
   if (summary.stoppedMedicine) updates.push({ kind: "stopped", at: summary.stoppedMedicine.stoppedAt });
-  if (restockRequest) updates.push({ kind: "refill", at: restockRequest.requestedAt, request: restockRequest });
-  else if (handledRestockAt) updates.push({ kind: "refillHandled", at: handledRestockAt });
+  for (const request of restockRequests) {
+    if (request.status === "pending" && !handledHere[request.id]) updates.push({ kind: "refill", at: request.requestedAt, request });
+  }
+  for (const [id, at] of Object.entries(handledHere)) updates.push({ kind: "refillHandled", at, id });
   return updates.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
 }

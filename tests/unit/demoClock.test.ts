@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readDemoClock, runningClock, saveDemoClock } from "../../mobile/src/lib/demoClock.js";
+import { demoClockOnLoad, readDemoClock, searchWithout, runningClock, saveDemoClock } from "../../mobile/src/lib/demoClock.js";
 import type { KeyValueStore } from "../../mobile/src/lib/localStore.js";
 
 function memoryStore(): KeyValueStore {
@@ -26,5 +26,23 @@ describe("demo clock", () => {
     expect(readDemoClock(store)).toBeNull();
     store.setItem("pawtner.demoClock", "2026-10-16T01:00:00.000Z");
     expect(readDemoClock(store, 9_000)).toBe("2026-10-16T01:00:00.000Z");
+  });
+});
+
+describe("demo clock on load (the server keeps the demo's time)", () => {
+  it("a ?clock= link wins and is written to the server", () => {
+    expect(demoClockOnLoad("2026-10-18T01:00:00.000Z")).toEqual({ action: "write", at: "2026-10-18T01:00:00.000Z" });
+  });
+  it("without a link the phone adopts the server's clock and writes nothing", () => {
+    expect(demoClockOnLoad(null)).toEqual({ action: "adopt" });
+  });
+});
+
+describe("the ?clock= link is used once", () => {
+  it("is removed from the address after it was written, other params kept", () => {
+    expect(searchWithout("?clock=morning", "clock")).toBe("");
+    expect(searchWithout("?clock=morning&time=evening", "clock")).toBe("?time=evening");
+    expect(searchWithout("?time=21:00", "clock")).toBe("?time=21%3A00");
+    expect(searchWithout("", "clock")).toBe("");
   });
 });

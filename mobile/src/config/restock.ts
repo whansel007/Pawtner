@@ -1,5 +1,5 @@
 /**
- * Restock help (demo only, wire-ready). Logic in lib/restockHelp.ts; text in en.json under "restock".
+ * Restock help. Logic in lib/restockHelp.ts (pure) and lib/useRestockHelp.ts (API); text in en.json under "restock".
  */
 import { DEMO_RULES } from "../../../shared/config.js";
 
@@ -7,12 +7,11 @@ import { DEMO_RULES } from "../../../shared/config.js";
 export const RESTOCK_SOON_DAYS = DEMO_RULES.restockDaysOfSupply;
 
 /**
- * localStorage keys. The phone app and /care share one origin, so /care in the same browser sees the request.
- * Swap for the API when P1 adds a table/endpoint (see requestRestockHelp).
+ * localStorage keys. Refill requests live on the server since migration 008; only "I'll get it myself" stays here.
  */
 export const RESTOCK_STORAGE_KEYS = {
-  /** The senior's latest "Ask my caretaker to help" request (RestockHelpEntry as JSON). */
+  /** Written by builds before migration 008 (the one same-browser request); kept so "Reset to morning" clears it. */
   request: "pawtner.restockHelp",
-  /** medications.id the senior chose "I'll get it myself" for; the card stays, with a status line instead of the buttons. */
+  /** medications.id list the senior chose "I'll get it myself" for; each card stays, with a status line instead of the buttons. */
   self: "pawtner.restockSelf",
 } as const;

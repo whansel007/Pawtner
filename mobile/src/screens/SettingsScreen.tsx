@@ -1,5 +1,6 @@
 import { SENIOR_TIMEZONE } from "../config/scene";
 import type { HealthMetric } from "../../../shared/contract";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
@@ -57,8 +58,12 @@ export function SettingsScreen({
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
   const resetTime = parseDemoTime(DEMO_TIME_PRESETS[DEMO_RESET_PRESET], DEMO_TIME_PRESETS);
+  // "For demo only" open = demo mode: only the demo card shows, and the back button closes it (owner, 18 Oct).
+  const [demoOpen, setDemoOpen] = useState(false);
+  const screenBack: BackAction = demoOpen ? { kind: "back", onBack: () => setDemoOpen(false) } : back;
   return (
-    <FullCard back={back} className="settings-card">
+    <FullCard back={screenBack} backLabel={demoOpen ? t("settings.demoBackToSettings") : undefined} className="settings-card">
+      {!demoOpen && (<>
       <p className="eyebrow green">{t("settings.eyebrow", { name: petName })}</p>
       <h2>{t("settings.title")}</h2>
       <div className="settings-group">
@@ -79,8 +84,9 @@ export function SettingsScreen({
         </span>
       </label>
       <div className="settings-note"><Icon name="heart" /><p><strong>{t("settings.privacyTitle")}</strong></p></div>
+      </>)}
             {/* Every demo-only control in one closed card (user, 16 Oct: people kept tapping them by mistake). */}
-      <details className="demo-clock-card demo-panel">
+      <details className="demo-clock-card demo-panel" open={demoOpen} onToggle={(event) => setDemoOpen(event.currentTarget.open)}>
         <summary>
           <span>
             <span className="eyebrow green">{t("settings.demoEyebrow")}</span>

@@ -36,10 +36,10 @@ import { useNavigation } from "./lib/useNavigation";
 import { useBark } from "./lib/useBark";
 import { useDayPhase } from "./lib/useDayPhase";
 import { useRestockHelp } from "./lib/useRestockHelp";
-import { pickRestockAlert } from "./lib/restockHelp";
+import { pickRestockAlerts } from "./lib/restockHelp";
 import { resetDemoStorage } from "./lib/demoReset";
 import { mergeHealthMetrics } from "./lib/healthReadings";
-import { runningClock, saveDemoClock, type DemoClockAnchor } from "./lib/demoClock";
+import { demoClockOnLoad, runningClock, saveDemoClock, searchWithout, type DemoClockAnchor } from "./lib/demoClock";
 import { useHomeView } from "./lib/useHomeView";
 import { useDoseReminder } from "./lib/useDoseReminder";
 import { shouldBarkFor } from "./lib/nudgeBark";
@@ -49,7 +49,7 @@ import { DEMO_CLOCK_PARAM, DEMO_RESET_PRESET, DEMO_TIME_PARAM, DEMO_TIME_PRESETS
 import { demoHeartsTotal, demoStreak, demoTodayHearts, hasDemoTodayHearts, toggleDemoTick } from "./lib/demoUnlocks";
 import { computeHeart, heartActivities } from "../../shared/selectors";
 import { SENIOR_TIMEZONE } from "./config/scene";
-import type { World, Accessory } from "./types";
+import type { World, Accessory, Screen } from "./types";
 import type { WalkCompletion } from "./lib/walkState";
 import { isUrgentDecision, routineDecision } from "./lib/decisions";
 import type { TrickRequest } from "./lib/tricks";
@@ -93,10 +93,10 @@ function localHeartCount(doses: DerivedDose[], bpLogged: boolean, walked: boolea
   return computeHeart(heartActivities(doses, bpLogged, walked));
 }
 
-export default function App() {
+export default function App({ startScreen, onRestart }: { startScreen?: Screen; onRestart?: (screen: Screen) => void } = {}) {
   const { t } = useTranslation();
   // Screen plus a small history: drilled-down screens go "Back" to where they came from (lib/navigation.ts).
-  const { screen, navigate, goHome, back } = useNavigation("cover");
+  const { screen, navigate, goHome, back } = useNavigation(startScreen ?? "cover");
   const [doseList, setDoseList] = useState<DerivedDose[]>(todayDoses);
   const [pendingDoseId, setPendingDoseId] = useState<string | null>(null);
   const [bpLogged, setBpLogged] = useState(false);
@@ -118,7 +118,7 @@ export default function App() {
   const [demoClock, setDemoClock] = useState<DemoClockAnchor | null>(() => { const at = initialAgentClock(); return at ? { at, setAtMs: Date.now() } : null; });
   /** The demo clock's time right now, or null for real time. */
   const demoNow = (): string | null => runningClock(demoClock);
-  const setDemoNow = (at: string | null) => setDemoClock(at ? { at, setAtMs: Date.now() } : null);
+  const setDemoNow = (at: string | null) => { setDemoClock(at ? { at, setAtMs: Date.now() } : null); void api.setDemoClock({ at }).catch((error) => reportApiProblem(error)); };
   // Scene time (`?time=`, Settings > Demo time buttons): day/night look only. Hearts, mood and doses stay on the one
   // real state; switching morning ↔ evening must never re-read /api/today at another time.
   const [sceneTime, setSceneTime] = useState<string | null>(initialSceneTime);
@@ -173,7 +173,8 @@ export default function App() {
     catch (error) { reportApiProblem(error); }
   };
   useEffect(() => { void refreshToday(); }, []);
-  // /care in the same browser follows this clock, so Jamie sees Buddy as Rose does (lib/demoClock.ts).
+  // The demo clock lives on the server (any browser; /care reads it): on load a ?clock= link is written, else the server's clock is adopted (demoClockOnLoad).
+  useEffect(() => { const plan = demoClockOnLoad(demoClock?.at ?? null); if (plan.action === "write") { void api.setDemoClock({ at: plan.at }).catch((error) => reportApiProblem(error)); window.history.replaceState(null, "", `${window.location.pathname}${searchWithout(window.location.search, DEMO_CLOCK_PARAM)}${window.location.hash}`); } else void api.demoClock().then((clock) => { if (clock.at) { setDemoClock({ at: clock.at, setAtMs: Date.now() }); setDemoClockValue(toDateTimeLocal(new Date(clock.at))); void refreshToday(clock.at); } }).catch((error) => console.warn("Demo clock: server clock unavailable", error)); }, []);
   useEffect(() => { saveDemoClock(demoClock); }, [demoClock]);
   useEffect(() => {
     if (screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
@@ -204,14 +205,14 @@ export default function App() {
     : { ...caregiver, names: t("care.pairNames", { senior: caregiver.seniorName, caretaker: caregiver.caretakerName }) };
   // Restock help (demo only, lib/restockHelp.ts): the card lives on Reminders; "See all" on Home gets a dot while it waits.
   // Live days of supply when the API answered; the mock alert offline.
-  const liveRestockAlert = medications ? pickRestockAlert(medications, RESTOCK_SOON_DAYS) : restockAlert;
-  const restock = useRestockHelp(liveRestockAlert);
+  const liveRestockAlerts = medications ? pickRestockAlerts(medications, RESTOCK_SOON_DAYS) : [restockAlert];
+  const restock = useRestockHelp(liveRestockAlerts, (error) => reportApiProblem(error, true));
   // "For my next visit" notes (this phone only): Health row, their own screen, and the Weekly Summary.
-  const visitNotes = useVisitNotes();
+  const visitNotes = useVisitNotes((error) => reportApiProblem(error, true));
   // Her first blood-pressure reading ever: the server's (today.firstBloodPressure) or, offline, the earliest local one.
   const firstReading = firstReadingOf([...(today?.firstBloodPressure ? [today.firstBloodPressure] : []), ...healthMetrics]);
   // "Share my blood pressure with {{caretaker}}" (Settings; /care follows it in the same browser).
-  const [shareBloodPressure, setShareBloodPressure] = useShareBloodPressure();
+  const [shareBloodPressure, setShareBloodPressure] = useShareBloodPressure((error) => reportApiProblem(error, true));
 
   const notify = (message: string, ms = 2400) => {
     setToast(message);
@@ -439,7 +440,8 @@ export default function App() {
 
   /**
    * Settings > For demo only > Reset to morning: the API deletes today's dose taps, readings and decisions and decides
-   * at 9:00 (lib/api.ts resetDemoDay); this phone's demo choices are cleared; the reload starts with the agent clock at 9:00.
+   * at 9:00 (lib/api.ts resetDemoDay); this phone's demo choices are cleared; the app restarts in place (no page reload,
+   * owner 18 Oct) on Settings, with the agent clock at 9:00 from the ?clock= link.
    * If the API is unreachable, the phone side still resets (the toast says the action failed).
    */
   const resetDemoToMorning = async () => {
@@ -448,7 +450,8 @@ export default function App() {
     try { await api.resetDemoDay(demoInstantToday(morning, new Date(), SENIOR_TIMEZONE)); }
     catch (error) { reportApiProblem(error, true); }
     resetDemoStorage();
-    window.location.assign(`${window.location.pathname}?${DEMO_CLOCK_PARAM}=${DEMO_RESET_PRESET}`);
+    window.history.replaceState(null, "", `${window.location.pathname}?${DEMO_CLOCK_PARAM}=${DEMO_RESET_PRESET}`);
+    if (onRestart) onRestart("settings"); else window.location.reload();
   };
 
   /**
@@ -516,7 +519,7 @@ export default function App() {
             back={back}
             doses={doseList}
             now={demoNow() ?? new Date().toISOString()}
-            restockCard={restock.visible && liveRestockAlert ? <RestockCard alert={liveRestockAlert} caretakerName={caretakerName} state={restock.state} busy={restock.busy} onAsk={() => void restock.askForHelp()} onSelf={restock.getItMyself} /> : null}
+            restockCard={restock.cards.length ? <>{restock.cards.map((card) => <RestockCard key={card.alert.medicationId} alert={card.alert} caretakerName={caretakerName} state={card.state} busy={card.busy} onAsk={() => void restock.askForHelp(card.alert)} onSelf={() => restock.getItMyself(card.alert)} />)}</> : null}
           />
         )}
         {screen === "prescription" && <PrescriptionScreen back={back} onSaved={handleMedicationSaved} onExplain={handleExplainMedicine} petName={dogName} />}

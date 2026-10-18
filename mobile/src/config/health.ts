@@ -1,3 +1,4 @@
+import { DEMO_RULES } from "../../../shared/config.js";
 /**
  * Health screen settings. Text lives in en.json; links and the Healthy 365 logo live in mock/home.ts.
  */
@@ -22,8 +23,8 @@ export const CLINIC_MEMO = {
 export const VISIT_NOTES = {
   /** localStorage key; a JSON array of VisitNote, newest first. */
   storageKey: "pawtner.visitNotes",
-  /** Longest note, in characters. */
-  maxLength: 300,
+  /** Longest note, in characters (one value with the API: shared/config.ts). */
+  maxLength: DEMO_RULES.visitNoteMaxLength,
 } as const;
 
 /**

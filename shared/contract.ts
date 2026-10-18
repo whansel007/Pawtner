@@ -208,6 +208,10 @@ export interface CaretakerSummaryResponse {
    * Never the medicine's name and never a count: /care only says "A medicine is stopped."
    */
   stoppedMedicine: { stoppedAt: string } | null;
+  /** This week's refill requests from the senior (each shares its medicine's name, because she asked for help with it). */
+  restockRequests: RestockRequest[];
+  /** Notes the senior shared with her caretaker (never her private ones), newest first. */
+  sharedNotes: SharedNote[];
   /** Buddy's hearts at the end of each of the 7 days before today (the senior's local dates, oldest first). */
   dayHearts: Array<{ date: string; hearts: number }>;
 }
@@ -400,4 +404,54 @@ export interface MilestonesResponse {
   nextSouvenirTarget: { key: string; name: string; note: string; cumulativeMeters: number; progress: number } | null;
   tricks: { name: string; note: string; earned: boolean }[];
   currentWorld: { id: string; label: string; levelText: string; description: string; progress: number };
+}
+
+// ── /care from any browser (migration 008). Each item has its own id and timestamps, as if it were its own row. ──
+
+/** A refill request: the senior asked her caretaker to help with one medicine. */
+export interface RestockRequest {
+  id: string;
+  medicationId: string;
+  /** The medicine to buy (from medications; shared only because she asked for help with it). */
+  medicationName: string;
+  /** Days of supply left when she asked. */
+  daysLeft: number;
+  requestedAt: string;
+  status: "pending" | "handled";
+  /** When a caretaker said they'd handle it; null while pending. */
+  handledAt: string | null;
+}
+
+/** POST /api/restock-requests. Asking again for the same medicine replaces its pending request. */
+export interface CreateRestockRequest {
+  medicationId: string;
+  daysLeft: number;
+  requestedAt: string;
+}
+
+export interface RestockRequestListResponse {
+  restockRequests: RestockRequest[];
+}
+
+/** A note the senior shared with her caretaker; `id` is the phone's note id. */
+export interface SharedNote {
+  id: string;
+  text: string;
+  updatedAt: string;
+}
+
+/** PUT /api/shared-notes/:id (create or replace). */
+export interface SharedNoteRequest {
+  text: string;
+  updatedAt: string;
+}
+
+/** GET / PUT /api/sharing. When false, the caretaker summary has no blood-pressure reading and no reading-based questions. */
+export interface SharingSettings {
+  shareBloodPressure: boolean;
+}
+
+/** GET / PUT /api/demo-clock. GET returns the clock's time NOW (it runs forward from when it was set); null = real time. */
+export interface DemoClockState {
+  at: string | null;
 }

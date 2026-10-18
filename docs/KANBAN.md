@@ -8,7 +8,7 @@ Updated 2026-10-18. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 Now (18 Oct), in order:
 1. `claude/single-undo`: on My medicines only the latest stop keeps its Undo (coder, in progress).
 2. `claude/names-from-data`: no hardcoded names in code; fallback demo names only in the locales (built, not pushed; was: brief drafted, waiting for the owner's OK).
-3. `claude/care-cross-browser`: refill requests (several medicines), shared notes, blood-pressure sharing and the demo clock through the API, so /care works from any browser (brief approved; starts after 2).
+3. `claude/care-cross-browser` (built, not pushed): refill requests (several medicines), shared notes, blood-pressure sharing and the demo clock through the API, so /care works from any browser (brief approved; starts after 2).
 
 Earlier items still listed below:
 
@@ -43,6 +43,8 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Demo mode: Settings shows only the demo card ("Back to Settings"); Reset to morning restarts the app in place (no page reload, no confirm) | Branch `claude/demo-focus` (on `claude/care-cross-browser`), not pushed |
+| — | /care from any browser: refill requests (one card per low medicine, one row each on /care), shared notes, the BP switch (enforced by the server) and the demo clock move to the API (migration 008, columns on `users`); Reset to morning brings back the morning state; closes KIV "Restock help: wire to the API". **Migration 008 before the merge.** | Branch `claude/care-cross-browser`, not pushed |
 | — | My medicines: one medicine at a time while it is being worked on, "Back to Medicine list"; schedule step without the "no loud alarm" line | Branch `claude/medicine-focus`, not pushed |
 | — | No hardcoded names: fallback demo names only in en.json "demoNames" (`lib/demoNames.ts`), names on screen from data, placeholders in en.json, guard test; closes the KIV rows "Fixed names left in mock data" and "Offline sample text still names people" | Branch `claude/names-from-data`, not pushed |
 | — | A stop is a moment: a stopped medicine's earlier doses keep counting (past hearts, lifetime, streak, check-ins never move), a stop never backdates a heart, its earlier doses leave today's list and nudges | Branch `claude/stop-keeps-history`, not pushed |
@@ -108,7 +110,6 @@ Earlier items still listed below:
 
 | Item | Note |
 |---|---|
-| Restock help: wire to the API | Demo stores the request in localStorage (`lib/restockHelp.ts`), so `/care` sees it only in the same browser. P1: table + `POST /api/restock-requests`, `GET ?status=pending`, `POST /:id/handled` (shapes and TODO in `lib/restockHelp.ts`). Supply data is live from `GET /api/medications` (mock only if that fails). No DB change made. |
 | Wording waiting for the user (#65, #66) | Grab bar label and next-dose strip (`home.sheet.*`), Settings demo card (`settings.demo*`), "today" (`topZone.heartsToday`), /care check-in card (`care.web.week.checkIn*`) and Alerts switch/days strings (`care.web.alerts.*`). |
 | Health wording waiting for the user | "Snap your clinic memo" / "Your clinic memo" and the restock buttons are tentative; "Ask your doctor" / "Questions for the doctor" unchanged on purpose. |
 | Buddy clips: Safari/WebKit check (done 16 Oct by the user, portrait) | The `.mov` (HEVC-alpha) path is untested: Playwright WebKit isn't installed here. Check on an iPhone (Safari) and macOS Safari that the wave plays with no black box and lines up with the still. |

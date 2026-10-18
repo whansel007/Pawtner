@@ -38,3 +38,25 @@ export function readDemoClock(store: KeyValueStore | null = browserStore(), nowM
     return null;
   }
 }
+
+/**
+ * What the phone does with the demo clock when it opens (owner: the demo keeps its state). A `?clock=` link (Reset to
+ * morning reloads with one, or a shared demo link) wins and is written to the server; otherwise the phone adopts the
+ * server's clock (set from any browser) and writes nothing, so opening the app never wipes the demo's time.
+ * After that the phone writes only on an explicit change (Settings "Run Buddy's check at this time").
+ */
+export function demoClockOnLoad(fromLink: string | null): { action: "write"; at: string } | { action: "adopt" } {
+  return fromLink ? { action: "write", at: fromLink } : { action: "adopt" };
+}
+
+/**
+ * The address bar's query without `param` (other params kept, "" when none are left). Once a `?clock=` link has been
+ * written to the server on load, it is removed, so a later reload adopts the server's running clock instead of
+ * setting it back.
+ */
+export function searchWithout(search: string, param: string): string {
+  const params = new URLSearchParams(search);
+  params.delete(param);
+  const rest = params.toString();
+  return rest ? `?${rest}` : "";
+}
