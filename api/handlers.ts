@@ -56,6 +56,9 @@ export function createApiHandler(repository: PawtnerRepository) {
         const data = await body<WalkSessionRequest>(request);
         if (!validDate(data.startedAt) || !validDate(data.finishedAt) || !Number.isFinite(data.distanceMeters) || data.distanceMeters < 0 || typeof data.fastStretchOccurred !== "boolean") throw new ApiError(400, "Invalid walk session.");
         if (Date.parse(data.finishedAt) < Date.parse(data.startedAt)) throw new ApiError(400, "Walk finish must be after its start.");
+        if (data.goalMinutes !== undefined && data.goalMinutes !== null && !(Number.isInteger(data.goalMinutes) && data.goalMinutes >= 1 && data.goalMinutes <= 600)) {
+          throw new ApiError(400, "goalMinutes must be a whole number from 1 to 600.");
+        }
         return json(await repository.recordWalkSession(data), 201);
       }
       // ── /care from any browser (migration 008) ──

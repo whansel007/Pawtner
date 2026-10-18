@@ -53,5 +53,3 @@ export const WAVE_CLIP_BY_MOOD: Record<DogMood, BuddyClipKind | null> = {
   attentive: "wave",
 };
 
-/** After "Give Buddy a heart", Home plays this clip once, only if it shows this mood. */
-export const CELEBRATION_CLIP: { mood: DogMood; clip: BuddyClipKind } = { mood: "joyful", clip: "joyful" };
