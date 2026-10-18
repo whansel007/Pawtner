@@ -8,7 +8,8 @@ import { api } from "../lib/api";
 import { fileToBase64 } from "../lib/imageBase64";
 import type { MedicationDetail } from "../../../shared/contract";
 import { formatStrength } from "../lib/strength";
-import { isStopBusy, isStopGone } from "../lib/stopMedicine";
+import { isStopBusy } from "../lib/stopMedicine";
+import { focusedMedicine, visibleMedicines } from "../lib/medicineFocus";
 import { useStopMedicine } from "../lib/useStopMedicine";
 
 /**
@@ -16,6 +17,7 @@ import { useStopMedicine } from "../lib/useStopMedicine";
  * settings-defined original pill photo (T2-08) that every proof check is compared to.
  * Moved here from the old caretaker-style Care screen (William's medicine settings).
  * "Stop this medicine" (soft stop, two separate taps, Undo while on this screen): lib/useStopMedicine.ts.
+ * One medicine at a time while it is being worked on, with "Back to Medicine list" (lib/medicineFocus.ts).
  */
 export function MedicinesScreen({ back, petName, caretakerName, onMedicinesChanged }: {
   back: BackAction;
@@ -88,8 +90,19 @@ export function MedicinesScreen({ back, petName, caretakerName, onMedicinesChang
 
   const closeRef = () => { setSettingRefMed(null); setRefFile(null); setRefPreview(null); };
 
-  // An older stop leaves the list once a newer stop succeeds (only the latest keeps its Undo).
-  const shownMedications = medications.filter((med) => !isStopGone(stops.rows[med.id]));
+  // While a medicine is being worked on, only its card shows; an older stop leaves the list once its Undo ends.
+  const focusInput = { editingId: editingMed, photoId: settingRefMed, stopRows: stops.rows };
+  const focus = focusedMedicine(focusInput);
+  const shownMedications = visibleMedicines(medications, focusInput);
+  // "Back to Medicine list": like Cancel / "No, keep it" (nothing saved); from the stopped card it ends the Undo.
+  const backToList = () => {
+    if (!focus) return;
+    if (editingMed === focus) setEditingMed(null);
+    if (settingRefMed === focus) closeRef();
+    stops.cancel(focus);
+    stops.dismiss(focus);
+  };
+  const screenBack: BackAction = focus ? { kind: "back", onBack: backToList } : back;
 
   // From the Edit panel: the confirm panel replaces the row, so Edit and the photo step on that row close.
   const openStop = (medId: string) => {
@@ -120,7 +133,7 @@ export function MedicinesScreen({ back, petName, caretakerName, onMedicinesChang
   };
 
   return (
-    <FullCard back={back}>
+    <FullCard back={screenBack} backLabel={focus ? t("medicines.backToList") : undefined}>
       <p className="eyebrow green">{t("medicines.eyebrow", { name: petName })}</p>
       <h2>{t("medicines.title")}</h2>
       <p className="supporting">{t("medicines.supporting", { name: petName })}</p>
