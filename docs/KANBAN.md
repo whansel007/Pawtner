@@ -44,7 +44,7 @@ Today's plan (agreed 13 Oct evening), in order:
 
 | ID | Item | PR |
 |---|---|---|
-| — | Revision (design "A", 18 Oct): Stop moves inside each medicine's Edit panel (quiet text button, no Stop on the list); /care This week shows one "Updates for you" card (check-in, stopped medicine, refill request, newest first; heading tentative) | [#83](https://github.com/whansel007/Pawtner/pull/83), not pushed yet |
+| — | Revision (design "A", 18 Oct): Stop moves inside each medicine's Edit panel (quiet text button, no Stop on the list); /care This week shows one "{{dog}}'s updates" card, e.g. "Buddy's updates" (check-in, stopped medicine, refill request, newest first) | [#83](https://github.com/whansel007/Pawtner/pull/83), not pushed yet |
 | — | Stop a medicine: My medicines "Stop this medicine" → confirm → "is stopped." + Undo (soft stop, `active` + `stopped_at`, migration 007); Home refreshes; /care This week "A medicine is stopped." (no name) for every caretaker. **Migration 007 must run on Supabase before the merge.** | [#83](https://github.com/whansel007/Pawtner/pull/83) (open) |
 | — | Demo video https://youtu.be/xlip3x6tUjk: plays embedded at /care/video (address stays Pawtner's); footer link goes there; README links to it | [#79](https://github.com/whansel007/Pawtner/pull/79) |
 | — | Repo clean-up: unused `max-garden.jpg` removed, `playwright` moved to devDependencies, stale `functions/` ignore line dropped, CLAUDE.md PRD path fixed, favicon linked, `Pawtner.csv` → `docs/user-stories.csv`; old local worktrees and merged local branches removed (CodeBuddy ones kept) | [#75](https://github.com/whansel007/Pawtner/pull/75) |

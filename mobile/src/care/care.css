@@ -175,7 +175,7 @@ html:has(.care-root) {
   font-size: var(--care-text-sm);
 }
 
-/* "Updates for you" (This week): one card, one row per update, a thin divider between rows. */
+/* "{{dog}}'s updates" (This week): one card, one row per update, a thin divider between rows. */
 .care-updates__list {
   margin: 4px 0 0;
   padding: 0;

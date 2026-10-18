@@ -131,7 +131,7 @@ export function stoppedMedicineDay(stopped: { stoppedAt: string } | null, timeZo
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-/** One row of the "Updates for you" card on This week. `at` (ISO) orders the rows, newest first. */
+/** One row of the "{{dog}}'s updates" card on This week. `at` (ISO) orders the rows, newest first. */
 export type CareUpdate =
   | { kind: "checkIn"; at: string; checkIn: NonNullable<CaretakerSummaryResponse["checkIn"]> }
   | { kind: "stopped"; at: string }
@@ -139,7 +139,7 @@ export type CareUpdate =
   | { kind: "refillHandled"; at: string };
 
 /**
- * The rows of the one "Updates for you" card, newest first; empty = no card.
+ * The rows of the one "{{dog}}'s updates" card, newest first; empty = no card.
  * Check-ins only for caretakers who get them; a stopped medicine never carries its name;
  * the refill request (one at a time, demo: lib/restockHelp.ts) is pending, or handled at `handledRestockAt`.
  */

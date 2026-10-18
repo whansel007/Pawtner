@@ -47,7 +47,7 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
 
 
   const [latestQuestion, ...earlierQuestions] = doctorQuestions;
-  // One "Updates for you" card: check-in (check-ins caretakers only), a stopped medicine (never its name), the refill request.
+  // One "{{dog}}'s updates" card: check-in (check-ins caretakers only), a stopped medicine (never its name), the refill request.
   const updates = careUpdates(data.summary, viewer, restockRequest, handledRestockAt);
 
   return (
@@ -61,7 +61,7 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
 
       <div className="care-grid care-grid--week">
         {updates.length > 0 && (
-          <CareCard title={t("care.web.week.updatesTitle")} stitched className="care-restock care-updates">
+          <CareCard title={t("care.web.week.updatesTitle", { dog: dog.name })} stitched className="care-restock care-updates">
             <ul className="care-updates__list">
               {updates.map((update) => (
                 <li className="care-updates__item" key={update.kind}>
