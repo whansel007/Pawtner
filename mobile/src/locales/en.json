@@ -431,8 +431,6 @@
     "comingSoonGift": "Soon: a gift from {{name}}"
   },
   "health": {
-    "eyebrow": "This week",
-    "title": "Small steps, clearly told",
     "bpLabel": "BLOOD PRESSURE",
     "bpNeedsReading": "{{name}} needs one reading",
     "weekSummary": "Your week in plain words",
@@ -465,6 +463,7 @@
     "bpNoReadingYet": "No reading logged yet",
     "resultTitle": "What the app noticed",
     "warning": "Warning",
+    "warningNotAdvice": "This is not medical advice.",
     "symptomsTitle": "How do you feel?",
     "symptoms": {
       "fine": "I feel fine",

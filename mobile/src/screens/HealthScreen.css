@@ -111,6 +111,13 @@
 }
 
 
+/* Small line under every warning (owner, 18 Oct). */
+.bp-result__disclaimer {
+  margin: 8px 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-body);
+}
+
 /* The reading inside the Warning card (the blood-pressure card is hidden while there's a warning). */
 .bp-result__reading {
   margin: 0 0 6px;
