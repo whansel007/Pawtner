@@ -204,6 +204,16 @@ testApi("Reset to morning hides the day, never deletes it", () => {
     expect((await get("/api/caretaker/summary", MORNING)).sharedNotes.map((note: { text: string }) => note.text)).toEqual(["Ask about my hip"]);
   }, 60_000);
 
+  it("(g) a walk hidden by a reset never counts toward the day's walk total", async () => {
+    const walk = (from: string, to: string) => call("POST", "/api/walk-session", { startedAt: sgt(today, from), finishedAt: sgt(today, to), distanceMeters: 500, fastStretchOccurred: false, goalMinutes: 50 });
+    expect((await walk("09:30", "09:50")).status).toBe(201); // 20 min
+    await reset();
+    expect((await walk("10:00", "10:30")).status).toBe(201); // 30 min: 20 + 30 would reach 50, but the 20 is hidden
+    expect((await get("/api/today", sgt(today, "10:45"))).activities.walk).toBe(false);
+    expect((await walk("11:00", "11:20")).status).toBe(201); // 30 + 20 = 50 after the reset → heart
+    expect((await get("/api/today", sgt(today, "11:25"))).activities.walk).toBe(true);
+  }, 60_000);
+
   it("(e) a row a demo clock dated tomorrow is stamped too", async () => {
     const tomorrow = sgt(shift(today, 1), "09:30");
     expect((await call("POST", "/api/health-metric", { systolic: 135, diastolic: 82, note: null, recordedAt: tomorrow })).status).toBe(201);
