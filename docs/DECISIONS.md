@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-10-18 — /care from any browser (branch `claude/care-cross-browser`, migration 008)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Four things move from the phone's localStorage to the API, so /care sees them from any browser or device: refill requests (several medicines; one card per low medicine on the phone, one row each with its own "I'll handle it" on /care), notes Rose marks shared, the "Share my blood pressure" switch, and the demo clock (`GET` returns the running time). Rose's private notes, earlier note versions, the clinic memo photo and "I'll get it myself" stay on the phone, by design. | Owner, 18 Oct: /care must work from any browser; "Rose asked for help to restock medicine a b etc". | The phone needs the API for these; offline, "Ask … to help" fails with the toast instead of pretending. | Final |
+| **Columns now, tables later.** Migration 008 adds columns only to `users` (`restock_requests`, `shared_visit_notes` jsonb; `share_blood_pressure`; `demo_clock_at`, `demo_clock_set_at`). The contract, endpoints and UI treat each refill request and shared note as its own row (own uuid / id, timestamps, status, per-item endpoints); every read and write is in named methods in `api/repository.ts` (`listRestockRequests`, `createRestockRequest`, `markRestockRequestHandled`, `upsertSharedNote`, `deleteSharedNote`, `getSharing`, `updateSharing`, `getDemoClock`, `setDemoClock`), scoped by `getDefaultUserId`. Real tables (and accounts) later only change those methods and a migration. | Owner: "Columns only for current scope. But workwise, ui and workflow should be able to be fitted w another db (w the full correct tables + accounts) in the future." | No database-level constraints: one pending refill per medicine, the medicine belonging to the user and the 300-character note limit (`DEMO_RULES.visitNoteMaxLength`, shared with the phone) are enforced in the repository (integration-tested); a write replaces the whole list, acceptable for a one-user demo. | Final |
+| BP privacy is enforced by the server: with sharing off, the caretaker summary has `latestBloodPressure: null` and no reading-based `doctorQuestions`; /care no longer hides them itself. | A switch only the client honours is not privacy. | — | Final |
+| Reset to morning (`POST /api/demo/reset-day`) brings back the morning state: today's taps, readings and decisions removed (as before), refill requests and shared notes emptied, BP sharing on, and the demo clock at the reset's morning time (today 09:00), running from then. Medicines, stops and past history are not touched. | Owner: "when we reset it will go to that morning state". | On the hosted site each reset also resets those four for the fictional demo user. | Final |
+| Corrected: the old `lib/restockHelp.ts` comment said the refill GET returns "no medicine names"; per the 16 Oct decision a refill request shares that medicine's name (so the caretaker knows what to buy). The code and comment now match. | Doc contradiction found in the brief. | — | Final |
+
 ## 2026-10-18 — No hardcoded names (branch `claude/names-from-data`)
 
 | Decision | Reason | Tradeoff | Status |
