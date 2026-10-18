@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-18 — No hardcoded names (branch `claude/names-from-data`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| No person or pet name is written in code. On screen, names come from data (the API's `senior.name`, `dog.name`, `caregiver.name`). With no data (offline, mock data, before the API answers), the fallback demo names come from ONE place: `mobile/src/locales/en.json` "demoNames" (`senior` Rose, `dog` Buddy, `caretaker` Jamie, `updatesOnlyCaretaker` Alex), read by `mobile/src/lib/demoNames.ts` (`DEMO_NAMES`). The mocks (`mock/home.ts`, `mock/care.ts`, `care/data/mock.ts`) and the public `/care/video` page use it; en.json strings use placeholders (`care.web.video.intro`, `health.bpProgress.first`, `settings.demoUnlockHint`, `settings.demoClockHint`, `settings.demoClockRun`), and every screen reads the same as before with the demo names. A future accounts database only has to supply the data; no code changes. | Owner, 18 Oct: "pls ensure all name are not hardcoded. For now it will go to locales folder. So we can fit them with a new accounts db". Restores the 13 Oct rule (names via i18n interpolation), which had drifted. | `DEMO_NAMES` imports en.json directly (not `i18n.t`), because mocks are built at import time and also run in Node tests; a second locale would need its own lookup. | Final |
+| Guard: `tests/unit/noHardcodedNames.test.ts` parses every .ts/.tsx under `mobile/src`, `shared`, `api` (not locales, tests, `shared/fixtures.ts`) with the TypeScript compiler and fails if a demo name appears in a string literal, template part or JSX text (comments are not syntax nodes, so they are never checked), and fails if any en.json string outside "demoNames" contains one. Out of scope: `migrations/seed.sql` (database data), tests and fixtures, README, docs. | Proof that it stays fixed. | Medicine, trick and place names are not person or pet names and stay. | Final |
+
 ## 2026-10-18 — A stop is a moment: the past is never rewritten (branch `claude/stop-keeps-history`)
 
 | Decision | Reason | Tradeoff | Status |

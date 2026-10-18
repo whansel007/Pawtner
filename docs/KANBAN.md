@@ -7,7 +7,7 @@ Updated 2026-10-18. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 
 Now (18 Oct), in order:
 1. `claude/single-undo`: on My medicines only the latest stop keeps its Undo (coder, in progress).
-2. `claude/names-from-data`: no hardcoded names in code; fallback demo names only in the locales (brief drafted, waiting for the owner's OK).
+2. `claude/names-from-data`: no hardcoded names in code; fallback demo names only in the locales (built, not pushed; was: brief drafted, waiting for the owner's OK).
 3. `claude/care-cross-browser`: refill requests (several medicines), shared notes, blood-pressure sharing and the demo clock through the API, so /care works from any browser (brief approved; starts after 2).
 
 Earlier items still listed below:
@@ -43,6 +43,7 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | No hardcoded names: fallback demo names only in en.json "demoNames" (`lib/demoNames.ts`), names on screen from data, placeholders in en.json, guard test; closes the KIV rows "Fixed names left in mock data" and "Offline sample text still names people" | Branch `claude/names-from-data`, not pushed |
 | — | A stop is a moment: a stopped medicine's earlier doses keep counting (past hearts, lifetime, streak, check-ins never move), a stop never backdates a heart, its earlier doses leave today's list and nudges | Branch `claude/stop-keeps-history`, not pushed |
 | — | Revision (design "A", 18 Oct): Stop moves inside each medicine's Edit panel (quiet text button, no Stop on the list); /care This week shows one "{{dog}}'s updates" card, e.g. "Buddy's updates" (check-in, stopped medicine, refill request, newest first) | [#83](https://github.com/whansel007/Pawtner/pull/83), merged 18 Oct |
 | — | Stop a medicine: My medicines "Stop this medicine" → confirm → "is stopped." + Undo (soft stop, `active` + `stopped_at`, migration 007); Home refreshes; /care This week "A medicine is stopped." (no name) for every caretaker. Migration 007 run on Supabase by the owner before the merge. | [#83](https://github.com/whansel007/Pawtner/pull/83), merged 18 Oct |
@@ -111,10 +112,8 @@ Earlier items still listed below:
 | Health wording waiting for the user | "Snap your clinic memo" / "Your clinic memo" and the restock buttons are tentative; "Ask your doctor" / "Questions for the doctor" unchanged on purpose. |
 | Buddy clips: Safari/WebKit check (done 16 Oct by the user, portrait) | The `.mov` (HEVC-alpha) path is untested: Playwright WebKit isn't installed here. Check on an iPhone (Safari) and macOS Safari that the wave plays with no black box and lines up with the still. |
 | P1 hosting landed on `main` without a PR (15 Oct) | `cb/api-hosting-edgeone` is fully in `main` (`1fc0b53`); nothing left to merge. Reviewed: checks pass (typecheck, 73/73, build); Vercel preview and `pawtner.edgeone.dev` still front end only. Also touched P2-owned screens (Proof, Reminders, Settings via `App.tsx`) — agreed split says screen changes go through P2. Reminders now lists `DerivedDose[]` (mock offline); Settings caretaker name from the summary. |
-| Offline sample text still names people | `mobile/src/mock/care.ts`: "Two people, one Buddy" (no longer shown: the phone's caretaker screen is gone; the "Mum took her lunchtime medicine" activity was removed with it). |
 | Seed history (merged #34, 15 Oct) | `migrations/seed.sql` now writes 10 days of fictional history relative to the run day (streak 7, 34 hearts before today). P1 must re-run `npm run db:seed` on the hosted DB **on the demo day** (it deletes and rewrites the two seed schedules' dose events; user told). |
 | EdgeOne API fix (merged #33, 15 Oct) | `pawtner.edgeone.dev` served the front end but `/api/*` returned `index.html` (EdgeOne never scanned `functions/`). Fixed by `cloud-functions/api/[[default]].js` + root `edgeone.json`. Still needs: EdgeOne project deployed from the repo root, `DATABASE_URL` set, redeploy; then `/api/today` returns JSON. Old `functions/` folder can be deleted. Verified 15 Oct evening: `/api/today` on pawtner.edgeone.dev returns JSON (streak 7, heartsTotal 34). |
-| Fixed names left in mock data | `mobile/src/mock/care.ts` has `names: "Mum + Jamie"`; Renaming the caretaker won't change it; derive it from the name fields. (`mock/milestones.ts` "From Jamie" fixed in #31.) |
 | CodeBuddy credits below 5% (14 Oct) | Spend CodeBuddy only on judged features (T1-16, then T1-15). Claude Code does merges, structural fixes and screenshots. Ask organisers about a top-up. |
 | First load shows a plain green screen for ~3 s | Seen on the 14 Oct preview: `garden-day.webp` and `dog-base.webp` load after Home appears. Preload them during the cover/dedication. |
 | Toast says "heart is full!" at 3 of 4 hearts | `toast.bpLogged` text; pre-existing. |

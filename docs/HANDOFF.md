@@ -111,7 +111,7 @@ Config lives in `mobile/src/config/` (`scene.ts`: images incl. `DOG_IMAGE_BY_MOO
 3. Home has no decision row since `claude/visit-notes` (urgent decisions are on Health, routine ones on Milestones), so the 360×640 crop from that row is gone.
 4. No authentication or roles exist; this API is for the fictional single-user demo only.
 5. Dog size limits and mood looks are TENTATIVE guesses.
-6. Fixed names remain in mock data (`mock/care.ts` "Mum + Jamie", `mock/milestones.ts` "From Jamie").
+6. Fixed names: fixed on `claude/names-from-data` (not pushed). No name is written in code; fallback demo names live only in en.json "demoNames" (`lib/demoNames.ts`), guarded by `tests/unit/noHardcodedNames.test.ts`. Database seed data (`migrations/seed.sql`) still holds the demo people, as data.
 7. `README.md` rewritten 16 Oct as the project story (`claude/repo-cleanup`): screenshots in `docs/screenshots/readme/`, the video link https://youtu.be/xlip3x6tUjk. `CLAUDE.md` now points to `PRD.md` and `docs/HANDOFF.md`.
 8. Landscape two-column layout (phones and tablets held sideways) is checked in headless Chromium at 844×390, 932×430, 740×360, 1024×768 and 1180×820, not yet on a real device. At 740×360 the card is ~230 px tall (scrolls).
 9. Pill check on the proof screen: since T2-08 (`eeea363`) "Compare with my pill" compares with the medicine's **original pill photo** (set in Settings > My medicines, or right after adding a medicine); HTTP 422 = no original yet (`proof.check.noReference`). The PR #28 first-photo path (409) is gone. No similarity %, friendly errors, raw error only in the console. A full-size phone photo as base64 may still exceed Vercel's 4.5 MB request body limit once the API is hosted there.

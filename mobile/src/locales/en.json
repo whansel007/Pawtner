@@ -1,4 +1,10 @@
 {
+  "demoNames": {
+    "senior": "Rose",
+    "dog": "Buddy",
+    "caretaker": "Jamie",
+    "updatesOnlyCaretaker": "Alex"
+  },
   "intro": {
     "coverAlt": "Pawtner cover image",
     "brand": "Pawtner",
@@ -261,7 +267,7 @@
       "video": {
         "eyebrow": "Demo video",
         "title": "See Pawtner in action",
-        "intro": "A short tour of Rose's phone and Jamie's page.",
+        "intro": "A short tour of {{senior}}'s phone and {{caretaker}}'s page.",
         "cardTitle": "The Pawtner demo",
         "playerTitle": "Pawtner demo video",
         "openElsewhere": "Watch the demo video",
@@ -470,7 +476,7 @@
       "speech": "Slurred speech"
     },
     "bpProgress": {
-      "first": "Your first reading. Buddy will compare the next ones with it.",
+      "first": "Your first reading. {{name}} will compare the next ones with it.",
       "keepGoing": "Keep at it! About the same as or lower than your first reading.",
       "goodJob": "Good job! Your reading is in the normal range.",
       "warning": "This reading is higher than your first reading."
@@ -561,7 +567,7 @@
     "demoTimeTitle": "Garden time",
     "demoTimeHint": "Jump the garden to a time of day; tap it again for real time. Doesn't run the agent or save anything.",
     "demoUnlockTitle": "Pretend numbers",
-    "demoUnlockHint": "Show the app as if Rose had:",
+    "demoUnlockHint": "Show the app as if {{senior}} had:",
     "demoGroup": {
       "today": "Today's hearts",
       "total": "In total"
@@ -575,9 +581,9 @@
       "hearts20": "20 hearts in total"
     },
     "demoClockTitle": "Current Time of Demo",
-    "demoClockHint": "The phone acts as if it is this time, and the clock keeps running from there: doses, readings and walks are saved at it, the dose-time reminder fires when it reaches a dose, and Buddy checks his rules (nudges, check-ins) when you run him. Nudges are limited to two per scheduled dose.",
+    "demoClockHint": "The phone acts as if it is this time, and the clock keeps running from there: doses, readings and walks are saved at it, the dose-time reminder fires when it reaches a dose, and {{name}} checks his rules (nudges, check-ins) when you run him. Nudges are limited to two per scheduled dose.",
     "demoClockLabel": "Simulated local time",
-    "demoClockRun": "Run Buddy's check at this time",
+    "demoClockRun": "Run {{name}}'s check at this time",
     "demoClockBusy": "Checking…",
     "demoTime": {
       "morning": "Morning ({{time}})",

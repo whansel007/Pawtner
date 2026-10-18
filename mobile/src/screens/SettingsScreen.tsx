@@ -111,7 +111,7 @@ export function SettingsScreen({
           </section>
           <section className="demo-panel__section">
             <h3>{t("settings.demoUnlockTitle")}</h3>
-            <p>{t("settings.demoUnlockHint")}</p>
+            <p>{t("settings.demoUnlockHint", { senior: caregiver.seniorName })}</p>
             {DEMO_UNLOCK_GROUPS.map((group) => (
               <div className="demo-unlock-group" key={group.id}>
                 <p className="demo-unlock-group__title">{t(`settings.demoGroup.${group.id}`)}</p>
@@ -128,10 +128,10 @@ export function SettingsScreen({
           </section>
           <section className="demo-panel__section">
             <h3>{t("settings.demoClockTitle")}</h3>
-            <p>{t("settings.demoClockHint")}</p>
+            <p>{t("settings.demoClockHint", { name: petName })}</p>
             <label htmlFor="demo-clock">{t("settings.demoClockLabel")}</label>
             <input id="demo-clock" type="datetime-local" value={demoClockValue} onChange={(event) => onDemoClockChange(event.target.value)} />
-            <button className="primary-button" disabled={agentBusy || !demoClockValue} onClick={onRunDemoClock}>{agentBusy ? t("settings.demoClockBusy") : t("settings.demoClockRun")}</button>
+            <button className="primary-button" disabled={agentBusy || !demoClockValue} onClick={onRunDemoClock}>{agentBusy ? t("settings.demoClockBusy") : t("settings.demoClockRun", { name: petName })}</button>
           </section>
         </div>
       </details>
