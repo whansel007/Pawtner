@@ -102,8 +102,9 @@ export function HealthScreen({
     return { ok: true, sys, dia };
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  // Only a tap on "Save reading" saves: a phone keyboard's action key submits a form even when no Enter keydown
+  // arrives (many Android keyboards), so the form's own submit never saves.
+  function handleSave() {
     if (justSaved && !systolic.trim() && !diastolic.trim()) return;
     const result = validate();
     if (!result.ok) {
@@ -170,7 +171,7 @@ export function HealthScreen({
         </div>
       )}
 
-      <form className="bp-form" onSubmit={handleSubmit}>
+      <form className="bp-form" onSubmit={(e) => e.preventDefault()}>
         <p className="bp-form__title">{t("health.bpFormTitle")}</p>
         <div className="bp-form__row">
           <label className="bp-form__field">
@@ -228,7 +229,7 @@ export function HealthScreen({
           />
         </label>
         {error && <p className="bp-form__error" role="alert">{error}</p>}
-        <button className="bp-form__submit" type="submit">{t("health.bpSubmit")}</button>
+        <button className="bp-form__submit" type="button" onClick={handleSave}>{t("health.bpSubmit")}</button>
       </form>
 
       <ActionRow icon={<Icon name="book" />} title={t("health.weekSummary")} subtitle={t("health.weekSummarySub", { doses: weekSummary.metrics[0].value, walks: weekSummary.metrics[1].value })} onClick={onSummary} />
