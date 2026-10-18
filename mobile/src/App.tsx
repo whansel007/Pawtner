@@ -118,6 +118,8 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
   const [demoClock, setDemoClock] = useState<DemoClockAnchor | null>(() => { const at = initialAgentClock(); return at ? { at, setAtMs: Date.now() } : null; });
   /** The demo clock's time right now, or null for real time. */
   const demoNow = (): string | null => runningClock(demoClock);
+  /** The app's clock as an ISO string: the running demo clock, or real time (walk start/finish, the walk timer). */
+  const clockNow = (): string => demoNow() ?? new Date().toISOString();
   const setDemoNow = (at: string | null) => { setDemoClock(at ? { at, setAtMs: Date.now() } : null); void api.setDemoClock({ at }).catch((error) => reportApiProblem(error)); };
   // Scene time (`?time=`, Settings > Demo time buttons): day/night look only. Hearts, mood and doses stay on the one
   // real state; switching morning ↔ evening must never re-read /api/today at another time.
@@ -288,12 +290,13 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
    */
   async function handleWalkState(walking: boolean, simulated?: WalkCompletion) {
     if (walking) {
-      setWalkStartedAt(new Date().toISOString());
+      setWalkStartedAt(clockNow());
       return;
     }
     if (!walkStartedAt && !simulated) return;
-    const startedAt = walkStartedAt ?? new Date().toISOString();
-    const finishedAt = new Date().toISOString();
+    // Same clock as doses and readings (the running demo clock, or real time), so the walk heart counts right away.
+    const finishedAt = clockNow();
+    const startedAt = walkStartedAt ?? finishedAt;
     setWalkStartedAt(null);
     setDizzy(false);
     try {
@@ -525,7 +528,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         {screen === "schedule" && <ScheduleScreen back={back} onConfirm={handleScheduleConfirmed} petName={dogName} medicationId={savedMedicationId} />}
         {screen === "reference" && <ReferenceScreen back={back} onDone={handleReferenceDone} onSkip={handleReferenceDone} petName={dogName} medicationId={savedMedicationId} />}
         {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} medicationId={pendingDose?.medicationId} />}
-        {screen === "walk" && <WalkScreen back={back} walkStats={walkStats} petName={dogName} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
+        {screen === "walk" && <WalkScreen back={back} walkStats={walkStats} petName={dogName} walkStartedAt={walkStartedAt} clockNow={clockNow} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
         {screen === "milestones" && <MilestonesScreen back={back} onWalk={() => navigate("walk")} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} heartsTotal={heartsTotal} mood={mood} decision={routineDecision(latestDecision)} onTrick={(performance) => setTrickRequest((prev) => ({ id: (prev?.id ?? 0) + 1, performance }))} />}
         {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}

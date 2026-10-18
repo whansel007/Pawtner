@@ -380,6 +380,7 @@
     "titleDone": "Walk done",
     "km": "{{km}} km",
     "doneMessage": "Walk done: {{km}} km. {{name}} loved it!",
+    "doneMessageNoDistance": "Walk done. {{name}} loved it!",
     "startReady": "Start when {{name}} is ready",
     "startWalk": "Start walk",
     "finishWalk": "Finish walk",

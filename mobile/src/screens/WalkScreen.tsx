@@ -7,33 +7,35 @@ import type { BackAction } from "../lib/navigation";
 import type { WalkStats } from "../types";
 import { useSimulatedWalk } from "../lib/simulatedWalk";
 import type { WalkCompletion } from "../lib/walkState";
-
-function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
+import { elapsedSeconds, formatDuration } from "../lib/walkTimer";
+import { useWalkTimer } from "../lib/useWalkTimer";
 
 function formatKm(meters: number): string {
   return (meters / 1000).toFixed(2);
 }
 
-/** The last simulated walk's result, kept on screen until another walk starts or the senior leaves. */
+/** The last walk's result, kept on screen until another walk starts or the senior leaves. A real walk has no distance (null). */
 interface FinishedWalk {
   durationSeconds: number;
-  distanceMeters: number;
+  distanceMeters: number | null;
 }
 
 export function WalkScreen({
   back,
   walkStats,
   petName,
+  walkStartedAt,
+  clockNow,
   onWalkState,
   onDizzyChange,
 }: {
   back: BackAction;
   walkStats: WalkStats;
   petName: string;
+  /** When the current walk started (App's walk handler, on the app's clock); null when no walk runs. */
+  walkStartedAt: string | null;
+  /** The app's clock: the running demo clock, or real time. */
+  clockNow: () => string;
   onWalkState: (walking: boolean, simulated?: WalkCompletion) => void;
   onDizzyChange?: (dizzy: boolean) => void;
 }) {
@@ -79,6 +81,17 @@ export function WalkScreen({
   const isSimulating = simStarted && !simDone;
   const isActive = walking || isSimulating;
   const done = !isActive ? finishedWalk : null;
+  // Start walk: a live timer from the walk's start. No step counter or GPS, so a real walk (walking or finished) shows
+  // only its time: no distance line, no steps / calories / speed (owner, 18 Oct). Simulate walk keeps its numbers.
+  const walkSeconds = useWalkTimer(walking ? walkStartedAt : null, clockNow);
+  const realWalk = walking || (done !== null && done.distanceMeters === null);
+  const toggleWalk = () => {
+    const next = !walking;
+    if (next) setFinishedWalk(null);
+    else if (walkStartedAt) setFinishedWalk({ durationSeconds: elapsedSeconds(walkStartedAt, clockNow()), distanceMeters: null });
+    setWalking(next);
+    onWalkState(next);
+  };
 
   // Derive demo step count and calories from simulated distance.
   const simSteps = isSimulating ? Math.max(0, Math.round(simState.distanceMeters / STRIDE_METERS)) : 0;
@@ -96,31 +109,37 @@ export function WalkScreen({
           {isSimulating
             ? formatDuration(simState.durationSeconds)
             : walking
-              ? walkStats.duration
+              ? formatDuration(walkSeconds)
               : done
                 ? formatDuration(done.durationSeconds)
                 : "00:00"}
         </strong>
-        <small>
-          {isSimulating
-            ? t("walk.km", { km: formatKm(simState.distanceMeters) })
-            : walking
-              ? walkStats.distance
-              : done
+        {!realWalk && (
+          <small>
+            {isSimulating
+              ? t("walk.km", { km: formatKm(simState.distanceMeters) })
+              : done && done.distanceMeters !== null
                 ? t("walk.km", { km: formatKm(done.distanceMeters) })
                 : t("walk.startReady", { name: petName })}
-        </small>
+          </small>
+        )}
       </div>
       {done && (
-        <p className="walk-done" role="status">{t("walk.doneMessage", { km: formatKm(done.distanceMeters), name: petName })}</p>
+        <p className="walk-done" role="status">
+          {done.distanceMeters !== null
+            ? t("walk.doneMessage", { km: formatKm(done.distanceMeters), name: petName })
+            : t("walk.doneMessageNoDistance", { name: petName })}
+        </p>
       )}
-      <div className="walk-stats">
-        <div><strong>{walking ? walkStats.steps : isSimulating ? String(simSteps) : "0"}</strong><small>{t("common.steps")}</small></div>
-        <div><strong>{walking ? walkStats.calories : isSimulating ? String(simCalories) : "0"}</strong><small>{t("common.calories")}</small></div>
-        <div><strong>{isSimulating ? simState.speedKmh.toFixed(1) : walking ? walkStats.speed : "0.0"}</strong><small>{t("common.kmh")}</small></div>
-      </div>
+      {!realWalk && (
+        <div className="walk-stats">
+          <div><strong>{isSimulating ? String(simSteps) : "0"}</strong><small>{t("common.steps")}</small></div>
+          <div><strong>{isSimulating ? String(simCalories) : "0"}</strong><small>{t("common.calories")}</small></div>
+          <div><strong>{isSimulating ? simState.speedKmh.toFixed(1) : "0.0"}</strong><small>{t("common.kmh")}</small></div>
+        </div>
+      )}
       {!isSimulating && (
-        <button className={`primary-button ${walking ? "stop-button" : ""}`} onClick={() => { const next = !walking; if (next) setFinishedWalk(null); setWalking(next); onWalkState(next); }}>
+        <button className={`primary-button ${walking ? "stop-button" : ""}`} onClick={toggleWalk}>
           {walking ? t("walk.finishWalk") : t("walk.startWalk")}
         </button>
       )}
