@@ -432,7 +432,6 @@
   },
   "health": {
     "eyebrow": "This week",
-    "title": "Small steps, clearly told",
     "bpLabel": "BLOOD PRESSURE",
     "bpNeedsReading": "{{name}} needs one reading",
     "weekSummary": "Your week in plain words",

@@ -149,7 +149,6 @@ export function HealthScreen({
   return (
     <FullCard back={back}>
       <p className="eyebrow green">{t("health.eyebrow")}</p>
-      <h2>{t("health.title")}</h2>
 
       {/* With a warning, the Warning card replaces this one and carries the reading (owner, 18 Oct: no "Good job" under a Warning). */}
       {!showResult && <div className={`metric-card ${bpLogged ? "complete" : ""}`}>
