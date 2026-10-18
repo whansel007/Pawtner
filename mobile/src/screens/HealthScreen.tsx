@@ -5,7 +5,7 @@ import { FullCard } from "../components/FullCard";
 import { ActionRow } from "../components/ActionRow";
 import { ClinicMemoRow } from "../components/ClinicMemoRow";
 import type { BackAction } from "../lib/navigation";
-import { explainDecision } from "../lib/decisions";
+import { explainDecision, isUrgentDecision } from "../lib/decisions";
 import { BP_RANGE } from "../config/bp";
 import { SYMPTOM_KEYS, type SymptomKey } from "../config/health";
 import { buildBpNote } from "../lib/bpNote";
@@ -36,7 +36,8 @@ export function HealthScreen({
   bpLogged: boolean;
   healthMetrics: HealthMetric[];
   latestDecision: AgentDecision | null;
-  onLogBp: (metric: HealthMetric) => void;
+  /** Saves the reading (App: API, then the toast); the button shows "Saving…" until it resolves. */
+  onLogBp: (metric: HealthMetric) => Promise<void> | void;
   onScreening: () => void;
   onSummary: () => void;
   bloodPressureReading: BloodPressureReading;
@@ -65,6 +66,18 @@ export function HealthScreen({
   const toggleFine = () => { setFeelFine((v) => !v); setSymptoms(new Set()); };
   const [error, setError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+  const diastolicRef = useRef<HTMLInputElement>(null);
+  // Right after a save the boxes are empty and the reading shows above; another tap on Save then does nothing
+  // (owner, 18 Oct: a second tap used to show "Please enter both numbers" though the reading was saved).
+  const [justSaved, setJustSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  // A phone keyboard's Enter/Go would submit the whole form from any box (and show "enter both numbers" too early):
+  // here it moves to the next box, or closes the keyboard; only "Save reading" saves.
+  const enterMovesTo = (next: HTMLInputElement | null) => (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    if (next) next.focus(); else event.currentTarget.blur();
+  };
 
   const lastMetric = healthMetrics.length > 0
     ? [...healthMetrics].sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))[0]
@@ -91,8 +104,10 @@ export function HealthScreen({
     return { ok: true, sys, dia };
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  // Only a tap on "Save reading" saves: a phone keyboard's action key submits a form even when no Enter keydown
+  // arrives (many Android keyboards), so the form's own submit never saves.
+  async function handleSave() {
+    if (saving || (justSaved && !systolic.trim() && !diastolic.trim())) return;
     const result = validate();
     if (!result.ok) {
       setError(result.msg);
@@ -107,7 +122,10 @@ export function HealthScreen({
       note: buildBpNote(feelFine ? [t("health.symptoms.fine")] : SYMPTOM_KEYS.filter((key) => symptoms.has(key)).map((key) => t(`health.symptoms.${key}`)), note),
       recordedAt: new Date().toISOString(),
     };
-    onLogBp(metric);
+    // The numbers stay in the boxes while it saves; then they clear and App shows the toast.
+    setSaving(true);
+    try { await onLogBp(metric); } finally { setSaving(false); }
+    setJustSaved(true);
     setSystolic("");
     setDiastolic("");
     setNote("");
@@ -115,9 +133,8 @@ export function HealthScreen({
     setSymptoms(new Set());
   }
 
-  const isEmergency = latestDecision?.decision === "emergency_995";
-  const isSeeGp = latestDecision?.decision === "see_gp_soon";
-  const showResult = isEmergency || isSeeGp;
+  // One warning for every condition (owner, 18 Oct); its line names the condition (explainDecision).
+  const showResult = isUrgentDecision(latestDecision);
 
   // Scroll the result card into view after the decision arrives, without smooth scroll under reduced motion.
   useEffect(() => {
@@ -134,7 +151,8 @@ export function HealthScreen({
       <p className="eyebrow green">{t("health.eyebrow")}</p>
       <h2>{t("health.title")}</h2>
 
-      <div className={`metric-card ${bpLogged ? "complete" : ""}`}>
+      {/* With a warning, the Warning card replaces this one and carries the reading (owner, 18 Oct: no "Good job" under a Warning). */}
+      {!showResult && <div className={`metric-card ${bpLogged ? "complete" : ""}`}>
         <span className="feature-icon sage"><Icon name="heart" /></span>
         <div>
           <small>{t("health.bpLabel")}</small>
@@ -142,22 +160,23 @@ export function HealthScreen({
           {/* Compared with her first reading (shared/rules.ts bloodPressureProgress): first / keep at it / good job / warning. */}
           <p>{lastMetric ? t(`health.bpProgress.${bloodPressureProgress(lastMetric, firstReading)}`, { name: petName }) : (bpLogged ? bloodPressureReading.note : bloodPressureReading.pendingNote)}</p>
         </div>
-      </div>
+      </div>}
 
       {showResult && latestDecision && (
         <div
           ref={resultRef}
-          className={`bp-result ${isEmergency ? "bp-result--emergency" : "bp-result--gp"}`}
+          className="bp-result bp-result--warning"
           tabIndex={-1}
         >
-          {/* Urgent decisions (995, see a GP) live here, not on Home (routine ones are on Milestones). User, 16 Oct:
-              just "Warning" and the plain reason; no action line, no button, no "Why?". */}
+          {/* The warning lives here, not on Home (routine decisions are on Milestones). User, 16 Oct: just "Warning"
+              and the plain reason (it follows the condition); no action line, no button, no "Why?". */}
           <p className="bp-result__title">{t("health.warning")}</p>
+          {lastMetric && <p className="bp-result__reading">{`${lastMetric.systolic} / ${lastMetric.diastolic}`}</p>}
           <p className="bp-result__wording">{t(explainDecision(latestDecision).reasonKey)}</p>
         </div>
       )}
 
-      <form className="bp-form" onSubmit={handleSubmit}>
+      <form className="bp-form" onSubmit={(e) => e.preventDefault()}>
         <p className="bp-form__title">{t("health.bpFormTitle")}</p>
         <div className="bp-form__row">
           <label className="bp-form__field">
@@ -167,7 +186,9 @@ export function HealthScreen({
               type="text"
               inputMode="numeric"
               value={systolic}
-              onChange={(e) => setSystolic(e.target.value)}
+              onChange={(e) => { setSystolic(e.target.value); setError(null); setJustSaved(false); }}
+              onKeyDown={(e) => enterMovesTo(diastolicRef.current)(e)}
+              enterKeyHint="next"
               autoComplete="off"
             />
           </label>
@@ -177,8 +198,11 @@ export function HealthScreen({
               className="bp-form__input"
               type="text"
               inputMode="numeric"
+              ref={diastolicRef}
               value={diastolic}
-              onChange={(e) => setDiastolic(e.target.value)}
+              onChange={(e) => { setDiastolic(e.target.value); setError(null); setJustSaved(false); }}
+              onKeyDown={enterMovesTo(null)}
+              enterKeyHint="done"
               autoComplete="off"
             />
           </label>
@@ -203,12 +227,14 @@ export function HealthScreen({
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            onKeyDown={enterMovesTo(null)}
+            enterKeyHint="done"
             placeholder={t("health.bpNotePlaceholder")}
             autoComplete="off"
           />
         </label>
         {error && <p className="bp-form__error" role="alert">{error}</p>}
-        <button className="bp-form__submit" type="submit">{t("health.bpSubmit")}</button>
+        <button className="bp-form__submit" type="button" disabled={saving} onClick={() => void handleSave()}>{saving ? t("health.bpSaving") : t("health.bpSubmit")}</button>
       </form>
 
       <ActionRow icon={<Icon name="book" />} title={t("health.weekSummary")} subtitle={t("health.weekSummarySub", { doses: weekSummary.metrics[0].value, walks: weekSummary.metrics[1].value })} onClick={onSummary} />

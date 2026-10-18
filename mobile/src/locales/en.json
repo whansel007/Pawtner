@@ -456,6 +456,7 @@
     "bpNoteLabel": "Note (optional)",
     "bpNotePlaceholder": "How are you feeling?",
     "bpSubmit": "Save reading",
+    "bpSaving": "Saving…",
     "bpErrorBothRequired": "Please enter both numbers.",
     "bpErrorWhole": "Please enter whole numbers. Systolic {{sysMin}}–{{sysMax}}, diastolic {{diaMin}}–{{diaMax}}.",
     "bpErrorSystolic": "Systolic (top) must be between {{min}} and {{max}}.",
@@ -645,6 +646,7 @@
     "nudgeSet": "{{name}} knows when to nudge you.",
     "heartGained": "{{name}} gained a heart!",
     "bpLogged": "Reading logged. {{name}}'s heart is full!",
+    "bpWarning": "uh-oh, but thank you for logging the information",
     "worlds": {
       "garden": "The garden is now behind {{name}}.",
       "beach": "The beach is now behind {{name}}.",

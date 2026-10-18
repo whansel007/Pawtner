@@ -7,7 +7,8 @@ export async function applyModelWording(
   options: { apiKey?: string; timeoutMs: number; generate?: WordingModel },
 ): Promise<AgentDecision> {
   const fallback = { ...decision, wordingSource: "template" as const };
-  if (decision.decision === "emergency_995" || decision.refused || !options.apiKey || !options.generate) return fallback;
+  // A warning's message is fixed text (it names the condition); the model never rewords it.
+  if (decision.decision === "emergency_995" || decision.decision === "see_gp_soon" || decision.refused || !options.apiKey || !options.generate) return fallback;
   let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
     const wording = await Promise.race([

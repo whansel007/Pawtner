@@ -5410,10 +5410,13 @@ var DECISION_TEMPLATES = {
   celebrate: "A lovely moment together. Your care routine is moving along.",
   restock_reminder: "Your supply may be getting low. Please check with your pharmacy when convenient.",
   doctor_question: "Would you like to ask your doctor or pharmacist about how you've been feeling?",
-  see_gp_soon: "The app's demo rules suggest arranging a check with your GP soon. This is not medical advice.",
-  emergency_995: "Call 995 now. This app cannot provide emergency care.",
+  // One warning (owner, 18 Oct: "see doctor immediately" for all); its message follows the condition, like the card line.
+  see_gp_soon: "This reading is higher than your first reading.",
+  // No longer decided (an emergency sign is now a see_gp_soon warning); kept so warnings saved before still read.
+  emergency_995: "Your note mentioned a sign that can be serious.",
   stay_quiet: "I'm here beside you."
 };
+var WARNING_EMERGENCY_SIGN_WORDING = "Your note mentioned a sign that can be serious.";
 
 // shared/rules.ts
 function includesAny(text, keywords) {
@@ -5463,13 +5466,16 @@ function decide(input) {
   const metrics = input.healthMetrics.filter((metric) => Date.parse(metric.recordedAt) <= nowMs);
   const latestMetric = [...metrics].sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))[0];
   if (latestMetric && includesAny(latestMetric.note ?? "", EMERGENCY_SYMPTOM_KEYWORDS)) {
-    return decision(
-      input,
-      "emergency_995",
-      "emergency_symptom_note",
-      "The latest reading's note mentions a configured emergency symptom; the wording is fixed and uses no model.",
-      { symptomDetected: true }
-    );
+    return {
+      ...decision(
+        input,
+        "see_gp_soon",
+        "emergency_symptom_note",
+        "The latest reading's note mentions a configured emergency symptom; the wording is fixed and uses no model.",
+        { symptomDetected: true }
+      ),
+      wording: WARNING_EMERGENCY_SIGN_WORDING
+    };
   }
   const firstReading = firstReadingOf(metrics);
   if (latestMetric && bloodPressureProgress(latestMetric, firstReading) === "warning" && firstReading) {
@@ -5747,7 +5753,7 @@ function walksUntilNow(source) {
 // shared/wording.ts
 async function applyModelWording(decision2, options) {
   const fallback = { ...decision2, wordingSource: "template" };
-  if (decision2.decision === "emergency_995" || decision2.refused || !options.apiKey || !options.generate) return fallback;
+  if (decision2.decision === "emergency_995" || decision2.decision === "see_gp_soon" || decision2.refused || !options.apiKey || !options.generate) return fallback;
   let timeout;
   try {
     const wording = await Promise.race([

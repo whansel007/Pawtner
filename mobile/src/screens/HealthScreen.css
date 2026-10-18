@@ -80,6 +80,12 @@
   cursor: pointer;
 }
 
+/* "Saving…": same button, quieter, can't be tapped again. */
+.bp-form__submit:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
 /* ── Calm result card: no animation, no emoji, large readable text ── */
 .bp-result {
   margin-top: 14px;
@@ -89,14 +95,10 @@
 }
 
 /* Calm, not alarming (user, 16 Oct): warm cream and Buddy's green, no red. The words still say "Call 995 now". */
-.bp-result--emergency {
+/* One warning look for every condition (owner, 18 Oct). */
+.bp-result--warning {
   background: var(--color-surface-cream-warm);
   border: 2px solid var(--color-surface-cream);
-}
-
-.bp-result--gp {
-  background: var(--color-surface-sage-deep);
-  border: 2px solid #c5d9c0;
 }
 
 
@@ -108,6 +110,14 @@
   color: var(--color-text-heading);
 }
 
+
+/* The reading inside the Warning card (the blood-pressure card is hidden while there's a warning). */
+.bp-result__reading {
+  margin: 0 0 6px;
+  font-size: var(--font-size-6xl);
+  font-weight: var(--font-weight-black);
+  color: var(--color-text-heading);
+}
 
 .bp-result__wording {
   margin: 0;

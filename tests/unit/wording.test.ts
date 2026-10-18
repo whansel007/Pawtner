@@ -27,7 +27,8 @@ describe("model wording fallback", () => {
       expect(result.wordingSource).toBe("template");
     }
     expect(new Set(decisions.map((item) => item.decision))).toEqual(new Set([
-      "nudge", "emergency_995", "see_gp_soon", "celebrate", "restock_reminder", "doctor_question", "stay_quiet",
+      // emergency_995 is no longer decided: an emergency sign is the same warning (see_gp_soon), owner 18 Oct.
+      "nudge", "see_gp_soon", "celebrate", "restock_reminder", "doctor_question", "stay_quiet",
     ]));
   });
   it("falls back after timeout or model error", async () => {
@@ -37,10 +38,11 @@ describe("model wording fallback", () => {
     const failed = await applyModelWording(decision, { apiKey: "test-only", timeoutMs: 100, generate: async () => { throw new Error("offline"); } });
     expect(failed).toMatchObject({ wording: decision.wording, wordingSource: "template" });
   });
-  it("never calls the model for emergency_995", async () => {
+  it("never calls the model for a warning (any condition) or a warning saved as emergency_995", async () => {
     const emergency = decide(sharedFixtures.find((fixture) => fixture.name === "emergency-995")!.input);
     const generate = vi.fn(async () => "unsafe replacement");
     expect(await applyModelWording(emergency, { apiKey: "test-only", timeoutMs: 20, generate })).toMatchObject({ wording: emergency.wording, wordingSource: "template" });
+    expect(await applyModelWording({ ...emergency, decision: "emergency_995" }, { apiKey: "test-only", timeoutMs: 20, generate })).toMatchObject({ wordingSource: "template" });
     expect(generate).not.toHaveBeenCalled();
   });
 });

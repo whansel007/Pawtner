@@ -28,8 +28,8 @@ describe("How do you feel? tick boxes", () => {
 
   it("a ticked emergency sign warns at normal numbers; 'I feel fine' does not", () => {
     const at = base.now;
-    expect(decide({ ...base, healthMetrics: [reading(120, 80, buildBpNote([en.health.symptoms.chestPain], ""), at)] }).decision).toBe("emergency_995");
-    expect(decide({ ...base, healthMetrics: [reading(120, 80, buildBpNote([en.health.symptoms.fine], ""), at)] }).decision).not.toBe("emergency_995");
+    expect(decide({ ...base, healthMetrics: [reading(120, 80, buildBpNote([en.health.symptoms.chestPain], ""), at)] })).toMatchObject({ decision: "see_gp_soon", ruleId: "emergency_symptom_note" });
+    expect(decide({ ...base, healthMetrics: [reading(120, 80, buildBpNote([en.health.symptoms.fine], ""), at)] }).decision).not.toBe("see_gp_soon");
   });
 
   it("the phone's local copy of the first reading still counts as the first", () => {

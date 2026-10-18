@@ -42,7 +42,7 @@ describe("explainDecision", () => {
 
   it("every rule id in shared/rules.ts has a plain reason", () => {
     const source = readFileSync(new URL("../../shared/rules.ts", import.meta.url), "utf8");
-    const ruleIds = [...source.matchAll(/return decision\(input, "\w+", ([^\n]+)/g)]
+    const ruleIds = [...source.matchAll(/decision\(input, "\w+", ([^\n]+)/g)]
       .flatMap((match) => [...match[1].matchAll(/"([a-z0-9]+(?:_[a-z0-9]+)+)"/g)].map((id) => id[1]));
     expect(ruleIds.length).toBeGreaterThanOrEqual(9);
     for (const ruleId of ruleIds) expect(RULES_WITH_PLAIN_REASON).toContain(ruleId);
