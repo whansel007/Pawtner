@@ -4,7 +4,7 @@ import {
   POSSIBLE_SIDE_EFFECT_KEYWORDS,
 } from "./config.js";
 import type { AgentDecision, AgentInput, DecisionKind, DogMood, HealthMetric } from "./contract.js";
-import { DECISION_TEMPLATES } from "./templates.js";
+import { DECISION_TEMPLATES, WARNING_EMERGENCY_SIGN_WORDING } from "./templates.js";
 
 function includesAny(text: string, keywords: readonly string[]): boolean {
   const normalized = text.toLowerCase();
@@ -89,11 +89,15 @@ export function decide(input: AgentInput): AgentDecision {
   const nowMs = Date.parse(input.now);
   const metrics = input.healthMetrics.filter((metric) => Date.parse(metric.recordedAt) <= nowMs);
   const latestMetric = [...metrics].sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))[0];
-  // Emergency signs typed in the latest reading's note: Warning whatever the numbers.
+  // One warning for every condition (owner, 18 Oct: "They should be the same … All are see doctor immediately").
+  // Emergency signs in the latest reading's note: the warning whatever the numbers, with its own line.
   if (latestMetric && includesAny(latestMetric.note ?? "", EMERGENCY_SYMPTOM_KEYWORDS)) {
-    return decision(input, "emergency_995", "emergency_symptom_note",
-      "The latest reading's note mentions a configured emergency symptom; the wording is fixed and uses no model.",
-      { symptomDetected: true });
+    return {
+      ...decision(input, "see_gp_soon", "emergency_symptom_note",
+        "The latest reading's note mentions a configured emergency symptom; the wording is fixed and uses no model.",
+        { symptomDetected: true }),
+      wording: WARNING_EMERGENCY_SIGN_WORDING,
+    };
   }
 
   // Otherwise the numbers decide, against the first reading (user, 16 Oct).

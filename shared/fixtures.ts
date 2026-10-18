@@ -44,10 +44,10 @@ export const sharedFixtures: AgentFixture[] = [
     name: "emergency-995",
     input: {
       ...baseInput,
-      // Emergency sign ticked on the BP form (lands in the note): Warning whatever the numbers.
+      // Emergency sign ticked on the BP form (lands in the note): the one warning whatever the numbers (owner, 18 Oct).
       healthMetrics: [{ id: "bp-emergency", kind: "blood_pressure", systolic: 150, diastolic: 95, note: "Chest pain", recordedAt: "2026-10-14T10:00:00+08:00" }],
     },
-    expected: { decision: "emergency_995", ruleId: "emergency_symptom_note", mood: "attentive", caretakerPing: false },
+    expected: { decision: "see_gp_soon", ruleId: "emergency_symptom_note", mood: "attentive", caretakerPing: false },
   },
   {
     name: "see-gp-soon",

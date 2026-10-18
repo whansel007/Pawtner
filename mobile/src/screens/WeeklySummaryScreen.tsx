@@ -26,7 +26,7 @@ export function WeeklySummaryScreen({
       <p className="eyebrow green">{t("summary.eyebrow")}</p>
       <h2>{t("summary.title")}</h2>
       {warning && (
-        <div className={`bp-result ${warning.decision === "emergency_995" ? "bp-result--emergency" : "bp-result--gp"}`}>
+        <div className="bp-result bp-result--warning">
           <p className="bp-result__title">{t("health.warning")}</p>
           <p className="bp-result__wording">{t(explainDecision(warning).reasonKey)}</p>
         </div>

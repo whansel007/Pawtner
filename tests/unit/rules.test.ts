@@ -68,7 +68,9 @@ describe("deterministic decision rules", () => {
   });
 
   it("an emergency sign in the latest note is a Warning at any numbers; a headache alone is not", () => {
-    expect(decide({ ...base, healthMetrics: [high(120, 80, "Chest pain")] })).toMatchObject({ decision: "emergency_995", ruleId: "emergency_symptom_note" });
+    // One warning for every condition (owner, 18 Oct); the line names the condition.
+    expect(decide({ ...base, healthMetrics: [high(120, 80, "Chest pain")] })).toMatchObject({ decision: "see_gp_soon", ruleId: "emergency_symptom_note", wording: "Your note mentioned a sign that can be serious." });
+    expect(decide({ ...base, healthMetrics: [high(120, 80, null, -48), high(191, 110)] }).wording).toBe("This reading is higher than your first reading.");
     expect(decide({ ...base, healthMetrics: [high(185, 120, "bad headache")] }).decision).toBe("stay_quiet");
     // Only the latest note counts, so an old symptom doesn't stay stuck.
     expect(decide({ ...base, healthMetrics: [high(150, 95, "Fainting", -24), high(150, 95)] }).decision).toBe("stay_quiet");

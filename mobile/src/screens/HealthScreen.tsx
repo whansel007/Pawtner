@@ -5,7 +5,7 @@ import { FullCard } from "../components/FullCard";
 import { ActionRow } from "../components/ActionRow";
 import { ClinicMemoRow } from "../components/ClinicMemoRow";
 import type { BackAction } from "../lib/navigation";
-import { explainDecision } from "../lib/decisions";
+import { explainDecision, isUrgentDecision } from "../lib/decisions";
 import { BP_RANGE } from "../config/bp";
 import { SYMPTOM_KEYS, type SymptomKey } from "../config/health";
 import { buildBpNote } from "../lib/bpNote";
@@ -133,9 +133,8 @@ export function HealthScreen({
     setSymptoms(new Set());
   }
 
-  const isEmergency = latestDecision?.decision === "emergency_995";
-  const isSeeGp = latestDecision?.decision === "see_gp_soon";
-  const showResult = isEmergency || isSeeGp;
+  // One warning for every condition (owner, 18 Oct); its line names the condition (explainDecision).
+  const showResult = isUrgentDecision(latestDecision);
 
   // Scroll the result card into view after the decision arrives, without smooth scroll under reduced motion.
   useEffect(() => {
@@ -165,11 +164,11 @@ export function HealthScreen({
       {showResult && latestDecision && (
         <div
           ref={resultRef}
-          className={`bp-result ${isEmergency ? "bp-result--emergency" : "bp-result--gp"}`}
+          className="bp-result bp-result--warning"
           tabIndex={-1}
         >
-          {/* Urgent decisions (995, see a GP) live here, not on Home (routine ones are on Milestones). User, 16 Oct:
-              just "Warning" and the plain reason; no action line, no button, no "Why?". */}
+          {/* The warning lives here, not on Home (routine decisions are on Milestones). User, 16 Oct: just "Warning"
+              and the plain reason (it follows the condition); no action line, no button, no "Why?". */}
           <p className="bp-result__title">{t("health.warning")}</p>
           <p className="bp-result__wording">{t(explainDecision(latestDecision).reasonKey)}</p>
         </div>

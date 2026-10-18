@@ -95,14 +95,10 @@
 }
 
 /* Calm, not alarming (user, 16 Oct): warm cream and Buddy's green, no red. The words still say "Call 995 now". */
-.bp-result--emergency {
+/* One warning look for every condition (owner, 18 Oct). */
+.bp-result--warning {
   background: var(--color-surface-cream-warm);
   border: 2px solid var(--color-surface-cream);
-}
-
-.bp-result--gp {
-  background: var(--color-surface-sage-deep);
-  border: 2px solid #c5d9c0;
 }
 
 

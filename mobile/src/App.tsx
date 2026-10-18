@@ -276,9 +276,8 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
       reportApiProblem("health-metric request failed");
     }
     setBpLogged(true);
-    // The 995 moment stays calm: no toast. A see-GP warning gets its own gentle toast (owner, 18 Oct).
-    if (decision.decision === "see_gp_soon") notify(t("toast.bpSeeGp"));
-    else if (decision.decision !== "emergency_995") notify(t("toast.bpLogged", { name: dogName }));
+    // Every warning gets the same gentle toast (owner, 18 Oct: one warning for every condition).
+    notify(isUrgentDecision(decision) ? t("toast.bpWarning") : t("toast.bpLogged", { name: dogName }));
   }
 
   /**
