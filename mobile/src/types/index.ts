@@ -200,21 +200,6 @@ export interface WorldOption {
   note: string;
 }
 
-export interface WalkStats {
-  /** Duration string, e.g. "18:24" */
-  duration: string;
-  /** Distance string, e.g. "0.92 km" */
-  distance: string;
-  /** Step count */
-  steps: string;
-  /** Calories burned */
-  calories: string;
-  /** Speed string */
-  speed: string;
-  /** Today's goal text */
-  goal: string;
-}
-
 // Re-export shared types so screens can import everything from types/
 import type { Screen, World, Accessory } from "./common";
 export type { Screen, World, Accessory };

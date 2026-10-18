@@ -24,17 +24,22 @@ export interface MemoPhoto {
   dataUrl: string;
   /** ISO time it was added ("" for a photo saved before the list existed). */
   addedAt: string;
+  /** Set by Reset to morning: the photo is hidden (shared/dayReset.ts). */
+  resetAt?: string;
 }
 
 function toPhoto(value: unknown): MemoPhoto | null {
   if (!value || typeof value !== "object") return null;
   const photo = value as Record<string, unknown>;
   if (typeof photo.id !== "string" || !isImageDataUrl(photo.dataUrl)) return null;
-  return { id: photo.id, dataUrl: photo.dataUrl, addedAt: typeof photo.addedAt === "string" ? photo.addedAt : "" };
+  return {
+    id: photo.id, dataUrl: photo.dataUrl, addedAt: typeof photo.addedAt === "string" ? photo.addedAt : "",
+    ...(typeof photo.resetAt === "string" ? { resetAt: photo.resetAt } : {}),
+  };
 }
 
 /**
- * Stored photos, newest first, or []. Earlier builds stored one data URL under the same key; that photo
+ * Stored photos, newest first, hidden ones (Reset to morning) included, or []. Earlier builds stored one data URL under the same key; that photo
  * becomes the only entry, so nobody loses it.
  */
 export function readClinicMemos(key: string, store: KeyValueStore | null = browserStore()): MemoPhoto[] {

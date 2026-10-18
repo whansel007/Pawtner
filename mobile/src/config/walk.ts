@@ -10,6 +10,9 @@ export interface WalkPoint {
   meters: number;
 }
 
+/** Where this phone keeps the walk goal chosen in Settings (lib/walkGoals.ts); not cleared by Reset to morning. */
+export const WALK_GOAL_STORAGE_KEY = "pawtner.walkGoal";
+
 /** Speed threshold: above this the dog gets dizzy and distance pauses. */
 export const FAST_SPEED_KMH = 12;
 
@@ -21,12 +24,6 @@ export const PLAYBACK_RATE = 45;
 
 /** Real milliseconds between playback ticks (each tick advances PLAYBACK_RATE / 5 = 9 s). */
 export const TICK_MS = 200;
-
-/** Demo stride length used to derive step count from walked distance (meters per step). */
-export const STRIDE_METERS = 0.7;
-
-/** Demo calories burned per kilometer walked (used to derive kcal from distance). */
-export const KCAL_PER_KM = 50;
 
 /**
  * Demo track: 375 s walk (~5 km/h), 150 s bus (~25 km/h), 375 s walk (~5 km/h).

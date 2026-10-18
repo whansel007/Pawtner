@@ -1,22 +1,26 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DEMO_POINTS, PLAYBACK_RATE, TICK_MS } from "../config/walk.js";
+import { DEMO_POINTS, PLAYBACK_RATE, TICK_MS, type WalkPoint } from "../config/walk.js";
 import { walkStateAt } from "./walkState.js";
 
 /**
  * React hook that drives a simulated walk with one interval.
- * Each TICK_MS tick advances PLAYBACK_RATE * TICK_MS / 1000 simulated seconds.
+ * Each TICK_MS tick advances playbackRate * TICK_MS / 1000 simulated seconds along `points`
+ * (by default the demo track; lib/walkState.ts simulationFor stretches it to the walk goal).
  * Cleared automatically on finish and on unmount.
  */
-export function useSimulatedWalk() {
+export function useSimulatedWalk(points: WalkPoint[] = DEMO_POINTS, playbackRate: number = PLAYBACK_RATE) {
   const [elapsedSimulatedSeconds, setElapsedSimulatedSeconds] = useState(0);
   const [started, setStarted] = useState(false);
   const [forceFinished, setForceFinished] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const state = useMemo(
-    () => walkStateAt(DEMO_POINTS, elapsedSimulatedSeconds),
-    [elapsedSimulatedSeconds]
+    () => walkStateAt(points, elapsedSimulatedSeconds),
+    [points, elapsedSimulatedSeconds]
   );
+  // The track and rate in use when start() runs (latest values without restarting the interval).
+  const track = useRef({ points, playbackRate });
+  track.current = { points, playbackRate };
 
   const start = useCallback(() => {
     setStarted(true);
@@ -27,8 +31,9 @@ export function useSimulatedWalk() {
     }
     intervalRef.current = setInterval(() => {
       setElapsedSimulatedSeconds((prev) => {
-        const end = DEMO_POINTS[DEMO_POINTS.length - 1].atSeconds;
-        const next = prev + (PLAYBACK_RATE * TICK_MS) / 1000;
+        const { points: current, playbackRate: rate } = track.current;
+        const end = current[current.length - 1].atSeconds;
+        const next = prev + (rate * TICK_MS) / 1000;
         return next >= end ? end : next;
       });
     }, TICK_MS);

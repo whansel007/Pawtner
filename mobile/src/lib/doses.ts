@@ -19,10 +19,8 @@ export function selectNextDose(doses: DerivedDose[]): DerivedDose | null {
   return upcoming ?? null;
 }
 
-/** Count how many doses have status "taken". */
-export function countTaken(doses: DerivedDose[]): number {
-  return doses.filter((d) => d.status === "taken").length;
-}
+/** Count how many doses have status "taken" (one helper, lib/doseCount.ts). */
+export { countTaken } from "./doseCount";
 
 /**
  * Format an ISO time string for display using Intl.DateTimeFormat.

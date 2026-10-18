@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { VISIT_NOTES } from "../config/health";
 import { api } from "./api";
+import { liveItems } from "../../../shared/dayReset";
 import { addVisitNote, cleanNoteText, editVisitNote, readVisitNotes, removeVisitNote, writeVisitNotes, type VisitNote } from "./visitNotes";
 
 /** Stored notes, kept in sync with other tabs of the same origin. */
@@ -15,7 +16,7 @@ function useStoredVisitNotes() {
 }
 
 /**
- * "For my next visit" notes for this phone, newest first. Kept in state too, so they last the session if storage is blocked.
+ * "For my next visit" notes for this phone, newest first; notes hidden by Reset to morning are kept in storage but not shown. Kept in state too, so they last the session if storage is blocked.
  * A note shared with the caretaker is mirrored to the server (PUT / DELETE /api/shared-notes/:id), so /care sees it from
  * any browser; private notes and earlier wordings never leave the phone. `onApiError` reports a failed mirror (the toast).
  */
@@ -51,5 +52,6 @@ export function useVisitNotes(onApiError: (error: unknown) => void) {
     if (removed?.shared) api.deleteSharedNote(id).catch(onApiError);
   }, [notes, save, onApiError]);
 
-  return { notes, latest: notes[0] ?? null, add, edit, remove, maxLength: VISIT_NOTES.maxLength };
+  const shown = liveItems(notes);
+  return { notes: shown, latest: shown[0] ?? null, add, edit, remove, maxLength: VISIT_NOTES.maxLength };
 }

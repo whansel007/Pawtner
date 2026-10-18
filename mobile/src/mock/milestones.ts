@@ -1,4 +1,4 @@
-import type { Trick, WalkStats, WorldOption, AccessoryOption } from "../types";
+import type { Trick, WorldOption, AccessoryOption } from "../types";
 
 /**
  * Offline fallback for Milestones. Mirrors the API's trick ladder (api/repository.ts: Sit 1, Wave 7,
@@ -23,12 +23,3 @@ export const accessoryOptions: AccessoryOption[] = [
   { id: "hat", label: "Sun hat", note: "" },
   { id: "flower", label: "Hibiscus bloom", note: "accessory.fromCaretaker" },
 ];
-
-export const walkStats: WalkStats = {
-  duration: "18:24",
-  distance: "0.92 km",
-  steps: "1,842",
-  calories: "48",
-  speed: "4.2",
-  goal: "Today's goal · 30 minutes · speed check on",
-};

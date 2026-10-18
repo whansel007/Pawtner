@@ -24,6 +24,7 @@ import type {
   SouvenirResponse,
   TodayResponse,
   TreatResponse,
+  WalkSessionRequest,
   WalkSessionResponse,
 } from "../../../shared/contract";
 
@@ -50,14 +51,14 @@ export const api = {
   // T1 endpoints
   today: (now?: string) => request<TodayResponse>(`/today${now ? `?now=${encodeURIComponent(now)}` : ""}`),
   decide: (userId: string, now: string) => request<{ decision: AgentDecision }>("/agent/decide", { method: "POST", body: JSON.stringify({ userId, now }) }),
-  /** Demo only: deletes today's dose taps, readings and decisions (from the start of `now`'s day), then decides at `now`. */
+  /** Demo only: hides (never deletes) today's dose taps, readings, decisions and walks (from the start of `now`'s day), then decides at `now`. */
   resetDemoDay: (now: string) => request<TodayResponse>("/demo/reset-day", { method: "POST", body: JSON.stringify({ now }) }),
   caretakerSummary: (now?: string) => request<CaretakerSummaryResponse>(`/caretaker/summary${now ? `?now=${encodeURIComponent(now)}` : ""}`),
   escalationSettings: () => request<EscalationSettingsResponse>("/escalation-settings"),
   updateEscalationSettings: (data: EscalationSettingsRequest) => request<EscalationSettingsResponse>("/escalation-settings", { method: "PUT", body: JSON.stringify(data) }),
   doseEvent: (data: { scheduleId: string; scheduledFor: string; event: "taken"; occurredAt: string; proofPhotoUrl?: string | null }) => request<DoseEventResponse>("/dose-event", { method: "POST", body: JSON.stringify(data) }),
   healthMetric: (data: { systolic: number; diastolic: number; note?: string | null; recordedAt: string }) => request<HealthMetricResponse>("/health-metric", { method: "POST", body: JSON.stringify(data) }),
-  walkSession: (data: { startedAt: string; finishedAt: string; distanceMeters: number; fastStretchOccurred: boolean }) => request<WalkSessionResponse>("/walk-session", { method: "POST", body: JSON.stringify(data) }),
+  walkSession: (data: WalkSessionRequest) => request<WalkSessionResponse>("/walk-session", { method: "POST", body: JSON.stringify(data) }),
 
   // T2-01: HSA product search
   searchProducts: (q: string) => request<{ query: string; products: { id: string; brandName: string; genericName: string | null; strength: string | null; dosageForm: string | null; routeOfAdministration: string | null; forensicClassification: string | null; activeIngredients: string | null; sourceAttribution: string }[] }>(`/products/search?q=${encodeURIComponent(q)}`),

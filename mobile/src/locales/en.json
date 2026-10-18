@@ -5,6 +5,14 @@
     "caretaker": "Jamie",
     "updatesOnlyCaretaker": "Alex"
   },
+  "walkGoals": {
+    "default": "5k",
+    "options": [
+      { "key": "3k", "steps": 3000, "minutes": 30 },
+      { "key": "5k", "steps": 5000, "minutes": 50 },
+      { "key": "10k", "steps": 10000, "minutes": 100 }
+    ]
+  },
   "intro": {
     "coverAlt": "Pawtner cover image",
     "brand": "Pawtner",
@@ -19,10 +27,7 @@
     "done": "Done",
     "viewAll": "View all",
     "log": "Log",
-    "today": "Today",
-    "steps": "steps",
-    "calories": "calories",
-    "kmh": "km/h"
+    "today": "Today"
   },
   "nav": {
     "home": "Home",
@@ -355,7 +360,7 @@
     "onePill": "One pill in the frame",
     "verified": "Photo saved!",
     "retake": "Please retake the picture",
-    "giveHeart": "Give {{name}} a heart",
+    "markTaken": "{{done}}/{{total}} taken",
     "notNow": "Not now",
     "check": {
       "button": "Compare with my pill",
@@ -379,6 +384,8 @@
     "titleDone": "Walk done",
     "km": "{{km}} km",
     "doneMessage": "Walk done: {{km}} km. {{name}} loved it!",
+    "doneMessageNoDistance": "Walk done. {{name}} loved it!",
+    "heartGoal": "{{minutes}} min = 1 heart",
     "startReady": "Start when {{name}} is ready",
     "startWalk": "Start walk",
     "finishWalk": "Finish walk",
@@ -506,6 +513,7 @@
       "happy3": "One more? {{name}} could do this all day!",
       "happy4": "You and {{name}} make a great team."
     },
+    "walkMore": "Just a little bit more!",
     "lowHeart": "{{name}} needs a heart to play. Take your medicine or log your blood pressure to give one."
   },
   "visitNotes": {
@@ -554,13 +562,16 @@
     "shareBp": "Share my blood pressure with {{caretaker}}",
     "shareBpSub": "{{caretaker}} sees your latest reading and the notes you write with it.",
     "privacyTitle": "Your information stays yours, unless specified otherwise.",
+    "walkGoal": "Walk goal",
+    "walkGoalOption": "{{key}} · {{minutes}} min",
+    "walkGoalMinutes": "{{minutes}} min",
     "demoEyebrow": "Demo",
     "demoTitle": "For demo only",
     "demoSub": "Tools for showing Pawtner. Tap to open.",
     "demoBackToSettings": "Back to Settings",
     "demoResetTitle": "Start the day again",
     "demoReset": "Reset to morning ({{time}})",
-    "demoResetHint": "Back to {{time}} today: today's doses, readings and {{name}}'s answers are cleared, plus this phone's demo choices (restock answer, clinic memo photo, visit notes, sharing switch, ticks, garden time). Earlier days stay.",
+    "demoResetHint": "Today starts over at {{time}}. Earlier days stay.",
     "demoTimeTitle": "Garden time",
     "demoTimeHint": "Jump the garden to a time of day; tap it again for real time. Doesn't run the agent or save anything.",
     "demoUnlockTitle": "Pretend numbers",
@@ -641,7 +652,10 @@
     "treatWaiting": "A treat from {{caretaker}} is waiting for {{name}}!",
     "nudgeSet": "{{name}} knows when to nudge you.",
     "heartGained": "{{name}} gained a heart!",
+    "heartFull": "{{name}}'s heart is full!",
     "bpLogged": "Reading logged. {{name}}'s heart is full!",
+    "bpLoggedHeart": "Reading logged. {{name}} gained a heart!",
+    "bpLoggedPlain": "Reading logged. Thank you!",
     "bpWarning": "uh-oh, but thank you for logging the information",
     "worlds": {
       "garden": "The garden is now behind {{name}}.",
