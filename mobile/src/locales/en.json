@@ -569,6 +569,7 @@
     "privacyTitle": "Your information stays yours, unless specified otherwise.",
     "walkGoal": "Walk goal",
     "walkGoalOption": "{{key}} · {{minutes}} min",
+    "walkGoalMinutes": "{{minutes}} min",
     "demoEyebrow": "Demo",
     "demoTitle": "For demo only",
     "demoSub": "Tools for showing Pawtner. Tap to open.",

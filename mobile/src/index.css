@@ -698,7 +698,10 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
 .settings-share small { color: #7a847c; font-size: var(--font-size-sm); }
 .settings-walk-goal { display: grid; gap: 10px; margin-top: 14px; padding: 13px; border-radius: var(--radius-2xl); background: var(--color-surface-white); border: 1px solid var(--color-border-card); }
 .settings-walk-goal strong { color: var(--color-text-heading); }
-.settings-walk-goal__options { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 8px; }
+.settings-walk-goal__options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.settings-walk-goal__options .secondary-button { display: grid; justify-items: center; gap: 2px; min-width: 0; padding-inline: 6px; }
+.settings-walk-goal__key { font-size: var(--font-size-5xl); font-weight: var(--font-weight-black); line-height: 1.1; }
+.settings-walk-goal__minutes { font-size: var(--font-size-sm); line-height: 1.2; }
 .settings-walk-goal__options .secondary-button.is-active { color: white; background: var(--color-primary); }
 .settings-share .settings-share__first { color: var(--color-text-heading); font-weight: var(--font-weight-bold); }
 

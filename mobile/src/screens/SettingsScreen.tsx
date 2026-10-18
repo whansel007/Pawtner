@@ -97,8 +97,9 @@ export function SettingsScreen({
         <strong id="settings-walk-goal-title">{t("settings.walkGoal")}</strong>
         <div className="settings-walk-goal__options">
           {WALK_GOALS.map((goal) => (
-            <button key={goal.key} type="button" className={`secondary-button ${goal.key === walkGoalKey ? "is-active" : ""}`} aria-pressed={goal.key === walkGoalKey} onClick={() => onWalkGoal(goal.key)}>
-              {t("settings.walkGoalOption", { key: goal.key, minutes: goal.minutes })}
+            <button key={goal.key} type="button" className={`secondary-button ${goal.key === walkGoalKey ? "is-active" : ""}`} aria-pressed={goal.key === walkGoalKey} aria-label={t("settings.walkGoalOption", { key: goal.key, minutes: goal.minutes })} onClick={() => onWalkGoal(goal.key)}>
+              <span className="settings-walk-goal__key">{goal.key}</span>
+              <span className="settings-walk-goal__minutes">{t("settings.walkGoalMinutes", { minutes: goal.minutes })}</span>
             </button>
           ))}
         </div>
