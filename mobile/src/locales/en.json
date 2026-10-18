@@ -645,6 +645,8 @@
     "nudgeSet": "{{name}} knows when to nudge you.",
     "heartGained": "{{name}} gained a heart!",
     "bpLogged": "Reading logged. {{name}}'s heart is full!",
+    "bpLoggedHeart": "Reading logged. {{name}} gained a heart!",
+    "bpLoggedPlain": "Reading logged. Thank you!",
     "bpWarning": "uh-oh, but thank you for logging the information",
     "worlds": {
       "garden": "The garden is now behind {{name}}.",

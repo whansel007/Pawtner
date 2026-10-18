@@ -43,6 +43,7 @@ import { demoClockOnLoad, runningClock, saveDemoClock, searchWithout, type DemoC
 import { useHomeView } from "./lib/useHomeView";
 import { useDoseReminder } from "./lib/useDoseReminder";
 import { shouldBarkFor } from "./lib/nudgeBark";
+import { bpToastKey, doseToastKey, heartChange } from "./lib/heartToast";
 import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
 import { DEMO_CLOCK_PARAM, DEMO_RESET_PRESET, DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset, type DemoUnlockKey } from "./config/demo";
@@ -155,11 +156,11 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
     if (barkNow) bark();
   }, [today, latestDecision, bark]);
 
-  /** GET /api/today. `now`: undefined = the current demo clock; null = real time; a string = that instant. */
-  const refreshToday = async (now?: string | null) => {
-    try { await loadToday(now); } finally { setDosesLoaded(true); }
+  /** GET /api/today. `now`: undefined = the current demo clock; null = real time; a string = that instant. Returns the answer, or null on failure. */
+  const refreshToday = async (now?: string | null): Promise<TodayResponse | null> => {
+    try { return await loadToday(now); } finally { setDosesLoaded(true); }
   };
-  const loadToday = async (now?: string | null) => {
+  const loadToday = async (now?: string | null): Promise<TodayResponse | null> => {
     const at = now === undefined ? demoNow() : now;
     try {
       const result = await api.today(at ?? undefined);
@@ -169,8 +170,9 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
       serverMetrics.current = result.healthMetrics;
       setHealthMetrics((prev) => mergeHealthMetrics(result.healthMetrics, prev, previousServer));
       apiWarned.current = false;
+      return result;
     }
-    catch (error) { reportApiProblem(error); }
+    catch (error) { reportApiProblem(error); return null; }
   };
   useEffect(() => { void refreshToday(); }, []);
   // The demo clock lives on the server (any browser; /care reads it): on load a ?clock= link is written, else the server's clock is adopted (demoClockOnLoad).
@@ -185,7 +187,10 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
 
   const pendingDose = doseList.find((item) => item.id === pendingDoseId);
   // Today's hearts: the API's, or a Settings "Today" demo tick (then Buddy's mood follows those hearts below).
-  const heartCount = demoTodayHearts(today?.dog.heart ?? localHeartCount(doseList, bpLogged, today?.activities.walk ?? false), demoUnlocks);
+  // One rule for the hearts shown, also used to tell whether a save gained a heart (lib/heartToast.ts).
+  const shownHearts = (data: TodayResponse | null, doses: DerivedDose[], bp: boolean) =>
+    demoTodayHearts(data?.dog.heart ?? localHeartCount(doses, bp, data?.activities.walk ?? false), demoUnlocks);
+  const heartCount = shownHearts(today, doseList, bpLogged);
   // One number each for the whole phone app: the API's (or mock) value, raised by a Settings demo tick if one is on.
   const heartsTotal = demoHeartsTotal(today?.dog?.heartsTotal ?? mockHeartsTotal, demoUnlocks);
   const streak = demoStreak(today?.dog.streak ?? pet.streak, demoUnlocks);
@@ -247,6 +252,8 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
     // The local copy carries the same time the API gets, so it matches the server's row (first-reading check).
     const metric = { ...logged, recordedAt };
     setHealthMetrics((prev) => [...prev, metric]);
+    const heartsBefore = heartCount;
+    let after: TodayResponse | null = today;
     let decision: AgentDecision;
     try {
       const result = await api.healthMetric({
@@ -257,7 +264,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
       });
       decision = result.decision;
       setLatestDecision(decision);
-      await refreshToday();
+      after = (await refreshToday()) ?? today;
     } catch {
       // Offline fallback: call the rules engine directly so the beat still works.
       const updatedMetrics = [...healthMetrics, metric];
@@ -276,8 +283,9 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
       reportApiProblem("health-metric request failed");
     }
     setBpLogged(true);
-    // Every warning gets the same gentle toast (owner, 18 Oct: one warning for every condition).
-    notify(isUrgentDecision(decision) ? t("toast.bpWarning") : t("toast.bpLogged", { name: dogName }));
+    // Every warning gets the same gentle toast (owner, 18 Oct: one warning for every condition); otherwise the toast
+    // says "full" only at max hearts and "gained" only when the shown hearts went up.
+    notify(t(bpToastKey(heartChange(heartsBefore, shownHearts(after, doseList, true)), isUrgentDecision(decision)), { name: dogName }));
   }
 
   /**
@@ -385,15 +393,19 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
     if (!pendingDose) return;
     const occurredAt = demoNow() ?? new Date().toISOString();
     const doseEvent = { scheduleId: pendingDose.id, scheduledFor: pendingDose.scheduledAt, event: "taken" as const, occurredAt, proofPhotoUrl };
+    const heartsBefore = heartCount;
+    let heartsAfter = heartsBefore;
     try {
       const result = await api.doseEvent(doseEvent);
       setToday(result.today);
       setDoseList(result.today.doses);
+      heartsAfter = shownHearts(result.today, result.today.doses, result.today.bloodPressureLoggedToday);
     } catch (error) {
       // Background notice (once per outage), not "didn't save": the dose is shown as taken locally.
       reportApiProblem(error);
       const localDoses = doseList.map((d) => (d.id === pendingDose.id ? { ...d, status: "taken" as const, eventAt: occurredAt } : d));
       setDoseList(localDoses);
+      heartsAfter = shownHearts(today, localDoses, bpLogged);
       const localEvent: DoseEvent = { id: `local-${pendingDose.id}-${occurredAt}`, ...doseEvent };
       const input = buildAgentInputFromState({
         now: occurredAt,
@@ -410,7 +422,9 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
     }
     navigate("home");
     setCelebrateRequest((n) => n + 1);
-    notify(t("toast.heartGained", { name: dogName }));
+    // Only when a heart was really gained (owner, 18 Oct); otherwise no toast.
+    const toastKey = doseToastKey(heartChange(heartsBefore, heartsAfter));
+    if (toastKey) notify(t(toastKey, { name: dogName }));
   }
 
   const runAgentAtDemoTime = async () => {
