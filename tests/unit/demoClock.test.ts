@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { demoClockOnLoad, readDemoClock, runningClock, saveDemoClock } from "../../mobile/src/lib/demoClock.js";
+import { demoClockOnLoad, readDemoClock, searchWithout, runningClock, saveDemoClock } from "../../mobile/src/lib/demoClock.js";
 import type { KeyValueStore } from "../../mobile/src/lib/localStore.js";
 
 function memoryStore(): KeyValueStore {
@@ -35,5 +35,14 @@ describe("demo clock on load (the server keeps the demo's time)", () => {
   });
   it("without a link the phone adopts the server's clock and writes nothing", () => {
     expect(demoClockOnLoad(null)).toEqual({ action: "adopt" });
+  });
+});
+
+describe("the ?clock= link is used once", () => {
+  it("is removed from the address after it was written, other params kept", () => {
+    expect(searchWithout("?clock=morning", "clock")).toBe("");
+    expect(searchWithout("?clock=morning&time=evening", "clock")).toBe("?time=evening");
+    expect(searchWithout("?time=21:00", "clock")).toBe("?time=21%3A00");
+    expect(searchWithout("", "clock")).toBe("");
   });
 });

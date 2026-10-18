@@ -39,7 +39,7 @@ import { useRestockHelp } from "./lib/useRestockHelp";
 import { pickRestockAlerts } from "./lib/restockHelp";
 import { resetDemoStorage } from "./lib/demoReset";
 import { mergeHealthMetrics } from "./lib/healthReadings";
-import { demoClockOnLoad, runningClock, saveDemoClock, type DemoClockAnchor } from "./lib/demoClock";
+import { demoClockOnLoad, runningClock, saveDemoClock, searchWithout, type DemoClockAnchor } from "./lib/demoClock";
 import { useHomeView } from "./lib/useHomeView";
 import { useDoseReminder } from "./lib/useDoseReminder";
 import { shouldBarkFor } from "./lib/nudgeBark";
@@ -174,7 +174,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
   };
   useEffect(() => { void refreshToday(); }, []);
   // The demo clock lives on the server (any browser; /care reads it): on load a ?clock= link is written, else the server's clock is adopted (demoClockOnLoad).
-  useEffect(() => { const plan = demoClockOnLoad(demoClock?.at ?? null); if (plan.action === "write") void api.setDemoClock({ at: plan.at }).catch((error) => reportApiProblem(error)); else void api.demoClock().then((clock) => { if (clock.at) { setDemoClock({ at: clock.at, setAtMs: Date.now() }); setDemoClockValue(toDateTimeLocal(new Date(clock.at))); void refreshToday(clock.at); } }).catch((error) => console.warn("Demo clock: server clock unavailable", error)); }, []);
+  useEffect(() => { const plan = demoClockOnLoad(demoClock?.at ?? null); if (plan.action === "write") { void api.setDemoClock({ at: plan.at }).catch((error) => reportApiProblem(error)); window.history.replaceState(null, "", `${window.location.pathname}${searchWithout(window.location.search, DEMO_CLOCK_PARAM)}${window.location.hash}`); } else void api.demoClock().then((clock) => { if (clock.at) { setDemoClock({ at: clock.at, setAtMs: Date.now() }); setDemoClockValue(toDateTimeLocal(new Date(clock.at))); void refreshToday(clock.at); } }).catch((error) => console.warn("Demo clock: server clock unavailable", error)); }, []);
   useEffect(() => { saveDemoClock(demoClock); }, [demoClock]);
   useEffect(() => {
     if (screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));

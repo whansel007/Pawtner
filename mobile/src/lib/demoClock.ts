@@ -48,3 +48,15 @@ export function readDemoClock(store: KeyValueStore | null = browserStore(), nowM
 export function demoClockOnLoad(fromLink: string | null): { action: "write"; at: string } | { action: "adopt" } {
   return fromLink ? { action: "write", at: fromLink } : { action: "adopt" };
 }
+
+/**
+ * The address bar's query without `param` (other params kept, "" when none are left). Once a `?clock=` link has been
+ * written to the server on load, it is removed, so a later reload adopts the server's running clock instead of
+ * setting it back.
+ */
+export function searchWithout(search: string, param: string): string {
+  const params = new URLSearchParams(search);
+  params.delete(param);
+  const rest = params.toString();
+  return rest ? `?${rest}` : "";
+}
