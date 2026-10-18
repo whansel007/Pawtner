@@ -3,9 +3,6 @@
  * whole seconds from the walk's start to now, both on the app's clock (the running demo clock, or real time).
  */
 
-/** Shown for what a real walk can't measure (distance, steps, calories, speed). */
-export const NOT_MEASURED = "—";
-
 /** How often the timer on screen re-reads the clock (real milliseconds). */
 export const WALK_TIMER_TICK_MS = 1000;
 

@@ -379,6 +379,7 @@
     "titleWalking": "A lovely walk",
     "titleDone": "Walk done",
     "km": "{{km}} km",
+    "notMeasured": "—",
     "doneMessage": "Walk done: {{km}} km. {{name}} loved it!",
     "startReady": "Start when {{name}} is ready",
     "startWalk": "Start walk",
