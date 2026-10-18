@@ -66,6 +66,9 @@ export function HealthScreen({
   const [error, setError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const diastolicRef = useRef<HTMLInputElement>(null);
+  // Right after a save the boxes are empty and the reading shows above; another tap on Save then does nothing
+  // (owner, 18 Oct: a second tap used to show "Please enter both numbers" though the reading was saved).
+  const [justSaved, setJustSaved] = useState(false);
   // A phone keyboard's Enter/Go would submit the whole form from any box (and show "enter both numbers" too early):
   // here it moves to the next box, or closes the keyboard; only "Save reading" saves.
   const enterMovesTo = (next: HTMLInputElement | null) => (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -101,6 +104,7 @@ export function HealthScreen({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (justSaved && !systolic.trim() && !diastolic.trim()) return;
     const result = validate();
     if (!result.ok) {
       setError(result.msg);
@@ -116,6 +120,7 @@ export function HealthScreen({
       recordedAt: new Date().toISOString(),
     };
     onLogBp(metric);
+    setJustSaved(true);
     setSystolic("");
     setDiastolic("");
     setNote("");
@@ -175,7 +180,7 @@ export function HealthScreen({
               type="text"
               inputMode="numeric"
               value={systolic}
-              onChange={(e) => { setSystolic(e.target.value); setError(null); }}
+              onChange={(e) => { setSystolic(e.target.value); setError(null); setJustSaved(false); }}
               onKeyDown={(e) => enterMovesTo(diastolicRef.current)(e)}
               enterKeyHint="next"
               autoComplete="off"
@@ -189,7 +194,7 @@ export function HealthScreen({
               inputMode="numeric"
               ref={diastolicRef}
               value={diastolic}
-              onChange={(e) => { setDiastolic(e.target.value); setError(null); }}
+              onChange={(e) => { setDiastolic(e.target.value); setError(null); setJustSaved(false); }}
               onKeyDown={enterMovesTo(null)}
               enterKeyHint="done"
               autoComplete="off"
