@@ -73,6 +73,19 @@ function localDate(now: string, timezone: string): string {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
+/**
+ * A stop is a moment (owner, 18 Oct): a stopped medicine's doses scheduled before `stopped_at` stay in the history
+ * exactly as they were (taken or missed); none exist at or after it. Inactive without `stopped_at` stays out.
+ * The one rule for every history query; `scheduledAt` is the SQL expression of the occurrence's instant.
+ */
+function countsInHistory(medication: string, scheduledAt: string): string {
+  return `(${medication}.active OR (${medication}.stopped_at IS NOT NULL AND ${scheduledAt} < ${medication}.stopped_at))`;
+}
+/** Medicines whose occurrences a history query reads: active ones and stopped ones (up to their stop). */
+function readsHistory(medication: string): string {
+  return `(${medication}.active OR ${medication}.stopped_at IS NOT NULL)`;
+}
+
 function shiftDate(date: string, amount: number): string {
   const value = new Date(`${date}T00:00:00.000Z`);
   value.setUTCDate(value.getUTCDate() + amount);
@@ -214,7 +227,10 @@ export class PawtnerRepository {
     return { input: selectAgentInput(source), heartsTotal: selectHeartsTotal(source), activities: selectHeartActivities(source), source };
   }
 
-  /** Reads everything the selectors need: every occurrence since each active schedule started (no history cap), ledger, nudges, readings. */
+  /**
+   * Reads everything the selectors need: every occurrence since each schedule started (no history cap; a stopped
+   * medicine's only before its stop, countsInHistory), ledger, nudges, readings.
+   */
   private async loadSource(
     client: PoolClient | Pool,
     userId: string,
@@ -229,28 +245,39 @@ export class PawtnerRepository {
     const person = personResult.rows[0];
     if (!person) throw new ApiError(404, "Demo user or dog not found.");
     const today = localDate(now, person.timezone);
+    // Occurrences of active medicines, and of stopped ones up to their stop's local day (countsInHistory splits them).
     const scheduleResult = await client.query(
-      `SELECT ms.id::text AS id, m.id::text AS medication_id, m.name AS medication_name,
-              m.strength, ((days.local_day + ms.scheduled_time) AT TIME ZONE u.timezone) AS scheduled_at
-       FROM med_schedules ms
-       JOIN medications m ON m.id = ms.medication_id
-       JOIN users u ON u.id = m.user_id
-       CROSS JOIN LATERAL generate_series(
-         ms.starts_on::timestamp,
-         LEAST(COALESCE(ms.ends_on, $2::date), $2::date)::timestamp,
-         interval '1 day'
-       ) AS days(local_day)
-       WHERE u.id = $1 AND m.active = true AND ms.starts_on <= $2::date
-       ORDER BY scheduled_at, ms.id`,
+      `SELECT o.*, ${countsInHistory("o", "o.scheduled_at")} AS counts
+       FROM (
+         SELECT ms.id::text AS id, m.id::text AS medication_id, m.name AS medication_name, m.strength,
+                m.active, m.stopped_at, ((days.local_day + ms.scheduled_time) AT TIME ZONE u.timezone) AS scheduled_at
+         FROM med_schedules ms
+         JOIN medications m ON m.id = ms.medication_id
+         JOIN users u ON u.id = m.user_id
+         CROSS JOIN LATERAL generate_series(
+           ms.starts_on::timestamp,
+           LEAST(COALESCE(ms.ends_on, $2::date), $2::date, COALESCE((m.stopped_at AT TIME ZONE u.timezone)::date, $2::date))::timestamp,
+           interval '1 day'
+         ) AS days(local_day)
+         WHERE u.id = $1 AND ${readsHistory("m")} AND ms.starts_on <= $2::date
+       ) o
+       ORDER BY o.scheduled_at, o.id`,
       [userId, today],
     );
-    const schedules = scheduleResult.rows.map((row) => ({
+    const schedules = scheduleResult.rows.filter((row) => row.counts).map((row) => ({
       id: row.id,
       medicationId: row.medication_id,
       medicationName: row.medication_name,
       strength: row.strength,
       scheduledAt: iso(row.scheduled_at),
     }));
+    // Doses a stop removed (scheduled at or after it): only used so a stop never backdates a heart (heartGains).
+    const stopCutoffs = scheduleResult.rows.filter((row) => !row.counts).map((row) => ({
+      scheduleId: row.id,
+      scheduledAt: iso(row.scheduled_at),
+      stoppedAt: iso(row.stopped_at),
+    }));
+    const stoppedMedicationIds = [...new Set(scheduleResult.rows.filter((row) => !row.active).map((row) => row.medication_id as string))];
     const earliest = schedules[0]?.scheduledAt ?? `${shiftDate(today, -365)}T00:00:00.000Z`;
     const eventsResult = await client.query(
       `SELECT de.id::text AS id, de.schedule_id::text AS schedule_id, de.scheduled_for,
@@ -309,6 +336,8 @@ export class PawtnerRepository {
       userId,
       dog: { id: person.dog_id, name: person.dog_name },
       doseOccurrences: schedules,
+      stopCutoffs,
+      stoppedMedicationIds,
       doseEvents: events,
       nudges: nudgeRows,
       healthMetrics: metricsResult.rows.map((row) => ({ ...mapMetric(row), kind: "blood_pressure" as const })),
@@ -499,10 +528,11 @@ export class PawtnerRepository {
          SELECT calendar.local_day::date AS local_day, ms.id AS schedule_id,
                 ((calendar.local_day + ms.scheduled_time) AT TIME ZONE u.timezone) AS scheduled_for
          FROM calendar CROSS JOIN users u
-         JOIN medications m ON m.user_id = u.id AND m.active = true
+         JOIN medications m ON m.user_id = u.id AND ${readsHistory("m")}
          JOIN med_schedules ms ON ms.medication_id = m.id
          WHERE u.id = $1 AND ms.starts_on <= calendar.local_day::date
            AND (ms.ends_on IS NULL OR ms.ends_on >= calendar.local_day::date)
+           AND ${countsInHistory("m", "((calendar.local_day + ms.scheduled_time) AT TIME ZONE u.timezone)")}
        ), statuses AS (
          SELECT o.local_day, o.schedule_id, event.event
          FROM occurrences o

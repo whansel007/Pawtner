@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAgentInput, computeHeart, computeHeartsTotal, heartActivities, heartGains, heartsAt, computeMissedDays, computeStreak, deriveDoseStatus, hasBloodPressureToday, selectAgentInput, selectHeartActivities, selectHeartsTotal } from "../../shared/selectors.js";
+import { actionableDoses, buildAgentInput, computeHeart, computeHeartsTotal, heartActivities, heartGains, heartsAt, computeMissedDays, computeStreak, deriveDoseStatus, hasBloodPressureToday, selectAgentInput, selectHeartActivities, selectHeartsTotal } from "../../shared/selectors.js";
 import type { DerivedDose, DoseSchedule, HealthMetric } from "../../shared/contract.js";
 import type { AgentSelectionSource } from "../../shared/selectors.js";
 
@@ -175,6 +175,78 @@ describe("selectors", () => {
       expect(selectHeartActivities(source)).toEqual({ medicines: true, bloodPressure: true, walk: true });
       // The 12th ended on 1 (its medicines heart had dropped by then); today is 4.
       expect(selectHeartsTotal(source)).toBe(1 + input.dog.heart);
+    });
+  });
+
+  describe("a stop is a moment: it never rewrites the past", () => {
+    const dose = (id: string, scheduledAt: string, status: DerivedDose["status"], eventAt: string | null = null): DerivedDose => ({
+      ...seedSchedule, id, scheduledAt, status, eventAt, nudgeCount: 0, lastNudgeAt: null,
+    });
+    const at = (hours: number) => new Date(Date.parse("2026-10-13T00:00:00.000Z") + hours * 3_600_000).toISOString();
+    // A taken at 02:00 (10:00 SGT); B due 12:00 (20:00 SGT).
+    const aTaken = dose("a", at(2), "taken", at(2.1));
+    const bDue = dose("b", at(12), "upcoming");
+
+    it("no stopped doses = the same gains as before", () => {
+      expect(heartGains([aTaken, dose("b", at(12), "taken", at(12.2))], [], [])).toEqual([at(12.2)]);
+      expect(heartGains([aTaken, bDue], [], [], [])).toEqual([]);
+    });
+
+    it("a stop that leaves the day all taken earns the heart at the stop, never earlier", () => {
+      // B stopped at 04:00: before the stop the day was incomplete, so no heart before 04:00.
+      const gains = heartGains([aTaken], [], [], [{ scheduledAt: at(12), stoppedAt: at(4), takenAt: null }]);
+      expect(gains).toEqual([at(4)]);
+      expect(heartsAt(gains, at(3.9))).toBe(1);
+      expect(heartsAt(gains, at(4))).toBe(2);
+    });
+
+    it("a removed dose taken before the stop keeps the heart at its real time", () => {
+      expect(heartGains([aTaken], [], [], [{ scheduledAt: at(12), stoppedAt: at(4), takenAt: at(3) }])).toEqual([at(3)]);
+    });
+
+    it("a day left with no doses earns no medicine heart (unless all removed doses were already taken)", () => {
+      expect(heartGains([], [], [], [{ scheduledAt: at(2), stoppedAt: at(1), takenAt: null }])).toEqual([]);
+      expect(heartGains([], [], [], [{ scheduledAt: at(2), stoppedAt: at(3), takenAt: at(0.5) }])).toEqual([at(0.5)]);
+    });
+
+    it("a stop on a day where it removed nothing leaves that day alone", () => {
+      const dayBefore = (hours: number) => new Date(Date.parse(at(hours)) - 86_400_000).toISOString();
+      const yesterdayTaken = dose("y", dayBefore(2), "taken", dayBefore(2.1));
+      // Stopped today at 04:00, removing today's 12:00 dose only: yesterday's heart stays at its real time.
+      expect(heartGains([yesterdayTaken, aTaken], [], [], [{ scheduledAt: at(12), stoppedAt: at(4), takenAt: null }])).toEqual([dayBefore(2.1), at(4)]);
+    });
+
+    it("a missed-then-stopped dose is never actionable again but still counts as missed for the day", () => {
+      const stoppedMed = "stopped-med";
+      // Tablet A due 10:00 SGT, missed; stopped at 11:30; the other medicine (B) is due 20:00.
+      const source: AgentSelectionSource = {
+        now: "2026-10-13T12:00:00+08:00",
+        today: "2026-10-13",
+        userId: "u",
+        dog: { id: "d", name: "Buddy" },
+        doseOccurrences: [
+          { ...seedSchedule, id: "a-schedule", medicationId: stoppedMed, scheduledAt: "2026-10-13T10:00:00+08:00" },
+          { ...seedSchedule, id: "b-schedule", medicationName: "Fictional Tablet B", scheduledAt: "2026-10-13T20:00:00+08:00" },
+        ],
+        stopCutoffs: [],
+        stoppedMedicationIds: [stoppedMed],
+        doseEvents: [],
+        nudges: [],
+        healthMetrics: [],
+        daysOfSupplyByMedicationId: {},
+        caretaker: { optedIn: true, threshold: 1 },
+        lastCheckInDay: null,
+        walkFinishedAt: [],
+      };
+      const input = selectAgentInput(source);
+      // Not on the list (Home, Reminders, dose-time reminder) and not nudged: only B is actionable.
+      expect(input.doses.map((dose) => dose.id)).toEqual(["b-schedule"]);
+      expect(input.doses.some((dose) => dose.status === "missed")).toBe(false);
+      // Still counts: today's medicines are not all taken, and tomorrow today is a missed day (check-ins).
+      expect(selectHeartActivities(source).medicines).toBe(false);
+      const tomorrow = selectAgentInput({ ...source, now: "2026-10-14T09:00:00+08:00", today: "2026-10-14" });
+      expect(tomorrow).toMatchObject({ consecutiveMissedDays: 1, lastMissedDay: "2026-10-13" });
+      expect(actionableDoses(input.doses, {})).toEqual(input.doses);
     });
   });
 });

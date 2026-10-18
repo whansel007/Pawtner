@@ -43,6 +43,7 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | A stop is a moment: a stopped medicine's earlier doses keep counting (past hearts, lifetime, streak, check-ins never move), a stop never backdates a heart, its earlier doses leave today's list and nudges | Branch `claude/stop-keeps-history`, not pushed |
 | — | Revision (design "A", 18 Oct): Stop moves inside each medicine's Edit panel (quiet text button, no Stop on the list); /care This week shows one "{{dog}}'s updates" card, e.g. "Buddy's updates" (check-in, stopped medicine, refill request, newest first) | [#83](https://github.com/whansel007/Pawtner/pull/83), merged 18 Oct |
 | — | Stop a medicine: My medicines "Stop this medicine" → confirm → "is stopped." + Undo (soft stop, `active` + `stopped_at`, migration 007); Home refreshes; /care This week "A medicine is stopped." (no name) for every caretaker. Migration 007 run on Supabase by the owner before the merge. | [#83](https://github.com/whansel007/Pawtner/pull/83), merged 18 Oct |
 | — | Health card ignores readings already saved today after a reload (found 17 Oct): `loadToday` now fills App's `healthMetrics` from `/api/today` (`today.healthMetrics`) via `mergeHealthMetrics` (`lib/healthReadings.ts`, tested), keeping readings saved offline and replacing the phone's copy with the server's row; after a reload the card shows the latest reading and its feedback line | [#82](https://github.com/whansel007/Pawtner/pull/82) (open, not merged) |

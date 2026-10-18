@@ -5565,11 +5565,18 @@ function heartActivities(doses, bloodPressureLogged, walked) {
   return { medicines: doses.length > 0 && doses.every((dose) => dose.status === "taken"), bloodPressure: bloodPressureLogged, walk: walked };
 }
 var DECAY_MS = DEMO_RULES.heartDecayHours * 36e5;
-function heartGains(doses, metrics, walkFinishedAt) {
+function heartGains(doses, metrics, walkFinishedAt, stoppedDoses = []) {
   const gains = [];
-  for (const dayDoses of groupBy(doses, (dose) => dose.scheduledAt.slice(0, 10)).values()) {
+  const dayKey = (scheduledAt) => scheduledAt.slice(0, 10);
+  const dosesByDay = groupBy(doses, (dose) => dayKey(dose.scheduledAt));
+  const stoppedByDay = groupBy([...stoppedDoses], (dose) => dayKey(dose.scheduledAt));
+  const latest = (instants) => instants.reduce((a, b) => Date.parse(b) > Date.parse(a) ? b : a);
+  for (const day of /* @__PURE__ */ new Set([...dosesByDay.keys(), ...stoppedByDay.keys()])) {
+    const dayDoses = dosesByDay.get(day) ?? [];
+    const removed = stoppedByDay.get(day) ?? [];
     if (!dayDoses.every((dose) => dose.status === "taken" && dose.eventAt)) continue;
-    gains.push(dayDoses.reduce((latest, dose) => Date.parse(dose.eventAt) > Date.parse(latest) ? dose.eventAt : latest, dayDoses[0].eventAt));
+    if (dayDoses.length === 0 && !removed.every((dose) => dose.takenAt)) continue;
+    gains.push(latest([...dayDoses.map((dose) => dose.eventAt), ...removed.map((dose) => dose.takenAt ?? dose.stoppedAt)]));
   }
   const firstPerDay = (instants) => [...groupBy([...instants], (instant) => instant.slice(0, 10)).values()].map((day) => day.reduce((first, instant) => Date.parse(instant) < Date.parse(first) ? instant : first));
   gains.push(...firstPerDay(metrics.map((metric) => metric.recordedAt)), ...firstPerDay(walkFinishedAt));
@@ -5660,13 +5667,17 @@ function deriveSelection(source) {
     });
   });
   const metrics = source.healthMetrics.filter((metric) => Date.parse(metric.recordedAt) <= Date.parse(source.now));
-  return { derived, metrics };
+  const stopped = (source.stopCutoffs ?? []).map((cutoff) => {
+    const taken = (eventsByOccurrence.get(occurrenceKey(cutoff.scheduleId, cutoff.scheduledAt)) ?? []).filter((event) => event.event === "taken" && Date.parse(event.occurredAt) <= Date.parse(cutoff.stoppedAt)).sort((a, b) => Date.parse(a.occurredAt) - Date.parse(b.occurredAt))[0];
+    return { scheduledAt: cutoff.scheduledAt, stoppedAt: cutoff.stoppedAt, takenAt: taken?.occurredAt ?? null };
+  });
+  return { derived, metrics, stopped };
 }
-function computeHeartsTotal(doses, metrics, today, walkFinishedAt, now) {
+function computeHeartsTotal(doses, metrics, today, walkFinishedAt, now, stoppedDoses = []) {
   const days = [...new Set(doses.map((dose) => dose.scheduledAt.slice(0, 10)))].filter((date) => date <= today).sort();
   const firstDate = days[0];
   if (!firstDate) return 0;
-  const gains = heartGains(doses, metrics, walkFinishedAt).filter((gain) => Date.parse(gain) <= Date.parse(now));
+  const gains = heartGains(doses, metrics, walkFinishedAt, stoppedDoses).filter((gain) => Date.parse(gain) <= Date.parse(now));
   let total = 0;
   const cursor = /* @__PURE__ */ new Date(`${firstDate}T00:00:00.000Z`);
   for (let date = firstDate; date <= today; date = cursor.toISOString().slice(0, 10)) {
@@ -5686,7 +5697,7 @@ function todayActivities(derived, metrics, source) {
   return heartActivities(todayDoses, hasBloodPressureToday(metrics, source.today), walkedToday);
 }
 function selectAgentInput(source) {
-  const { derived, metrics } = deriveSelection(source);
+  const { derived, metrics, stopped } = deriveSelection(source);
   const todayDoses = derived.filter((dose) => dose.scheduledAt.slice(0, 10) === source.today);
   const doseDays = derived.map((dose) => ({
     date: dose.scheduledAt.slice(0, 10),
@@ -5701,10 +5712,10 @@ function selectAgentInput(source) {
     userId: source.userId,
     dog: {
       ...source.dog,
-      heart: heartsAt(heartGains(derived, metrics, walksUntilNow(source)), source.now),
+      heart: heartsAt(heartGains(derived, metrics, walksUntilNow(source), stopped), source.now),
       streak
     },
-    doses: todayDoses,
+    doses: actionableDoses(todayDoses, source),
     latestDoseEvent,
     healthMetrics: metrics,
     daysOfSupplyByMedicationId: source.daysOfSupplyByMedicationId,
@@ -5715,13 +5726,17 @@ function selectAgentInput(source) {
   });
 }
 function selectHeartsTotal(source) {
-  const { derived, metrics } = deriveSelection(source);
-  return computeHeartsTotal(derived, metrics, source.today, walksUntilNow(source), source.now);
+  const { derived, metrics, stopped } = deriveSelection(source);
+  return computeHeartsTotal(derived, metrics, source.today, walksUntilNow(source), source.now, stopped);
 }
 function selectHeartsAtInstants(source, instants) {
-  const { derived, metrics } = deriveSelection(source);
-  const gains = heartGains(derived, metrics, walksUntilNow(source));
+  const { derived, metrics, stopped } = deriveSelection(source);
+  const gains = heartGains(derived, metrics, walksUntilNow(source), stopped);
   return instants.map((instant) => heartsAt(gains, Date.parse(instant) > Date.parse(source.now) ? source.now : instant));
+}
+function actionableDoses(todayDoses, source) {
+  const stopped = new Set(source.stoppedMedicationIds ?? []);
+  return stopped.size ? todayDoses.filter((dose) => !stopped.has(dose.medicationId)) : todayDoses;
 }
 function walksUntilNow(source) {
   return source.walkFinishedAt.filter((finishedAt) => Date.parse(finishedAt) <= Date.parse(source.now));
@@ -5823,6 +5838,12 @@ function localDate(now, timezone) {
   }).formatToParts(new Date(now));
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${values.year}-${values.month}-${values.day}`;
+}
+function countsInHistory(medication, scheduledAt) {
+  return `(${medication}.active OR (${medication}.stopped_at IS NOT NULL AND ${scheduledAt} < ${medication}.stopped_at))`;
+}
+function readsHistory(medication) {
+  return `(${medication}.active OR ${medication}.stopped_at IS NOT NULL)`;
 }
 function shiftDate(date, amount) {
   const value = /* @__PURE__ */ new Date(`${date}T00:00:00.000Z`);
@@ -5951,7 +5972,10 @@ var PawtnerRepository = class {
     const source = await this.loadSource(client, userId, now, triggeringDoseEventId);
     return { input: selectAgentInput(source), heartsTotal: selectHeartsTotal(source), activities: selectHeartActivities(source), source };
   }
-  /** Reads everything the selectors need: every occurrence since each active schedule started (no history cap), ledger, nudges, readings. */
+  /**
+   * Reads everything the selectors need: every occurrence since each schedule started (no history cap; a stopped
+   * medicine's only before its stop, countsInHistory), ledger, nudges, readings.
+   */
   async loadSource(client, userId, now, triggeringDoseEventId) {
     const personResult = await client.query(
       `SELECT u.timezone, d.id::text AS dog_id, d.name AS dog_name
@@ -5962,27 +5986,36 @@ var PawtnerRepository = class {
     if (!person) throw new ApiError(404, "Demo user or dog not found.");
     const today = localDate(now, person.timezone);
     const scheduleResult = await client.query(
-      `SELECT ms.id::text AS id, m.id::text AS medication_id, m.name AS medication_name,
-              m.strength, ((days.local_day + ms.scheduled_time) AT TIME ZONE u.timezone) AS scheduled_at
-       FROM med_schedules ms
-       JOIN medications m ON m.id = ms.medication_id
-       JOIN users u ON u.id = m.user_id
-       CROSS JOIN LATERAL generate_series(
-         ms.starts_on::timestamp,
-         LEAST(COALESCE(ms.ends_on, $2::date), $2::date)::timestamp,
-         interval '1 day'
-       ) AS days(local_day)
-       WHERE u.id = $1 AND m.active = true AND ms.starts_on <= $2::date
-       ORDER BY scheduled_at, ms.id`,
+      `SELECT o.*, ${countsInHistory("o", "o.scheduled_at")} AS counts
+       FROM (
+         SELECT ms.id::text AS id, m.id::text AS medication_id, m.name AS medication_name, m.strength,
+                m.active, m.stopped_at, ((days.local_day + ms.scheduled_time) AT TIME ZONE u.timezone) AS scheduled_at
+         FROM med_schedules ms
+         JOIN medications m ON m.id = ms.medication_id
+         JOIN users u ON u.id = m.user_id
+         CROSS JOIN LATERAL generate_series(
+           ms.starts_on::timestamp,
+           LEAST(COALESCE(ms.ends_on, $2::date), $2::date, COALESCE((m.stopped_at AT TIME ZONE u.timezone)::date, $2::date))::timestamp,
+           interval '1 day'
+         ) AS days(local_day)
+         WHERE u.id = $1 AND ${readsHistory("m")} AND ms.starts_on <= $2::date
+       ) o
+       ORDER BY o.scheduled_at, o.id`,
       [userId, today]
     );
-    const schedules = scheduleResult.rows.map((row) => ({
+    const schedules = scheduleResult.rows.filter((row) => row.counts).map((row) => ({
       id: row.id,
       medicationId: row.medication_id,
       medicationName: row.medication_name,
       strength: row.strength,
       scheduledAt: iso(row.scheduled_at)
     }));
+    const stopCutoffs = scheduleResult.rows.filter((row) => !row.counts).map((row) => ({
+      scheduleId: row.id,
+      scheduledAt: iso(row.scheduled_at),
+      stoppedAt: iso(row.stopped_at)
+    }));
+    const stoppedMedicationIds = [...new Set(scheduleResult.rows.filter((row) => !row.active).map((row) => row.medication_id))];
     const earliest = schedules[0]?.scheduledAt ?? `${shiftDate(today, -365)}T00:00:00.000Z`;
     const eventsResult = await client.query(
       `SELECT de.id::text AS id, de.schedule_id::text AS schedule_id, de.scheduled_for,
@@ -6039,6 +6072,8 @@ var PawtnerRepository = class {
       userId,
       dog: { id: person.dog_id, name: person.dog_name },
       doseOccurrences: schedules,
+      stopCutoffs,
+      stoppedMedicationIds,
       doseEvents: events,
       nudges: nudgeRows,
       healthMetrics: metricsResult.rows.map((row) => ({ ...mapMetric(row), kind: "blood_pressure" })),
@@ -6224,10 +6259,11 @@ var PawtnerRepository = class {
          SELECT calendar.local_day::date AS local_day, ms.id AS schedule_id,
                 ((calendar.local_day + ms.scheduled_time) AT TIME ZONE u.timezone) AS scheduled_for
          FROM calendar CROSS JOIN users u
-         JOIN medications m ON m.user_id = u.id AND m.active = true
+         JOIN medications m ON m.user_id = u.id AND ${readsHistory("m")}
          JOIN med_schedules ms ON ms.medication_id = m.id
          WHERE u.id = $1 AND ms.starts_on <= calendar.local_day::date
            AND (ms.ends_on IS NULL OR ms.ends_on >= calendar.local_day::date)
+           AND ${countsInHistory("m", "((calendar.local_day + ms.scheduled_time) AT TIME ZONE u.timezone)")}
        ), statuses AS (
          SELECT o.local_day, o.schedule_id, event.event
          FROM occurrences o
