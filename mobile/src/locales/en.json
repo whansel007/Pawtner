@@ -27,10 +27,7 @@
     "done": "Done",
     "viewAll": "View all",
     "log": "Log",
-    "today": "Today",
-    "steps": "steps",
-    "calories": "calories",
-    "kmh": "km/h"
+    "today": "Today"
   },
   "nav": {
     "home": "Home",

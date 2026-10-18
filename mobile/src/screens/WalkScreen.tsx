@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
-import { KCAL_PER_KM, STRIDE_METERS } from "../config/walk";
 import type { BackAction } from "../lib/navigation";
 import { useSimulatedWalk } from "../lib/simulatedWalk";
 import { simulationFor, type WalkCompletion } from "../lib/walkState";
@@ -98,7 +97,7 @@ export function WalkScreen({
   const isActive = walking || isSimulating;
   const done = !isActive ? finishedWalk : null;
   // Start walk: a live timer from the walk's start. No step counter or GPS, so a real walk (walking or finished) shows
-  // only its time: no distance line, no steps / calories / speed (owner, 18 Oct). Simulate walk keeps its numbers.
+  // only its time, no distance line. No steps / calories / speed for any walk (owner, 18 Oct).
   const walkSeconds = useWalkTimer(walking ? walkStartedAt : null, clockNow);
   const realWalk = walking || (done !== null && done.distanceMeters === null);
   const toggleWalk = () => {
@@ -108,12 +107,6 @@ export function WalkScreen({
     setWalking(next);
     onWalkState(next);
   };
-
-  // Derive demo step count and calories from simulated distance.
-  const simSteps = isSimulating ? Math.max(0, Math.round(simState.distanceMeters / STRIDE_METERS)) : 0;
-  const simCalories = isSimulating
-    ? Math.max(0, Math.round((simState.distanceMeters / 1000) * KCAL_PER_KM))
-    : 0;
 
   return (
     <FullCard back={back} className="walk-card">
@@ -146,13 +139,6 @@ export function WalkScreen({
             ? t("walk.doneMessage", { km: formatKm(done.distanceMeters), name: petName })
             : t("walk.doneMessageNoDistance", { name: petName })}
         </p>
-      )}
-      {!realWalk && (
-        <div className="walk-stats">
-          <div><strong>{isSimulating ? String(simSteps) : "0"}</strong><small>{t("common.steps")}</small></div>
-          <div><strong>{isSimulating ? String(simCalories) : "0"}</strong><small>{t("common.calories")}</small></div>
-          <div><strong>{isSimulating ? simState.speedKmh.toFixed(1) : "0.0"}</strong><small>{t("common.kmh")}</small></div>
-        </div>
       )}
       {!isSimulating && (
         <button className={`primary-button ${walking ? "stop-button" : ""}`} onClick={toggleWalk}>

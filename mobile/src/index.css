@@ -601,11 +601,6 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .walk-orb.active { border-color: var(--color-accent-walk-border); transform: scale(1.02); }
 .walk-orb strong { color: #193c2e; font-size: var(--font-size-8xl); font-weight: var(--font-weight-black); }
 .walk-orb small { color: #75847a; font-size: var(--font-size-sm); }
-.walk-stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 0 8px; }
-.walk-stats div { display: grid; gap: 2px; border-right: 1px solid #e0e5dc; }
-.walk-stats div:last-child { border: 0; }
-.walk-stats strong { font-size: var(--font-size-4xl); font-weight: var(--font-weight-black); }
-.walk-stats small { color: #79857e; font-size: var(--font-size-xs); text-transform: uppercase; }
 .stop-button { background: var(--color-action-stop); }
 .walk-note { color: #7b887f; font-size: var(--font-size-sm); }
 .gentle-note { margin: 8px auto 0; max-width: 330px; color: #88928b; font-size: var(--font-size-sm); line-height: 1.4; }
