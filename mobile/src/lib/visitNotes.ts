@@ -16,6 +16,16 @@ export interface VisitNote {
   shared: boolean;
   /** Earlier wordings, newest first: editing never loses what she wrote before. */
   earlier: Array<{ text: string; updatedAt: string }>;
+  /** Set by Reset to morning: the note is hidden (lib/demoDayReset.ts). */
+  resetAt?: string;
+  /** Wordings a Reset to morning took back (kept, hidden), newest first. */
+  resetVersions?: Array<{ text: string; updatedAt: string; resetAt: string }>;
+}
+
+type Version = { text: string; updatedAt: string };
+function isVersion(item: unknown): item is Version {
+  return !!item && typeof item === "object" && typeof (item as Record<string, unknown>).text === "string"
+    && typeof (item as Record<string, unknown>).updatedAt === "string";
 }
 
 /** A stored note; notes saved before sharing existed have no `shared` and stay private. */
@@ -23,12 +33,16 @@ function toNote(value: unknown): VisitNote | null {
   if (!value || typeof value !== "object") return null;
   const note = value as Record<string, unknown>;
   if (typeof note.id !== "string" || typeof note.text !== "string" || typeof note.updatedAt !== "string") return null;
-  const earlier = Array.isArray(note.earlier)
-    ? note.earlier.filter((item): item is { text: string; updatedAt: string } =>
-      !!item && typeof item === "object" && typeof (item as Record<string, unknown>).text === "string"
-      && typeof (item as Record<string, unknown>).updatedAt === "string")
+  const earlier = Array.isArray(note.earlier) ? note.earlier.filter(isVersion) : [];
+  // Reset marks are read back as they are, so saving the list keeps hidden notes and wordings.
+  const resetVersions = Array.isArray(note.resetVersions)
+    ? note.resetVersions.filter((item): item is Version & { resetAt: string } => isVersion(item) && typeof (item as Record<string, unknown>).resetAt === "string")
     : [];
-  return { id: note.id, text: note.text, updatedAt: note.updatedAt, shared: note.shared === true, earlier };
+  return {
+    id: note.id, text: note.text, updatedAt: note.updatedAt, shared: note.shared === true, earlier,
+    ...(typeof note.resetAt === "string" ? { resetAt: note.resetAt } : {}),
+    ...(resetVersions.length ? { resetVersions } : {}),
+  };
 }
 
 /** Trimmed and capped at `maxLength`; empty string when there is nothing to save. */
@@ -36,7 +50,7 @@ export function cleanNoteText(text: string, maxLength: number): string {
   return text.trim().slice(0, maxLength);
 }
 
-/** Stored notes, or [] (nothing stored, blocked storage, or unreadable data). */
+/** Stored notes, hidden ones (Reset to morning) included, or [] (nothing stored, blocked storage, or unreadable data). */
 export function readVisitNotes(key: string, store: KeyValueStore | null = browserStore()): VisitNote[] {
   const raw = readItem(key, store);
   if (!raw) return [];

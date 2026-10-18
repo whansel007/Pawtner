@@ -5850,6 +5850,12 @@ function localDate(now, timezone) {
 function countsInHistory(medication, scheduledAt) {
   return `(${medication}.active OR (${medication}.stopped_at IS NOT NULL AND ${scheduledAt} < ${medication}.stopped_at))`;
 }
+function notReset(table) {
+  return `${table}.reset_at IS NULL`;
+}
+function notResetItem(item) {
+  return !item.resetAt;
+}
 function readsHistory(medication) {
   return `(${medication}.active OR ${medication}.stopped_at IS NOT NULL)`;
 }
@@ -6032,7 +6038,7 @@ var PawtnerRepository = class {
        JOIN med_schedules ms ON ms.id = de.schedule_id
        JOIN medications m ON m.id = ms.medication_id
        WHERE m.user_id = $1 AND de.scheduled_for >= $2::timestamptz
-         AND de.occurred_at <= $3::timestamptz
+         AND de.occurred_at <= $3::timestamptz AND ${notReset("de")}
        ORDER BY de.occurred_at`,
       [userId, earliest, now]
     );
@@ -6041,13 +6047,13 @@ var PawtnerRepository = class {
       `SELECT schedule_id::text AS schedule_id, scheduled_for, created_at
        FROM agent_decisions
        WHERE user_id = $1 AND decision = 'nudge' AND schedule_id IS NOT NULL
-         AND created_at <= $2::timestamptz AND scheduled_for >= $3::timestamptz
+         AND created_at <= $2::timestamptz AND scheduled_for >= $3::timestamptz AND ${notReset("agent_decisions")}
        ORDER BY created_at`,
       [userId, now, earliest]
     );
     const metricsResult = await client.query(
       `SELECT id::text AS id, systolic, diastolic, note, recorded_at
-       FROM health_metrics WHERE user_id = $1 AND recorded_at <= $2::timestamptz
+       FROM health_metrics WHERE user_id = $1 AND recorded_at <= $2::timestamptz AND ${notReset("health_metrics")}
        ORDER BY recorded_at DESC`,
       [userId, now]
     );
@@ -6060,12 +6066,12 @@ var PawtnerRepository = class {
       [userId]
     );
     const walksResult = await client.query(
-      "SELECT finished_at FROM walk_sessions WHERE user_id = $1 AND finished_at <= $2::timestamptz ORDER BY finished_at",
+      `SELECT finished_at FROM walk_sessions WHERE user_id = $1 AND finished_at <= $2::timestamptz AND ${notReset("walk_sessions")} ORDER BY finished_at`,
       [userId, now]
     );
     const checkInResult = await client.query(
       `SELECT observations->>'lastMissedDay' AS last_missed_day FROM agent_decisions
-       WHERE user_id = $1 AND caretaker_ping = true AND created_at <= $2::timestamptz
+       WHERE user_id = $1 AND caretaker_ping = true AND created_at <= $2::timestamptz AND ${notReset("agent_decisions")}
        ORDER BY created_at DESC LIMIT 1`,
       [userId, now]
     );
@@ -6095,6 +6101,7 @@ var PawtnerRepository = class {
   async latestDecision(client, userId, now) {
     const result = await client.query(
       `SELECT * FROM agent_decisions WHERE user_id = $1 AND ($2::timestamptz IS NULL OR created_at <= $2::timestamptz)
+         AND ${notReset("agent_decisions")}
        ORDER BY created_at DESC LIMIT 1`,
       [userId, now ?? null]
     );
@@ -6216,29 +6223,35 @@ var PawtnerRepository = class {
     });
   }
   /**
-   * Demo only (Settings > For demo only > Reset to morning). DATA DELETE, scoped to the demo user: removes their dose
-   * taps (by scheduled time), readings and agent decisions from the start of `now`'s local day on, including rows a
-   * demo clock dated later. Earlier days, the seed readings, walks and treats stay. Then the agent decides once at `now`,
-   * so Buddy's mood comes from the fresh state rather than an older decision.
+   * Demo only (Settings > For demo only > Reset to morning). Hides, never deletes (migration 009), scoped to the demo
+   * user: stamps `reset_at` on their dose taps (by scheduled time), readings, agent decisions and walks (by finish time)
+   * from the start of `now`'s local day on, including rows a demo clock dated later; rows already stamped keep their
+   * first stamp. Every read skips stamped rows (`notReset`). Earlier days, the seed readings and treats stay as they are.
+   * Then the agent decides once at `now`, so Buddy's mood comes from the fresh state rather than an older decision.
    */
   async resetDemoDay(now) {
     return this.transaction(async (client) => {
       const userId = await this.getDefaultUserId(client);
       const dayStart = "((($2::timestamptz AT TIME ZONE u.timezone)::date)::timestamp AT TIME ZONE u.timezone)";
       await client.query(
-        `DELETE FROM dose_events de USING med_schedules ms, medications m, users u
+        `UPDATE dose_events de SET reset_at = now() FROM med_schedules ms, medications m, users u
          WHERE ms.id = de.schedule_id AND m.id = ms.medication_id AND u.id = m.user_id
-           AND u.id = $1 AND de.scheduled_for >= ${dayStart}`,
+           AND u.id = $1 AND de.scheduled_for >= ${dayStart} AND de.reset_at IS NULL`,
         [userId, now]
       );
       await client.query(
-        `DELETE FROM health_metrics hm USING users u
-         WHERE u.id = hm.user_id AND u.id = $1 AND hm.recorded_at >= ${dayStart}`,
+        `UPDATE health_metrics hm SET reset_at = now() FROM users u
+         WHERE u.id = hm.user_id AND u.id = $1 AND hm.recorded_at >= ${dayStart} AND hm.reset_at IS NULL`,
         [userId, now]
       );
       await client.query(
-        `DELETE FROM agent_decisions ad USING users u
-         WHERE u.id = ad.user_id AND u.id = $1 AND ad.created_at >= ${dayStart}`,
+        `UPDATE agent_decisions ad SET reset_at = now() FROM users u
+         WHERE u.id = ad.user_id AND u.id = $1 AND ad.created_at >= ${dayStart} AND ad.reset_at IS NULL`,
+        [userId, now]
+      );
+      await client.query(
+        `UPDATE walk_sessions ws SET reset_at = now() FROM users u
+         WHERE u.id = ws.user_id AND u.id = $1 AND ws.finished_at >= ${dayStart} AND ws.reset_at IS NULL`,
         [userId, now]
       );
       await this.resetCareSharing(client, userId, now);
@@ -6278,7 +6291,7 @@ var PawtnerRepository = class {
          FROM occurrences o
          LEFT JOIN LATERAL (
            SELECT de.event FROM dose_events de
-           WHERE de.schedule_id = o.schedule_id AND de.scheduled_for = o.scheduled_for
+           WHERE de.schedule_id = o.schedule_id AND de.scheduled_for = o.scheduled_for AND ${notReset("de")}
            ORDER BY de.occurred_at DESC LIMIT 1
          ) event ON true
        ), daily AS (
@@ -6296,25 +6309,25 @@ var PawtnerRepository = class {
       `SELECT count(*)::int AS walk_count, COALESCE(sum(distance_meters), 0)::int AS distance_meters,
               max(finished_at) AS latest_walk
        FROM walk_sessions WHERE user_id = $1 AND started_at >= ($2::date::timestamp AT TIME ZONE $4)
-         AND started_at < (($3::date + 1)::timestamp AT TIME ZONE $4)`,
+         AND started_at < (($3::date + 1)::timestamp AT TIME ZONE $4) AND ${notReset("walk_sessions")}`,
       [userId, start, today, person.timezone]
     );
     const latestMetricResult = await this.pool.query(
-      "SELECT id::text AS id, systolic, diastolic, note, recorded_at FROM health_metrics WHERE user_id = $1 ORDER BY recorded_at DESC LIMIT 1",
+      `SELECT id::text AS id, systolic, diastolic, note, recorded_at FROM health_metrics WHERE user_id = $1 AND ${notReset("health_metrics")} ORDER BY recorded_at DESC LIMIT 1`,
       [userId]
     );
     const momentsResult = await this.pool.query(
       `SELECT id::text AS id, decision, caretaker_ping, created_at
        FROM agent_decisions WHERE user_id = $1 AND created_at >= ($2::date::timestamp AT TIME ZONE $4)
          AND created_at < (($3::date + 1)::timestamp AT TIME ZONE $4)
-         AND (decision = 'celebrate' OR caretaker_ping = true)
+         AND (decision = 'celebrate' OR caretaker_ping = true) AND ${notReset("agent_decisions")}
        ORDER BY created_at DESC LIMIT 20`,
       [userId, start, today, person.timezone]
     );
     const checkInResult = await this.pool.query(
       `SELECT observations, created_at FROM agent_decisions
        WHERE user_id = $1 AND caretaker_ping = true AND observations ? 'lastMissedDay'
-         AND created_at >= ($2::date::timestamp AT TIME ZONE $3)
+         AND created_at >= ($2::date::timestamp AT TIME ZONE $3) AND ${notReset("agent_decisions")}
        ORDER BY created_at DESC LIMIT 1`,
       [userId, start, person.timezone]
     );
@@ -6329,7 +6342,7 @@ var PawtnerRepository = class {
       `SELECT note, recorded_at FROM health_metrics
        WHERE user_id = $1 AND note IS NOT NULL AND note <> ''
          AND recorded_at >= ($2::date::timestamp AT TIME ZONE $4)
-         AND recorded_at < (($3::date + 1)::timestamp AT TIME ZONE $4)
+         AND recorded_at < (($3::date + 1)::timestamp AT TIME ZONE $4) AND ${notReset("health_metrics")}
        ORDER BY recorded_at DESC LIMIT 10`,
       [userId, start, today, person.timezone]
     );
@@ -6420,7 +6433,7 @@ var PawtnerRepository = class {
       const { decision: decision2 } = await this.decideAndPersist(client, userId, request.finishedAt, void 0, { walkFinished: true });
       const row = result.rows[0];
       const cumulativeResult = await client.query(
-        "SELECT COALESCE(sum(distance_meters), 0)::int AS total FROM walk_sessions WHERE user_id = $1",
+        `SELECT COALESCE(sum(distance_meters), 0)::int AS total FROM walk_sessions WHERE user_id = $1 AND ${notReset("walk_sessions")}`,
         [userId]
       );
       const cumulative = cumulativeResult.rows[0].total;
@@ -6459,17 +6472,28 @@ var PawtnerRepository = class {
   // getDefaultUserId) only change these methods and a migration, never shared/contract.ts, the phone or /care.
   // Rules a table would enforce (one pending refill per medicine, the medicine belongs to the user, note length) are here.
   /**
-   * Reset to morning (owner, 18 Oct: "when we reset it will go to that morning state"): the server copies of the phone's
-   * demo choices go back to the seed's (no refill requests, no shared notes, blood pressure shared) and the demo clock to
-   * the reset's morning time (`morning`, today 09:00 from the phone), running from now. No rows are deleted here;
+   * Reset to morning (owner, 18 Oct: "when we reset it will go to that morning state"): refill requests (by
+   * `requestedAt`) and shared notes (by `updatedAt`) from the start of the morning's local day on get `resetAt` (hidden,
+   * same rule as `notReset`; earlier days' items stay as they are), blood pressure is shared again, and the demo clock
+   * goes to the reset's morning time (`morning`, today 09:00 from the phone), running from now. Nothing is deleted;
    * medicines, stops and past history are not touched.
    */
   async resetCareSharing(client, userId, morning) {
+    const { day_start: dayStartValue, stamped_at: stampedAtValue } = (await client.query(
+      `SELECT ((($2::timestamptz AT TIME ZONE u.timezone)::date)::timestamp AT TIME ZONE u.timezone) AS day_start, now() AS stamped_at
+       FROM users u WHERE u.id = $1`,
+      [userId, morning]
+    )).rows[0];
+    const dayStart = Date.parse(iso(dayStartValue));
+    const stampedAt = iso(stampedAtValue);
+    const stamp = (items, timeOf) => items.map((item) => notResetItem(item) && Date.parse(timeOf(item)) >= dayStart ? { ...item, resetAt: stampedAt } : item);
+    const restock = stamp(await this.readRestockItems(client, userId, true), (item) => item.requestedAt);
+    const notes = stamp(await this.readSharedNoteItems(client, userId, true), (item) => item.updatedAt);
     await client.query(
-      `UPDATE users SET restock_requests = '[]'::jsonb, shared_visit_notes = '[]'::jsonb, share_blood_pressure = true,
+      `UPDATE users SET restock_requests = $3::jsonb, shared_visit_notes = $4::jsonb, share_blood_pressure = true,
               demo_clock_at = $2::timestamptz, demo_clock_set_at = now()
        WHERE id = $1`,
-      [userId, morning]
+      [userId, morning, JSON.stringify(restock), JSON.stringify(notes)]
     );
   }
   /** Start of the summary's 7-day window (the senior's local midnight, 6 days before today), as an instant. */
@@ -6478,15 +6502,18 @@ var PawtnerRepository = class {
     const start = shiftDate(localDate(now, tz), -6);
     return iso((await client.query("SELECT ($1::date::timestamp AT TIME ZONE $2) AS at", [start, tz])).rows[0].at);
   }
-  /** The stored refill requests (raw items) with each medicine's current name. */
-  async readRestockRequests(client, userId, forUpdate = false) {
+  /** Every stored refill request, hidden ones included (for writes, which must keep them). */
+  async readRestockItems(client, userId, forUpdate = false) {
     const row = (await client.query(`SELECT restock_requests FROM users WHERE id = $1${forUpdate ? " FOR UPDATE" : ""}`, [userId])).rows[0];
+    return row.restock_requests;
+  }
+  /** The refill requests that count (not hidden by a reset), with each medicine's current name. */
+  async readRestockRequests(client, userId) {
     const names = new Map((await client.query("SELECT id::text, name FROM medications WHERE user_id = $1", [userId])).rows.map((med) => [med.id, med.name]));
-    return row.restock_requests.map((item) => ({ ...item, medicationName: names.get(item.medicationId) ?? "" }));
+    return (await this.readRestockItems(client, userId)).filter(notResetItem).map(({ resetAt: _reset, ...item }) => ({ ...item, medicationName: names.get(item.medicationId) ?? "" }));
   }
   async writeRestockRequests(client, userId, items) {
-    const stored = items.map(({ medicationName: _name, ...item }) => item);
-    await client.query("UPDATE users SET restock_requests = $2::jsonb WHERE id = $1", [userId, JSON.stringify(stored)]);
+    await client.query("UPDATE users SET restock_requests = $2::jsonb WHERE id = $1", [userId, JSON.stringify(items)]);
   }
   /** Refill requests since `since` (ISO), newest first. */
   async restockRequestsSince(client, userId, since) {
@@ -6503,7 +6530,7 @@ var PawtnerRepository = class {
       const userId = await this.getDefaultUserId(client);
       const owns = await client.query("SELECT 1 FROM medications WHERE id::text = $1 AND user_id = $2", [request.medicationId, userId]);
       if (!owns.rowCount) throw new ApiError(404, "Medication not found.");
-      const items = await this.readRestockRequests(client, userId, true);
+      const items = await this.readRestockItems(client, userId, true);
       const created = {
         id: randomUUID(),
         medicationId: request.medicationId,
@@ -6512,8 +6539,8 @@ var PawtnerRepository = class {
         status: "pending",
         handledAt: null
       };
-      const kept = items.filter((item) => !(item.medicationId === request.medicationId && item.status === "pending"));
-      await this.writeRestockRequests(client, userId, [...kept, { ...created, medicationName: "" }]);
+      const kept = items.filter((item) => !(notResetItem(item) && item.medicationId === request.medicationId && item.status === "pending"));
+      await this.writeRestockRequests(client, userId, [...kept, created]);
       return (await this.readRestockRequests(client, userId)).find((item) => item.id === created.id);
     });
   }
@@ -6521,18 +6548,22 @@ var PawtnerRepository = class {
   async markRestockRequestHandled(id) {
     return this.transaction(async (client) => {
       const userId = await this.getDefaultUserId(client);
-      const items = await this.readRestockRequests(client, userId, true);
-      const current = items.find((item) => item.id === id);
+      const items = await this.readRestockItems(client, userId, true);
+      const current = items.find((item) => item.id === id && notResetItem(item));
       if (!current) throw new ApiError(404, "Refill request not found.");
       const handled = current.status === "handled" ? current : { ...current, status: "handled", handledAt: (/* @__PURE__ */ new Date()).toISOString() };
-      await this.writeRestockRequests(client, userId, items.map((item) => item.id === id ? handled : item));
-      return handled;
+      await this.writeRestockRequests(client, userId, items.map((item) => item === current ? handled : item));
+      return (await this.readRestockRequests(client, userId)).find((item) => item.id === id);
     });
   }
-  /** The senior's shared notes, newest first. */
-  async listSharedNotes(client, userId, forUpdate = false) {
+  /** Every stored shared note, hidden ones included (for writes, which must keep them). */
+  async readSharedNoteItems(client, userId, forUpdate = false) {
     const row = (await client.query(`SELECT shared_visit_notes FROM users WHERE id = $1${forUpdate ? " FOR UPDATE" : ""}`, [userId])).rows[0];
-    return [...row.shared_visit_notes].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+    return row.shared_visit_notes;
+  }
+  /** The senior's shared notes that count (not hidden by a reset), newest first. */
+  async listSharedNotes(client, userId) {
+    return (await this.readSharedNoteItems(client, userId)).filter(notResetItem).map(({ resetAt: _reset, ...note }) => note).sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
   }
   /** PUT /api/shared-notes/:id: create or replace one shared note (text 1–visitNoteMaxLength characters). */
   async upsertSharedNote(id, request) {
@@ -6542,7 +6573,7 @@ var PawtnerRepository = class {
     return this.transaction(async (client) => {
       const userId = await this.getDefaultUserId(client);
       const note = { id, text, updatedAt: new Date(request.updatedAt).toISOString() };
-      const notes = (await this.listSharedNotes(client, userId, true)).filter((item) => item.id !== id);
+      const notes = (await this.readSharedNoteItems(client, userId, true)).filter((item) => !(item.id === id && notResetItem(item)));
       await client.query("UPDATE users SET shared_visit_notes = $2::jsonb WHERE id = $1", [userId, JSON.stringify([note, ...notes])]);
       return note;
     });
@@ -6551,8 +6582,8 @@ var PawtnerRepository = class {
   async deleteSharedNote(id) {
     return this.transaction(async (client) => {
       const userId = await this.getDefaultUserId(client);
-      const notes = await this.listSharedNotes(client, userId, true);
-      const kept = notes.filter((item) => item.id !== id);
+      const notes = await this.readSharedNoteItems(client, userId, true);
+      const kept = notes.filter((item) => !(item.id === id && notResetItem(item)));
       await client.query("UPDATE users SET shared_visit_notes = $2::jsonb WHERE id = $1", [userId, JSON.stringify(kept)]);
       return { deleted: kept.length < notes.length };
     });
@@ -6773,7 +6804,7 @@ var PawtnerRepository = class {
   async getSouvenirs() {
     const userId = await this.getDefaultUserId();
     const walkResult = await this.pool.query(
-      "SELECT COALESCE(sum(distance_meters), 0)::int AS total FROM walk_sessions WHERE user_id = $1",
+      `SELECT COALESCE(sum(distance_meters), 0)::int AS total FROM walk_sessions WHERE user_id = $1 AND ${notReset("walk_sessions")}`,
       [userId]
     );
     const cumulative = walkResult.rows[0].total;
@@ -6863,7 +6894,7 @@ var PawtnerRepository = class {
          FROM dose_events de
          JOIN med_schedules ms ON ms.id = de.schedule_id
          JOIN medications m ON m.id = ms.medication_id
-         WHERE m.user_id = $1 AND de.event = 'taken'
+         WHERE m.user_id = $1 AND de.event = 'taken' AND ${notReset("de")}
        )
        SELECT COALESCE(
          GREATEST(EXTRACT(day FROM now() - first_at)::int, 0), 0
@@ -6872,7 +6903,7 @@ var PawtnerRepository = class {
     );
     const caringDays = caringResult.rows[0]?.caring_days ?? 0;
     const walkResult = await this.pool.query(
-      "SELECT count(*)::int AS count, COALESCE(sum(distance_meters), 0)::int AS total FROM walk_sessions WHERE user_id = $1",
+      `SELECT count(*)::int AS count, COALESCE(sum(distance_meters), 0)::int AS total FROM walk_sessions WHERE user_id = $1 AND ${notReset("walk_sessions")}`,
       [userId]
     );
     const souvenirResult = await this.pool.query(
