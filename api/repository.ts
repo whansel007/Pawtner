@@ -11,6 +11,13 @@ import type {
   AgentInput,
   CaretakerSummaryResponse,
   CreateMedicationRequest,
+  CreateRestockRequest,
+  DemoClockState,
+  RestockRequest,
+  RestockRequestListResponse,
+  SharedNote,
+  SharedNoteRequest,
+  SharingSettings,
   UpdateMedicationRequest,
   CreateMedicationResponse,
   CreateScheduleRequest,
@@ -597,6 +604,9 @@ export class PawtnerRepository {
     );
     const latestDecision = await this.latestDecision(this.pool, userId, now);
     const { input, heartsTotal, source } = await this.loadDogState(this.pool, userId, now);
+    // The senior's "Share my blood pressure" switch, enforced here: off = no reading and no reading-based questions.
+    const { shareBloodPressure } = await this.getSharing();
+    const weekStartAt = await this.weekStart(this.pool, userId, now);
     // Buddy's hearts at the end of each of the 7 days before today, in the senior's time zone (/care's rhythm card).
     const pastDays = Array.from({ length: 7 }, (_, index) => shiftDate(today, index - 7));
     const dayEnds = await this.pool.query(
@@ -623,14 +633,14 @@ export class PawtnerRepository {
       walkCount: walks.walk_count,
       walkDistanceMeters: walks.distance_meters,
       latestActivityAt: latestActivity ? latestActivity.toISOString() : null,
-      latestBloodPressure: latestMetricResult.rows[0] ? mapMetric(latestMetricResult.rows[0]) : null,
+      latestBloodPressure: shareBloodPressure && latestMetricResult.rows[0] ? mapMetric(latestMetricResult.rows[0]) : null,
       caringMoments: momentsResult.rows.map((row) => ({
         id: row.id,
         kind: row.caretaker_ping ? "check_in" as const : "celebration" as const,
         message: row.caretaker_ping ? "A gentle check-in may help today." : "A caring moment from the routine.",
         occurredAt: iso(row.created_at),
       })),
-      doctorQuestions: questionsResult.rows.map((row) => ({
+      doctorQuestions: (shareBloodPressure ? questionsResult.rows : []).map((row) => ({
         note: `Ask a healthcare professional about: ${row.note}`,
         occurredAt: iso(row.recorded_at),
       })),
@@ -638,6 +648,8 @@ export class PawtnerRepository {
         ? { missedDays: Number(checkInRow.observations.consecutiveMissedDays), lastMissedDay: String(checkInRow.observations.lastMissedDay), sentAt: iso(checkInRow.created_at) }
         : null,
       stoppedMedicine: stoppedAt ? { stoppedAt: iso(stoppedAt) } : null,
+      restockRequests: await this.restockRequestsSince(this.pool, userId, weekStartAt),
+      sharedNotes: await this.listSharedNotes(this.pool, userId),
       dayHearts: dayEnds.rows.map((row, index) => ({ date: row.day, hearts: endHearts[index]! })),
     };
   }
@@ -722,6 +734,138 @@ export class PawtnerRepository {
         souvenirId,
       };
     });
+  }
+
+  // ── /care from any browser (migration 008) ──
+  // For now these live in COLUMNS on `users` (owner: "Columns only for current scope"). Every read and write of them is in
+  // the methods below, and each item already has its own id and timestamps, so real tables (and accounts, replacing
+  // getDefaultUserId) only change these methods and a migration, never shared/contract.ts, the phone or /care.
+  // Rules a table would enforce (one pending refill per medicine, the medicine belongs to the user, note length) are here.
+
+  /** Start of the summary's 7-day window (the senior's local midnight, 6 days before today), as an instant. */
+  private async weekStart(client: PoolClient | Pool, userId: string, now: string): Promise<string> {
+    const tz = (await client.query("SELECT timezone FROM users WHERE id = $1", [userId])).rows[0].timezone as string;
+    const start = shiftDate(localDate(now, tz), -6);
+    return iso((await client.query("SELECT ($1::date::timestamp AT TIME ZONE $2) AS at", [start, tz])).rows[0].at);
+  }
+
+  /** The stored refill requests (raw items) with each medicine's current name. */
+  private async readRestockRequests(client: PoolClient | Pool, userId: string, forUpdate = false): Promise<RestockRequest[]> {
+    const row = (await client.query(`SELECT restock_requests FROM users WHERE id = $1${forUpdate ? " FOR UPDATE" : ""}`, [userId])).rows[0];
+    const names = new Map((await client.query("SELECT id::text, name FROM medications WHERE user_id = $1", [userId])).rows
+      .map((med) => [med.id as string, med.name as string]));
+    return (row.restock_requests as Array<Omit<RestockRequest, "medicationName">>)
+      .map((item) => ({ ...item, medicationName: names.get(item.medicationId) ?? "" }));
+  }
+
+  private async writeRestockRequests(client: PoolClient, userId: string, items: RestockRequest[]): Promise<void> {
+    const stored = items.map(({ medicationName: _name, ...item }) => item);
+    await client.query("UPDATE users SET restock_requests = $2::jsonb WHERE id = $1", [userId, JSON.stringify(stored)]);
+  }
+
+  /** Refill requests since `since` (ISO), newest first. */
+  private async restockRequestsSince(client: PoolClient | Pool, userId: string, since: string): Promise<RestockRequest[]> {
+    return (await this.readRestockRequests(client, userId))
+      .filter((item) => Date.parse(item.requestedAt) >= Date.parse(since))
+      .sort((a, b) => Date.parse(b.requestedAt) - Date.parse(a.requestedAt));
+  }
+
+  /** GET /api/restock-requests: this week's, for the phone's status line. */
+  async listRestockRequests(now = new Date().toISOString()): Promise<RestockRequestListResponse> {
+    const userId = await this.getDefaultUserId();
+    return { restockRequests: await this.restockRequestsSince(this.pool, userId, await this.weekStart(this.pool, userId, now)) };
+  }
+
+  /** POST /api/restock-requests: the medicine must be hers; asking again for it replaces its pending request. */
+  async createRestockRequest(request: CreateRestockRequest): Promise<RestockRequest> {
+    return this.transaction(async (client) => {
+      const userId = await this.getDefaultUserId(client);
+      const owns = await client.query("SELECT 1 FROM medications WHERE id::text = $1 AND user_id = $2", [request.medicationId, userId]);
+      if (!owns.rowCount) throw new ApiError(404, "Medication not found.");
+      const items = await this.readRestockRequests(client, userId, true);
+      const created: Omit<RestockRequest, "medicationName"> = {
+        id: randomUUID(), medicationId: request.medicationId, daysLeft: request.daysLeft,
+        requestedAt: new Date(request.requestedAt).toISOString(), status: "pending", handledAt: null,
+      };
+      const kept = items.filter((item) => !(item.medicationId === request.medicationId && item.status === "pending"));
+      await this.writeRestockRequests(client, userId, [...kept, { ...created, medicationName: "" }]);
+      return (await this.readRestockRequests(client, userId)).find((item) => item.id === created.id)!;
+    });
+  }
+
+  /** POST /api/restock-requests/:id/handled: a caretaker will help (repeating it keeps the first time). */
+  async markRestockRequestHandled(id: string): Promise<RestockRequest> {
+    return this.transaction(async (client) => {
+      const userId = await this.getDefaultUserId(client);
+      const items = await this.readRestockRequests(client, userId, true);
+      const current = items.find((item) => item.id === id);
+      if (!current) throw new ApiError(404, "Refill request not found.");
+      const handled: RestockRequest = current.status === "handled" ? current : { ...current, status: "handled", handledAt: new Date().toISOString() };
+      await this.writeRestockRequests(client, userId, items.map((item) => (item.id === id ? handled : item)));
+      return handled;
+    });
+  }
+
+  /** The senior's shared notes, newest first. */
+  private async listSharedNotes(client: PoolClient | Pool, userId: string, forUpdate = false): Promise<SharedNote[]> {
+    const row = (await client.query(`SELECT shared_visit_notes FROM users WHERE id = $1${forUpdate ? " FOR UPDATE" : ""}`, [userId])).rows[0];
+    return [...(row.shared_visit_notes as SharedNote[])].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+  }
+
+  /** PUT /api/shared-notes/:id: create or replace one shared note (text 1–visitNoteMaxLength characters). */
+  async upsertSharedNote(id: string, request: SharedNoteRequest): Promise<SharedNote> {
+    const text = request.text.trim();
+    if (!text) throw new ApiError(400, "Note text is required.");
+    if (text.length > DEMO_RULES.visitNoteMaxLength) throw new ApiError(400, `Note text must be at most ${DEMO_RULES.visitNoteMaxLength} characters.`);
+    return this.transaction(async (client) => {
+      const userId = await this.getDefaultUserId(client);
+      const note: SharedNote = { id, text, updatedAt: new Date(request.updatedAt).toISOString() };
+      const notes = (await this.listSharedNotes(client, userId, true)).filter((item) => item.id !== id);
+      await client.query("UPDATE users SET shared_visit_notes = $2::jsonb WHERE id = $1", [userId, JSON.stringify([note, ...notes])]);
+      return note;
+    });
+  }
+
+  /** DELETE /api/shared-notes/:id (no error when it is already gone). */
+  async deleteSharedNote(id: string): Promise<{ deleted: boolean }> {
+    return this.transaction(async (client) => {
+      const userId = await this.getDefaultUserId(client);
+      const notes = await this.listSharedNotes(client, userId, true);
+      const kept = notes.filter((item) => item.id !== id);
+      await client.query("UPDATE users SET shared_visit_notes = $2::jsonb WHERE id = $1", [userId, JSON.stringify(kept)]);
+      return { deleted: kept.length < notes.length };
+    });
+  }
+
+  async getSharing(): Promise<SharingSettings> {
+    const userId = await this.getDefaultUserId();
+    return { shareBloodPressure: (await this.pool.query("SELECT share_blood_pressure FROM users WHERE id = $1", [userId])).rows[0].share_blood_pressure };
+  }
+
+  async updateSharing(request: SharingSettings): Promise<SharingSettings> {
+    const userId = await this.getDefaultUserId();
+    const result = await this.pool.query("UPDATE users SET share_blood_pressure = $2 WHERE id = $1 RETURNING share_blood_pressure", [userId, request.shareBloodPressure]);
+    return { shareBloodPressure: result.rows[0].share_blood_pressure };
+  }
+
+  /** GET /api/demo-clock: the demo clock's time NOW (it runs forward from when it was set, by server time), or null. */
+  async getDemoClock(): Promise<DemoClockState> {
+    const userId = await this.getDefaultUserId();
+    const row = (await this.pool.query(
+      "SELECT demo_clock_at + (now() - demo_clock_set_at) AS running FROM users WHERE id = $1 AND demo_clock_at IS NOT NULL",
+      [userId],
+    )).rows[0];
+    return { at: row ? iso(row.running) : null };
+  }
+
+  /** PUT /api/demo-clock: set it to `at` from now (server time), or clear it with null. */
+  async setDemoClock(request: DemoClockState): Promise<DemoClockState> {
+    const userId = await this.getDefaultUserId();
+    await this.pool.query(
+      "UPDATE users SET demo_clock_at = $2::timestamptz, demo_clock_set_at = CASE WHEN $2::timestamptz IS NULL THEN NULL ELSE now() END WHERE id = $1",
+      [userId, request.at],
+    );
+    return this.getDemoClock();
   }
 
   // ── T2-02 / T2-06: Medication CRUD ──

@@ -32,6 +32,8 @@ export const DEMO_RULES = {
   streakMilestones: [3, 7, 14, 30] as const,
   /** Minutes the dog stays joyful after a celebrate decision before reverting to heart-based mood. */
   celebrateJoyfulMinutes: 30,
+  /** Longest "For my next visit" note, in characters: the phone caps it, the API rejects longer shared notes. */
+  visitNoteMaxLength: 300,
 } as const;
 
 /** In the latest reading's note, these mean Warning whatever the numbers (emergency signs at any reading). */
