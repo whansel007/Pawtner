@@ -39,7 +39,7 @@ import { useRestockHelp } from "./lib/useRestockHelp";
 import { pickRestockAlerts } from "./lib/restockHelp";
 import { resetDemoStorage } from "./lib/demoReset";
 import { mergeHealthMetrics } from "./lib/healthReadings";
-import { runningClock, saveDemoClock, type DemoClockAnchor } from "./lib/demoClock";
+import { demoClockOnLoad, runningClock, saveDemoClock, type DemoClockAnchor } from "./lib/demoClock";
 import { useHomeView } from "./lib/useHomeView";
 import { useDoseReminder } from "./lib/useDoseReminder";
 import { shouldBarkFor } from "./lib/nudgeBark";
@@ -118,7 +118,7 @@ export default function App() {
   const [demoClock, setDemoClock] = useState<DemoClockAnchor | null>(() => { const at = initialAgentClock(); return at ? { at, setAtMs: Date.now() } : null; });
   /** The demo clock's time right now, or null for real time. */
   const demoNow = (): string | null => runningClock(demoClock);
-  const setDemoNow = (at: string | null) => setDemoClock(at ? { at, setAtMs: Date.now() } : null);
+  const setDemoNow = (at: string | null) => { setDemoClock(at ? { at, setAtMs: Date.now() } : null); void api.setDemoClock({ at }).catch((error) => reportApiProblem(error)); };
   // Scene time (`?time=`, Settings > Demo time buttons): day/night look only. Hearts, mood and doses stay on the one
   // real state; switching morning ↔ evening must never re-read /api/today at another time.
   const [sceneTime, setSceneTime] = useState<string | null>(initialSceneTime);
@@ -173,8 +173,9 @@ export default function App() {
     catch (error) { reportApiProblem(error); }
   };
   useEffect(() => { void refreshToday(); }, []);
-  // /care in the same browser follows this clock, so Jamie sees Buddy as Rose does (lib/demoClock.ts).
-  useEffect(() => { saveDemoClock(demoClock); void api.setDemoClock({ at: runningClock(demoClock) }).catch((error) => reportApiProblem(error)); }, [demoClock]);
+  // The demo clock lives on the server (any browser; /care reads it): on load a ?clock= link is written, else the server's clock is adopted (demoClockOnLoad).
+  useEffect(() => { const plan = demoClockOnLoad(demoClock?.at ?? null); if (plan.action === "write") void api.setDemoClock({ at: plan.at }).catch((error) => reportApiProblem(error)); else void api.demoClock().then((clock) => { if (clock.at) { setDemoClock({ at: clock.at, setAtMs: Date.now() }); setDemoClockValue(toDateTimeLocal(new Date(clock.at))); void refreshToday(clock.at); } }).catch((error) => console.warn("Demo clock: server clock unavailable", error)); }, []);
+  useEffect(() => { saveDemoClock(demoClock); }, [demoClock]);
   useEffect(() => {
     if (screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
     // On launch (Home's "See all" dot) and each time Reminders opens (a medicine may have been added).

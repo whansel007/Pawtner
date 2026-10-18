@@ -38,3 +38,13 @@ export function readDemoClock(store: KeyValueStore | null = browserStore(), nowM
     return null;
   }
 }
+
+/**
+ * What the phone does with the demo clock when it opens (owner: the demo keeps its state). A `?clock=` link (Reset to
+ * morning reloads with one, or a shared demo link) wins and is written to the server; otherwise the phone adopts the
+ * server's clock (set from any browser) and writes nothing, so opening the app never wipes the demo's time.
+ * After that the phone writes only on an explicit change (Settings "Run Buddy's check at this time").
+ */
+export function demoClockOnLoad(fromLink: string | null): { action: "write"; at: string } | { action: "adopt" } {
+  return fromLink ? { action: "write", at: fromLink } : { action: "adopt" };
+}
