@@ -3,7 +3,7 @@ import en from "../../mobile/src/locales/en.json" with { type: "json" };
 import { readWalkGoal, walkGoalByKey, WALK_GOALS, writeWalkGoal } from "../../mobile/src/lib/walkGoals.js";
 import { simulationFor, walkStateAt, scaleTrack } from "../../mobile/src/lib/walkState.js";
 import { DEMO_POINTS, PLAYBACK_RATE, TICK_MS } from "../../mobile/src/config/walk.js";
-import { walkEarnsHeart } from "../../shared/selectors.js";
+import { walkHeartTimes } from "../../shared/selectors.js";
 import type { KeyValueStore } from "../../mobile/src/lib/localStore.js";
 
 function memoryStore(): KeyValueStore {
@@ -34,17 +34,45 @@ describe("walk goals (en.json walkGoals, one reader)", () => {
   });
 });
 
-describe("walk heart rule (shared walkEarnsHeart)", () => {
-  it("a walk earns the heart only when it lasts its own goal", () => {
-    expect(walkEarnsHeart({ startedAt: START, finishedAt: at(29), goalMinutes: 30 })).toBe(false);
-    expect(walkEarnsHeart({ startedAt: START, finishedAt: at(30), goalMinutes: 30 })).toBe(true);
-    expect(walkEarnsHeart({ startedAt: START, finishedAt: at(99), goalMinutes: 100 })).toBe(false);
-    expect(walkEarnsHeart({ startedAt: START, finishedAt: at(100), goalMinutes: 100 })).toBe(true);
+describe("walk heart rule (shared walkHeartTimes): a day's walks add up", () => {
+  const walk = (from: number, to: number, goalMinutes: number | null = 50) => ({ startedAt: at(from), finishedAt: at(to), goalMinutes });
+
+  it("one walk: earns at its finish only when it lasts the goal", () => {
+    expect(walkHeartTimes([walk(0, 29, 30)])).toEqual([]);
+    expect(walkHeartTimes([walk(0, 30, 30)])).toEqual([at(30)]);
+    expect(walkHeartTimes([walk(0, 99, 100)])).toEqual([]);
+    expect(walkHeartTimes([walk(0, 100, 100)])).toEqual([at(100)]);
   });
 
-  it("a walk with no goal (saved before goals existed) counts at any length", () => {
-    expect(walkEarnsHeart({ startedAt: START, finishedAt: at(0), goalMinutes: null })).toBe(true);
-    expect(walkEarnsHeart({ startedAt: START, finishedAt: at(1) })).toBe(true);
+  it("stop and continue: 20 + 30 min with goal 50 earns at the second walk's finish", () => {
+    expect(walkHeartTimes([walk(0, 20), walk(60, 90)])).toEqual([at(90)]);
+  });
+
+  it("20 + 20 min with goal 50 earns nothing; a third walk that reaches 50 earns at its finish", () => {
+    expect(walkHeartTimes([walk(0, 20), walk(60, 80)])).toEqual([]);
+    expect(walkHeartTimes([walk(0, 20), walk(60, 80), walk(120, 130)])).toEqual([at(130)]);
+  });
+
+  it("walks on different days never add up; at most one heart per day", () => {
+    const nextDay = 24 * 60;
+    expect(walkHeartTimes([walk(0, 30), walk(nextDay, nextDay + 30)])).toEqual([]);
+    expect(walkHeartTimes([walk(0, 50), walk(60, 120), walk(nextDay, nextDay + 50)])).toEqual([at(50), at(nextDay + 50)]);
+  });
+
+  it("a walk with no goal (saved before goals) earns at any length, as before", () => {
+    expect(walkHeartTimes([walk(0, 1, null)])).toEqual([at(1)]);
+    expect(walkHeartTimes([{ startedAt: START, finishedAt: at(0) }])).toEqual([at(0)]);
+  });
+
+  it("a goal change mid-day uses the finishing walk's goal", () => {
+    // 20 min under 50, then 15 min under 30: 35 >= 30 → heart at the second walk.
+    expect(walkHeartTimes([walk(0, 20, 50), walk(60, 75, 30)])).toEqual([at(75)]);
+    // 20 min under 30, then 15 min under 100: 35 < 100 → none.
+    expect(walkHeartTimes([walk(0, 20, 30), walk(60, 75, 100)])).toEqual([]);
+  });
+
+  it("order of the list doesn't matter", () => {
+    expect(walkHeartTimes([walk(60, 90), walk(0, 20)])).toEqual([at(90)]);
   });
 });
 

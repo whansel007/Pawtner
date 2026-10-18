@@ -48,7 +48,7 @@ import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
 import { DEMO_CLOCK_PARAM, DEMO_RESET_PRESET, DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset, type DemoUnlockKey } from "./config/demo";
 import { demoHeartsTotal, demoStreak, demoTodayHearts, hasDemoTodayHearts, toggleDemoTick } from "./lib/demoUnlocks";
-import { computeHeart, heartActivities, walkEarnsHeart } from "../../shared/selectors";
+import { computeHeart, heartActivities, walkHeartTimes } from "../../shared/selectors";
 import { SENIOR_TIMEZONE } from "./config/scene";
 import type { World, Accessory, Screen } from "./types";
 import type { WalkCompletion } from "./lib/walkState";
@@ -329,7 +329,8 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
           streak: today?.dog.streak ?? pet.streak,
           doses: doseList,
           healthMetrics,
-          walkFinished: walkEarnsHeart({ startedAt, finishedAt, goalMinutes }),
+          // Offline the phone only knows this walk, so only it counts toward the day's total.
+          walkFinished: walkHeartTimes([{ startedAt, finishedAt, goalMinutes }]).length > 0,
         });
         setLatestDecision(await requestDecision(input));
       }

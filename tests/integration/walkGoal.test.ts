@@ -52,25 +52,50 @@ testApi("Walk goal: a walk earns the heart when it lasts its own goal (migration
     return { status: response.status, body: await response.json() };
   };
   const get = async (path: string, now: string) => (await call("GET", `${path}?now=${encodeURIComponent(now)}`)).body;
-  const walk = (minutes: number, goalMinutes?: number | null) => call("POST", "/api/walk-session", {
-    startedAt: START, finishedAt: plus(minutes), distanceMeters: 500, fastStretchOccurred: false, ...(goalMinutes === undefined ? {} : { goalMinutes }),
+  /** A walk from `from` to `to` minutes after 9:00 today. */
+  const walkBetween = (from: number, to: number, goalMinutes?: number | null) => call("POST", "/api/walk-session", {
+    startedAt: plus(from), finishedAt: plus(to), distanceMeters: 500, fastStretchOccurred: false, ...(goalMinutes === undefined ? {} : { goalMinutes }),
   });
+  const walk = (minutes: number, goalMinutes?: number | null) => walkBetween(0, minutes, goalMinutes);
   const walkedAt = async (minutes: number) => (await get("/api/today", plus(minutes))).activities.walk as boolean;
 
-  it("goal 30: 29 minutes earns nothing, 30 minutes earns the heart", async () => {
+  it("goal 30: one 29-minute walk earns nothing, one 30-minute walk earns the heart", async () => {
     expect((await walk(29, 30)).status).toBe(201);
     expect(await walkedAt(29)).toBe(false);
-    const heartBefore = (await get("/api/today", plus(29))).dog.heart;
+  });
+
+  it("goal 30: a 30-minute walk earns the heart (+1)", async () => {
+    const heartBefore = (await get("/api/today", plus(0))).dog.heart;
     expect((await walk(30, 30)).status).toBe(201);
     expect(await walkedAt(30)).toBe(true);
     expect((await get("/api/today", plus(30))).dog.heart).toBe(heartBefore + 1);
   });
 
-  it("goal 100 needs 100 minutes", async () => {
+  it("goal 100 needs 100 minutes in one walk", async () => {
     await walk(99, 100);
     expect(await walkedAt(99)).toBe(false);
-    await walk(100, 100);
-    expect(await walkedAt(100)).toBe(true);
+  });
+
+  it("stop and continue: 20 + 30 minutes with goal 50 earn the heart at the second walk's finish", async () => {
+    await walkBetween(0, 20, 50);
+    expect(await walkedAt(25)).toBe(false);
+    await walkBetween(60, 90, 50);
+    expect(await walkedAt(89)).toBe(false);
+    expect(await walkedAt(90)).toBe(true);
+  });
+
+  it("20 + 20 minutes with goal 50 earn nothing", async () => {
+    await walkBetween(0, 20, 50);
+    await walkBetween(60, 80, 50);
+    expect(await walkedAt(120)).toBe(false);
+  });
+
+  it("Buddy celebrates a walk only when it earned the day's walk heart", async () => {
+    // No refill reminder in the way (throwaway schema only).
+    await setup.query(`UPDATE "${schema}".medications SET days_of_supply = NULL`);
+    expect((await walkBetween(0, 20, 50)).body.decision.decision).not.toBe("celebrate");
+    const earned = (await walkBetween(60, 90, 50)).body.decision;
+    expect(earned).toMatchObject({ decision: "celebrate", observations: { walkFinished: true } });
   });
 
   it("a walk with no goal (older phone, or saved before goals) still counts at any length", async () => {
@@ -96,6 +121,7 @@ testApi("Walk goal: a walk earns the heart when it lasts its own goal (migration
     };
     const before = await past();
     await walk(5, 50);
+    await walkBetween(10, 60, 50);
     expect(await past()).toEqual(before);
   });
 });
