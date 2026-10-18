@@ -1,6 +1,7 @@
 import { DEMO_RULES } from "../../../../shared/config.js";
 import type { DerivedDose } from "../../../../shared/contract.js";
 import type { CareData } from "./types.js";
+import { DEMO_NAMES } from "../../lib/demoNames.js";
 
 /**
  * Offline fallback for /care, shaped exactly like the API responses (fictional people, PRD §3 and migrations/seed.sql).
@@ -8,17 +9,18 @@ import type { CareData } from "./types.js";
  * Times are built around `now` so the week view always looks current.
  */
 
-const SENIOR = { id: "mock-senior", name: "Rose" };
-const DOG = { id: "mock-dog", name: "Buddy" };
+// Names: the demo names from en.json "demoNames" (lib/demoNames.ts), never written here.
+const SENIOR = { id: "mock-senior", name: DEMO_NAMES.senior };
+const DOG = { id: "mock-dog", name: DEMO_NAMES.dog };
 
 /** The check-ins caretaker when the API is offline or has no caregiver yet. */
-export const MOCK_CHECK_INS_CARETAKER = { id: "mock-caretaker-check-ins", name: "Jamie" } as const;
+export const MOCK_CHECK_INS_CARETAKER = { id: "mock-caretaker-check-ins", name: DEMO_NAMES.caretaker } as const;
 
 /**
  * MOCK SLOT, replace with P1's caregivers list (`caregivers: { id, name, receivesCheckIns }[]` in CaretakerSummaryResponse,
  * docs/KANBAN.md "Blocked"). The API has one caregiver today, so the updates-only caretaker exists only here.
  */
-export const MOCK_UPDATES_ONLY_CARETAKER = { id: "mock-caretaker-updates-only", name: "Alex", receivesCheckIns: false } as const;
+export const MOCK_UPDATES_ONLY_CARETAKER = { id: "mock-caretaker-updates-only", name: DEMO_NAMES.updatesOnlyCaretaker, receivesCheckIns: false } as const;
 
 function at(now: Date, dayOffset: number, hours: number, minutes: number): string {
   const date = new Date(now);

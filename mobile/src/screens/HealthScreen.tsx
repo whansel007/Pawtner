@@ -140,7 +140,7 @@ export function HealthScreen({
           <small>{t("health.bpLabel")}</small>
           <h3>{lastMetric ? `${lastMetric.systolic} / ${lastMetric.diastolic}` : t("health.bpNeedsReading", { name: petName })}</h3>
           {/* Compared with her first reading (shared/rules.ts bloodPressureProgress): first / keep at it / good job / warning. */}
-          <p>{lastMetric ? t(`health.bpProgress.${bloodPressureProgress(lastMetric, firstReading)}`) : (bpLogged ? bloodPressureReading.note : bloodPressureReading.pendingNote)}</p>
+          <p>{lastMetric ? t(`health.bpProgress.${bloodPressureProgress(lastMetric, firstReading)}`, { name: petName }) : (bpLogged ? bloodPressureReading.note : bloodPressureReading.pendingNote)}</p>
         </div>
       </div>
 

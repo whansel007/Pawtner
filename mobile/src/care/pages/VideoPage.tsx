@@ -4,6 +4,7 @@ import { DEMO_VIDEO_URL } from "../config";
 import { youtubeEmbedUrl } from "../lib/video";
 import { CareCard, PageWelcome } from "../components/CareCard";
 import { CareLink } from "../components/CareLink";
+import { DEMO_NAMES } from "../../lib/demoNames";
 
 /**
  * /care/video: the demo video played on our own page (user, 16 Oct: watch it without leaving Pawtner's address).
@@ -14,7 +15,7 @@ export function VideoPage({ onNavigate }: { onNavigate: (route: CareRoute) => vo
   const embed = youtubeEmbedUrl(DEMO_VIDEO_URL);
   return (
     <div className="care-content care-page-enter">
-      <PageWelcome eyebrow={t("care.web.video.eyebrow")} title={t("care.web.video.title")} intro={t("care.web.video.intro")} />
+      <PageWelcome eyebrow={t("care.web.video.eyebrow")} title={t("care.web.video.title")} intro={t("care.web.video.intro", { senior: DEMO_NAMES.senior, caretaker: DEMO_NAMES.caretaker })} />
       <CareCard title={t("care.web.video.cardTitle")} className="care-video-card">
         {embed ? (
           <iframe
