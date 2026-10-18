@@ -17,6 +17,13 @@
 | Reset to morning (`POST /api/demo/reset-day`) brings back the morning state: today's taps, readings and decisions removed (as before), refill requests and shared notes emptied, BP sharing on, and the demo clock at the reset's morning time (today 09:00), running from then. Medicines, stops and past history are not touched. | Owner: "when we reset it will go to that morning state". | On the hosted site each reset also resets those four for the fictional demo user. | Final |
 | Corrected: the old `lib/restockHelp.ts` comment said the refill GET returns "no medicine names"; per the 16 Oct decision a refill request shares that medicine's name (so the caretaker knows what to buy). The code and comment now match. | Doc contradiction found in the brief. | — | Final |
 
+## 2026-10-18 — One medicine at a time on My medicines; no "loud alarm" line (branch `claude/medicine-focus`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| While a medicine is being worked on (its Edit form, its pill-photo step, its Stop confirm panel, or its "is stopped." + Undo card), My medicines shows ONLY that medicine's card, and the back button reads **"Back to Medicine list"** (owner's wording; `medicines.backToList`). It returns to the full list and saves nothing (like Cancel / "No, keep it"); from the stopped card it ends the Undo and the medicine leaves the list (stop event `dismiss`, same as when a newer stop replaces it). Save, Cancel, "No, keep it", a finished photo save and Undo return to the list as before. Rule: `lib/medicineFocus.ts` (pure, `tests/unit/medicineFocus.test.ts`). | Owner, 18 Oct: "when we are editing the meds, can we just have only that meds card rendered? Now it's stacked w the other meds and confusing … we can say Back to Medicine list". | While a request is in flight (stopping / undoing) the back button waits for it. | Final |
+| The schedule step no longer says "No loud alarm, and no scolding if you are late." (`schedule.noAlarm` removed); "{dog} will give a gentle woof." stays. | Owner, 18 Oct: "Pls remove "no loud alarm no scolding if xxx late"". | — | Final |
+
 ## 2026-10-18 — No hardcoded names (branch `claude/names-from-data`)
 
 | Decision | Reason | Tradeoff | Status |

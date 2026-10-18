@@ -17,7 +17,7 @@ import { STOP_CONFIRM_GUARD_MS } from "../config/medicines.js";
 export type StopStatus = "confirm" | "stopping" | "stopped" | "undoing" | "gone";
 export interface StopRow { status: StopStatus; failed: boolean; openedAt: number }
 export type StopRows = Readonly<Record<string, StopRow>>;
-export type StopEvent = "open" | "cancel" | "confirm" | "stopped" | "stopFailed" | "undo" | "undone" | "undoFailed";
+export type StopEvent = "open" | "cancel" | "confirm" | "stopped" | "stopFailed" | "undo" | "undone" | "undoFailed" | "dismiss";
 
 function without(rows: StopRows, keep: (id: string, row: StopRow) => boolean): Record<string, StopRow> {
   return Object.fromEntries(Object.entries(rows).filter(([id, row]) => keep(id, row)));
@@ -48,6 +48,8 @@ export function stopRowsAfter(rows: StopRows, id: string, event: StopEvent, now:
     // Started again: the row shows normally.
     case "undone": return without(rows, (otherId) => otherId !== id);
     case "undoFailed": return { ...rows, [id]: { status: "stopped", failed: true, openedAt } };
+    // "Back to Medicine list" from the stopped card ends its Undo: the medicine leaves the list, as when a newer stop does.
+    case "dismiss": return current?.status === "stopped" ? { ...rows, [id]: { ...current, status: "gone", failed: false } } : rows;
   }
 }
 

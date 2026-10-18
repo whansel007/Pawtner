@@ -107,3 +107,18 @@ describe("stop this medicine: only the latest stop keeps its Undo", () => {
     expect(stopRowsAfter(rows, "a", "undone", LATER + 1200).a).toBeUndefined();
   });
 });
+
+describe("stop this medicine: Back to Medicine list", () => {
+  const stopped = run([["a", "open", T], ["a", "confirm", LATER], ["a", "stopped", LATER]]);
+  it("from the stopped card ends the Undo: the medicine leaves the list", () => {
+    const rows = stopRowsAfter(stopped, "a", "dismiss", LATER + 50);
+    expect(rows.a.status).toBe("gone");
+    expect(stopRowsAfter(rows, "a", "undo", LATER + 60)).toBe(rows);
+  });
+  it("does nothing on a confirm panel (that is cancel) or while a request is in flight", () => {
+    expect(stopRowsAfter(opened, "a", "dismiss", T + 50)).toBe(opened);
+    const undoing = stopRowsAfter(stopped, "a", "undo", LATER + 5);
+    expect(stopRowsAfter(undoing, "a", "dismiss", LATER + 6)).toBe(undoing);
+  });
+});
+
