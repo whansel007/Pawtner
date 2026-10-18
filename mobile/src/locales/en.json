@@ -431,7 +431,6 @@
     "comingSoonGift": "Soon: a gift from {{name}}"
   },
   "health": {
-    "eyebrow": "This week",
     "bpLabel": "BLOOD PRESSURE",
     "bpNeedsReading": "{{name}} needs one reading",
     "weekSummary": "Your week in plain words",
