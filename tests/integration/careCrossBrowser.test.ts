@@ -121,16 +121,19 @@ testApi("/care from any browser: refill requests, shared notes, BP sharing, demo
     expect((await summary()).latestBloodPressure).not.toBeNull();
   }, 60_000);
 
-  it("Reset to morning puts the four server copies back to their defaults", async () => {
+  it("Reset to morning puts the four server copies back to the morning state (clock at the reset's morning time)", async () => {
     await call("POST", "/api/restock-requests", { medicationId: B, daysLeft: 4, requestedAt: now() });
     await call("PUT", "/api/shared-notes/note-1", { text: "Shared", updatedAt: now() });
     await call("PUT", "/api/sharing", { shareBloodPressure: false });
     await call("PUT", "/api/demo-clock", { at: "2026-10-19T01:00:00.000Z" });
-    expect((await call("POST", "/api/demo/reset-day", { now: now() })).status).toBe(200);
+    const morning = new Date(Date.now() - 60_000).toISOString();
+    expect((await call("POST", "/api/demo/reset-day", { now: morning })).status).toBe(200);
     expect((await call("GET", "/api/restock-requests")).body.restockRequests).toEqual([]);
     expect((await summary()).sharedNotes).toEqual([]);
     expect((await call("GET", "/api/sharing")).body).toEqual({ shareBloodPressure: true });
-    expect((await call("GET", "/api/demo-clock")).body).toEqual({ at: null });
+    const clock = Date.parse((await call("GET", "/api/demo-clock")).body.at);
+    expect(clock - Date.parse(morning)).toBeGreaterThanOrEqual(0);
+    expect(clock - Date.parse(morning)).toBeLessThan(5_000);
   }, 60_000);
 
   it("demo clock: set, runs forward from when it was set, cleared", async () => {
