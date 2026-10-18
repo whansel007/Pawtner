@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import type { CareData, Caretaker } from "../data/types";
 import type { TreatStatus } from "../hooks/useCareTreat";
-import type { RestockHelpEntry } from "../../lib/restockHelp";
+import type { RestockRequest } from "../../../../shared/contract";
 import { formatCalendarDay, formatWeekday } from "../lib/format";
 import { careUpdates, progressPercent, RHYTHM_MIN_HEARTS, stoppedMedicineDay, streakHearts, todayProgress, todayState, weekRhythm } from "../lib/rules";
 import { SENIOR_TIMEZONE } from "../../config/scene";
@@ -19,18 +19,18 @@ interface WeekPageProps {
   treatStatus: TreatStatus;
   onSendTreat: (message: string) => void;
   /** The senior's pending "help with a refill" request (demo: lib/restockHelp.ts). Never names the medicine. */
-  restockRequest: RestockHelpEntry | null;
-  onHandleRestock: () => void;
+  restockRequests: RestockRequest[];
+  onHandleRestock: (id: string) => void;
   /** "Questions for the doctor": the senior's shared notes plus the API's questions, newest first (doctorQuestionsForCare). */
   doctorQuestions: Array<{ note: string; occurredAt: string }>;
   /** Latest reading, only when the senior shares her blood pressure (Settings on her phone); else null. */
   latestBloodPressure: { systolic: number; diastolic: number; recordedAt: string } | null;
 }
 
-export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, restockRequest, onHandleRestock, doctorQuestions, latestBloodPressure }: WeekPageProps) {
+export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, restockRequests, onHandleRestock, doctorQuestions, latestBloodPressure }: WeekPageProps) {
   const { t, i18n } = useTranslation();
   // Thank-you line after "I'll handle it" (and when it was tapped, to order it among the updates), until the page changes.
-  const [handledRestockAt, setHandledRestockAt] = useState<string | null>(null);
+  const [handledHere, setHandledHere] = useState<Record<string, string>>({});
   const locale = i18n.language;
   const now = new Date();
   const senior = data.summary.senior.name;
@@ -48,7 +48,7 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
 
   const [latestQuestion, ...earlierQuestions] = doctorQuestions;
   // One "{{dog}}'s updates" card: check-in (check-ins caretakers only), a stopped medicine (never its name), the refill request.
-  const updates = careUpdates(data.summary, viewer, restockRequest, handledRestockAt);
+  const updates = careUpdates(data.summary, viewer, restockRequests, handledHere);
 
   return (
     <div className="care-content care-page-enter">
@@ -64,7 +64,7 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
           <CareCard title={t("care.web.week.updatesTitle", { dog: dog.name })} stitched className="care-restock care-updates">
             <ul className="care-updates__list">
               {updates.map((update) => (
-                <li className="care-updates__item" key={update.kind}>
+                <li className="care-updates__item" key={update.kind === "refill" ? `refill-${update.request.id}` : update.kind === "refillHandled" ? `handled-${update.id}` : update.kind}>
                   {update.kind === "checkIn" && (
                     <>
                       <p className="care-eyebrow">{t("care.web.week.checkInEyebrow")}</p>
@@ -86,7 +86,7 @@ export function WeekPage({ data, viewer, offline, treatStatus, onSendTreat, rest
                       <button
                         className="care-primary-button care-primary-button--card"
                         type="button"
-                        onClick={() => { onHandleRestock(); setHandledRestockAt(new Date().toISOString()); }}
+                        onClick={() => { const id = update.request.id; onHandleRestock(id); setHandledHere((current) => ({ ...current, [id]: new Date().toISOString() })); }}
                       >
                         {t("care.web.week.restockHandle")}
                       </button>

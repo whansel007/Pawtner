@@ -36,7 +36,7 @@ import { useNavigation } from "./lib/useNavigation";
 import { useBark } from "./lib/useBark";
 import { useDayPhase } from "./lib/useDayPhase";
 import { useRestockHelp } from "./lib/useRestockHelp";
-import { pickRestockAlert } from "./lib/restockHelp";
+import { pickRestockAlerts } from "./lib/restockHelp";
 import { resetDemoStorage } from "./lib/demoReset";
 import { mergeHealthMetrics } from "./lib/healthReadings";
 import { runningClock, saveDemoClock, type DemoClockAnchor } from "./lib/demoClock";
@@ -174,7 +174,7 @@ export default function App() {
   };
   useEffect(() => { void refreshToday(); }, []);
   // /care in the same browser follows this clock, so Jamie sees Buddy as Rose does (lib/demoClock.ts).
-  useEffect(() => { saveDemoClock(demoClock); }, [demoClock]);
+  useEffect(() => { saveDemoClock(demoClock); void api.setDemoClock({ at: runningClock(demoClock) }).catch((error) => reportApiProblem(error)); }, [demoClock]);
   useEffect(() => {
     if (screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
     // On launch (Home's "See all" dot) and each time Reminders opens (a medicine may have been added).
@@ -204,14 +204,14 @@ export default function App() {
     : { ...caregiver, names: t("care.pairNames", { senior: caregiver.seniorName, caretaker: caregiver.caretakerName }) };
   // Restock help (demo only, lib/restockHelp.ts): the card lives on Reminders; "See all" on Home gets a dot while it waits.
   // Live days of supply when the API answered; the mock alert offline.
-  const liveRestockAlert = medications ? pickRestockAlert(medications, RESTOCK_SOON_DAYS) : restockAlert;
-  const restock = useRestockHelp(liveRestockAlert);
+  const liveRestockAlerts = medications ? pickRestockAlerts(medications, RESTOCK_SOON_DAYS) : [restockAlert];
+  const restock = useRestockHelp(liveRestockAlerts, (error) => reportApiProblem(error, true));
   // "For my next visit" notes (this phone only): Health row, their own screen, and the Weekly Summary.
-  const visitNotes = useVisitNotes();
+  const visitNotes = useVisitNotes((error) => reportApiProblem(error, true));
   // Her first blood-pressure reading ever: the server's (today.firstBloodPressure) or, offline, the earliest local one.
   const firstReading = firstReadingOf([...(today?.firstBloodPressure ? [today.firstBloodPressure] : []), ...healthMetrics]);
   // "Share my blood pressure with {{caretaker}}" (Settings; /care follows it in the same browser).
-  const [shareBloodPressure, setShareBloodPressure] = useShareBloodPressure();
+  const [shareBloodPressure, setShareBloodPressure] = useShareBloodPressure((error) => reportApiProblem(error, true));
 
   const notify = (message: string, ms = 2400) => {
     setToast(message);
@@ -516,7 +516,7 @@ export default function App() {
             back={back}
             doses={doseList}
             now={demoNow() ?? new Date().toISOString()}
-            restockCard={restock.visible && liveRestockAlert ? <RestockCard alert={liveRestockAlert} caretakerName={caretakerName} state={restock.state} busy={restock.busy} onAsk={() => void restock.askForHelp()} onSelf={restock.getItMyself} /> : null}
+            restockCard={restock.cards.length ? <>{restock.cards.map((card) => <RestockCard key={card.alert.medicationId} alert={card.alert} caretakerName={caretakerName} state={card.state} busy={card.busy} onAsk={() => void restock.askForHelp(card.alert)} onSelf={() => restock.getItMyself(card.alert)} />)}</> : null}
           />
         )}
         {screen === "prescription" && <PrescriptionScreen back={back} onSaved={handleMedicationSaved} onExplain={handleExplainMedicine} petName={dogName} />}

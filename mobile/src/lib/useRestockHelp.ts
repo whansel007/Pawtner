@@ -4,6 +4,8 @@ import { RESTOCK_SOON_DAYS } from "../config/restock";
 import { api } from "./api";
 import { chooseRestockSelf, readRestockSelf, restockCardState, shouldShowRestock, type RestockAlertItem, type RestockCardState } from "./restockHelp";
 
+export type { RestockCardState } from "./restockHelp";
+
 /** How often the phone re-reads the requests while a card shows, so "will help" appears after the caretaker taps. */
 const REFRESH_MS = 15_000;
 

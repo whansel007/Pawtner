@@ -3,14 +3,12 @@ import { RESTOCK_STORAGE_KEYS } from "../../mobile/src/config/restock.js";
 import type { KeyValueStore } from "../../mobile/src/lib/localStore.js";
 import {
   chooseRestockSelf,
-  clearRestockHelp,
-  markRestockHelpHandled,
-  readRestockHelp,
   readRestockSelf,
-  requestRestockHelp,
-  pickRestockAlert,
+  pickRestockAlerts,
+  restockCardState,
   shouldShowRestock,
 } from "../../mobile/src/lib/restockHelp.js";
+import type { RestockRequest } from "../../shared/contract.js";
 import { addClinicMemo, fitWithin, isImageDataUrl, readClinicMemos, removeClinicMemo, writeClinicMemos } from "../../mobile/src/lib/clinicMemo.js";
 import { DEMO_STORAGE_KEYS, resetDemoStorage } from "../../mobile/src/lib/demoReset.js";
 
@@ -31,62 +29,45 @@ const blockedStore: KeyValueStore = {
   removeItem: () => { throw new Error("blocked"); },
 };
 
-const request = { medicationId: "med-rozevon", medicationName: "Rozevon", daysLeft: 4, requestedAt: "2026-10-15T04:00:00.000Z" };
+const serverRequest = (medicationId: string, status: RestockRequest["status"], requestedAt: string): RestockRequest => ({
+  id: `${medicationId}-${requestedAt}`, medicationId, medicationName: `Med ${medicationId}`, daysLeft: 4, requestedAt, status,
+  handledAt: status === "handled" ? requestedAt : null,
+});
 
-describe("restock help request (demo storage)", () => {
-  it("stores a pending request and reads it back", async () => {
-    const store = memoryStore();
-    const entry = await requestRestockHelp(request, store);
-    expect(entry).toEqual({ ...request, status: "pending", handledAt: null });
-    expect(readRestockHelp(store)).toEqual(entry);
+describe("restock card state (requests from the server, one card per medicine)", () => {
+  it("offers help until she asks; then asked; then handled once a caretaker taps", () => {
+    expect(restockCardState("a", [], [])).toBe("offer");
+    expect(restockCardState("a", [serverRequest("a", "pending", "2026-10-18T01:00:00.000Z")], [])).toBe("asked");
+    expect(restockCardState("a", [serverRequest("a", "handled", "2026-10-18T01:00:00.000Z")], [])).toBe("handled");
   });
 
-  it("stores the one medicine she asked help with (name included, so the caretaker knows what to buy), nothing else", async () => {
-    const store = memoryStore();
-    await requestRestockHelp(request, store);
-    const raw = store.data.get(RESTOCK_STORAGE_KEYS.request) ?? "";
-    expect(Object.keys(JSON.parse(raw)).sort()).toEqual(["daysLeft", "handledAt", "medicationId", "medicationName", "requestedAt", "status"]);
-    expect(JSON.parse(raw).medicationName).toBe("Rozevon");
-  });
-
-  it("marks a request handled, then clears it", async () => {
-    const store = memoryStore();
-    await requestRestockHelp(request, store);
-    const handled = markRestockHelpHandled("2026-10-15T05:00:00.000Z", store);
-    expect(handled).toMatchObject({ status: "handled", handledAt: "2026-10-15T05:00:00.000Z", daysLeft: 4 });
-    expect(readRestockHelp(store)?.status).toBe("handled");
-    clearRestockHelp(store);
-    expect(readRestockHelp(store)).toBeNull();
-    expect(markRestockHelpHandled("2026-10-15T06:00:00.000Z", store)).toBeNull();
-  });
-
-  it("ignores unreadable or wrongly shaped data", () => {
-    const store = memoryStore();
-    store.setItem(RESTOCK_STORAGE_KEYS.request, "{not json");
-    expect(readRestockHelp(store)).toBeNull();
-    store.setItem(RESTOCK_STORAGE_KEYS.request, JSON.stringify({ medicationId: "x", daysLeft: "4" }));
-    expect(readRestockHelp(store)).toBeNull();
-  });
-
-  it("still returns the request when storage is blocked or missing", async () => {
-    await expect(requestRestockHelp(request, blockedStore)).resolves.toMatchObject({ status: "pending" });
-    expect(readRestockHelp(blockedStore)).toBeNull();
-    expect(readRestockHelp(null)).toBeNull();
-    expect(() => clearRestockHelp(blockedStore)).not.toThrow();
+  it("each medicine has its own state; the latest request for it decides", () => {
+    const requests = [
+      serverRequest("a", "handled", "2026-10-17T01:00:00.000Z"),
+      serverRequest("a", "pending", "2026-10-18T01:00:00.000Z"),
+      serverRequest("b", "handled", "2026-10-18T02:00:00.000Z"),
+    ];
+    expect(restockCardState("a", requests, [])).toBe("asked");
+    expect(restockCardState("b", requests, [])).toBe("handled");
+    expect(restockCardState("c", requests, ["c"])).toBe("self");
   });
 });
 
 describe("restock card visibility", () => {
-  it("remembers 'I'll get it myself' for that medicine", () => {
+  it("remembers 'I'll get it myself' per medicine, on this phone only", () => {
     const store = memoryStore();
-    expect(readRestockSelf(store)).toBeNull();
-    expect(chooseRestockSelf("med-1", store)).toBe(true);
-    expect(readRestockSelf(store)).toBe("med-1");
+    expect(readRestockSelf(store)).toEqual([]);
+    expect(chooseRestockSelf("med-1", store)).toEqual(["med-1"]);
+    expect(chooseRestockSelf("med-2", store)).toEqual(["med-1", "med-2"]);
+    expect(readRestockSelf(store)).toEqual(["med-1", "med-2"]);
+    // An older build stored a single id.
+    store.setItem(RESTOCK_STORAGE_KEYS.self, "med-old");
+    expect(readRestockSelf(store)).toEqual(["med-old"]);
   });
 
-  it("reports a blocked choice so the caller can keep it in memory", () => {
-    expect(chooseRestockSelf("med-1", blockedStore)).toBe(false);
-    expect(readRestockSelf(blockedStore)).toBeNull();
+  it("keeps the choice in memory when storage is blocked", () => {
+    expect(chooseRestockSelf("med-1", blockedStore)).toEqual(["med-1"]);
+    expect(readRestockSelf(blockedStore)).toEqual([]);
   });
 
   it("shows while the supply is low, whatever the senior chose", () => {
@@ -130,18 +111,20 @@ describe("clinic memo photo helpers", () => {
   });
 });
 
-describe("pickRestockAlert", () => {
+describe("pickRestockAlerts", () => {
   const med = (id: string, daysOfSupply: number | null, active = true) => ({ id, name: `Med ${id}`, daysOfSupply, active });
 
-  it("picks the active medicine with the fewest days at or under the threshold", () => {
-    expect(pickRestockAlert([med("a", 14), med("b", 4), med("c", 2), med("d", 1, false)], 5))
-      .toEqual({ medicationId: "c", name: "Med c", daysRemaining: 2 });
-    expect(pickRestockAlert([med("a", 5)], 5)?.medicationId).toBe("a");
+  it("lists every active medicine at or under the threshold, fewest days first (one card each)", () => {
+    expect(pickRestockAlerts([med("a", 14), med("b", 4), med("c", 2), med("d", 1, false), med("e", 5)], 5)).toEqual([
+      { medicationId: "c", name: "Med c", daysRemaining: 2 },
+      { medicationId: "b", name: "Med b", daysRemaining: 4 },
+      { medicationId: "e", name: "Med e", daysRemaining: 5 },
+    ]);
   });
 
-  it("returns null when nothing is low or supply is unknown", () => {
-    expect(pickRestockAlert([med("a", 14), med("b", null)], 5)).toBeNull();
-    expect(pickRestockAlert([], 5)).toBeNull();
+  it("is empty when nothing is low or supply is unknown", () => {
+    expect(pickRestockAlerts([med("a", 14), med("b", null)], 5)).toEqual([]);
+    expect(pickRestockAlerts([], 5)).toEqual([]);
   });
 });
 

@@ -82,9 +82,11 @@ describe("shared visit notes", () => {
     expect(readVisitNotes("k", store)[0].shared).toBe(false);
   });
 
-  it("gives /care only shared notes, merged with the API's questions, newest first", () => {
+  it("gives /care the server's shared notes merged with the API's questions, newest first", () => {
     const api = [{ note: "Ask a healthcare professional about: dizzy", occurredAt: "2026-10-15T10:00:00.000Z" }];
-    expect(doctorQuestionsForCare([mine, shared], api)).toEqual([
+    // The server only ever stores shared notes (the phone never sends private ones, e.g. `mine`).
+    void mine;
+    expect(doctorQuestionsForCare([{ text: shared.text, updatedAt: shared.updatedAt }], api)).toEqual([
       api[0],
       { note: "Ask about the cough", occurredAt: "2026-10-15T09:00:00.000Z" },
     ]);
