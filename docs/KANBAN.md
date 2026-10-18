@@ -43,6 +43,8 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Blood-pressure form saves only on "Save reading" (keyboard Enter/Go never submits), "Saving…", no warning after a save; one warning for every condition with the reading on the Warning card; toast "uh-oh, but thank you for logging the information" | [#91](https://github.com/whansel007/Pawtner/pull/91), merged 18 Oct |
+| — | "This is not medical advice." under every warning; Health heading ("This week", "Small steps, clearly told") removed | [#92](https://github.com/whansel007/Pawtner/pull/92), merged 18 Oct |
 | — | Only the latest stop keeps its Undo on My medicines (an earlier stopped row leaves the list) | [#85](https://github.com/whansel007/Pawtner/pull/85), merged 18 Oct |
 | — | Demo mode: Settings shows only the demo card ("Back to Settings"); Reset to morning restarts the app in place (no page reload, no confirm) | [#89](https://github.com/whansel007/Pawtner/pull/89), merged 18 Oct |
 | — | /care from any browser: refill requests (one card per low medicine, one row each on /care), shared notes, the BP switch (enforced by the server) and the demo clock move to the API (migration 008, columns on `users`); Reset to morning brings back the morning state; closes KIV "Restock help: wire to the API". **Migration 008 before the merge.** | [#89](https://github.com/whansel007/Pawtner/pull/89), merged 18 Oct (migration 008 run first) |
