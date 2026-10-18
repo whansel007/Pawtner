@@ -8,7 +8,7 @@ import { api } from "../lib/api";
 import { fileToBase64 } from "../lib/imageBase64";
 import type { MedicationDetail } from "../../../shared/contract";
 import { formatStrength } from "../lib/strength";
-import { isStopBusy } from "../lib/stopMedicine";
+import { isStopBusy, isStopGone } from "../lib/stopMedicine";
 import { useStopMedicine } from "../lib/useStopMedicine";
 
 /**
@@ -88,6 +88,9 @@ export function MedicinesScreen({ back, petName, caretakerName, onMedicinesChang
 
   const closeRef = () => { setSettingRefMed(null); setRefFile(null); setRefPreview(null); };
 
+  // An older stop leaves the list once a newer stop succeeds (only the latest keeps its Undo).
+  const shownMedications = medications.filter((med) => !isStopGone(stops.rows[med.id]));
+
   // From the Edit panel: the confirm panel replaces the row, so Edit and the photo step on that row close.
   const openStop = (medId: string) => {
     if (editingMed === medId) setEditingMed(null);
@@ -124,10 +127,10 @@ export function MedicinesScreen({ back, petName, caretakerName, onMedicinesChang
 
       {loadState === "loading" && <p className="supporting">{t("medicines.loading")}</p>}
       {loadState === "error" && <p className="supporting">{t("medicines.offline")}</p>}
-      {loadState === "ready" && medications.length === 0 && <p className="supporting">{t("medicines.empty")}</p>}
-      {loadState === "ready" && medications.length > 0 && (
+      {loadState === "ready" && shownMedications.length === 0 && <p className="supporting">{t("medicines.empty")}</p>}
+      {loadState === "ready" && shownMedications.length > 0 && (
         <div className="medication-list">
-          {medications.map((med) => {
+          {shownMedications.map((med) => {
             const stopRow = stops.rows[med.id];
             const busy = isStopBusy(stopRow);
             return (

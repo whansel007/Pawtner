@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { STOP_CONFIRM_GUARD_MS } from "../../mobile/src/config/medicines.js";
-import { canConfirmStop, isStopBusy, stopRowsAfter, type StopEvent, type StopRows } from "../../mobile/src/lib/stopMedicine.js";
+import { canConfirmStop, isStopBusy, isStopGone, stopRowsAfter, type StopEvent, type StopRows } from "../../mobile/src/lib/stopMedicine.js";
 
 const T = 10_000; // when the panel opens
 const LATER = T + STOP_CONFIRM_GUARD_MS; // first moment "Yes, stop it" counts
@@ -70,5 +70,40 @@ describe("stop this medicine: double-tap guard", () => {
     const reopened = run([["a", "cancel", T + 2000], ["a", "open", T + 3000]], opened);
     expect(canConfirmStop(reopened.a, T + 3500)).toBe(false);
     expect(canConfirmStop(reopened.a, T + 4000)).toBe(true);
+  });
+});
+
+describe("stop this medicine: only the latest stop keeps its Undo", () => {
+  const stopA = run([["a", "open", T], ["a", "confirm", LATER], ["a", "stopped", LATER]]);
+  const stopB = (start: StopRows) => run([["b", "open", LATER + 10], ["b", "confirm", LATER + 1010], ["b", "stopped", LATER + 1100]], start);
+
+  it("stop A, then stop B: A's row goes, B shows Undo", () => {
+    const rows = stopB(stopA);
+    expect(rows.a.status).toBe("gone");
+    expect(isStopGone(rows.a)).toBe(true);
+    expect(rows.b).toEqual({ status: "stopped", failed: false, openedAt: LATER + 10 });
+    // A gone row can't be undone.
+    expect(stopRowsAfter(rows, "a", "undo", LATER + 2000)).toBe(rows);
+  });
+
+  it("Undo on B brings B back; A stays stopped (gone from the list)", () => {
+    const rows = run([["b", "undo", LATER + 2000], ["b", "undone", LATER + 2100]], stopB(stopA));
+    expect(rows).toEqual({ a: { status: "gone", failed: false, openedAt: T } });
+  });
+
+  it("opening another row's panel keeps the current Undo; only a successful stop ends it", () => {
+    const opened = stopRowsAfter(stopA, "b", "open", LATER + 10);
+    expect(opened.a.status).toBe("stopped");
+    const confirming = stopRowsAfter(opened, "b", "confirm", LATER + 1010);
+    expect(confirming.a.status).toBe("stopped");
+    const failed = stopRowsAfter(confirming, "b", "stopFailed", LATER + 1100);
+    expect(failed.a.status).toBe("stopped");
+  });
+
+  it("does not interrupt an Undo still in flight on another row", () => {
+    const undoingA = stopRowsAfter(stopA, "a", "undo", LATER + 5);
+    const rows = stopB(undoingA);
+    expect(rows.a.status).toBe("undoing");
+    expect(stopRowsAfter(rows, "a", "undone", LATER + 1200).a).toBeUndefined();
   });
 });
