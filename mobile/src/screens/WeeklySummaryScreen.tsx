@@ -29,6 +29,7 @@ export function WeeklySummaryScreen({
         <div className="bp-result bp-result--warning">
           <p className="bp-result__title">{t("health.warning")}</p>
           <p className="bp-result__wording">{t(explainDecision(warning).reasonKey)}</p>
+          <p className="bp-result__disclaimer">{t("health.warningNotAdvice")}</p>
         </div>
       )}
       <div className="summary-score"><strong>{weekSummary.rating}</strong><span>{t("summary.caringDays", { count: weekSummary.caringDays, total: weekSummary.totalDays })}</span></div>

@@ -173,6 +173,7 @@ export function HealthScreen({
           <p className="bp-result__title">{t("health.warning")}</p>
           {lastMetric && <p className="bp-result__reading">{`${lastMetric.systolic} / ${lastMetric.diastolic}`}</p>}
           <p className="bp-result__wording">{t(explainDecision(latestDecision).reasonKey)}</p>
+          <p className="bp-result__disclaimer">{t("health.warningNotAdvice")}</p>
         </div>
       )}
 
