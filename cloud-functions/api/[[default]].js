@@ -5569,6 +5569,19 @@ function deriveDoseStatus(schedule, events, now, nudgeHistory = { count: 0, last
     lastNudgeAt: nudgeHistory.lastAt
   };
 }
+function walkHeartTimes(walks) {
+  const earned = [];
+  const walkedMs = /* @__PURE__ */ new Map();
+  const sorted = [...walks].sort((a, b) => Date.parse(a.finishedAt) - Date.parse(b.finishedAt));
+  for (const walk of sorted) {
+    const day = walk.finishedAt.slice(0, 10);
+    if (earned.some((time) => time.slice(0, 10) === day)) continue;
+    const total = (walkedMs.get(day) ?? 0) + Math.max(0, Date.parse(walk.finishedAt) - Date.parse(walk.startedAt));
+    walkedMs.set(day, total);
+    if (walk.goalMinutes === null || walk.goalMinutes === void 0 || total >= walk.goalMinutes * 6e4) earned.push(walk.finishedAt);
+  }
+  return earned;
+}
 function heartActivities(doses, bloodPressureLogged, walked) {
   return { medicines: doses.length > 0 && doses.every((dose) => dose.status === "taken"), bloodPressure: bloodPressureLogged, walk: walked };
 }
@@ -6059,10 +6072,7 @@ var PawtnerRepository = class {
       `SELECT opted_in, threshold FROM user_caregivers WHERE user_id = $1 ORDER BY caregiver_id LIMIT 1`,
       [userId]
     );
-    const walksResult = await client.query(
-      "SELECT finished_at FROM walk_sessions WHERE user_id = $1 AND finished_at <= $2::timestamptz ORDER BY finished_at",
-      [userId, now]
-    );
+    const walkHearts = await this.walkHeartTimes(client, userId, now);
     const checkInResult = await client.query(
       `SELECT observations->>'lastMissedDay' AS last_missed_day FROM agent_decisions
        WHERE user_id = $1 AND caretaker_ping = true AND created_at <= $2::timestamptz
@@ -6086,11 +6096,19 @@ var PawtnerRepository = class {
       nudges: nudgeRows,
       healthMetrics: metricsResult.rows.map((row) => ({ ...mapMetric(row), kind: "blood_pressure" })),
       daysOfSupplyByMedicationId: Object.fromEntries(medsResult.rows.map((row) => [row.id, row.days_of_supply])),
-      walkFinishedAt: walksResult.rows.map((row) => iso(row.finished_at)),
+      walkFinishedAt: walkHearts,
       caretaker: caregiverResult.rows[0] ? { optedIn: caregiverResult.rows[0].opted_in, threshold: caregiverResult.rows[0].threshold } : null,
       lastCheckInDay: checkInResult.rows[0]?.last_missed_day ?? null,
       ...triggeringDoseEventId ? { triggeringDoseEventId } : {}
     };
+  }
+  /** Finish times (up to `now`) that earn a day's walk heart: the user's walks through the one rule, shared/selectors.ts walkHeartTimes. */
+  async walkHeartTimes(client, userId, now) {
+    const walks = await client.query(
+      "SELECT started_at, finished_at, goal_minutes FROM walk_sessions WHERE user_id = $1 AND finished_at <= $2::timestamptz ORDER BY finished_at",
+      [userId, now]
+    );
+    return walkHeartTimes(walks.rows.map((row) => ({ startedAt: iso(row.started_at), finishedAt: iso(row.finished_at), goalMinutes: row.goal_minutes })));
   }
   async latestDecision(client, userId, now) {
     const result = await client.query(
@@ -6412,13 +6430,14 @@ var PawtnerRepository = class {
       const userId = await this.getDefaultUserId(client);
       const id = randomUUID();
       const result = await client.query(
-        `INSERT INTO walk_sessions (id, user_id, started_at, finished_at, distance_meters, fast_stretch_occurred)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO walk_sessions (id, user_id, started_at, finished_at, distance_meters, fast_stretch_occurred, goal_minutes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id::text, started_at, finished_at, distance_meters, fast_stretch_occurred`,
-        [id, userId, request.startedAt, request.finishedAt, request.distanceMeters, request.fastStretchOccurred]
+        [id, userId, request.startedAt, request.finishedAt, request.distanceMeters, request.fastStretchOccurred, request.goalMinutes ?? null]
       );
-      const { decision: decision2 } = await this.decideAndPersist(client, userId, request.finishedAt, void 0, { walkFinished: true });
       const row = result.rows[0];
+      const earnedHeart = (await this.walkHeartTimes(client, userId, iso(row.finished_at))).includes(iso(row.finished_at));
+      const { decision: decision2 } = await this.decideAndPersist(client, userId, request.finishedAt, void 0, { walkFinished: earnedHeart });
       const cumulativeResult = await client.query(
         "SELECT COALESCE(sum(distance_meters), 0)::int AS total FROM walk_sessions WHERE user_id = $1",
         [userId]
@@ -7114,6 +7133,9 @@ function createApiHandler(repository) {
         const data = await body(request);
         if (!validDate(data.startedAt) || !validDate(data.finishedAt) || !Number.isFinite(data.distanceMeters) || data.distanceMeters < 0 || typeof data.fastStretchOccurred !== "boolean") throw new ApiError(400, "Invalid walk session.");
         if (Date.parse(data.finishedAt) < Date.parse(data.startedAt)) throw new ApiError(400, "Walk finish must be after its start.");
+        if (data.goalMinutes !== void 0 && data.goalMinutes !== null && !(Number.isInteger(data.goalMinutes) && data.goalMinutes >= 1 && data.goalMinutes <= 600)) {
+          throw new ApiError(400, "goalMinutes must be a whole number from 1 to 600.");
+        }
         return json(await repository.recordWalkSession(data), 201);
       }
       if (request.method === "GET" && url.pathname === "/api/restock-requests") return json(await repository.listRestockRequests(now));

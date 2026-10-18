@@ -1,4 +1,4 @@
-import { FAST_SPEED_KMH, FAST_MIN_SECONDS } from "../config/walk.js";
+import { DEMO_POINTS, FAST_SPEED_KMH, FAST_MIN_SECONDS, PLAYBACK_RATE } from "../config/walk.js";
 import type { WalkPoint } from "../config/walk.js";
 
 export interface WalkState {
@@ -10,8 +10,25 @@ export interface WalkState {
   finished: boolean;
 }
 
-/** What a finished simulated walk reports back to the app. */
-export type WalkCompletion = Pick<WalkState, "distanceMeters" | "fastStretchOccurred">;
+/** What a finished simulated walk reports back to the app (its simulated length is saved as the walk's length). */
+export type WalkCompletion = Pick<WalkState, "distanceMeters" | "fastStretchOccurred" | "durationSeconds">;
+
+/**
+ * The demo track stretched to `seconds` (the walk goal's length): time and distance scale together, so every speed,
+ * the bus stretch and the dizzy dog stay as on the original track.
+ */
+export function scaleTrack(points: readonly WalkPoint[], seconds: number): WalkPoint[] {
+  const end = points[points.length - 1].atSeconds;
+  const factor = end > 0 ? seconds / end : 1;
+  return points.map((point) => ({ atSeconds: point.atSeconds * factor, meters: point.meters * factor }));
+}
+
+/** Simulate walk for a goal: the demo track stretched to the goal's minutes, played back in the same real time. */
+export function simulationFor(goalMinutes: number): { points: WalkPoint[]; playbackRate: number } {
+  const points = scaleTrack(DEMO_POINTS, goalMinutes * 60);
+  const original = DEMO_POINTS[DEMO_POINTS.length - 1].atSeconds;
+  return { points, playbackRate: PLAYBACK_RATE * (points[points.length - 1].atSeconds / original) };
+}
 
 /**
  * Pure function: given a track and elapsed simulated time, return the current walk state.

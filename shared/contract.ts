@@ -231,6 +231,8 @@ export interface WalkSessionRequest {
   finishedAt: string;
   distanceMeters: number;
   fastStretchOccurred: boolean;
+  /** Minutes this walk must last to earn the walk heart (the goal chosen in Settings); missing/null = any length (older phones). */
+  goalMinutes?: number | null;
 }
 
 export interface WalkSessionResponse {

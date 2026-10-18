@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "./components/Icon";
 import { TopZone } from "./screens/TopZone";
@@ -41,6 +41,7 @@ import { resetDemoStorage } from "./lib/demoReset";
 import { mergeHealthMetrics } from "./lib/healthReadings";
 import { demoClockOnLoad, runningClock, saveDemoClock, searchWithout, type DemoClockAnchor } from "./lib/demoClock";
 import { useHomeView } from "./lib/useHomeView";
+import { useWalkGoal } from "./lib/useWalkGoal";
 import { useDoseReminder } from "./lib/useDoseReminder";
 import { shouldBarkFor } from "./lib/nudgeBark";
 import { activityToastKey, bpToastKey, heartChange } from "./lib/heartToast";
@@ -49,7 +50,7 @@ import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
 import { DEMO_CLOCK_PARAM, DEMO_RESET_PRESET, DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset, type DemoUnlockKey } from "./config/demo";
 import { demoHeartsTotal, demoStreak, demoTodayHearts, hasDemoTodayHearts, toggleDemoTick } from "./lib/demoUnlocks";
-import { computeHeart, heartActivities } from "../../shared/selectors";
+import { computeHeart, heartActivities, walkHeartTimes } from "../../shared/selectors";
 import { SENIOR_TIMEZONE } from "./config/scene";
 import type { World, Accessory, Screen } from "./types";
 import type { WalkCompletion } from "./lib/walkState";
@@ -69,7 +70,6 @@ import {
   restockAlert,
   worldOptions,
   accessoryOptions,
-  walkStats,
   heartsTotal as mockHeartsTotal,
 } from "./mock";
 
@@ -112,6 +112,10 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
   const [today, setToday] = useState<TodayResponse | null>(null);
   const [careSummary, setCareSummary] = useState<CaretakerSummaryResponse | null>(null);
   const [walkStartedAt, setWalkStartedAt] = useState<string | null>(null);
+  // Walk goal (Settings, this phone): minutes a walk needs for the walk heart. Simulate walk runs from the demo card.
+  const [walkGoal, setWalkGoal] = useWalkGoal();
+  const [simulateWalkRequested, setSimulateWalkRequested] = useState(false);
+  const handleSimulateStarted = useCallback(() => setSimulateWalkRequested(false), []);
   const [dizzy, setDizzy] = useState(false);
   // One friendly notice per outage; the technical error goes to the console, never to the senior.
   const apiWarned = useRef(false);
@@ -120,6 +124,8 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
   const [demoClock, setDemoClock] = useState<DemoClockAnchor | null>(() => { const at = initialAgentClock(); return at ? { at, setAtMs: Date.now() } : null; });
   /** The demo clock's time right now, or null for real time. */
   const demoNow = (): string | null => runningClock(demoClock);
+  /** The app's clock as an ISO string: the running demo clock, or real time (walk start/finish, the walk timer). */
+  const clockNow = (): string => demoNow() ?? new Date().toISOString();
   const setDemoNow = (at: string | null) => { setDemoClock(at ? { at, setAtMs: Date.now() } : null); void api.setDemoClock({ at }).catch((error) => reportApiProblem(error)); };
   // Scene time (`?time=`, Settings > Demo time buttons): day/night look only. Hearts, mood and doses stay on the one
   // real state; switching morning ↔ evening must never re-read /api/today at another time.
@@ -297,12 +303,15 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
    */
   async function handleWalkState(walking: boolean, simulated?: WalkCompletion) {
     if (walking) {
-      setWalkStartedAt(new Date().toISOString());
+      setWalkStartedAt(clockNow());
       return;
     }
     if (!walkStartedAt && !simulated) return;
-    const startedAt = walkStartedAt ?? new Date().toISOString();
-    const finishedAt = new Date().toISOString();
+    // Same clock as doses and readings (the running demo clock, or real time), so the walk heart counts right away.
+    const finishedAt = clockNow();
+    // A simulated walk is saved with its simulated length (ending now), so it can reach the goal.
+    const startedAt = simulated ? new Date(Date.parse(finishedAt) - simulated.durationSeconds * 1000).toISOString() : walkStartedAt ?? finishedAt;
+    const goalMinutes = walkGoal.minutes;
     setWalkStartedAt(null);
     setDizzy(false);
     const heartsBefore = heartCount;
@@ -312,8 +321,10 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
       const result = await api.walkSession({
         startedAt,
         finishedAt,
-        distanceMeters: simulated?.distanceMeters ?? 0,
+        // Whole meters (the column is an integer; a track stretched to the goal gives fractions).
+        distanceMeters: Math.round(simulated?.distanceMeters ?? 0),
         fastStretchOccurred: simulated?.fastStretchOccurred ?? false,
+        goalMinutes,
       });
       setLatestDecision(result.decision);
       refreshed = await refreshToday();
@@ -322,7 +333,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
     } catch (error) {
       reportApiProblem(error, true);
       if (simulated) {
-        if (!refreshed) heartsAfter = shownHearts(today, doseList, bpLogged, true);
+        if (!refreshed) heartsAfter = shownHearts(today, doseList, bpLogged, walkHeartTimes([{ startedAt, finishedAt, goalMinutes }]).length > 0);
         const input = buildAgentInputFromState({
           now: finishedAt,
           userId: demoUser.id,
@@ -332,7 +343,8 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
           streak: today?.dog.streak ?? pet.streak,
           doses: doseList,
           healthMetrics,
-          walkFinished: true,
+          // Offline the phone only knows this walk, so only it counts toward the day's total.
+          walkFinished: walkHeartTimes([{ startedAt, finishedAt, goalMinutes }]).length > 0,
         });
         setLatestDecision(await requestDecision(input));
       }
@@ -548,12 +560,12 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         {screen === "schedule" && <ScheduleScreen back={back} onConfirm={handleScheduleConfirmed} petName={dogName} medicationId={savedMedicationId} />}
         {screen === "reference" && <ReferenceScreen back={back} onDone={handleReferenceDone} onSkip={handleReferenceDone} petName={dogName} medicationId={savedMedicationId} />}
         {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} medicationId={pendingDose?.medicationId} takenCount={countAfterTaking(doseList, pendingDoseId ?? "")} />}
-        {screen === "walk" && <WalkScreen back={back} walkStats={walkStats} petName={dogName} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
+        {screen === "walk" && <WalkScreen back={back} goalMinutes={walkGoal.minutes} simulateRequested={simulateWalkRequested} onSimulateStarted={handleSimulateStarted} petName={dogName} walkStartedAt={walkStartedAt} clockNow={clockNow} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
         {screen === "milestones" && <MilestonesScreen back={back} onWalk={() => navigate("walk")} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} heartsTotal={heartsTotal} mood={mood} decision={routineDecision(latestDecision)} onTrick={(performance) => setTrickRequest((prev) => ({ id: (prev?.id ?? 0) + 1, performance }))} />}
         {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={{ ...(careSummary ? { ...weekSummary, caringDays: careSummary.caringDays, metrics: [{ ...weekSummary.metrics[0], value: `${careSummary.dosesTaken}/${careSummary.dosesDue}` }, { ...weekSummary.metrics[1], value: `${careSummary.walkCount}` }] } : weekSummary), doctorQuestion: visitNotes.latest?.text ?? t("visitNotes.empty") }} onVisitNotes={() => navigate("visitNotes")} warning={isUrgentDecision(latestDecision) ? latestDecision : null} />}
-        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => toggleDemoTick(current, key))} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} />}
+        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => toggleDemoTick(current, key))} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} walkGoalKey={walkGoal.key} onWalkGoal={setWalkGoal} onSimulateWalk={() => { setSimulateWalkRequested(true); navigate("walk"); }} />}
         {screen === "medicines" && <MedicinesScreen back={back} petName={dogName} caretakerName={caretakerName} onMedicinesChanged={() => void refreshToday()} />}
         {screen === "visitNotes" && <VisitNotesScreen back={back} notes={visitNotes.notes} caretakerName={caretakerName} maxLength={visitNotes.maxLength} onAdd={visitNotes.add} onEdit={visitNotes.edit} onRemove={visitNotes.remove} />}
         {screen === "customize" && <CustomizeScreen back={back} onHome={goHome} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(t(`toast.worlds.${nextWorld}`, { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: t(`accessory.${nextAccessory}`) })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} caretakerName={caretakerName} heartsTotal={heartsTotal} notify={notify} />}

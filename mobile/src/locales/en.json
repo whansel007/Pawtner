@@ -5,6 +5,14 @@
     "caretaker": "Jamie",
     "updatesOnlyCaretaker": "Alex"
   },
+  "walkGoals": {
+    "default": "5k",
+    "options": [
+      { "key": "3k", "steps": 3000, "minutes": 30 },
+      { "key": "5k", "steps": 5000, "minutes": 50 },
+      { "key": "10k", "steps": 10000, "minutes": 100 }
+    ]
+  },
   "intro": {
     "coverAlt": "Pawtner cover image",
     "brand": "Pawtner",
@@ -19,10 +27,7 @@
     "done": "Done",
     "viewAll": "View all",
     "log": "Log",
-    "today": "Today",
-    "steps": "steps",
-    "calories": "calories",
-    "kmh": "km/h"
+    "today": "Today"
   },
   "nav": {
     "home": "Home",
@@ -380,6 +385,8 @@
     "titleDone": "Walk done",
     "km": "{{km}} km",
     "doneMessage": "Walk done: {{km}} km. {{name}} loved it!",
+    "doneMessageNoDistance": "Walk done. {{name}} loved it!",
+    "heartGoal": "{{minutes}} min = 1 heart",
     "startReady": "Start when {{name}} is ready",
     "startWalk": "Start walk",
     "finishWalk": "Finish walk",
@@ -557,6 +564,9 @@
     "shareBp": "Share my blood pressure with {{caretaker}}",
     "shareBpSub": "{{caretaker}} sees your latest reading and the notes you write with it.",
     "privacyTitle": "Your information stays yours, unless specified otherwise.",
+    "walkGoal": "Walk goal",
+    "walkGoalOption": "{{key}} · {{minutes}} min",
+    "walkGoalMinutes": "{{minutes}} min",
     "demoEyebrow": "Demo",
     "demoTitle": "For demo only",
     "demoSub": "Tools for showing Pawtner. Tap to open.",
