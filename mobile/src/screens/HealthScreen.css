@@ -111,6 +111,14 @@
 }
 
 
+/* The reading inside the Warning card (the blood-pressure card is hidden while there's a warning). */
+.bp-result__reading {
+  margin: 0 0 6px;
+  font-size: var(--font-size-6xl);
+  font-weight: var(--font-weight-black);
+  color: var(--color-text-heading);
+}
+
 .bp-result__wording {
   margin: 0;
   font-size: var(--font-size-xl);

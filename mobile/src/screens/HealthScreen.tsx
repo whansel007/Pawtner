@@ -151,7 +151,8 @@ export function HealthScreen({
       <p className="eyebrow green">{t("health.eyebrow")}</p>
       <h2>{t("health.title")}</h2>
 
-      <div className={`metric-card ${bpLogged ? "complete" : ""}`}>
+      {/* With a warning, the Warning card replaces this one and carries the reading (owner, 18 Oct: no "Good job" under a Warning). */}
+      {!showResult && <div className={`metric-card ${bpLogged ? "complete" : ""}`}>
         <span className="feature-icon sage"><Icon name="heart" /></span>
         <div>
           <small>{t("health.bpLabel")}</small>
@@ -159,7 +160,7 @@ export function HealthScreen({
           {/* Compared with her first reading (shared/rules.ts bloodPressureProgress): first / keep at it / good job / warning. */}
           <p>{lastMetric ? t(`health.bpProgress.${bloodPressureProgress(lastMetric, firstReading)}`, { name: petName }) : (bpLogged ? bloodPressureReading.note : bloodPressureReading.pendingNote)}</p>
         </div>
-      </div>
+      </div>}
 
       {showResult && latestDecision && (
         <div
@@ -170,6 +171,7 @@ export function HealthScreen({
           {/* The warning lives here, not on Home (routine decisions are on Milestones). User, 16 Oct: just "Warning"
               and the plain reason (it follows the condition); no action line, no button, no "Why?". */}
           <p className="bp-result__title">{t("health.warning")}</p>
+          {lastMetric && <p className="bp-result__reading">{`${lastMetric.systolic} / ${lastMetric.diastolic}`}</p>}
           <p className="bp-result__wording">{t(explainDecision(latestDecision).reasonKey)}</p>
         </div>
       )}
