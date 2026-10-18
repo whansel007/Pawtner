@@ -456,6 +456,7 @@
     "bpNoteLabel": "Note (optional)",
     "bpNotePlaceholder": "How are you feeling?",
     "bpSubmit": "Save reading",
+    "bpSaving": "Saving…",
     "bpErrorBothRequired": "Please enter both numbers.",
     "bpErrorWhole": "Please enter whole numbers. Systolic {{sysMin}}–{{sysMax}}, diastolic {{diaMin}}–{{diaMax}}.",
     "bpErrorSystolic": "Systolic (top) must be between {{min}} and {{max}}.",

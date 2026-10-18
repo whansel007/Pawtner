@@ -36,7 +36,8 @@ export function HealthScreen({
   bpLogged: boolean;
   healthMetrics: HealthMetric[];
   latestDecision: AgentDecision | null;
-  onLogBp: (metric: HealthMetric) => void;
+  /** Saves the reading (App: API, then the toast); the button shows "Saving…" until it resolves. */
+  onLogBp: (metric: HealthMetric) => Promise<void> | void;
   onScreening: () => void;
   onSummary: () => void;
   bloodPressureReading: BloodPressureReading;
@@ -69,6 +70,7 @@ export function HealthScreen({
   // Right after a save the boxes are empty and the reading shows above; another tap on Save then does nothing
   // (owner, 18 Oct: a second tap used to show "Please enter both numbers" though the reading was saved).
   const [justSaved, setJustSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   // A phone keyboard's Enter/Go would submit the whole form from any box (and show "enter both numbers" too early):
   // here it moves to the next box, or closes the keyboard; only "Save reading" saves.
   const enterMovesTo = (next: HTMLInputElement | null) => (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -104,8 +106,8 @@ export function HealthScreen({
 
   // Only a tap on "Save reading" saves: a phone keyboard's action key submits a form even when no Enter keydown
   // arrives (many Android keyboards), so the form's own submit never saves.
-  function handleSave() {
-    if (justSaved && !systolic.trim() && !diastolic.trim()) return;
+  async function handleSave() {
+    if (saving || (justSaved && !systolic.trim() && !diastolic.trim())) return;
     const result = validate();
     if (!result.ok) {
       setError(result.msg);
@@ -120,7 +122,9 @@ export function HealthScreen({
       note: buildBpNote(feelFine ? [t("health.symptoms.fine")] : SYMPTOM_KEYS.filter((key) => symptoms.has(key)).map((key) => t(`health.symptoms.${key}`)), note),
       recordedAt: new Date().toISOString(),
     };
-    onLogBp(metric);
+    // The numbers stay in the boxes while it saves; then they clear and App shows the toast.
+    setSaving(true);
+    try { await onLogBp(metric); } finally { setSaving(false); }
     setJustSaved(true);
     setSystolic("");
     setDiastolic("");
@@ -229,7 +233,7 @@ export function HealthScreen({
           />
         </label>
         {error && <p className="bp-form__error" role="alert">{error}</p>}
-        <button className="bp-form__submit" type="button" onClick={handleSave}>{t("health.bpSubmit")}</button>
+        <button className="bp-form__submit" type="button" disabled={saving} onClick={() => void handleSave()}>{saving ? t("health.bpSaving") : t("health.bpSubmit")}</button>
       </form>
 
       <ActionRow icon={<Icon name="book" />} title={t("health.weekSummary")} subtitle={t("health.weekSummarySub", { doses: weekSummary.metrics[0].value, walks: weekSummary.metrics[1].value })} onClick={onSummary} />
