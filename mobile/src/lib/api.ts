@@ -2,6 +2,13 @@ import type {
   AgentDecision,
   CaretakerSummaryResponse,
   CreateMedicationRequest,
+  CreateRestockRequest,
+  DemoClockState,
+  RestockRequest,
+  RestockRequestListResponse,
+  SharedNote,
+  SharedNoteRequest,
+  SharingSettings,
   UpdateMedicationRequest,
   CreateScheduleRequest,
   DoseEventResponse,
@@ -60,6 +67,17 @@ export const api = {
   createMedication: (data: CreateMedicationRequest) => request<{ medication: MedicationListResponse["medications"][number] }>("/medications", { method: "POST", body: JSON.stringify(data) }),
   updateMedication: (id: string, data: UpdateMedicationRequest) => request<{ medication: MedicationListResponse["medications"][number] }>(`/medications/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   createSchedule: (data: CreateScheduleRequest) => request<{ schedule: { id: string; medicationId: string; scheduledTime: string; startsOn: string; endsOn: string | null } }>("/schedules", { method: "POST", body: JSON.stringify(data) }),
+
+  // /care from any browser (migration 008): refill requests, shared notes, BP sharing, demo clock.
+  restockRequests: () => request<RestockRequestListResponse>("/restock-requests"),
+  createRestockRequest: (data: CreateRestockRequest) => request<RestockRequest>("/restock-requests", { method: "POST", body: JSON.stringify(data) }),
+  markRestockRequestHandled: (id: string) => request<RestockRequest>(`/restock-requests/${encodeURIComponent(id)}/handled`, { method: "POST" }),
+  putSharedNote: (id: string, data: SharedNoteRequest) => request<SharedNote>(`/shared-notes/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteSharedNote: (id: string) => request<{ deleted: boolean }>(`/shared-notes/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  sharing: () => request<SharingSettings>("/sharing"),
+  updateSharing: (data: SharingSettings) => request<SharingSettings>("/sharing", { method: "PUT", body: JSON.stringify(data) }),
+  demoClock: () => request<DemoClockState>("/demo-clock"),
+  setDemoClock: (data: DemoClockState) => request<DemoClockState>("/demo-clock", { method: "PUT", body: JSON.stringify(data) }),
 
   // T2-03: Medicine explanation
   medicineExplanation: (name: string) => request<MedicineExplanationResponse>(`/medicine-explanation?name=${encodeURIComponent(name)}`),

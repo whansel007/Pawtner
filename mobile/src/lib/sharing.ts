@@ -3,8 +3,8 @@ import { browserStore, readItem, writeItem, type KeyValueStore } from "./localSt
 
 /**
  * "Share my blood pressure with {{caretaker}}" (pure helpers). When on, /care shows the latest reading and
- * the questions written with readings. DEMO ONLY, WIRE-READY: a localStorage switch; a real version is a
- * consent column next to `optedIn` in /api/escalation-settings (P1).
+ * the questions written with readings. The server keeps the switch and enforces it (GET / PUT /api/sharing,
+ * migration 008); this is the phone's local copy (useSharing.ts).
  */
 export function readShareBloodPressure(store: KeyValueStore | null = browserStore()): boolean {
   const raw = readItem(SHARING.bloodPressureKey, store);

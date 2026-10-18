@@ -4,10 +4,8 @@ import { browserStore, readItem, writeItem, type KeyValueStore } from "./localSt
  * "For my next visit" notes (pure helpers; no DOM). The senior's own words, no interpretation. Lists are newest first.
  * Each note is either shared with the caretaker (shown on /care) or just for her.
  *
- * DEMO ONLY, WIRE-READY: notes live in localStorage, so /care sees shared notes only in the same browser
- * (same origin), like restock help. To share across devices, P1 adds a table and e.g.
- *   GET  /api/visit-notes?shared=true   (for /care)      POST / PUT / DELETE /api/visit-notes[/:id]
- * and the bodies of readVisitNotes / writeVisitNotes become API calls; callers keep the same shapes.
+ * Notes live on this phone (localStorage). Shared ones are also mirrored to the server (useVisitNotes.ts →
+ * PUT / DELETE /api/shared-notes/:id, migration 008), so /care sees them from any browser; private notes never leave it.
  */
 export interface VisitNote {
   id: string;
@@ -73,14 +71,14 @@ export function editVisitNote(notes: VisitNote[], id: string, text: string, now:
 }
 
 /**
- * /care "Questions for the doctor": the senior's shared notes plus the API's questions (from BP notes),
- * newest first. Private notes never appear here.
+ * /care "Questions for the doctor": the senior's shared notes (from the server, which only ever stores shared ones)
+ * plus the API's questions (from BP notes; empty when she doesn't share her blood pressure), newest first.
  */
 export function doctorQuestionsForCare(
-  notes: VisitNote[],
+  sharedNotes: ReadonlyArray<{ text: string; updatedAt: string }>,
   apiQuestions: ReadonlyArray<{ note: string; occurredAt: string }>,
 ): Array<{ note: string; occurredAt: string }> {
-  const shared = notes.filter((note) => note.shared).map((note) => ({ note: note.text, occurredAt: note.updatedAt }));
+  const shared = sharedNotes.map((note) => ({ note: note.text, occurredAt: note.updatedAt }));
   return [...shared, ...apiQuestions].sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt));
 }
 
