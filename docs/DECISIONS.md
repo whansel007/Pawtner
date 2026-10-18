@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-18 — Demo mode shows only the demo card; reset without a page reload (branch `claude/demo-focus`)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| When "For demo only" is open, Settings shows only that card; the back button reads **"Back to Settings"** (owner's choice; `settings.demoBackToSettings`) and closes it. | Owner, 18 Oct: "when we are in demo mode, please also just render the demo card, right now it's also stacked. Confusing". | — | Final |
+| "Reset to morning" still calls the server (it clears today's saved data) but no longer reloads the page: `main.tsx` restarts the phone app in place (new key, fresh state) on Settings, with the clock from the `?clock=` link. No confirm step. | Owner, 18 Oct: "No confirm step but drop page reload". | A non-destructive reset (today's actions stop counting instead of being deleted) was suggested by the owner; it needs a design (rows carry demo-clock times) and is with the advisor. | Final (non-destructive reset: open) |
+
 ## 2026-10-18 — /care from any browser (branch `claude/care-cross-browser`, migration 008)
 
 | Decision | Reason | Tradeoff | Status |

@@ -43,6 +43,7 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Demo mode: Settings shows only the demo card ("Back to Settings"); Reset to morning restarts the app in place (no page reload, no confirm) | Branch `claude/demo-focus` (on `claude/care-cross-browser`), not pushed |
 | — | /care from any browser: refill requests (one card per low medicine, one row each on /care), shared notes, the BP switch (enforced by the server) and the demo clock move to the API (migration 008, columns on `users`); Reset to morning brings back the morning state; closes KIV "Restock help: wire to the API". **Migration 008 before the merge.** | Branch `claude/care-cross-browser`, not pushed |
 | — | No hardcoded names: fallback demo names only in en.json "demoNames" (`lib/demoNames.ts`), names on screen from data, placeholders in en.json, guard test; closes the KIV rows "Fixed names left in mock data" and "Offline sample text still names people" | Branch `claude/names-from-data`, not pushed |
 | — | A stop is a moment: a stopped medicine's earlier doses keep counting (past hearts, lifetime, streak, check-ins never move), a stop never backdates a heart, its earlier doses leave today's list and nudges | Branch `claude/stop-keeps-history`, not pushed |
