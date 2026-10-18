@@ -48,15 +48,36 @@ export function computeHeart(activities: HeartActivities): number {
 const DECAY_MS = DEMO_RULES.heartDecayHours * 3_600_000;
 
 /**
+ * A dose a stop removed (scheduled at or after the medicine's `stopped_at`), for `heartGains` only: `takenAt` if it was
+ * taken before the stop, else null.
+ */
+export interface StoppedDose {
+  scheduledAt: string;
+  stoppedAt: string;
+  takenAt: string | null;
+}
+
+/**
  * When each heart was earned (ISO instants, oldest first): per day, one for the medicines (the moment the last of the
  * day's doses was taken, once all are), one for the day's first measurement, one for the day's first walk. Days are
  * grouped like the streak (`scheduledAt` / `recordedAt` / walk finish date).
+ * A stop never backdates a heart: a removed dose counts as done at the moment it was taken before the stop, else at the
+ * stop, so a stop that leaves the day "all taken" earns its heart at the stop, and every heart before the stop stays.
+ * A day left with no doses earns no medicine heart unless every removed dose had been taken before the stop.
+ * (The phone's offline path never calls this; it passes no stopped doses.)
  */
-export function heartGains(doses: DerivedDose[], metrics: HealthMetric[], walkFinishedAt: readonly string[]): string[] {
+export function heartGains(doses: DerivedDose[], metrics: HealthMetric[], walkFinishedAt: readonly string[], stoppedDoses: readonly StoppedDose[] = []): string[] {
   const gains: string[] = [];
-  for (const dayDoses of groupBy(doses, (dose) => dose.scheduledAt.slice(0, 10)).values()) {
+  const dayKey = (scheduledAt: string) => scheduledAt.slice(0, 10);
+  const dosesByDay = groupBy(doses, (dose) => dayKey(dose.scheduledAt));
+  const stoppedByDay = groupBy([...stoppedDoses], (dose) => dayKey(dose.scheduledAt));
+  const latest = (instants: string[]) => instants.reduce((a, b) => (Date.parse(b) > Date.parse(a) ? b : a));
+  for (const day of new Set([...dosesByDay.keys(), ...stoppedByDay.keys()])) {
+    const dayDoses = dosesByDay.get(day) ?? [];
+    const removed = stoppedByDay.get(day) ?? [];
     if (!dayDoses.every((dose) => dose.status === "taken" && dose.eventAt)) continue;
-    gains.push(dayDoses.reduce((latest, dose) => (Date.parse(dose.eventAt!) > Date.parse(latest) ? dose.eventAt! : latest), dayDoses[0]!.eventAt!));
+    if (dayDoses.length === 0 && !removed.every((dose) => dose.takenAt)) continue;
+    gains.push(latest([...dayDoses.map((dose) => dose.eventAt!), ...removed.map((dose) => dose.takenAt ?? dose.stoppedAt)]));
   }
   const firstPerDay = (instants: readonly string[]) => [...groupBy([...instants], (instant) => instant.slice(0, 10)).values()]
     .map((day) => day.reduce((first, instant) => (Date.parse(instant) < Date.parse(first) ? instant : first)));
@@ -108,8 +129,12 @@ export interface AgentSelectionSource {
   today: string;
   userId: string;
   dog: { id: string; name: string };
-  /** Occurrences expanded from active recurring schedules for the history window plus today. */
+  /** Occurrences expanded from recurring schedules for the history window plus today (a stopped medicine's only before its stop). */
   doseOccurrences: DoseSchedule[];
+  /** Occurrences a stop removed (at or after `stopped_at`); only so a stop never backdates a heart. */
+  stopCutoffs?: Array<{ scheduleId: string; scheduledAt: string; stoppedAt: string }>;
+  /** Stopped medicines: their earlier doses count in the history but are not actionable today (list, reminders, nudges). */
+  stoppedMedicationIds?: string[];
   doseEvents: DoseEvent[];
   nudges: NudgeRecord[];
   healthMetrics: HealthMetric[];
@@ -185,8 +210,8 @@ function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
   return groups;
 }
 
-/** Every occurrence in the source with its ledger-derived status, oldest first, plus the metrics visible at `now`. */
-function deriveSelection(source: AgentSelectionSource): { derived: DerivedDose[]; metrics: HealthMetric[] } {
+/** Every occurrence in the source with its ledger-derived status, oldest first, plus the metrics visible at `now` and the doses a stop removed. */
+function deriveSelection(source: AgentSelectionSource): { derived: DerivedDose[]; metrics: HealthMetric[]; stopped: StoppedDose[] } {
   const occurrences = [...source.doseOccurrences].sort((a, b) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt));
   // Index events and nudges by occurrence so long histories stay linear; deriveDoseStatus still applies its own filters.
   const eventsByOccurrence = groupBy(source.doseEvents, (event) => occurrenceKey(event.scheduleId, event.scheduledFor));
@@ -202,18 +227,27 @@ function deriveSelection(source: AgentSelectionSource): { derived: DerivedDose[]
     });
   });
   const metrics = source.healthMetrics.filter((metric) => Date.parse(metric.recordedAt) <= Date.parse(source.now));
-  return { derived, metrics };
+  // Not filtered by `now`: asked about an instant before a stop, the removed dose still keeps its day incomplete until
+  // the stop (a gain after `now` is ignored by heartsAt / computeHeartsTotal).
+  const stopped = (source.stopCutoffs ?? [])
+    .map((cutoff) => {
+      const taken = (eventsByOccurrence.get(occurrenceKey(cutoff.scheduleId, cutoff.scheduledAt)) ?? [])
+        .filter((event) => event.event === "taken" && Date.parse(event.occurredAt) <= Date.parse(cutoff.stoppedAt))
+        .sort((a, b) => Date.parse(a.occurredAt) - Date.parse(b.occurredAt))[0];
+      return { scheduledAt: cutoff.scheduledAt, stoppedAt: cutoff.stoppedAt, takenAt: taken?.occurredAt ?? null };
+    });
+  return { derived, metrics, stopped };
 }
 
 /**
  * Lifetime hearts: the sum of each day's hearts at the end of that day (`heartsAt`; today at `now`), from the first day
  * with a scheduled dose up to and including `today`. No dose history at all gives 0. Anything after `now` is ignored.
  */
-export function computeHeartsTotal(doses: DerivedDose[], metrics: HealthMetric[], today: string, walkFinishedAt: readonly string[], now: string): number {
+export function computeHeartsTotal(doses: DerivedDose[], metrics: HealthMetric[], today: string, walkFinishedAt: readonly string[], now: string, stoppedDoses: readonly StoppedDose[] = []): number {
   const days = [...new Set(doses.map((dose) => dose.scheduledAt.slice(0, 10)))].filter((date) => date <= today).sort();
   const firstDate = days[0];
   if (!firstDate) return 0;
-  const gains = heartGains(doses, metrics, walkFinishedAt).filter((gain) => Date.parse(gain) <= Date.parse(now));
+  const gains = heartGains(doses, metrics, walkFinishedAt, stoppedDoses).filter((gain) => Date.parse(gain) <= Date.parse(now));
   let total = 0;
   const cursor = new Date(`${firstDate}T00:00:00.000Z`);
   for (let date = firstDate; date <= today; date = cursor.toISOString().slice(0, 10)) {
@@ -238,7 +272,7 @@ function todayActivities(derived: DerivedDose[], metrics: HealthMetric[], source
 }
 
 export function selectAgentInput(source: AgentSelectionSource): AgentInput {
-  const { derived, metrics } = deriveSelection(source);
+  const { derived, metrics, stopped } = deriveSelection(source);
   const todayDoses = derived.filter((dose) => dose.scheduledAt.slice(0, 10) === source.today);
   const doseDays = derived.map((dose) => ({
     date: dose.scheduledAt.slice(0, 10),
@@ -256,10 +290,10 @@ export function selectAgentInput(source: AgentSelectionSource): AgentInput {
     userId: source.userId,
     dog: {
       ...source.dog,
-      heart: heartsAt(heartGains(derived, metrics, walksUntilNow(source)), source.now),
+      heart: heartsAt(heartGains(derived, metrics, walksUntilNow(source), stopped), source.now),
       streak,
     },
-    doses: todayDoses,
+    doses: actionableDoses(todayDoses, source),
     latestDoseEvent,
     healthMetrics: metrics,
     daysOfSupplyByMedicationId: source.daysOfSupplyByMedicationId,
@@ -272,15 +306,24 @@ export function selectAgentInput(source: AgentSelectionSource): AgentInput {
 
 /** The dog's lifetime hearts for this source, derived from the same occurrences, ledger and readings as `selectAgentInput`. */
 export function selectHeartsTotal(source: AgentSelectionSource): number {
-  const { derived, metrics } = deriveSelection(source);
-  return computeHeartsTotal(derived, metrics, source.today, walksUntilNow(source), source.now);
+  const { derived, metrics, stopped } = deriveSelection(source);
+  return computeHeartsTotal(derived, metrics, source.today, walksUntilNow(source), source.now, stopped);
 }
 
 /** Buddy's hearts at each instant (e.g. the end of each day), from the same gains as `heartsAt`; instants after `now` use `now`. */
 export function selectHeartsAtInstants(source: AgentSelectionSource, instants: readonly string[]): number[] {
-  const { derived, metrics } = deriveSelection(source);
-  const gains = heartGains(derived, metrics, walksUntilNow(source));
+  const { derived, metrics, stopped } = deriveSelection(source);
+  const gains = heartGains(derived, metrics, walksUntilNow(source), stopped);
   return instants.map((instant) => heartsAt(gains, Date.parse(instant) > Date.parse(source.now) ? source.now : instant));
+}
+
+/**
+ * Today's doses Rose can still act on (Home, Reminders, dose-time reminders, the agent's nudges): a stopped medicine's
+ * earlier doses still count in the history and the day's "all medicines taken", but are never shown or nudged again.
+ */
+export function actionableDoses(todayDoses: DerivedDose[], source: Pick<AgentSelectionSource, "stoppedMedicationIds">): DerivedDose[] {
+  const stopped = new Set(source.stoppedMedicationIds ?? []);
+  return stopped.size ? todayDoses.filter((dose) => !stopped.has(dose.medicationId)) : todayDoses;
 }
 
 function walksUntilNow(source: AgentSelectionSource): string[] {
