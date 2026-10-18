@@ -81,10 +81,10 @@ export function WalkScreen({
   const isSimulating = simStarted && !simDone;
   const isActive = walking || isSimulating;
   const done = !isActive ? finishedWalk : null;
-  // Start walk: a live timer from the walk's start; no step counter or GPS, so the other numbers show walk.notMeasured.
+  // Start walk: a live timer from the walk's start. No step counter or GPS, so a real walk (walking or finished) shows
+  // only its time: no distance line, no steps / calories / speed (owner, 18 Oct). Simulate walk keeps its numbers.
   const walkSeconds = useWalkTimer(walking ? walkStartedAt : null, clockNow);
-  const notMeasured = walking || (done !== null && done.distanceMeters === null);
-  const notMeasuredText = t("walk.notMeasured");
+  const realWalk = walking || (done !== null && done.distanceMeters === null);
   const toggleWalk = () => {
     const next = !walking;
     if (next) setFinishedWalk(null);
@@ -114,24 +114,30 @@ export function WalkScreen({
                 ? formatDuration(done.durationSeconds)
                 : "00:00"}
         </strong>
-        <small>
-          {isSimulating
-            ? t("walk.km", { km: formatKm(simState.distanceMeters) })
-            : notMeasured
-              ? t("walk.km", { km: notMeasuredText })
+        {!realWalk && (
+          <small>
+            {isSimulating
+              ? t("walk.km", { km: formatKm(simState.distanceMeters) })
               : done && done.distanceMeters !== null
                 ? t("walk.km", { km: formatKm(done.distanceMeters) })
                 : t("walk.startReady", { name: petName })}
-        </small>
+          </small>
+        )}
       </div>
-      {done && done.distanceMeters !== null && (
-        <p className="walk-done" role="status">{t("walk.doneMessage", { km: formatKm(done.distanceMeters), name: petName })}</p>
+      {done && (
+        <p className="walk-done" role="status">
+          {done.distanceMeters !== null
+            ? t("walk.doneMessage", { km: formatKm(done.distanceMeters), name: petName })
+            : t("walk.doneMessageNoDistance", { name: petName })}
+        </p>
       )}
-      <div className="walk-stats">
-        <div><strong>{notMeasured ? notMeasuredText : isSimulating ? String(simSteps) : "0"}</strong><small>{t("common.steps")}</small></div>
-        <div><strong>{notMeasured ? notMeasuredText : isSimulating ? String(simCalories) : "0"}</strong><small>{t("common.calories")}</small></div>
-        <div><strong>{notMeasured ? notMeasuredText : isSimulating ? simState.speedKmh.toFixed(1) : "0.0"}</strong><small>{t("common.kmh")}</small></div>
-      </div>
+      {!realWalk && (
+        <div className="walk-stats">
+          <div><strong>{isSimulating ? String(simSteps) : "0"}</strong><small>{t("common.steps")}</small></div>
+          <div><strong>{isSimulating ? String(simCalories) : "0"}</strong><small>{t("common.calories")}</small></div>
+          <div><strong>{isSimulating ? simState.speedKmh.toFixed(1) : "0.0"}</strong><small>{t("common.kmh")}</small></div>
+        </div>
+      )}
       {!isSimulating && (
         <button className={`primary-button ${walking ? "stop-button" : ""}`} onClick={toggleWalk}>
           {walking ? t("walk.finishWalk") : t("walk.startWalk")}
