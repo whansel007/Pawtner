@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import type { DogMood } from "../../../shared/contract";
 import { BUDDY_CLIPS, CLIP_PRELOAD_FALLBACK_MS, CLIP_SAFETY_TIMEOUT_MS, type BuddyClipKind } from "../config/clips";
-import { celebrationClipFor, clipMatchesMood, pickClipSource, waveClipFor } from "./buddyClips";
+import { clipMatchesMood, pickClipSource, waveClipFor } from "./buddyClips";
 import { useReducedMotion } from "./useReducedMotion";
 import type { Screen } from "../types";
 
@@ -55,23 +55,20 @@ function preloadClips(sources: (string | null)[]) {
 
 /**
  * Owns Buddy's video clips: which file this browser gets, idle preloading after Home first renders,
- * starting a clip (the Wave trick from a tap or trick card, or a fresh heart), the 7 s safety stop, and handing back to the still.
+ * starting a clip (the Wave trick from a tap, a trick card or a celebration, lib/celebration.ts), the 7 s safety stop, and handing back to the still.
  *
  * Rules:
- * - Nothing plays on load; a clip starts only from play() (Wave: dog tap or the Wave card) or a new celebrateRequest.
- * - celebrateRequest: App bumps it after "Give Buddy a heart". The next time Home shows, the joyful clip plays once
- *   if the dog is joyful; otherwise the request is dropped.
+ * - Nothing plays on load; a clip starts only from play() (Wave: dog tap, the Wave card, or a celebration once Wave is earned).
  * - No clip under reduced motion, while dizzy, in a mood without a clip, or in a browser that can't draw it.
  * - A clip stops early if the mood changes away from the clip's face.
  */
-export function useBuddyClip({ mood, screen, dizzy, celebrateRequest }: { mood: DogMood; screen: Screen; dizzy: boolean; celebrateRequest: number }): BuddyClip {
+export function useBuddyClip({ mood, screen, dizzy }: { mood: DogMood; screen: Screen; dizzy: boolean }): BuddyClip {
   const reducedMotion = useReducedMotion();
   const sources = useMemo(browserSources, []);
   const [playing, setPlaying] = useState<{ id: number; kind: BuddyClipKind; src: string } | null>(null);
   const [visibleId, setVisibleId] = useState<number | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const nextId = useRef(1);
-  const handledCelebration = useRef(celebrateRequest);
 
   // Dizzy counts as "no motion clips" too: the dog wobbles and can't be tapped.
   const options = useMemo(
@@ -117,14 +114,6 @@ export function useBuddyClip({ mood, screen, dizzy, celebrateRequest }: { mood: 
     const timer = window.setTimeout(() => stop(id), CLIP_SAFETY_TIMEOUT_MS);
     return () => window.clearTimeout(timer);
   }, [playing, stop]);
-
-  // A fresh heart: play the celebration once Home shows the dog (or drop it if Buddy isn't joyful there).
-  useEffect(() => {
-    if (celebrateRequest === handledCelebration.current || screen !== "home") return;
-    handledCelebration.current = celebrateRequest;
-    const kind = celebrationClipFor(mood, options);
-    if (kind) play(kind);
-  }, [celebrateRequest, screen, mood, options, play]);
 
   // Stop if the clip no longer fits the dog (mood changed, dizzy, reduced motion switched on).
   useEffect(() => {
