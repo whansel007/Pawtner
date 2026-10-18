@@ -6235,6 +6235,7 @@ var PawtnerRepository = class {
          WHERE u.id = ad.user_id AND u.id = $1 AND ad.created_at >= ${dayStart}`,
         [userId, now]
       );
+      await this.resetCareSharing(client, userId);
       await this.decideAndPersist(client, userId, now);
       return this.today(client, userId, now);
     });
@@ -6451,6 +6452,15 @@ var PawtnerRepository = class {
   // the methods below, and each item already has its own id and timestamps, so real tables (and accounts, replacing
   // getDefaultUserId) only change these methods and a migration, never shared/contract.ts, the phone or /care.
   // Rules a table would enforce (one pending refill per medicine, the medicine belongs to the user, note length) are here.
+  /** Reset to morning: the server copies of the phone's demo choices go back to their defaults (no rows are deleted). */
+  async resetCareSharing(client, userId) {
+    await client.query(
+      `UPDATE users SET restock_requests = '[]'::jsonb, shared_visit_notes = '[]'::jsonb, share_blood_pressure = true,
+              demo_clock_at = NULL, demo_clock_set_at = NULL
+       WHERE id = $1`,
+      [userId]
+    );
+  }
   /** Start of the summary's 7-day window (the senior's local midnight, 6 days before today), as an instant. */
   async weekStart(client, userId, now) {
     const tz = (await client.query("SELECT timezone FROM users WHERE id = $1", [userId])).rows[0].timezone;
