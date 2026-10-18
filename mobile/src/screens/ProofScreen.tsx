@@ -20,12 +20,15 @@ export function ProofScreen({
   petName,
   medicationName,
   medicationId,
+  takenCount,
 }: {
   back: BackAction;
   onVerified: (photoUrl: string | null) => void | Promise<void>;
   petName: string;
   medicationName?: string;
   medicationId?: string;
+  /** Today's dose count once this one is taken (lib/doseCount.ts), shown on the button: "1/3 taken". */
+  takenCount: { done: number; total: number };
 }) {
   const { t } = useTranslation();
   const [captured, setCaptured] = useState(false);
@@ -171,7 +174,7 @@ export function ProofScreen({
       )}
       {captured && (
         <button className={looksDifferent ? "secondary-button proof-heart-secondary" : "primary-button"} onClick={() => void onVerified(photoUrl)}>
-          {t("proof.giveHeart", { name: petName })}
+          {t("proof.markTaken", takenCount)}
         </button>
       )}
     </FullCard>

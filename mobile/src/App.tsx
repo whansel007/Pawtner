@@ -44,6 +44,7 @@ import { useHomeView } from "./lib/useHomeView";
 import { useDoseReminder } from "./lib/useDoseReminder";
 import { shouldBarkFor } from "./lib/nudgeBark";
 import { activityToastKey, bpToastKey, heartChange } from "./lib/heartToast";
+import { countAfterTaking } from "./lib/doseCount";
 import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
 import { DEMO_CLOCK_PARAM, DEMO_RESET_PRESET, DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset, type DemoUnlockKey } from "./config/demo";
@@ -546,7 +547,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         {screen === "explanation" && <ExplanationScreen back={back} onContinue={() => navigate("schedule")} medicineName={savedMedicationName} />}
         {screen === "schedule" && <ScheduleScreen back={back} onConfirm={handleScheduleConfirmed} petName={dogName} medicationId={savedMedicationId} />}
         {screen === "reference" && <ReferenceScreen back={back} onDone={handleReferenceDone} onSkip={handleReferenceDone} petName={dogName} medicationId={savedMedicationId} />}
-        {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} medicationId={pendingDose?.medicationId} />}
+        {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} medicationId={pendingDose?.medicationId} takenCount={countAfterTaking(doseList, pendingDoseId ?? "")} />}
         {screen === "walk" && <WalkScreen back={back} walkStats={walkStats} petName={dogName} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
         {screen === "milestones" && <MilestonesScreen back={back} onWalk={() => navigate("walk")} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} heartsTotal={heartsTotal} mood={mood} decision={routineDecision(latestDecision)} onTrick={(performance) => setTrickRequest((prev) => ({ id: (prev?.id ?? 0) + 1, performance }))} />}
         {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}
