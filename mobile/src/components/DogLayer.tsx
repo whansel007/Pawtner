@@ -45,7 +45,7 @@ export function DogLayer({
   accessory?: ReactNode;
   /** Bumped by App when a walk or the day's last dose earned a heart: Buddy celebrates once (lib/celebration.ts). */
   celebrateRequest?: number;
-  /** Bumped by App after a walk that didn't reach the day's goal yet: hearts and "Just a little bit more!". */
+  /** Bumped by App after a walk that didn't reach the day's goal yet: Buddy says "Just a little bit more!". */
   encourageRequest?: number;
   /** Set by App when a trick card is tapped; a new id plays the trick once. */
   trickRequest?: TrickRequest | null;

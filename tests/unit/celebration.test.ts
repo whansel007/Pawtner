@@ -28,8 +28,9 @@ describe("Buddy's celebration (one rule)", () => {
     expect(celebrationFor("heartEarned", { waveEarned: true, waveCanPlay: false, noMotion: false }).animation).toBe("hearts");
   });
 
-  it("a walk short of the goal: hearts and 'Just a little bit more!', never the wave", () => {
-    expect(celebrationFor("walkNotYet", { ...motion, waveEarned: true })).toEqual({ animation: "hearts", bubbleKey: "pet.walkMore" });
+  it("a walk short of the goal: only 'Just a little bit more!', no hearts and never the wave", () => {
+    expect(celebrationFor("walkNotYet", { ...motion, waveEarned: true })).toEqual({ animation: null, bubbleKey: "pet.walkMore" });
+    expect(celebrationFor("walkNotYet", { ...motion, waveEarned: false })).toEqual({ animation: null, bubbleKey: "pet.walkMore" });
   });
 
   it("reduced motion (or dizzy) → no animation; the short-walk bubble still shows", () => {
