@@ -363,7 +363,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
     // Same rule as a dose (owner, 18 Oct): a toast only when the walk gained a heart.
     const toastKey = activityToastKey(heartChange(heartsBefore, heartsAfter));
     if (toastKey) notify(t(toastKey, { name: dogName }));
-    // Buddy: celebrates the walk that earned the day's walk heart; after a shorter one, hearts and "Just a little bit more!".
+    // Buddy: celebrates the walk that earned the day's walk heart; after a shorter one, says "Just a little bit more!".
     if (walkHeartAfter === true && !walkHeartBefore) setCelebrateRequest((n) => n + 1);
     else if (walkHeartAfter === false) setEncourageRequest((n) => n + 1);
   }
