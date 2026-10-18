@@ -47,6 +47,8 @@ export function useStopMedicine(onChanged: () => void, now: () => number = Date.
     rows,
     open: (id: string) => apply(id, "open"),
     cancel: (id: string) => apply(id, "cancel"),
+    /** "Back to Medicine list" from the stopped card: ends its Undo (the medicine leaves the list). */
+    dismiss: (id: string) => apply(id, "dismiss"),
     stop,
     undo,
   };

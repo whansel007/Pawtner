@@ -43,6 +43,7 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | My medicines: one medicine at a time while it is being worked on, "Back to Medicine list"; schedule step without the "no loud alarm" line | Branch `claude/medicine-focus`, not pushed |
 | — | No hardcoded names: fallback demo names only in en.json "demoNames" (`lib/demoNames.ts`), names on screen from data, placeholders in en.json, guard test; closes the KIV rows "Fixed names left in mock data" and "Offline sample text still names people" | Branch `claude/names-from-data`, not pushed |
 | — | A stop is a moment: a stopped medicine's earlier doses keep counting (past hearts, lifetime, streak, check-ins never move), a stop never backdates a heart, its earlier doses leave today's list and nudges | Branch `claude/stop-keeps-history`, not pushed |
 | — | Revision (design "A", 18 Oct): Stop moves inside each medicine's Edit panel (quiet text button, no Stop on the list); /care This week shows one "{{dog}}'s updates" card, e.g. "Buddy's updates" (check-in, stopped medicine, refill request, newest first) | [#83](https://github.com/whansel007/Pawtner/pull/83), merged 18 Oct |

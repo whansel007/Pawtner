@@ -330,7 +330,6 @@
     "eyebrow": "Suggested routine",
     "title": "When should {{name}} nudge you?",
     "supporting": "We made this from the label. Change it anytime.",
-    "noAlarm": "No loud alarm, and no scolding if you are late.",
     "confirm": "Confirm {{name}}'s routine"
   },
   "reference": {
@@ -602,6 +601,7 @@
     "daysLeft_one": "{{count}} day left",
     "daysLeft_other": "{{count}} days left",
     "cancel": "Cancel",
+    "backToList": "Back to Medicine list",
     "edit": {
       "button": "Edit",
       "prescribedLabel": "What did your doctor say it's for?",
