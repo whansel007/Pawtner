@@ -17,7 +17,8 @@ export function bpToastKey(change: HeartChange, urgent: boolean): "toast.bpWarni
   return change.gained ? "toast.bpLoggedHeart" : "toast.bpLoggedPlain";
 }
 
-/** Dose toast (owner, 18 Oct): "gained a heart" only when one was gained; otherwise no toast (null). */
-export function doseToastKey(change: HeartChange): "toast.heartGained" | null {
-  return change.gained ? "toast.heartGained" : null;
+/** Medicine and walk toast (owner, 18 Oct): "heart is full" when the gain fills the hearts, "gained a heart" on another gain, else no toast (null). */
+export function activityToastKey(change: HeartChange): "toast.heartFull" | "toast.heartGained" | null {
+  if (!change.gained) return null;
+  return change.full ? "toast.heartFull" : "toast.heartGained";
 }

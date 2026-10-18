@@ -644,6 +644,7 @@
     "treatWaiting": "A treat from {{caretaker}} is waiting for {{name}}!",
     "nudgeSet": "{{name}} knows when to nudge you.",
     "heartGained": "{{name}} gained a heart!",
+    "heartFull": "{{name}}'s heart is full!",
     "bpLogged": "Reading logged. {{name}}'s heart is full!",
     "bpLoggedHeart": "Reading logged. {{name}} gained a heart!",
     "bpLoggedPlain": "Reading logged. Thank you!",

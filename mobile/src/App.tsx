@@ -43,7 +43,7 @@ import { demoClockOnLoad, runningClock, saveDemoClock, searchWithout, type DemoC
 import { useHomeView } from "./lib/useHomeView";
 import { useDoseReminder } from "./lib/useDoseReminder";
 import { shouldBarkFor } from "./lib/nudgeBark";
-import { bpToastKey, doseToastKey, heartChange } from "./lib/heartToast";
+import { activityToastKey, bpToastKey, heartChange } from "./lib/heartToast";
 import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
 import { DEMO_CLOCK_PARAM, DEMO_RESET_PRESET, DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset, type DemoUnlockKey } from "./config/demo";
@@ -188,8 +188,8 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
   const pendingDose = doseList.find((item) => item.id === pendingDoseId);
   // Today's hearts: the API's, or a Settings "Today" demo tick (then Buddy's mood follows those hearts below).
   // One rule for the hearts shown, also used to tell whether a save gained a heart (lib/heartToast.ts).
-  const shownHearts = (data: TodayResponse | null, doses: DerivedDose[], bp: boolean) =>
-    demoTodayHearts(data?.dog.heart ?? localHeartCount(doses, bp, data?.activities.walk ?? false), demoUnlocks);
+  const shownHearts = (data: TodayResponse | null, doses: DerivedDose[], bp: boolean, walked = data?.activities.walk ?? false) =>
+    demoTodayHearts(data?.dog.heart ?? localHeartCount(doses, bp, walked), demoUnlocks);
   const heartCount = shownHearts(today, doseList, bpLogged);
   // One number each for the whole phone app: the API's (or mock) value, raised by a Settings demo tick if one is on.
   const heartsTotal = demoHeartsTotal(today?.dog?.heartsTotal ?? mockHeartsTotal, demoUnlocks);
@@ -304,6 +304,9 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
     const finishedAt = new Date().toISOString();
     setWalkStartedAt(null);
     setDizzy(false);
+    const heartsBefore = heartCount;
+    let heartsAfter = heartsBefore;
+    let refreshed: TodayResponse | null = null;
     try {
       const result = await api.walkSession({
         startedAt,
@@ -312,11 +315,13 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         fastStretchOccurred: simulated?.fastStretchOccurred ?? false,
       });
       setLatestDecision(result.decision);
-      await refreshToday();
+      refreshed = await refreshToday();
+      heartsAfter = shownHearts(refreshed ?? today, doseList, bpLogged);
       setCareSummary(await api.caretakerSummary());
     } catch (error) {
       reportApiProblem(error, true);
       if (simulated) {
+        if (!refreshed) heartsAfter = shownHearts(today, doseList, bpLogged, true);
         const input = buildAgentInputFromState({
           now: finishedAt,
           userId: demoUser.id,
@@ -331,6 +336,9 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         setLatestDecision(await requestDecision(input));
       }
     }
+    // Same rule as a dose (owner, 18 Oct): a toast only when the walk gained a heart.
+    const toastKey = activityToastKey(heartChange(heartsBefore, heartsAfter));
+    if (toastKey) notify(t(toastKey, { name: dogName }));
   }
 
   /**
@@ -423,7 +431,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
     navigate("home");
     setCelebrateRequest((n) => n + 1);
     // Only when a heart was really gained (owner, 18 Oct); otherwise no toast.
-    const toastKey = doseToastKey(heartChange(heartsBefore, heartsAfter));
+    const toastKey = activityToastKey(heartChange(heartsBefore, heartsAfter));
     if (toastKey) notify(t(toastKey, { name: dogName }));
   }
 
