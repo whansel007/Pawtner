@@ -3,8 +3,9 @@
  * toast)", "if less than 7 days. There will be no wave"). One rule for every celebration (pure, no React):
  * - a heart earned by a walk or by the dose that completes the day's medicines: the Wave clip only when the Wave trick
  *   is earned (same earned tricks as the tap rotation) and the clip can play now; otherwise the hearts reaction;
- * - a walk that didn't reach the day's goal yet: the hearts reaction and the bubble "Just a little bit more!".
- * Under reduced motion (or while dizzy) there is no animation; the bubble still shows.
+ * - a walk that didn't reach the day's goal yet: only the bubble "Just a little bit more!", no animation (owner:
+ *   "Just a little bit more no need hearts").
+ * Under reduced motion (or while dizzy) there is no animation.
  */
 export type CelebrationReason = "heartEarned" | "walkNotYet";
 
@@ -18,7 +19,7 @@ export function celebrationFor(
   reason: CelebrationReason,
   { waveEarned, waveCanPlay, noMotion }: { waveEarned: boolean; waveCanPlay: boolean; noMotion: boolean },
 ): Celebration {
-  if (reason === "walkNotYet") return { animation: noMotion ? null : "hearts", bubbleKey: "pet.walkMore" };
+  if (reason === "walkNotYet") return { animation: null, bubbleKey: "pet.walkMore" };
   if (noMotion) return { animation: null, bubbleKey: null };
   return { animation: waveEarned && waveCanPlay ? "wave" : "hearts", bubbleKey: null };
 }
