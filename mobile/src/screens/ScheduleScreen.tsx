@@ -68,7 +68,7 @@ export function ScheduleScreen({
         </div>
       ))}
       <button className="text-button" onClick={addSlot}>Add another time</button>
-      <div className="dog-message"><Icon name="bell" /><p><strong>{petName} will give a gentle woof.</strong><br />{t("schedule.noAlarm")}</p></div>
+      <div className="dog-message"><Icon name="bell" /><p><strong>{petName} will give a gentle woof.</strong></p></div>
       {error && <p className="error-text">{error}</p>}
       <button className="primary-button" disabled={saving} onClick={save}>
         {saving ? "Saving…" : t("schedule.confirm", { name: petName })}

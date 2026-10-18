@@ -330,7 +330,6 @@
     "eyebrow": "Suggested routine",
     "title": "When should {{name}} nudge you?",
     "supporting": "We made this from the label. Change it anytime.",
-    "noAlarm": "No loud alarm, and no scolding if you are late.",
     "confirm": "Confirm {{name}}'s routine"
   },
   "reference": {
