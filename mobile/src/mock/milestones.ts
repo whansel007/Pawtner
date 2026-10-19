@@ -1,4 +1,4 @@
-import type { Trick, Souvenir, WorldOption, AccessoryOption } from "../types";
+import type { Trick, WorldOption, AccessoryOption } from "../types";
 
 /**
  * Offline fallback for Milestones. Mirrors the API's trick ladder (api/repository.ts: Sit 1, Wave 7,
@@ -9,10 +9,6 @@ export const tricks: Trick[] = [
   { name: "Wave", note: "7 day streak", earned: true },
   { name: "Roll over", note: "2 days to go", earned: false },
   { name: "New trick", note: "18 days to go", earned: false },
-];
-
-export const souvenirs: Souvenir[] = [
-  { distance: "3.2 km", name: "Botanic Gardens leaf", note: "Walk a little farther to find it" },
 ];
 
 export const worldOptions: WorldOption[] = [

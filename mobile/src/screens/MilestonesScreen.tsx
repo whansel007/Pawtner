@@ -13,14 +13,13 @@ import type { Pet } from "../types";
 import "./MilestonesScreen.css";
 
 /**
- * Milestones: the routine agent decision on top (urgent ones stay on Home), Buddy's progress, Souvenirs, then Tricks.
+ * Milestones: the routine agent decision on top (urgent ones stay on Home), Buddy's progress, then Tricks (no souvenirs for now, owner 18 Oct; badges later).
  * Earned trick cards are buttons: Buddy (standing above the card) performs the trick via onTrick; when he's too
  * sleepy to wave, the Wave card shows a gentle line instead (lib/tricks.ts trickCardTap). Locked tricks do nothing.
  */
 
 export function MilestonesScreen({
   back,
-  onWalk,
   onCustomize,
   pet,
   petName,
@@ -30,7 +29,6 @@ export function MilestonesScreen({
   onTrick,
 }: {
   back: BackAction;
-  onWalk: () => void;
   onCustomize: () => void;
   pet: Pet;
   petName: string;
@@ -69,24 +67,6 @@ export function MilestonesScreen({
       <p className="streak-line">{t("milestones.hearts", { count: heartsTotal })}</p>
 
       <button className="customize-row" onClick={onCustomize}><span className="feature-icon"><Icon name="star" /></span><div><strong>{t("milestones.worldWardrobe")}</strong><small>{t("milestones.worldWardrobeSub", { name: petName })}</small></div><Icon name="chevron" /></button>
-
-      <div className="section-title"><h3>{t("milestones.souvenirs")}</h3><span>{t("milestones.souvenirsSub")}</span></div>
-      {data && data.unlockedSouvenirs.length > 0 ? data.unlockedSouvenirs.map((souvenir) => (
-        <button className="souvenir-row" key={souvenir.key} onClick={onWalk}>
-          <span>Unlocked</span>
-          <div><strong>{souvenir.name}</strong><small>{souvenir.note}</small></div>
-          <Icon name="chevron" />
-        </button>
-      )) : (
-        <button className="souvenir-row" onClick={onWalk}>
-          <span>{data?.nextSouvenirTarget ? `${(data.nextSouvenirTarget.cumulativeMeters / 1000).toFixed(0)} km` : "—"}</span>
-          <div><strong>{data?.nextSouvenirTarget?.name ?? "No souvenirs yet"}</strong><small>{data?.nextSouvenirTarget?.note ?? "Walk to earn souvenirs"}</small></div>
-          <Icon name="chevron" />
-        </button>
-      )}
-      {data?.nextSouvenirTarget && (
-        <p className="supporting">Next: {data.nextSouvenirTarget.name} at {(data.nextSouvenirTarget.cumulativeMeters / 1000).toFixed(1)} km ({(data.nextSouvenirTarget.progress * 100).toFixed(0)}% there)</p>
-      )}
 
       <div className="section-title"><h3>{t("milestones.tricks")}</h3><span>{t("milestones.tricksSub")}</span></div>
       <div className="trick-grid">

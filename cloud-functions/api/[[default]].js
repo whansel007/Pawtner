@@ -6478,29 +6478,6 @@ var PawtnerRepository = class {
       const row = result.rows[0];
       const earnedHeart = (await this.walkHeartTimes(client, userId, iso(row.finished_at))).includes(iso(row.finished_at));
       const { decision: decision2 } = await this.decideAndPersist(client, userId, request.finishedAt, void 0, { walkFinished: earnedHeart });
-      const cumulativeResult = await client.query(
-        `SELECT COALESCE(sum(distance_meters), 0)::int AS total FROM walk_sessions WHERE user_id = $1 AND ${notReset("walk_sessions")}`,
-        [userId]
-      );
-      const cumulative = cumulativeResult.rows[0].total;
-      const shouldUnlock = unlockedSouvenirs(cumulative);
-      let souvenirId = null;
-      if (shouldUnlock.length > 0) {
-        for (const key of shouldUnlock) {
-          const existing = await client.query(
-            "SELECT 1 FROM souvenirs WHERE user_id = $1 AND souvenir_key = $2",
-            [userId, key]
-          );
-          if (!existing.rowCount) {
-            const souvenirIdRow = randomUUID();
-            await client.query(
-              "INSERT INTO souvenirs (id, user_id, souvenir_key, unlocked_at) VALUES ($1, $2, $3, $4)",
-              [souvenirIdRow, userId, key, request.finishedAt]
-            );
-            souvenirId = souvenirIdRow;
-          }
-        }
-      }
       return {
         id: row.id,
         startedAt: iso(row.started_at),
@@ -6508,7 +6485,8 @@ var PawtnerRepository = class {
         distanceMeters: row.distance_meters,
         fastStretchOccurred: row.fast_stretch_occurred,
         decision: decision2,
-        souvenirId
+        // No souvenirs for now (owner, 18 Oct; badges later): a walk unlocks nothing.
+        souvenirId: null
       };
     });
   }

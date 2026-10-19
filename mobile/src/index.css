@@ -627,14 +627,6 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .trick-grid small { color: #818c84; font-size: var(--font-size-xs); }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   Souvenir / screening / activity link
-   ═══════════════════════════════════════════════════════════════════════ */
-.souvenir-row { width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 14px; border: 0; border-radius: var(--radius-4xl); color: #274538; background: var(--color-surface-cream); text-align: left; cursor: pointer; }
-.souvenir-row > span { display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--radius-xl); color: #9b653a; background: #ffdab0; font-size: var(--font-size-sm); font-weight: var(--font-weight-black); }
-.souvenir-row div { display: grid; }
-.souvenir-row small { color: #7a847c; font-size: var(--font-size-sm); }
-
-/* ═══════════════════════════════════════════════════════════════════════
    Health / metric / weekly
    ═══════════════════════════════════════════════════════════════════════ */
 .metric-card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; margin-top: 18px; padding: 15px; border-radius: var(--radius-5xl); background: var(--color-surface-cream); }
