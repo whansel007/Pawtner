@@ -48,7 +48,7 @@ export function HealthScreen({
   screeningInfo: ScreeningInfo;
   activityLink: ActivityLink;
   clinicTasks: ClinicTask;
-  /** The senior's name from data, for the title "{{name}}'s Health Logs". */
+  /** The senior's name from data, for the title "{{name}}'s Health logs, clearly told". */
   seniorName: string;
   /** The card at the top today: a warning, a side-effect note, or none (lib/decisions.ts healthTopCard). */
   topCard: HealthTopCard<AgentDecision>;
@@ -161,7 +161,7 @@ export function HealthScreen({
 
   return (
     <FullCard back={back} sheet={sheet} heading={heading}>
-      {/* Same two lines as Milestones ("BUDDY IS LEARNING"): "ROSE'S" / "Health Logs". */}
+      {/* Same two lines as Milestones ("BUDDY IS LEARNING"): "ROSE'S" / "Health logs, clearly told". */}
       <p className="eyebrow green">{heading.eyebrow}</p>
       <h2>{heading.title}</h2>
       {/* Under the title (owner, 18 Oct: "title will start first"), only on a warning or side-effect day: Buddy's
