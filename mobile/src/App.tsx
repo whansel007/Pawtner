@@ -42,6 +42,8 @@ import { resetDemoStorage } from "./lib/demoReset";
 import { mergeHealthMetrics } from "./lib/healthReadings";
 import { demoClockOnLoad, runningClock, saveDemoClock, searchWithout, type DemoClockAnchor } from "./lib/demoClock";
 import { useHomeView } from "./lib/useHomeView";
+import { useCardView } from "./lib/useCardView";
+import { isCardSheetScreen, sheetViewFor } from "./lib/homeView";
 import { useWalkGoal } from "./lib/useWalkGoal";
 import { useDoctorVisits } from "./lib/useDoctorVisits";
 import { useDoseReminder } from "./lib/useDoseReminder";
@@ -155,6 +157,9 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
   const { bark } = useBark();
   // Full-screen Buddy, both, or the full-screen form: dragging Home's card (config/homeView.ts), kept on this phone.
   const [homeView, setHomeView] = useHomeView();
+  // Health, Milestones and Settings drag the same way (config/homeView.ts CARD_SHEET), starting at both on every visit.
+  const [cardView, setCardView] = useCardView(screen);
+  const sheetView = sheetViewFor(screen, homeView, cardView);
   // A new dose nudge while the app is open: Buddy barks once (in-app stand-in for a phone notification).
   // The decision already there on first load counts as seen, so opening the app never barks.
   const seenDecisionId = useRef<string | null | undefined>(undefined);
@@ -214,6 +219,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
 
   // Names come from data unchanged — no .toLowerCase().
   const dogName = today?.dog.name ?? pet.name;
+  const cardSheet = isCardSheetScreen(screen) ? { view: cardView, onView: setCardView, petName: dogName } : undefined;
   const caretakerName = careSummary?.caregiver?.name ?? caregiver.caretakerName;
   const livePet = { ...pet, name: dogName, heartCount, streak, careScore: careSummary?.careScore ?? pet.careScore, caringDays: careSummary?.caringDays ?? pet.caringDays };
   // /care pair label: build from data via the care.pairNames pattern, not a hardcoded string.
@@ -527,7 +533,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
   return (
     <>
     <DesktopBackdrop phase={phase} />
-    <main className={`app-shell world-${world} ${screen === "home" ? `home-view-${homeView}` : ""}`}>
+    <main className={`app-shell world-${world} ${!sheetView ? "" : screen === "home" ? `home-view-${sheetView}` : `card-view-${sheetView}`}`}>
       {screen === "cover" && <CoverScreen onContinue={() => navigate("dedication")} />}
       {screen === "dedication" && <DedicationScreen onContinue={() => navigate("home")} />}
       {screen !== "cover" && screen !== "dedication" && (
@@ -536,7 +542,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
       <div className="scene-shade" />
       <DogLayer
         screen={screen}
-        homeView={homeView}
+        sheetView={sheetView}
         mood={mood}
         dogName={dogName}
         dizzy={dizzy}
@@ -589,11 +595,11 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         {screen === "reference" && <ReferenceScreen back={back} onDone={handleReferenceDone} onSkip={handleReferenceDone} petName={dogName} medicationId={savedMedicationId} />}
         {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} medicationId={pendingDose?.medicationId} takenCount={countAfterTaking(doseList, pendingDoseId ?? "")} />}
         {screen === "walk" && <WalkScreen back={back} goalMinutes={walkGoal.minutes} simulateRequested={simulateWalkRequested} onSimulateStarted={handleSimulateStarted} petName={dogName} walkStartedAt={walkStartedAt} clockNow={clockNow} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
-        {screen === "milestones" && <MilestonesScreen back={back} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} heartsTotal={heartsTotal} mood={mood} onTrick={(performance) => setTrickRequest((prev) => ({ id: (prev?.id ?? 0) + 1, performance }))} />}
-        {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} onBpLog={() => navigate("bpLog")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} seniorName={today?.user.name ?? liveCaregiver.seniorName} topCard={healthTopCard(latestDecision, today?.sideEffectNote ?? showSideEffectCard(healthMetrics, demoNow() ?? new Date().toISOString(), SENIOR_TIMEZONE))} petName={dogName} />}
+        {screen === "milestones" && <MilestonesScreen back={back} sheet={cardSheet} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} heartsTotal={heartsTotal} mood={mood} onTrick={(performance) => setTrickRequest((prev) => ({ id: (prev?.id ?? 0) + 1, performance }))} />}
+        {screen === "health" && <HealthScreen back={back} sheet={cardSheet} bpLogged={bpLogged} healthMetrics={healthMetrics} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} onBpLog={() => navigate("bpLog")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} seniorName={today?.user.name ?? liveCaregiver.seniorName} topCard={healthTopCard(latestDecision, today?.sideEffectNote ?? showSideEffectCard(healthMetrics, demoNow() ?? new Date().toISOString(), SENIOR_TIMEZONE))} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={{ ...weekSummary, caringDays: careSummary?.caringDays ?? weekSummary.caringDays, doctorQuestion: visitNotes.latest?.text ?? t("visitNotes.empty") }} onVisitNotes={() => navigate("visitNotes")} goodWeek={isGoodWeek({ streak, caringDays: careSummary?.caringDays ?? weekSummary.caringDays })} />}
-        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => toggleDemoTick(current, key))} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} walkGoalKey={walkGoal.key} onWalkGoal={setWalkGoal} onSimulateWalk={() => { setSimulateWalkRequested(true); navigate("walk"); }} doctorVisits={doctorVisits} onDoctorVisits={setDoctorVisits} />}
+        {screen === "settings" && <SettingsScreen back={back} sheet={cardSheet} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => toggleDemoTick(current, key))} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} walkGoalKey={walkGoal.key} onWalkGoal={setWalkGoal} onSimulateWalk={() => { setSimulateWalkRequested(true); navigate("walk"); }} doctorVisits={doctorVisits} onDoctorVisits={setDoctorVisits} />}
         {screen === "medicines" && <MedicinesScreen back={back} petName={dogName} caretakerName={caretakerName} onMedicinesChanged={() => void refreshToday()} />}
         {screen === "bpLog" && <BpLogContainer back={back} now={demoNow() ?? new Date().toISOString()} timeZone={SENIOR_TIMEZONE} fallback={healthMetrics} firstReading={firstReading} onOffline={(error) => reportApiProblem(error)} />}
         {screen === "visitNotes" && <VisitNotesScreen back={back} notes={visitNotes.notes} caretakerName={caretakerName} maxLength={visitNotes.maxLength} onAdd={visitNotes.add} onEdit={visitNotes.edit} onRemove={visitNotes.remove} />}

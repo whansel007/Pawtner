@@ -41,6 +41,10 @@
     "homeAria": "{{name}}, go to Home",
     "settingsAria": "Open settings"
   },
+  "cardSheet": {
+    "portrait": "Drag up to see only this card, or down to see only {{name}}. Tap to see both.",
+    "landscape": "Drag left to see only this card, or right to see only {{name}}. Tap to see both."
+  },
   "home": {
     "sheet": {
       "portrait": "Drag up to see only your medicines, or down to see only {{name}}. Tap to see both.",

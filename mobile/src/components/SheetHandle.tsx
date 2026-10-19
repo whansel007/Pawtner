@@ -1,27 +1,27 @@
 import { useRef, type KeyboardEvent, type PointerEvent } from "react";
-import { useTranslation } from "react-i18next";
-import { HOME_VIEW, type HomeView } from "../config/homeView";
+import { HOME_VIEW, SHEET_DASHES, type HomeView } from "../config/homeView";
 import { homeViewAfterDrag, stepHomeView } from "../lib/homeView";
 import type { SceneLayout } from "../config/scene";
-import "./HomeSheetHandle.css";
+import "./SheetHandle.css";
 
 /** A movement shorter than this (px) on release counts as a tap. */
 const TAP_SLOP_PX = 8;
 
 /**
- * The grab bar on Home's card (config/homeView.ts). Drag toward the form (portrait: up, landscape: left) or toward
- * Buddy; on release it snaps one step per HOME_VIEW.snapPx. A tap returns to both. Arrow keys step too.
- * While dragging it reports the follow distance so the card moves with the finger (transform only, in HomeScreen).
+ * The grab bar on Home's card and on the card screens that drag (config/homeView.ts). Drag toward the form / full card
+ * (portrait: up, landscape: left) or toward Buddy; on release it snaps one step per HOME_VIEW.snapPx. A tap returns to
+ * both. Arrow keys step too. It shows the current view as dashes (SHEET_DASHES). While dragging it reports the follow
+ * distance so the card moves with the finger (transform only, in HomeScreen / FullCard).
  */
-export function HomeSheetHandle({ view, layout, petName, onView, onFollow }: {
+export function SheetHandle({ view, layout, label, onView, onFollow }: {
   view: HomeView;
-  petName: string;
+  /** The accessible label (en.json, already filled in by the caller). */
+  label: string;
   layout: SceneLayout;
   onView: (view: HomeView) => void;
   /** Distance toward the form while dragging (px, clamped), or 0 when released. */
   onFollow: (towardForm: number) => void;
 }) {
-  const { t } = useTranslation();
   const start = useRef<{ x: number; y: number; id: number } | null>(null);
   const towardForm = (event: PointerEvent) => {
     if (!start.current) return 0;
@@ -55,8 +55,8 @@ export function HomeSheetHandle({ view, layout, petName, onView, onFollow }: {
   return (
     <button
       type="button"
-      className={`home-sheet-handle home-sheet-handle--${layout}`}
-      aria-label={t(`home.sheet.${layout}`, { name: petName })}
+      className={`sheet-handle sheet-handle--${layout}`}
+      aria-label={label}
       // Click is handled on pointer up (tap vs drag); keyboard Enter/Space still go back to both.
       onClick={(event) => { if (event.detail === 0) onView("both"); }}
       onPointerDown={onPointerDown}
@@ -65,7 +65,9 @@ export function HomeSheetHandle({ view, layout, petName, onView, onFollow }: {
       onPointerCancel={(event) => finish(event, true)}
       onKeyDown={onKeyDown}
     >
-      <span className="home-sheet-handle__bar" aria-hidden="true" />
+      <span className="sheet-handle__dashes" aria-hidden="true">
+        {Array.from({ length: SHEET_DASHES[view] }, (_, index) => <span key={index} className="sheet-handle__dash" />)}
+      </span>
     </button>
   );
 }

@@ -4,7 +4,7 @@ import type { DerivedDose } from "../../../shared/contract";
 import type { HomeView } from "../config/homeView";
 import { formatDoseTime, selectNextDose } from "../lib/doses";
 import { useSceneLayout } from "../lib/useSceneLayout";
-import { HomeSheetHandle } from "../components/HomeSheetHandle";
+import { SheetHandle } from "../components/SheetHandle";
 import { NextDoseCard } from "../components/NextDoseCard";
 import { SceneChips } from "../components/SceneChips";
 import type { Pet } from "../types";
@@ -78,7 +78,7 @@ export function HomeScreen({
           className={`home-sheet home-sheet--${layout} ${follow !== 0 ? "is-dragging" : ""}`}
           style={{ "--sheet-follow": `${follow}px` } as CSSProperties}
         >
-          <HomeSheetHandle view={view} layout={layout} petName={pet.name} onView={onView} onFollow={setFollow} />
+          <SheetHandle view={view} layout={layout} label={t(`home.sheet.${layout}`, { name: pet.name })} onView={onView} onFollow={setFollow} />
           {view === "buddy" ? (
             <p className="home-sheet__peek">{peek}</p>
           ) : (

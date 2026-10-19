@@ -381,6 +381,18 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 /* Spans the frame's side padding (negative margin + padding) so focus rings and shadows aren't clipped at the content edge. */
 .full-card__scroll { flex: 1 1 auto; min-height: 0; margin-inline: -20px; padding: 8px 20px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
 .full-card__scroll::-webkit-scrollbar { display: none; }
+/* Card screens that drag like Home (FullCard `sheet`, config/homeView.ts CARD_SHEET): room for the grab bar (SheetHandle),
+   and the card follows the finger while dragging (transform only; at rest it eases back). */
+.full-card--sheet { transform: translateY(calc(-1 * var(--sheet-follow, 0px))); transition: transform .2s ease; }
+.full-card--sheet.full-card--portrait { padding-top: 28px; }
+.full-card--sheet.full-card--landscape { padding-left: 32px; transform: translateX(calc(-1 * var(--sheet-follow, 0px))); }
+.full-card--sheet.is-dragging { transition: none; }
+@media (prefers-reduced-motion: reduce) { .full-card--sheet { transition: none; } }
+/* Full Buddy: the card shrinks to a strip at the bottom (back button + the screen's heading); Buddy stands on it. */
+.full-card.full-card--strip { top: auto; }
+.full-card__strip { display: grid; gap: 2px; }
+.full-card__strip .eyebrow { margin: 0; }
+/* Full card: no Buddy (DogLayer has no placement), so no ledge space; the card starts at the top bar. */
 .back-button { display: flex; align-items: center; gap: 5px; margin: -5px 0 14px -5px; padding: 5px; border: 0; color: var(--color-text-back); background: transparent; font-weight: var(--font-weight-bold); cursor: pointer; }
 .streak-line { margin: 6px 0 0; color: var(--color-text-body); font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); }
 .supporting { max-width: 430px; margin: 10px 0 22px; color: var(--color-text-body); font-size: var(--font-size-lg); line-height: 1.45; }
@@ -445,7 +457,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .demo-panel__section p { margin: 0; color: #78857c; font-size: var(--font-size-sm); line-height: 1.4; }
 @media (prefers-reduced-motion: reduce) { .demo-panel summary svg { transition: none; } }
 
-/* Home sheet: the card (or, in full-screen Buddy, a strip with the next dose) plus its grab bar (HomeSheetHandle).
+/* Home sheet: the card (or, in full-screen Buddy, a strip with the next dose) plus its grab bar (SheetHandle).
    While dragging it follows the finger: up in portrait, left in landscape (transform only); at rest it eases back. */
 .home-sheet { position: relative; flex: none; display: flex; flex-direction: column; transform: translateY(calc(-1 * var(--sheet-follow, 0px))); transition: transform .2s ease; }
 .home-sheet--landscape { transform: translateX(calc(-1 * var(--sheet-follow, 0px))); }
@@ -1212,6 +1224,21 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
   .app-shell.home-view-buddy .scene-backdrop,
   .app-shell.home-view-buddy .scene-shade { right: 0; }
   .app-shell.home-view-buddy .home-layout__cards > .home-sheet { flex: none; }
+
+  /* Card screens sideways, the same way: full card = the pane takes the whole width (card centred and capped, Buddy's
+     column and its chips hidden); full Buddy = the garden runs behind the pane, which shows only the strip. */
+  .app-shell.card-view-medicines { --pane-w: 100vw; }
+  .app-shell.card-view-medicines .top-zone { right: 0; }
+  .app-shell.card-view-medicines .scene-backdrop,
+  .app-shell.card-view-medicines .scene-shade,
+  .app-shell.card-view-buddy .scene-backdrop,
+  .app-shell.card-view-buddy .scene-shade { right: 0; }
+  .app-shell.card-view-medicines .scene-chips { display: none; }
+  .app-shell.card-view-medicines .full-card {
+    top: var(--top-bar-space);
+    left: max(var(--side-gutter), calc((100% - 680px) / 2));
+    right: max(var(--side-gutter), calc((100% - 680px) / 2));
+  }
   /* Home's cards sit in the middle of the pane, between the top and the dock (user, 16 Oct: the gap above the card was
      too big). Auto margins rather than justify-content: center, so a column taller than the pane still scrolls from its top. */
   .home-layout__cards > :first-child { margin-top: auto; }
@@ -1266,6 +1293,13 @@ button.doctor-question { width: 100%; border: 0; text-align: left; font: inherit
   .app-shell.home-view-medicines .top-zone__home { visibility: hidden; }
   .app-shell.home-view-medicines .home-layout__cards { padding-top: 0; }
   .app-shell.home-view-medicines .home-layout__cards > .home-sheet { width: min(100% - 160px, 640px); --ndc-u: clamp(1px, min(0.5cqh, 0.2cqi), 2.4px); }
+  /* A card screen's full card, likewise: the whole height, clear of the gear. */
+  .app-shell.card-view-medicines .top-zone__home { visibility: hidden; }
+  .app-shell.card-view-medicines .full-card {
+    top: var(--pane-top);
+    left: max(80px, calc((100% - 640px) / 2));
+    right: max(80px, calc((100% - 640px) / 2));
+  }
   .bottom-dock { height: var(--dock-h); }
   .bottom-nav {
     bottom: calc(var(--dock-bottom) + (var(--dock-h) - var(--dock-nav-h)) / 2);
