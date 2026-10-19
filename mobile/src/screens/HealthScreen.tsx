@@ -31,6 +31,7 @@ export function HealthScreen({
   petName,
   visitNoteLatest,
   onVisitNotes,
+  onBpLog,
   firstReading,
 }: {
   back: BackAction;
@@ -52,6 +53,8 @@ export function HealthScreen({
   /** Newest "For my next visit" note (her own words), or null. */
   visitNoteLatest: string | null;
   onVisitNotes: () => void;
+  /** Opens the blood-pressure log. */
+  onBpLog: () => void;
   /** Her first blood-pressure reading ever (today.firstBloodPressure, or the earliest local one offline). */
   firstReading: HealthMetric | null;
 }) {
@@ -193,6 +196,9 @@ export function HealthScreen({
           <p>{bpLine ? t(bpLine, { name: petName }) : (bpLogged ? bloodPressureReading.note : bloodPressureReading.pendingNote)}</p>
         </div>
       </div>
+
+      {/* Every reading of the last days, on its own screen (BpLogScreen). */}
+      <ActionRow icon={<Icon name="stats" />} title={t("bpLog.row")} onClick={onBpLog} />
 
       <form className="bp-form" onSubmit={(e) => e.preventDefault()}>
         <p className="bp-form__title">{t("health.bpFormTitle")}</p>

@@ -1,5 +1,5 @@
 import type { AgentDecision, HealthMetric } from "../../../shared/contract.js";
-import { bloodPressureProgress, mentionsPossibleSideEffect } from "../../../shared/rules.js";
+import { mentionsPossibleSideEffect, readingStatus } from "../../../shared/rules.js";
 import { DECISION_TEMPLATES } from "../../../shared/templates.js";
 import { RULES_WITH_PLAIN_REASON, URGENT_DECISIONS } from "../config/decisions.js";
 
@@ -36,18 +36,27 @@ export const SIDE_EFFECT_PROMPT = DECISION_TEMPLATES.doctor_question;
  * side-effect note today, else nothing. Its front is Buddy's message with "Why?"; "Why?" shows the Warning card or the
  * side-effect reason for a moment (components/PeekCard).
  */
+type ReadingLike = Parameters<typeof readingStatus>[0];
+
+/**
+ * One reading's status line (en.json key), for the Blood Pressure card and every row of the blood-pressure log:
+ * an emergency sign in its note gets the warning's line ("Your note mentioned a sign that can be serious."), else the
+ * comparison with her first reading (first / keep at it / good job / "higher than your first reading"). A warning is
+ * never "Good job" (shared/rules.ts readingStatus).
+ */
+export function readingLineKey(reading: ReadingLike, first: ReadingLike | null): string {
+  const status = readingStatus(reading, first);
+  return status === "emergencySign" ? explainDecision({ ruleId: "emergency_symptom_note" }).reasonKey : `health.bpProgress.${status}`;
+}
+
 /**
  * The Blood Pressure card's line (en.json key), or null before any reading. On ANY warning day it follows the warning,
  * with the same condition line as the Warning face (explainDecision), never "Keep at it" / "Good job" (owner, 18 Oct:
- * no "Good job" under a Warning). Otherwise it compares the reading with her first one (bloodPressureProgress).
+ * no "Good job" under a Warning). Otherwise the reading's own line (readingLineKey).
  */
-export function bpCardLineKey(
-  latest: Parameters<typeof bloodPressureProgress>[0] | null,
-  first: Parameters<typeof bloodPressureProgress>[1],
-  warning: Pick<AgentDecision, "ruleId"> | null,
-): string | null {
+export function bpCardLineKey(latest: ReadingLike | null, first: ReadingLike | null, warning: Pick<AgentDecision, "ruleId"> | null): string | null {
   if (warning) return explainDecision(warning).reasonKey;
-  return latest ? `health.bpProgress.${bloodPressureProgress(latest, first)}` : null;
+  return latest ? readingLineKey(latest, first) : null;
 }
 
 export type HealthTopCard<T> = { kind: "warning"; decision: T } | { kind: "sideEffect" } | null;

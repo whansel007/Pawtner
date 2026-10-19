@@ -1,4 +1,5 @@
 import { ApiError, PawtnerRepository } from "./repository.js";
+import { BP_LOG_DAYS } from "../shared/config.js";
 import type { AgentDecideRequest, CreateMedicationRequest, DemoResetDayRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, PillReferenceRequest, PillVerifyRequest, UpdateMedicationRequest, WalkSessionRequest, CreateRestockRequest, SharedNoteRequest, SharingSettings, DemoClockState } from "../shared/contract.js";
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
@@ -25,6 +26,11 @@ export function createApiHandler(repository: PawtnerRepository) {
         return json(await repository.searchRegisteredProducts(query));
       }
       if (request.method === "GET" && url.pathname === "/api/today") return json(await repository.getToday(now));
+      if (request.method === "GET" && url.pathname === "/api/health-metrics") {
+        const days = Number(url.searchParams.get("days") ?? BP_LOG_DAYS);
+        if (!Number.isInteger(days) || days < 1 || days > 366) throw new ApiError(400, "days must be a whole number from 1 to 366.");
+        return json(await repository.listHealthMetrics(days, now));
+      }
       if (request.method === "GET" && url.pathname === "/api/caretaker/summary") return json(await repository.getCaretakerSummary(now));
       if (request.method === "GET" && url.pathname === "/api/escalation-settings") return json(await repository.getEscalationSettings());
       if (request.method === "PUT" && url.pathname === "/api/escalation-settings") {

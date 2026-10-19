@@ -5408,6 +5408,7 @@ var TRICK_STREAK_DAYS = {
   "Roll over": 14,
   "New trick": 30
 };
+var BP_LOG_DAYS = 30;
 var POSSIBLE_SIDE_EFFECT_KEYWORDS = ["sleepy", "dizzy", "nausea"];
 
 // shared/templates.ts
@@ -5428,6 +5429,9 @@ var WARNING_EMERGENCY_SIGN_WORDING = "Your note mentioned a sign that can be ser
 function includesAny(text, keywords) {
   const normalized = text.toLowerCase();
   return keywords.some((word) => normalized.includes(word));
+}
+function mentionsEmergencySign(note) {
+  return includesAny(note ?? "", EMERGENCY_SYMPTOM_KEYWORDS);
 }
 function mentionsPossibleSideEffect(note) {
   return includesAny(note ?? "", POSSIBLE_SIDE_EFFECT_KEYWORDS);
@@ -5473,7 +5477,7 @@ function decide(input) {
   const nowMs = Date.parse(input.now);
   const metrics = input.healthMetrics.filter((metric) => Date.parse(metric.recordedAt) <= nowMs);
   const latestMetric = [...metrics].sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))[0];
-  if (latestMetric && includesAny(latestMetric.note ?? "", EMERGENCY_SYMPTOM_KEYWORDS)) {
+  if (latestMetric && mentionsEmergencySign(latestMetric.note)) {
     return {
       ...decision(
         input,
@@ -6498,6 +6502,21 @@ var PawtnerRepository = class {
       };
     });
   }
+  /**
+   * GET /api/health-metrics: her blood-pressure readings of the `days` days up to `now`, newest first, skipping readings
+   * hidden by Reset to morning (notReset). Scoped by the user id; another provider only re-implements this method.
+   */
+  async listHealthMetrics(days, now = (/* @__PURE__ */ new Date()).toISOString()) {
+    const userId = await this.getDefaultUserId();
+    const result = await this.pool.query(
+      `SELECT id::text AS id, systolic, diastolic, note, recorded_at FROM health_metrics
+       WHERE user_id = $1 AND ${notReset("health_metrics")}
+         AND recorded_at <= $2::timestamptz AND recorded_at > $2::timestamptz - make_interval(days => $3::int)
+       ORDER BY recorded_at DESC`,
+      [userId, now, days]
+    );
+    return { healthMetrics: result.rows.map(mapMetric) };
+  }
   // ── /care from any browser (migration 008) ──
   // For now these live in COLUMNS on `users` (owner: "Columns only for current scope"). Every read and write of them is in
   // the methods below, and each item already has its own id and timestamps, so real tables (and accounts, replacing
@@ -7138,6 +7157,11 @@ function createApiHandler(repository) {
         return json(await repository.searchRegisteredProducts(query));
       }
       if (request.method === "GET" && url.pathname === "/api/today") return json(await repository.getToday(now));
+      if (request.method === "GET" && url.pathname === "/api/health-metrics") {
+        const days = Number(url.searchParams.get("days") ?? BP_LOG_DAYS);
+        if (!Number.isInteger(days) || days < 1 || days > 366) throw new ApiError(400, "days must be a whole number from 1 to 366.");
+        return json(await repository.listHealthMetrics(days, now));
+      }
       if (request.method === "GET" && url.pathname === "/api/caretaker/summary") return json(await repository.getCaretakerSummary(now));
       if (request.method === "GET" && url.pathname === "/api/escalation-settings") return json(await repository.getEscalationSettings());
       if (request.method === "PUT" && url.pathname === "/api/escalation-settings") {

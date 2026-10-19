@@ -59,6 +59,9 @@ export const TRICK_STREAK_DAYS: Readonly<Record<string, number>> = {
   "New trick": 30,
 };
 
+/** How many days back the phone's blood-pressure log reaches (TENTATIVE: 30; GET /api/health-metrics default). */
+export const BP_LOG_DAYS = 30;
+
 export const POSSIBLE_SIDE_EFFECT_KEYWORDS = ["sleepy", "dizzy", "nausea"] as const;
 
 export const REFUSAL_RULES = {

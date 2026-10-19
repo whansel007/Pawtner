@@ -515,6 +515,14 @@
     "walkMore": "Just a little bit more!",
     "lowHeart": "{{name}} needs a heart to play. Take your medicine or log your blood pressure to give one."
   },
+  "bpLog": {
+    "row": "Blood pressure log",
+    "title": "Blood pressure log",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "loading": "Loading your readings…",
+    "empty": "No readings yet. Log your blood pressure on Health and it shows here."
+  },
   "visitNotes": {
     "title": "For my next visit",
     "empty": "Jot down what to ask the doctor",

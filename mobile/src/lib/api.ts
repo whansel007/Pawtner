@@ -14,6 +14,7 @@ import type {
   DoseEventResponse,
   EscalationSettingsRequest,
   EscalationSettingsResponse,
+  HealthMetricListResponse,
   HealthMetricResponse,
   MedicationListResponse,
   MedicineExplanationResponse,
@@ -50,6 +51,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   // T1 endpoints
   today: (now?: string) => request<TodayResponse>(`/today${now ? `?now=${encodeURIComponent(now)}` : ""}`),
+  /** Her blood-pressure readings of the last `days` days up to `now`, newest first (the Health log). */
+  healthMetrics: (days: number, now?: string) => request<HealthMetricListResponse>(`/health-metrics?days=${days}${now ? `&now=${encodeURIComponent(now)}` : ""}`),
   decide: (userId: string, now: string) => request<{ decision: AgentDecision }>("/agent/decide", { method: "POST", body: JSON.stringify({ userId, now }) }),
   /** Demo only: hides (never deletes) today's dose taps, readings, decisions and walks (from the start of `now`'s day), then decides at `now`. */
   resetDemoDay: (now: string) => request<TodayResponse>("/demo/reset-day", { method: "POST", body: JSON.stringify({ now }) }),

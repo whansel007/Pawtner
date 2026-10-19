@@ -1,0 +1,66 @@
+/* Blood pressure log: one section per day, one row per reading. */
+.bp-log__empty {
+  margin: 12px 0 0;
+  color: var(--color-text-body);
+  font-size: var(--font-size-base);
+}
+
+.bp-log__day {
+  margin-top: 16px;
+}
+
+.bp-log__heading {
+  margin: 0 0 8px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-black);
+  color: var(--color-text-body);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bp-log__list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bp-log__item {
+  padding: 12px 14px;
+  border-radius: var(--radius-2xl);
+  background: var(--color-surface-white);
+  border: 1px solid var(--color-border-card);
+}
+
+.bp-log__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bp-log__reading {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-black);
+  color: var(--color-text-heading);
+}
+
+.bp-log__time {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-body);
+}
+
+.bp-log__status {
+  margin: 4px 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-heading);
+}
+
+.bp-log__note {
+  margin: 6px 0 0;
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  color: var(--color-text-body);
+  overflow-wrap: anywhere;
+}

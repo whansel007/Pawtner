@@ -58,6 +58,11 @@ export interface HealthMetric {
   recordedAt: string;
 }
 
+/** GET /api/health-metrics?days=N: her blood-pressure readings of the last N days, newest first (hidden ones skipped). */
+export interface HealthMetricListResponse {
+  healthMetrics: HealthMetric[];
+}
+
 export interface AgentInput {
   now: string;
   userId: string;
