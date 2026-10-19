@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
-import { FullCard } from "../components/FullCard";
+import { FullCard, type CardSheet } from "../components/FullCard";
 import { ActionRow } from "../components/ActionRow";
 import { ClinicMemoRow } from "../components/ClinicMemoRow";
 import type { BackAction } from "../lib/navigation";
@@ -17,6 +17,7 @@ import "./HealthScreen.css";
 
 export function HealthScreen({
   back,
+  sheet,
   bpLogged,
   healthMetrics,
   onLogBp,
@@ -35,6 +36,8 @@ export function HealthScreen({
   firstReading,
 }: {
   back: BackAction;
+  /** Set when this screen's card drags like Home (App, config/homeView.ts CARD_SHEET). */
+  sheet?: CardSheet;
   bpLogged: boolean;
   healthMetrics: HealthMetric[];
   /** Saves the reading (App: API, then the toast); the button shows "Saving…" until it resolves. */
@@ -45,7 +48,7 @@ export function HealthScreen({
   screeningInfo: ScreeningInfo;
   activityLink: ActivityLink;
   clinicTasks: ClinicTask;
-  /** The senior's name from data, for the title "{{name}}'s Health Logs". */
+  /** The senior's name from data, for the title "{{name}}'s Health logs, clearly told". */
   seniorName: string;
   /** The card at the top today: a warning, a side-effect note, or none (lib/decisions.ts healthTopCard). */
   topCard: HealthTopCard<AgentDecision>;
@@ -59,6 +62,7 @@ export function HealthScreen({
   firstReading: HealthMetric | null;
 }) {
   const { t } = useTranslation();
+  const heading = { eyebrow: t("health.eyebrow", { name: seniorName }), title: t("health.title") };
   const [systolic, setSystolic] = useState("");
   const [diastolic, setDiastolic] = useState("");
   const [note, setNote] = useState("");
@@ -156,10 +160,10 @@ export function HealthScreen({
   }, [warning]);
 
   return (
-    <FullCard back={back}>
-      {/* Same two lines as Milestones ("BUDDY IS LEARNING"): "ROSE'S" / "Health Logs". */}
-      <p className="eyebrow green">{t("health.eyebrow", { name: seniorName })}</p>
-      <h2>{t("health.title")}</h2>
+    <FullCard back={back} sheet={sheet} heading={heading}>
+      {/* Same two lines as Milestones ("BUDDY IS LEARNING"): "ROSE'S" / "Health logs, clearly told". */}
+      <p className="eyebrow green">{heading.eyebrow}</p>
+      <h2>{heading.title}</h2>
       {/* Under the title (owner, 18 Oct: "title will start first"), only on a warning or side-effect day: Buddy's
           message + "Why?", which shows the Warning card or the side-effect reason for a moment ("peekaboo"). */}
       <div ref={resultRef}>

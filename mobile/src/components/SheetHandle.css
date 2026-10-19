@@ -1,0 +1,27 @@
+/* The grab bar: a tap/drag target with short dashes inside (1 = full Buddy, 2 = both, 3 = full card; SHEET_DASHES).
+   touch-action none so the drag isn't a page scroll. The dashes keep the old bar's thickness, colour and 44 px length. */
+.sheet-handle {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+.sheet-handle:active { cursor: grabbing; }
+.sheet-handle:focus-visible { outline: 3px solid var(--color-primary-deep, #2d6b4a); outline-offset: -3px; border-radius: 14px; }
+
+.sheet-handle__dashes { display: flex; gap: 7px; }
+.sheet-handle__dash { display: block; border-radius: 999px; background: rgba(41, 74, 58, 0.32); }
+
+/* Portrait: across the top edge of the card, dashes in a row. */
+.sheet-handle--portrait { top: 0; left: 50%; width: 120px; height: 28px; transform: translateX(-50%); }
+.sheet-handle--portrait .sheet-handle__dash { width: 10px; height: 5px; }
+
+/* Landscape: down the left edge of the pane, dashes in a row along it. */
+.sheet-handle--landscape { top: 50%; left: 0; width: 28px; height: 120px; transform: translateY(-50%); }
+.sheet-handle--landscape .sheet-handle__dashes { flex-direction: column; }
+.sheet-handle--landscape .sheet-handle__dash { width: 5px; height: 10px; }

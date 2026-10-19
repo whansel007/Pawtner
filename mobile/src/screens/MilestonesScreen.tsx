@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
-import { FullCard } from "../components/FullCard";
+import { FullCard, type CardSheet } from "../components/FullCard";
 import type { BackAction } from "../lib/navigation";
 import { useMilestones } from "../lib/useMilestones";
 import { withStreak } from "../lib/demoUnlocks";
@@ -19,6 +19,7 @@ import "./MilestonesScreen.css";
 
 export function MilestonesScreen({
   back,
+  sheet,
   onCustomize,
   pet,
   petName,
@@ -27,6 +28,8 @@ export function MilestonesScreen({
   onTrick,
 }: {
   back: BackAction;
+  /** Set when this screen's card drags like Home (App, config/homeView.ts CARD_SHEET). */
+  sheet?: CardSheet;
   onCustomize: () => void;
   pet: Pet;
   petName: string;
@@ -47,17 +50,18 @@ export function MilestonesScreen({
   }
 
   if (loading) return (
-    <FullCard back={back}>
+    <FullCard back={back} sheet={sheet}>
       <p className="supporting">Loading milestones…</p>
     </FullCard>
   );
 
   const caringDays = data?.caringDays ?? pet.caringDays;
+  const heading = { eyebrow: t("milestones.eyebrow", { name: petName }), title: t("milestones.title", { count: caringDays }) };
 
   return (
-    <FullCard back={back}>
-      <p className="eyebrow green">{t("milestones.eyebrow", { name: petName })}</p>
-      <h2>{t("milestones.title", { count: caringDays })}</h2>
+    <FullCard back={back} sheet={sheet} heading={heading}>
+      <p className="eyebrow green">{heading.eyebrow}</p>
+      <h2>{heading.title}</h2>
       <p className="streak-line">{t("milestones.streakLine", { count: pet.streak })}</p>
       <p className="streak-line">{t("milestones.hearts", { count: heartsTotal })}</p>
 

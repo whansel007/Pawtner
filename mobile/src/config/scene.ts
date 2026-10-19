@@ -1,6 +1,7 @@
-import type { DogMood } from "../../../shared/contract";
-import type { DayPhase } from "../../../shared/day-phase";
-import type { Screen } from "../types";
+import type { DogMood } from "../../../shared/contract.js";
+import type { DayPhase } from "../../../shared/day-phase.js";
+import type { Screen } from "../types/common.js";
+import type { HomeView } from "./homeView.js";
 
 /**
  * One place for every scene asset, look and dog placement rule. Swap images and tune sizes here, not in components.
@@ -79,13 +80,17 @@ export type SceneLayout = "portrait" | "landscape";
  * minHeight / maxHeight: TENTATIVE size limits. The max keeps the small source art from upscaling into blur and dominating tall phones.
  * ledge: the screen's content card leaves room above itself (--ledge-space) so the dog can stand on its top edge.
  *
- * Portrait: home = on the lawn just above the Today chips; ledge = on the top edge of the content card.
+ * Portrait: home = on the lawn just above the Today chips; ledge = on the top edge of the content card;
+ * strip = on the strip a dragged card screen shrinks to in full Buddy, at Home's size (TENTATIVE).
  * Landscape: the dog stays on the lawn in the left column on every screen. homeWide = on Home's chips;
  * lawn = on the .scene-ground marker, which sits at the same height as Home's chips so the dog doesn't jump between screens.
  */
+const HOME_DOG_SIZE = { minHeight: "clamp(120px, 26dvh, 320px)", maxHeight: "34dvh" } as const;
+
 export const DOG_PLACEMENTS = {
-  home: { ground: ".home-layout__chips", minHeight: "clamp(120px, 26dvh, 320px)", maxHeight: "34dvh", ledge: false },
+  home: { ground: ".home-layout__chips", ...HOME_DOG_SIZE, ledge: false },
   ledge: { ground: ".content-card", minHeight: "clamp(80px, 14dvh, 140px)", maxHeight: "34dvh", ledge: true },
+  strip: { ground: ".content-card", ...HOME_DOG_SIZE, ledge: false },
   homeWide: { ground: ".home-layout__chips", minHeight: "clamp(110px, 30dvh, 300px)", maxHeight: "46dvh", ledge: false },
   lawn: { ground: ".scene-ground", minHeight: "clamp(110px, 30dvh, 300px)", maxHeight: "46dvh", ledge: false },
 } as const;
@@ -98,11 +103,18 @@ const SCREENS_WITHOUT_DOG_PORTRAIT: readonly Screen[] = ["cover", "dedication"];
 /** Landscape: the dog joins the senior in the left column on every screen with a scene. */
 const SCREENS_WITHOUT_DOG_LANDSCAPE: readonly Screen[] = ["cover", "dedication"];
 
-export function dogPlacementFor(screen: Screen, layout: SceneLayout = "portrait"): DogPlacement | null {
+/**
+ * `view` is the dragged card's view on the card screens (lib/homeView.ts sheetViewFor), null elsewhere. Home's views keep
+ * Home's placement (its CSS hides Buddy in the full-screen form); a card screen's full card has no dog.
+ */
+export function dogPlacementFor(screen: Screen, layout: SceneLayout = "portrait", view: HomeView | null = null): DogPlacement | null {
+  const cardScreen = screen !== "home" && view !== null;
+  if (cardScreen && view === "medicines") return null;
   if (layout === "landscape") {
     if (SCREENS_WITHOUT_DOG_LANDSCAPE.includes(screen)) return null;
     return screen === "home" ? "homeWide" : "lawn";
   }
   if (SCREENS_WITHOUT_DOG_PORTRAIT.includes(screen)) return null;
-  return screen === "home" ? "home" : "ledge";
+  if (screen === "home") return "home";
+  return cardScreen && view === "buddy" ? "strip" : "ledge";
 }

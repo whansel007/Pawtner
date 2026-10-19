@@ -1,4 +1,4 @@
-import { HOME_VIEW, HOME_VIEWS, type HomeView } from "../config/homeView.js";
+import { CARD_SHEET, HOME_VIEW, HOME_VIEWS, type HomeView } from "../config/homeView.js";
 import { browserStore, readItem, writeItem, type KeyValueStore } from "./localStore.js";
 import type { Screen } from "../types/common.js";
 
@@ -28,10 +28,27 @@ export function stepHomeView(view: HomeView, steps: number): HomeView {
   return HOME_VIEWS[index]!;
 }
 
+/** True on the card screens that drag like Home (config/homeView.ts CARD_SHEET). */
+export function isCardSheetScreen(screen: Screen): boolean {
+  return CARD_SHEET.screens.includes(screen);
+}
+
+/** The card screens' view: what was chosen on this screen, or the default once the screen changes (never stored). */
+export type CardViewState = { screen: Screen; view: HomeView } | null;
+export function cardViewOn(state: CardViewState, screen: Screen): HomeView {
+  return state && state.screen === screen ? state.view : CARD_SHEET.default;
+}
+
+/** The view that applies on this screen: Home's stored one, a card screen's, or null where nothing drags. */
+export function sheetViewFor(screen: Screen, homeView: HomeView, cardView: HomeView): HomeView | null {
+  if (screen === "home") return homeView;
+  return isCardSheetScreen(screen) ? cardView : null;
+}
+
 /**
- * When the scene's ground has to be measured again (useSceneGround's `screenKey`): on every screen change, and on Home
- * whenever its view changes, because the views mount and unmount the chips Buddy stands on.
+ * When the scene's ground has to be measured again (useSceneGround's `screenKey`): on every screen change, and whenever
+ * the screen's view changes, because the views mount and unmount or move what Buddy stands on.
  */
-export function sceneGroundKey(screen: Screen, homeView: HomeView): string {
-  return screen === "home" ? `${screen}:${homeView}` : screen;
+export function sceneGroundKey(screen: Screen, view: HomeView | null): string {
+  return view ? `${screen}:${view}` : screen;
 }

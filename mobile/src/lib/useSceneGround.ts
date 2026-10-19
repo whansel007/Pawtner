@@ -58,8 +58,11 @@ export function useSceneGround(anchor: RefObject<HTMLElement | null>, placement:
     observer.observe(shell);
     observer.observe(layer);
     Array.from(ground.parentElement?.children ?? [ground]).forEach((element) => observer.observe(element));
+    // A dragged card eases back with a transform, which no ResizeObserver sees: measure again once it has settled.
+    ground.addEventListener("transitionend", measure);
     return () => {
       observer.disconnect();
+      ground.removeEventListener("transitionend", measure);
       clear();
     };
   }, [anchor, placement, screenKey]);

@@ -30,7 +30,7 @@ import "./DogLayer.css";
  */
 export function DogLayer({
   screen,
-  homeView,
+  sheetView,
   mood,
   dogName,
   dizzy,
@@ -42,8 +42,8 @@ export function DogLayer({
   streak,
 }: {
   screen: Screen;
-  /** What Home shows (App's useHomeView): the chips Buddy stands on come and go with it. */
-  homeView: HomeView;
+  /** The dragged card's view on this screen (lib/homeView.ts sheetViewFor), null where nothing drags: where Buddy stands comes and goes with it. */
+  sheetView: HomeView | null;
   mood: DogMood;
   dogName: string;
   dizzy?: boolean;
@@ -62,8 +62,8 @@ export function DogLayer({
   const { t } = useTranslation();
   const anchor = useRef<HTMLDivElement>(null);
   const layout = useSceneLayout();
-  const placement = dogPlacementFor(screen, layout);
-  useSceneGround(anchor, placement, sceneGroundKey(screen, homeView));
+  const placement = dogPlacementFor(screen, layout, sheetView);
+  useSceneGround(anchor, placement, sceneGroundKey(screen, sheetView));
   const clip = useBuddyClip({ mood, screen, dizzy: Boolean(dizzy) });
   const { tricks } = useMilestones();
   const earned = useMemo(() => earnedPerformances(tricks ? withStreak(tricks, streak) : tricks), [tricks, streak]);

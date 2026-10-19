@@ -3,7 +3,7 @@ import type { HealthMetric } from "../../../shared/contract";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
-import { FullCard } from "../components/FullCard";
+import { FullCard, type CardSheet } from "../components/FullCard";
 import type { BackAction } from "../lib/navigation";
 import type { Caregiver } from "../types";
 import { DEMO_RESET_PRESET, DEMO_TIME_PRESETS, type DemoTimePreset, DEMO_UNLOCK_GROUPS, DEMO_UNLOCKS, type DemoUnlockKey } from "../config/demo";
@@ -13,6 +13,7 @@ import type { DoctorVisits } from "../../../shared/contract";
 
 export function SettingsScreen({
   back,
+  sheet,
   openMedicines,
   addMedication,
   openReminders,
@@ -37,6 +38,8 @@ export function SettingsScreen({
   onDoctorVisits,
 }: {
   back: BackAction;
+  /** Set when this screen's card drags like Home (App, config/homeView.ts CARD_SHEET). */
+  sheet?: CardSheet;
   /** "My medicines": the medicine list with Edit and the original pill photo (T2-08). */
   openMedicines: () => void;
   addMedication: () => void;
@@ -72,15 +75,16 @@ export function SettingsScreen({
 }) {
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
+  const heading = { eyebrow: t("settings.eyebrow", { name: petName }), title: t("settings.title") };
   const resetTime = parseDemoTime(DEMO_TIME_PRESETS[DEMO_RESET_PRESET], DEMO_TIME_PRESETS);
   // "For demo only" open = demo mode: only the demo card shows, and the back button closes it (owner, 18 Oct).
   const [demoOpen, setDemoOpen] = useState(false);
   const screenBack: BackAction = demoOpen ? { kind: "back", onBack: () => setDemoOpen(false) } : back;
   return (
-    <FullCard back={screenBack} backLabel={demoOpen ? t("settings.demoBackToSettings") : undefined} className="settings-card">
+    <FullCard back={screenBack} backLabel={demoOpen ? t("settings.demoBackToSettings") : undefined} className="settings-card" sheet={sheet} heading={heading}>
       {!demoOpen && (<>
-      <p className="eyebrow green">{t("settings.eyebrow", { name: petName })}</p>
-      <h2>{t("settings.title")}</h2>
+      <p className="eyebrow green">{heading.eyebrow}</p>
+      <h2>{heading.title}</h2>
       <div className="settings-group">
         <button onClick={openMedicines}><span className="feature-icon"><Icon name="pill" /></span><div><strong>{t("settings.myMeds")}</strong><small>{t("settings.myMedsSub")}</small></div><Icon name="chevron" /></button>
         <button onClick={addMedication}><span className="feature-icon"><Icon name="plus" /></span><div><strong>{t("settings.addMed")}</strong><small>{t("settings.addMedSub")}</small></div><Icon name="chevron" /></button>
