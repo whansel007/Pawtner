@@ -6,7 +6,8 @@ import { useRevealWhenOpen } from "../lib/useRevealWhenOpen";
 import "./DecisionLogCard.css";
 
 /**
- * DecisionLogCard for Milestones (routine decisions). Health's urgent card shows its reason directly.
+ * DecisionLogCard at the top of Health (lib/decisions.ts healthTopDecision: a possible side effect). Health's urgent
+ * Warning card shows its reason directly.
  * - When `decision` is null, shows an en.json empty state.
  * - When `decision` is present, shows the "Why?" toggle with a plain-language reason sentence from en.json
  *   (lib/decisions.ts explainDecision).

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { explainDecision, isUrgentDecision, routineDecision } from "../../mobile/src/lib/decisions.js";
+import { explainDecision, healthTopDecision, isUrgentDecision } from "../../mobile/src/lib/decisions.js";
 import { RULES_WITH_PLAIN_REASON } from "../../mobile/src/config/decisions.js";
 import { decide } from "../../shared/rules.js";
 import { sharedFixtures } from "../../shared/fixtures.js";
@@ -11,15 +11,19 @@ const en = JSON.parse(readFileSync(new URL("../../mobile/src/locales/en.json", i
 const ALL_KINDS: DecisionKind[] = ["nudge", "celebrate", "restock_reminder", "doctor_question", "see_gp_soon", "emergency_995", "stay_quiet"];
 
 describe("decision placement", () => {
-  it("emergency 995 and see-GP are urgent (Health); everything else goes to Milestones", () => {
+  it("emergency 995 and see-GP are urgent (Health's Warning card)", () => {
     for (const kind of ALL_KINDS) {
-      const urgent = kind === "emergency_995" || kind === "see_gp_soon";
-      const decision = { decision: kind };
-      expect(isUrgentDecision(decision)).toBe(urgent);
-      expect(routineDecision(decision)).toBe(urgent ? null : decision);
+      expect(isUrgentDecision({ decision: kind })).toBe(kind === "emergency_995" || kind === "see_gp_soon");
     }
     expect(isUrgentDecision(null)).toBe(false);
-    expect(routineDecision(null)).toBeNull();
+  });
+
+  it("only a doctor question (possible side effect) shows at the top of Health; nothing else shows", () => {
+    for (const kind of ALL_KINDS) {
+      const decision = { decision: kind };
+      expect(healthTopDecision(decision)).toBe(kind === "doctor_question" ? decision : null);
+    }
+    expect(healthTopDecision(null)).toBeNull();
   });
 });
 

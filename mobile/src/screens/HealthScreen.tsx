@@ -5,13 +5,14 @@ import { FullCard } from "../components/FullCard";
 import { ActionRow } from "../components/ActionRow";
 import { ClinicMemoRow } from "../components/ClinicMemoRow";
 import type { BackAction } from "../lib/navigation";
-import { explainDecision, isUrgentDecision } from "../lib/decisions";
+import { explainDecision, healthTopDecision, isUrgentDecision } from "../lib/decisions";
+import { DecisionLogCard } from "../components/DecisionLogCard";
 import { BP_RANGE } from "../config/bp";
 import { SYMPTOM_KEYS, type SymptomKey } from "../config/health";
 import { buildBpNote } from "../lib/bpNote";
 import { bloodPressureProgress } from "../../../shared/rules";
 import type { AgentDecision, HealthMetric } from "../../../shared/contract";
-import type { BloodPressureReading, ScreeningInfo, ActivityLink, ClinicTask, WeekSummary } from "../types";
+import type { BloodPressureReading, ScreeningInfo, ActivityLink, ClinicTask } from "../types";
 import "./HealthScreen.css";
 
 export function HealthScreen({
@@ -26,7 +27,7 @@ export function HealthScreen({
   screeningInfo,
   activityLink,
   clinicTasks,
-  weekSummary,
+  seniorName,
   petName,
   visitNoteLatest,
   onVisitNotes,
@@ -44,7 +45,8 @@ export function HealthScreen({
   screeningInfo: ScreeningInfo;
   activityLink: ActivityLink;
   clinicTasks: ClinicTask;
-  weekSummary: WeekSummary;
+  /** The senior's name from data, for the title "{{name}}'s Health Logs". */
+  seniorName: string;
   petName: string;
   /** Newest "For my next visit" note (her own words), or null. */
   visitNoteLatest: string | null;
@@ -146,8 +148,12 @@ export function HealthScreen({
     resultRef.current.focus({ preventScroll: true });
   }, [showResult]);
 
+  const sideEffect = healthTopDecision(latestDecision);
   return (
     <FullCard back={back}>
+      {/* Above the title: only a reading note that may mention a side effect (lib/decisions.ts, owner 18 Oct). */}
+      {sideEffect && <DecisionLogCard decision={sideEffect} summary={sideEffect.wording} />}
+      <h2>{t("health.title", { name: seniorName })}</h2>
 
       {/* With a warning, the Warning card replaces this one and carries the reading (owner, 18 Oct: no "Good job" under a Warning). */}
       {!showResult && <div className={`metric-card ${bpLogged ? "complete" : ""}`}>
@@ -236,7 +242,7 @@ export function HealthScreen({
         <button className="bp-form__submit" type="button" disabled={saving} onClick={() => void handleSave()}>{saving ? t("health.bpSaving") : t("health.bpSubmit")}</button>
       </form>
 
-      <ActionRow icon={<Icon name="book" />} title={t("health.weekSummary")} subtitle={t("health.weekSummarySub", { doses: weekSummary.metrics[0].value, walks: weekSummary.metrics[1].value })} onClick={onSummary} />
+      <ActionRow icon={<Icon name="book" />} title={t("health.weekSummary")} onClick={onSummary} />
       <ClinicMemoRow title={clinicTasks.title} />
       <ActionRow icon={<Icon name="note" />} title={t("visitNotes.title")} subtitle={visitNoteLatest ?? t("visitNotes.empty")} onClick={onVisitNotes} />
       <ActionRow icon={<Icon name="star" />} iconTone="peach" tone="warm" title={t("health.screeningTitle")} subtitle={t("health.screeningSub")} onClick={onScreening} />

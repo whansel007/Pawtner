@@ -33,11 +33,6 @@ export function WeeklySummaryScreen({
         </div>
       )}
       <div className="summary-score"><strong>{weekSummary.rating}</strong><span>{t("summary.caringDays", { count: weekSummary.caringDays, total: weekSummary.totalDays })}</span></div>
-      <div className="summary-grid">
-        {weekSummary.metrics.map((metric) => (
-          <article key={metric.label}><strong>{metric.value}</strong><small>{metric.label}</small></article>
-        ))}
-      </div>
       <button type="button" className="doctor-question" onClick={onVisitNotes}><Icon name="note" /><div><small>{t("summary.askDoctor")}</small><p>{weekSummary.doctorQuestion}</p></div><Icon name="chevron" className="doctor-question__chevron" /></button>
       <button className="primary-button" onClick={back.onBack}>{t("summary.doneReading")}</button>
     </FullCard>

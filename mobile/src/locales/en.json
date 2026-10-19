@@ -435,10 +435,10 @@
     "comingSoonGift": "Soon: a gift from {{name}}"
   },
   "health": {
+    "title": "{{name}}'s Health Logs",
     "bpLabel": "BLOOD PRESSURE",
     "bpNeedsReading": "{{name}} needs one reading",
     "weekSummary": "Your week in plain words",
-    "weekSummarySub": "{{doses}} doses · {{walks}} walks",
     "memoEmpty": "Snap your clinic memo",
     "memoSet_one": "Your clinic memo",
     "memoSet_other": "{{count}} clinic memos",

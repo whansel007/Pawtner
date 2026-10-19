@@ -82,8 +82,6 @@ export interface WeekSummary {
   caringDays: number;
   /** Total days in the period */
   totalDays: number;
-  /** Aggregate metrics */
-  metrics: { value: string; label: string }[];
   /** Suggested question to ask the doctor */
   doctorQuestion: string;
 }

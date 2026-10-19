@@ -631,7 +631,7 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
    ═══════════════════════════════════════════════════════════════════════ */
 .metric-card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; margin-top: 18px; padding: 15px; border-radius: var(--radius-5xl); background: var(--color-surface-cream); }
 .metric-card.complete { background: var(--color-surface-sage-deep); }
-.metric-card h3 { margin: 2px 0; font-size: var(--font-size-2xl); }
+.metric-card h3 { margin: 2px 0; font-size: var(--font-size-2xl); font-weight: var(--font-weight-black); }
 .metric-card p { margin: 0; color: #78847c; font-size: var(--font-size-sm); }
 .metric-card small { color: #8b6b4e; font-size: var(--font-size-xs); font-weight: var(--font-weight-black); letter-spacing: 1px; }
 .metric-card > button { min-width: 46px; height: 38px; display: grid; place-items: center; border: 0; border-radius: var(--radius-md); color: white; background: var(--color-primary-camera); font-size: var(--font-size-md); font-weight: var(--font-weight-black); cursor: pointer; }
@@ -654,10 +654,6 @@ button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3p
 .summary-score { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding: 18px; border-radius: var(--radius-5xl); color: #31583f; background: var(--color-surface-sage-deep); }
 .summary-score strong { font-size: var(--font-size-5xl); }
 .summary-score span { font-size: var(--font-size-sm); font-weight: var(--font-weight-black); }
-.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 10px; }
-.summary-grid article { display: grid; gap: 3px; padding: 14px; border-radius: var(--radius-2xl); background: var(--color-surface-fog); }
-.summary-grid strong { font-size: var(--font-size-4xl); }
-.summary-grid small { color: #79857d; font-size: var(--font-size-xs); }
 .doctor-question { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 14px; border-radius: var(--radius-3xl); color: #805b46; background: var(--color-surface-cream); }
 .doctor-question small { font-size: var(--font-size-2xs); font-weight: var(--font-weight-black); letter-spacing: 1px; }
 .doctor-question p { margin: 3px 0 0; font-size: var(--font-size-md); }
