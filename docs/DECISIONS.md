@@ -1,5 +1,19 @@
 # Decisions
 
+## 2026-10-19 — Health Logs, peekaboo warning, Buddy's mood, one streak (PRs #100, #101)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Buddy's sad face comes only from low hearts (≤ `lowHeartMaximum`, 1). A late-dose nudge still barks and reminds but no longer makes him sad (`selectDogMood`, `shared/rules.ts`). | Owner: "earlier i gained a heart, Buddy was happy but then return to sad … neutral state should be neutral". A nudge decision used to give the sad face at 2–3 hearts. | — | Final |
+| One streak everywhere: `/api/milestones` derives the streak like `/api/today` (not the cached `dogs` row); the phone's tricks follow the live streak only; trick thresholds once in `shared/config.ts` `TRICK_STREAK_DAYS`. No code reads `dogs.heart / streak / mood` any more (still written). | Owner: "check all hearts variable are only one". Milestones showed Wave earned with "0 days in a row". | Dropping the cached columns is a later migration. | Final |
+| Health opens with the eyebrow "{{name}}'s" (e.g. "ROSE'S", same style as "{{name}} is learning") and the title "Health Logs"; the senior's name comes from data. | Owner: "can we put Health Logs as the title?", "Rose's in Rose's Health Logs should be the same style as "Buddy is Learning"". | — | Final |
+| Under the title, only on a day that needs it, Buddy's message card (`components/PeekCard.tsx`, light blue front `--color-surface-sky`): warning day "Please check with your doctor soon." / side-effect day the `doctor_question` template, each with "Why?". "Why?" fades to the Warning card (or the side-effect reason) for `PEEK_MS` = 6 s, then back; her finger pauses the countdown, "Close" hides it, reduced motion swaps without fading. Rule: `healthTopCard` in `lib/decisions.ts` (warning first, then a side-effect note today). | Owner: "it will show the warning card for 5 to 8 s. then flip back to why … peekaboo style", "fading is also ok", "maybe light blue". | The Warning card is no longer on screen all the time (replaces 18 Oct "Warning card only, with the numbers"). The Blood Pressure card always shows and, on a warning day, says the warning's reason (`bpCardLineKey`), never "Good job". | Final |
+| The side-effect card shows for the rest of the day after a note with a side-effect word (`mentionsPossibleSideEffect`, `shared/rules.ts`, also used by the agent), not only while it is the latest decision. | Owner: "with the new behaviour, it should stay there". | Until the next-visit date PR: Buddy's agent still looks at every reading ever for side effects (pre-existing; see KIV). | Final |
+| The warning shows on Health only, not on the weekly summary. | Owner: "Warning should not go into Sunday Summary. keep it all in one consistent place". | — | Final |
+| Milestones has no decision card; it starts at "{{name}} is learning"; the streak line reads "{{count}} days in a row". | Owner: "the first card is also not needed too wordy", "just 0 days in a row". | Routine messages (nudge, restock, celebrate, "I'm here beside you") no longer show as a card; nudges still bark, restock has its own card. | Final |
+| "Your week in plain words": no doses / walks boxes and no mock numbers; "Good week" shows only with a shown streak ≥ 7 (the demo tick counts) or ≥ 5 of 7 caring days (`lib/weekRating.ts`, `GOOD_WEEK` in `config/health.ts`), otherwise no rating line. | Owner: "Remove the how many medicines taken and walks with buddy card", "when i click demo for 7days,the good week will appear accordingly". | — | Final ("5 of 7": tentative) |
+| Home's next-dose card label reads "Today's Schedule" (was "Next"). | Owner: "not sure what is Next? it's redundant. maybe can say Today's Schedule". | — | Final |
+
 ## 2026-10-18/19 — Walk timer and walk goal, heart toasts and celebrations, Reset to morning keeps history, no souvenirs (PRs #94–#98)
 
 | Decision | Reason | Tradeoff | Status |
