@@ -7,7 +7,7 @@ Updated 2026-10-19. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 
 Now (19 Oct):
 1. Bug fixes the owner raises (coder, each on its own branch off `main`).
-2. `claude/notes-shared-caretakers` (coder): "For my next visit" shared section names every caretaker ("Shared with Jamie + Alex"). `claude/readme-bp-screenshot`: README blood-pressure screenshot retaken, waiting for the owner.
+2. #115 (demo clock wording "Pretend it's this time. Buddy reacts to it." / "Jump to this time"): open, waiting for the owner's merge.
 
 Earlier items still listed below:
 
@@ -43,6 +43,8 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Shared notes name every caretaker; Settings and notes read the caretaker list from the API (fixes #111's fallback names) | [#113](https://github.com/whansel007/Pawtner/pull/113), merged 19 Oct |
+| — | README blood-pressure screenshot retaken | [#114](https://github.com/whansel007/Pawtner/pull/114), merged 19 Oct |
 | — | No "Add a reminder"; Buddy's nudges without the next-dose card; caretakers from data ("Jamie + Alex"); "Share my blood pressure"; no label scan; Screen for Life trimmed; /care footer links after sign-in | [#111](https://github.com/whansel007/Pawtner/pull/111), merged 19 Oct |
 | — | Health, Milestones and Settings drag like Home (full card / both / full Buddy, open in both); grab bar dashes "- -" / "-" / "- - -" on Home too; Health title "Health logs, clearly told" | [#109](https://github.com/whansel007/Pawtner/pull/109), merged 19 Oct |
 | — | Buddy comes back after Home's card is expanded and closed (ground measured again on every Home view change) | [#107](https://github.com/whansel007/Pawtner/pull/107), merged 19 Oct |
@@ -134,6 +136,7 @@ Earlier items still listed below:
 | Buddy's bubble covers part of "today" | The bubble (toast slot under the hearts) overlaps the "today" label; seen in the #96 screenshots. Pre-existing placement. |
 | `tests/integration/api.test.ts` still fails | Loads only `001_init.sql`; should load every migration like the newer integration tests. Not briefed yet. |
 | Card drag: open questions (#109) | Not storing the three screens' view, Buddy's size on the strip, and the bar's screen-reader wording are tentative. Not checked on a real phone, with touch, or on a tablet held sideways. |
+| Caretaker summary fetched twice when Settings opens | Seen on the hosted site after #113 (two `GET /api/caretaker/summary`, both 200). Harmless; trim when convenient. |
 | `home.bpSub` ("Fill a heart") unused | Like the removed `home.walkSub`; delete when convenient. |
 | Wording waiting for the user (#65, #66) | Grab bar label and next-dose strip (`home.sheet.*`), Settings demo card (`settings.demo*`), "today" (`topZone.heartsToday`), /care check-in card (`care.web.week.checkIn*`) and Alerts switch/days strings (`care.web.alerts.*`). |
 | Health wording waiting for the user | "Snap your clinic memo" / "Your clinic memo" and the restock buttons are tentative; "Ask your doctor" / "Questions for the doctor" unchanged on purpose. |

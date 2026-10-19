@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-19 — Shared notes name every caretaker; names read from the API (PR #113); README screenshot (PR #114)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| "For my next visit" shared section: "Shared with Jamie + Alex" / "Jamie + Alex can see these.", names from data, one join (`caretakersLine`) shared with Settings. | Owner: "for the notes for Jamie, will Alex can see it? if can, then we need to change that part too" → "A: Shared with Jamie + Alex / Jamie + Alex can see these, names from data." Every signed-in caretaker sees shared notes on /care. | — | Final |
+| Settings and the notes screen fetch the caretaker summary when they open (`CARE_SUMMARY_SCREENS`). Corrects #111, where Settings showed the fallback names unless the Weekly Summary had been opened. | Owner: "do not hard code" (#111). Found by the coder while testing #113. | One more summary request when those screens open. | Final |
+| README: only the blood-pressure screenshot retaken (current Health heading and grab bar). | Owner: "the big one is only just the blood pressure. the rest is negligible." | Other README images keep small differences (the "NEXT" label, bar marks). | Final |
+
 ## 2026-10-19 — Reminders, caretakers from data, no label scan, Screen for Life, /care footer (PR #111)
 
 | Decision | Reason | Tradeoff | Status |
