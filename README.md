@@ -8,7 +8,7 @@ All people and data in the demo are fictional. Thresholds are demo values, not c
 
 ## Why this problem
 
-My mom's normal blood pressure is about 160. With her medicine, it comes down to 137/75. That is why Pawtner opens with two words: "For Mom".
+My mom's normal blood pressure was very high. With her medicine, it comes down to normal range. That is why Pawtner opens with two words: "For Mom".
 
 Taking medicine on time, every day, is quiet and lonely work. Families want to help without hovering, and reminders that only beep are easy to ignore.
 
