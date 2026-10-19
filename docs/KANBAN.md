@@ -7,7 +7,6 @@ Updated 2026-10-19. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 
 Now (19 Oct):
 1. Bug fixes the owner raises (coder, each on its own branch off `main`).
-2. #115 (demo clock wording "Pretend it's this time. Buddy reacts to it." / "Jump to this time"): open, waiting for the owner's merge.
 
 Earlier items still listed below:
 
@@ -15,7 +14,7 @@ Earlier items still listed below:
 |---|---|---|---|
 | T1-08 | Home schedule card, names from data | P2 / CodeBuddy | Wired to `/api/today`; upcoming reminders remain mock. |
 | T1-09 | "Taken" flow with optional photo | P2 / CodeBuddy | Posts dose event and derives status from ledger; offline fallback (local taken + local `celebrate`) on `claude/sleepy-taken-fallback`; scanner/photo is still a prototype. |
-| T1-11 | In-app nudge + demo clock | P2 | Settings > For demo only > Current Time of Demo ("Run Buddy's check at this time") runs the deterministic agent; dose nudges are capped at two per occurrence. |
+| T1-11 | In-app nudge + demo clock | P2 | Settings > For demo only > Current Time of Demo ("Jump to this time") runs the deterministic agent; dose nudges are capped at two per occurrence. |
 | T1-13 | Dog mood on Home | P2 | Shared dog mood fed from API state; visual moods remain motion/glow. |
 | T1-15 | `/care` web page from the Miro frame | P2 / CodeBuddy | Done: landing, demo sign-in picker, This week, Alerts & caregivers, Settings. PR #14, #16, #21. Check-in on/off and the number of missed days are set on /care Alerts (min 1 day, `claude/demo-settings`); the phone no longer has them; the phone's caretaker screen was removed (`claude/health-care`). Web page needs P1's caretaker list (see Blocked). |
 | T1-17 | Public HTTPS URL | P2 (+ P1 API) | **15 Oct 22:45:** EdgeOne `/api/today` returns live JSON (hosted DB seeded); no CORS. Supabase migrations 002–005 applied (user, 15 Oct night): `/api/medications`, treats and search return 200; HSA product list imported by CSV (5,511 rows); search works. **Vercel production = `main` @ `2488d28`** (through #63; checks passed first). EdgeOne redeploys itself from main. Earlier: **Front end in production:** `pawtner-care.vercel.app` (and `pawtner-mobile-three.vercel.app`) = `main` @ `2a182f9` incl. `/care` and PRs #28–#31 (deploy `pawtner-mobile-3ppynl9e6`, 15 Oct; typecheck, 78/78 tests, build). No hosted API yet: offline fallback; Taken and the emergency beat and walk work offline, the demo clock and Tier 2 screens need the API. P1's EdgeOne copy **`pawtner.edgeone.dev`** serves `main` @ `1fc0b53` with working `/care/*` deep links, but `/api/*` returns `index.html` (no function live; checked 15 Oct). API hosting code is on `main` (P1 pushed directly, 15 Oct): `api/[...path].ts` + ROOT `vercel.json` for Vercel, `functions/api/[[path]].mjs` for EdgeOne. Our Vercel project ignores the root `vercel.json` (Root Directory `mobile`; preview from `1fc0b53`: `/` and `/care` OK, `/api` 404). Going live needs either Root Directory → repo root + `DATABASE_URL` on Vercel, or a working EdgeOne function (+ CORS if split hosts), and the Supabase schema migrated (P1). Until then the deployed front end still runs on the offline fallback (beats 2 and 3 work; beat 1 needs the API). |
@@ -43,6 +42,7 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Demo clock wording: "Pretend it's this time. Buddy reacts to it." / "Jump to this time" | [#115](https://github.com/whansel007/Pawtner/pull/115), merged 19 Oct |
 | — | Shared notes name every caretaker; Settings and notes read the caretaker list from the API (fixes #111's fallback names) | [#113](https://github.com/whansel007/Pawtner/pull/113), merged 19 Oct |
 | — | README blood-pressure screenshot retaken | [#114](https://github.com/whansel007/Pawtner/pull/114), merged 19 Oct |
 | — | No "Add a reminder"; Buddy's nudges without the next-dose card; caretakers from data ("Jamie + Alex"); "Share my blood pressure"; no label scan; Screen for Life trimmed; /care footer links after sign-in | [#111](https://github.com/whansel007/Pawtner/pull/111), merged 19 Oct |

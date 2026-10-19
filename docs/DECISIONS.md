@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-19 — Demo clock wording (PR #115)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Settings > For demo only > Current Time of Demo: hint "Pretend it's this time. {{name}} reacts to it.", button "Jump to this time" (was a four-line explanation and "Run {{name}}'s check at this time"). Behaviour unchanged. | Owner: "too wordy. trim aggressively", "Run Buddy's check at this time. -> not clear", chose "Demo wording A". | The card no longer explains that saves happen at the demo time or the two-nudge cap. | Final |
+
 ## 2026-10-19 — Shared notes name every caretaker; names read from the API (PR #113); README screenshot (PR #114)
 
 | Decision | Reason | Tradeoff | Status |
