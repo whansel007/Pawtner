@@ -46,8 +46,8 @@ export function SettingsScreen({
   addMedication: () => void;
   openReminders: () => void;
   caregiver: Caregiver;
-  /** Everyone caring for her, from data (lib/caretakers.ts), shown as one line. */
-  caretakers: string[];
+  /** Everyone caring for her, from data, as one line (lib/caretakers.ts caretakersLine). */
+  caretakers: string;
   petName: string;
   demoClockValue: string;
   onDemoClockChange: (value: string) => void;
@@ -92,7 +92,7 @@ export function SettingsScreen({
         <button onClick={addMedication}><span className="feature-icon"><Icon name="plus" /></span><div><strong>{t("settings.addMed")}</strong><small>{t("settings.addMedSub")}</small></div><Icon name="chevron" /></button>
         <button onClick={openReminders}><span className="feature-icon sage"><Icon name="bell" /></span><div><strong>{t("settings.nudges", { name: petName })}</strong><small>{t("settings.nudgesSub")}</small></div><Icon name="chevron" /></button>
         {/* Information only: the caretaker's view lives on /care, not on the senior's phone. */}
-        <div className="settings-info"><span className="feature-icon sage"><Icon name="users" /></span><div><strong>{caretakers.join(t("settings.caretakerSeparator"))}</strong><small>{t("settings.caretakerSub", { name: petName })}</small></div></div>
+        <div className="settings-info"><span className="feature-icon sage"><Icon name="users" /></span><div><strong>{caretakers}</strong><small>{t("settings.caretakerSub", { name: petName })}</small></div></div>
       </div>
       <label className="settings-share">
         <input type="checkbox" checked={shareBloodPressure} onChange={(event) => onShareBloodPressure(event.target.checked)} />

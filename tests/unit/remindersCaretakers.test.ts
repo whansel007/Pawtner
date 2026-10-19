@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { remindersParts } from "../../mobile/src/lib/reminders.js";
 import { openedFrom, pushHistory } from "../../mobile/src/lib/navigation.js";
-import { caretakerNames } from "../../mobile/src/lib/caretakers.js";
+import { caretakerNames, caretakersLine } from "../../mobile/src/lib/caretakers.js";
 
 describe("Gentle reminders by the way in", () => {
   it("shows the next dose from Home, not from Settings (Buddy's nudges)", () => {
@@ -26,5 +26,16 @@ describe("caretaker names for Settings", () => {
     expect(caretakerNames(null, fallback)).toEqual(["Fallback"]);
     expect(caretakerNames({}, fallback)).toEqual(["Fallback"]);
     expect(caretakerNames({ caregivers: [] }, fallback)).toEqual(["Fallback"]);
+  });
+});
+
+describe("caretakers as one line (Settings and shared notes)", () => {
+  const entry = (id: string, name: string) => ({ id, name, receivesCheckIns: true });
+  const fallback = [entry("f1", "Jamie"), entry("f2", "Alex")];
+  it("joins two names, keeps one, and falls back when nobody is listed", () => {
+    expect(caretakersLine({ caregivers: [entry("a", "Robin"), entry("b", "Sam")] }, fallback, " + ")).toBe("Robin + Sam");
+    expect(caretakersLine({ caregivers: [entry("a", "Robin")] }, fallback, " + ")).toBe("Robin");
+    expect(caretakersLine({ caregivers: [] }, fallback, " + ")).toBe("Jamie + Alex");
+    expect(caretakersLine(null, fallback, " + ")).toBe("Jamie + Alex");
   });
 });

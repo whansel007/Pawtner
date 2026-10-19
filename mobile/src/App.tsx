@@ -44,7 +44,8 @@ import { demoClockOnLoad, runningClock, saveDemoClock, searchWithout, type DemoC
 import { useHomeView } from "./lib/useHomeView";
 import { useCardView } from "./lib/useCardView";
 import { remindersParts } from "./lib/reminders";
-import { caretakerNames } from "./lib/caretakers";
+import { caretakersLine } from "./lib/caretakers";
+import { CARE_SUMMARY_SCREENS } from "./config/sharing";
 import { isCardSheetScreen, sheetViewFor } from "./lib/homeView";
 import { useWalkGoal } from "./lib/useWalkGoal";
 import { useDoctorVisits } from "./lib/useDoctorVisits";
@@ -200,7 +201,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
   useEffect(() => { const plan = demoClockOnLoad(demoClock?.at ?? null); if (plan.action === "write") { void api.setDemoClock({ at: plan.at }).catch((error) => reportApiProblem(error)); window.history.replaceState(null, "", `${window.location.pathname}${searchWithout(window.location.search, DEMO_CLOCK_PARAM)}${window.location.hash}`); } else void api.demoClock().then((clock) => { if (clock.at) { setDemoClock({ at: clock.at, setAtMs: Date.now() }); setDemoClockValue(toDateTimeLocal(new Date(clock.at))); void refreshToday(clock.at); } }).catch((error) => console.warn("Demo clock: server clock unavailable", error)); }, []);
   useEffect(() => { saveDemoClock(demoClock); }, [demoClock]);
   useEffect(() => {
-    if (screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
+    if (CARE_SUMMARY_SCREENS.includes(screen)) void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
     // On launch (Home's "See all" dot) and each time Reminders opens (a medicine may have been added).
     // Quiet on failure (console only, mock alert stays): the hosted list 500s until migration 005 runs.
     if (screen === "home" || screen === "reminders") void api.listMedications().then((result) => setMedications(result.medications)).catch((error) => console.warn("Restock: medicine list unavailable", error));
@@ -224,6 +225,8 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
   const dogName = today?.dog.name ?? pet.name;
   const cardSheet = isCardSheetScreen(screen) ? { view: cardView, onView: setCardView, petName: dogName } : undefined;
   const caretakerName = careSummary?.caregiver?.name ?? caregiver.caretakerName;
+  // Everyone caring for her, from data, as one line ("Jamie + Alex"): Settings and the shared notes.
+  const caretakers = caretakersLine(careSummary, mockCaregivers, t("settings.caretakerSeparator"));
   const livePet = { ...pet, name: dogName, heartCount, streak, careScore: careSummary?.careScore ?? pet.careScore, caringDays: careSummary?.caringDays ?? pet.caringDays };
   // /care pair label: build from data via the care.pairNames pattern, not a hardcoded string.
   // Live API names take priority; otherwise fall back to the mock data.
@@ -603,10 +606,10 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         {screen === "health" && <HealthScreen back={back} sheet={cardSheet} bpLogged={bpLogged} healthMetrics={healthMetrics} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} onBpLog={() => navigate("bpLog")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} seniorName={today?.user.name ?? liveCaregiver.seniorName} topCard={healthTopCard(latestDecision, today?.sideEffectNote ?? showSideEffectCard(healthMetrics, demoNow() ?? new Date().toISOString(), SENIOR_TIMEZONE))} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={{ ...weekSummary, caringDays: careSummary?.caringDays ?? weekSummary.caringDays, doctorQuestion: visitNotes.latest?.text ?? t("visitNotes.empty") }} onVisitNotes={() => navigate("visitNotes")} goodWeek={isGoodWeek({ streak, caringDays: careSummary?.caringDays ?? weekSummary.caringDays })} />}
-        {screen === "settings" && <SettingsScreen back={back} sheet={cardSheet} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} caretakers={caretakerNames(careSummary, mockCaregivers)} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => toggleDemoTick(current, key))} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} walkGoalKey={walkGoal.key} onWalkGoal={setWalkGoal} onSimulateWalk={() => { setSimulateWalkRequested(true); navigate("walk"); }} doctorVisits={doctorVisits} onDoctorVisits={setDoctorVisits} />}
+        {screen === "settings" && <SettingsScreen back={back} sheet={cardSheet} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} caretakers={caretakers} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => toggleDemoTick(current, key))} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} walkGoalKey={walkGoal.key} onWalkGoal={setWalkGoal} onSimulateWalk={() => { setSimulateWalkRequested(true); navigate("walk"); }} doctorVisits={doctorVisits} onDoctorVisits={setDoctorVisits} />}
         {screen === "medicines" && <MedicinesScreen back={back} petName={dogName} caretakerName={caretakerName} onMedicinesChanged={() => void refreshToday()} />}
         {screen === "bpLog" && <BpLogContainer back={back} now={demoNow() ?? new Date().toISOString()} timeZone={SENIOR_TIMEZONE} fallback={healthMetrics} firstReading={firstReading} onOffline={(error) => reportApiProblem(error)} />}
-        {screen === "visitNotes" && <VisitNotesScreen back={back} notes={visitNotes.notes} caretakerName={caretakerName} maxLength={visitNotes.maxLength} onAdd={visitNotes.add} onEdit={visitNotes.edit} onRemove={visitNotes.remove} />}
+        {screen === "visitNotes" && <VisitNotesScreen back={back} notes={visitNotes.notes} caretakers={caretakers} maxLength={visitNotes.maxLength} onAdd={visitNotes.add} onEdit={visitNotes.edit} onRemove={visitNotes.remove} />}
         {screen === "customize" && <CustomizeScreen back={back} onHome={goHome} world={world} setWorld={(nextWorld) => { setWorld(nextWorld); notify(t(`toast.worlds.${nextWorld}`, { name: dogName })); }} accessory={accessory} setAccessory={(nextAccessory) => { setAccessory(nextAccessory); notify(nextAccessory === "none" ? t("toast.accessoryNone", { name: dogName }) : t("toast.accessoryOn", { name: dogName, item: t(`accessory.${nextAccessory}`) })); }} worldOptions={worldOptions} accessoryOptions={accessoryOptions} petName={dogName} caretakerName={caretakerName} heartsTotal={heartsTotal} notify={notify} />}
       </div>
       <div className="bottom-dock" aria-hidden="true" />
