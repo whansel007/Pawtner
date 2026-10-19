@@ -50,6 +50,15 @@ export function readingLineKey(reading: ReadingLike, first: ReadingLike | null):
 }
 
 /**
+ * A reading that is a warning on its own (higher than her first reading, or an emergency sign in its note): the log's
+ * small "Warning" label (owner, 18 Oct: "just the important stuff"). Same shared rule as the card's line.
+ */
+export function isWarningReading(reading: ReadingLike, first: ReadingLike | null): boolean {
+  const status = readingStatus(reading, first);
+  return status === "emergencySign" || status === "warning";
+}
+
+/**
  * The Blood Pressure card's line (en.json key), or null before any reading. On ANY warning day it follows the warning,
  * with the same condition line as the Warning face (explainDecision), never "Keep at it" / "Good job" (owner, 18 Oct:
  * no "Good job" under a Warning). Otherwise the reading's own line (readingLineKey).

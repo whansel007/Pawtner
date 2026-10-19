@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatLogDay, formatLogTime, groupReadingsByDay } from "../../mobile/src/lib/bpLog.js";
-import { bpCardLineKey, readingLineKey } from "../../mobile/src/lib/decisions.js";
+import { bpCardLineKey, isWarningReading, readingLineKey } from "../../mobile/src/lib/decisions.js";
 import { readingStatus } from "../../shared/rules.js";
 import type { HealthMetric } from "../../shared/contract.js";
 
@@ -56,5 +56,15 @@ describe("one status line for the card and the log (never 'Good job' on a warnin
     expect(bpCardLineKey(reading("g", NOW, 118, 76), first, { ruleId: "bp_above_first_reading" })).toBe("decisionLog.why.bp_above_first_reading");
     expect(bpCardLineKey(sign, first, null)).toBe("decisionLog.why.emergency_symptom_note");
     expect(bpCardLineKey(null, first, null)).toBeNull();
+  });
+});
+
+describe("log: only the important stuff", () => {
+  it("a 'Warning' label only for a reading higher than the first, or with an emergency sign in its note", () => {
+    expect(isWarningReading(reading("w", NOW, 185, 120), first)).toBe(true);
+    expect(isWarningReading(reading("s", NOW, 118, 76, "Shortness of breath"), first)).toBe(true);
+    expect(isWarningReading(reading("k", NOW, 150, 90), first)).toBe(false);
+    expect(isWarningReading(reading("g", NOW, 118, 76, "I feel fine"), first)).toBe(false);
+    expect(isWarningReading(first, first)).toBe(false);
   });
 });
