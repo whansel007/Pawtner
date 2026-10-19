@@ -18,6 +18,7 @@ export function SettingsScreen({
   addMedication,
   openReminders,
   caregiver,
+  caretakers,
   petName,
   demoClockValue,
   onDemoClockChange,
@@ -45,6 +46,8 @@ export function SettingsScreen({
   addMedication: () => void;
   openReminders: () => void;
   caregiver: Caregiver;
+  /** Everyone caring for her, from data (lib/caretakers.ts), shown as one line. */
+  caretakers: string[];
   petName: string;
   demoClockValue: string;
   onDemoClockChange: (value: string) => void;
@@ -74,7 +77,6 @@ export function SettingsScreen({
   onDoctorVisits: (visits: DoctorVisits) => void;
 }) {
   const { t } = useTranslation();
-  const caretakerName = caregiver.caretakerName;
   const heading = { eyebrow: t("settings.eyebrow", { name: petName }), title: t("settings.title") };
   const resetTime = parseDemoTime(DEMO_TIME_PRESETS[DEMO_RESET_PRESET], DEMO_TIME_PRESETS);
   // "For demo only" open = demo mode: only the demo card shows, and the back button closes it (owner, 18 Oct).
@@ -90,13 +92,13 @@ export function SettingsScreen({
         <button onClick={addMedication}><span className="feature-icon"><Icon name="plus" /></span><div><strong>{t("settings.addMed")}</strong><small>{t("settings.addMedSub")}</small></div><Icon name="chevron" /></button>
         <button onClick={openReminders}><span className="feature-icon sage"><Icon name="bell" /></span><div><strong>{t("settings.nudges", { name: petName })}</strong><small>{t("settings.nudgesSub")}</small></div><Icon name="chevron" /></button>
         {/* Information only: the caretaker's view lives on /care, not on the senior's phone. */}
-        <div className="settings-info"><span className="feature-icon sage"><Icon name="users" /></span><div><strong>{t("settings.caretaker", { caretaker: caretakerName })}</strong><small>{t("settings.caretakerSub", { name: petName })}</small></div></div>
+        <div className="settings-info"><span className="feature-icon sage"><Icon name="users" /></span><div><strong>{caretakers.join(t("settings.caretakerSeparator"))}</strong><small>{t("settings.caretakerSub", { name: petName })}</small></div></div>
       </div>
       <label className="settings-share">
         <input type="checkbox" checked={shareBloodPressure} onChange={(event) => onShareBloodPressure(event.target.checked)} />
         <span>
-          <strong>{t("settings.shareBp", { caretaker: caretakerName })}</strong>
-          <small>{t("settings.shareBpSub", { caretaker: caretakerName })}</small>
+          <strong>{t("settings.shareBp")}</strong>
+          <small>{t("settings.shareBpSub")}</small>
           {firstReading && (
             <small className="settings-share__first">{t("settings.firstReading", { systolic: firstReading.systolic, diastolic: firstReading.diastolic, day: new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", timeZone: SENIOR_TIMEZONE }).format(new Date(firstReading.recordedAt)) })}</small>
           )}

@@ -297,8 +297,7 @@
     "today": "Today",
     "statusDone": "Done",
     "statusSoon": "Soon",
-    "statusLater": "Later",
-    "add": "Add a reminder"
+    "statusLater": "Later"
   },
   "restock": {
     "label": "Restock soon",
@@ -312,15 +311,9 @@
   },
   "prescription": {
     "eyebrow": "New medication",
-    "titleScan": "Scan the prescription",
     "titleFound": "Prescription found",
-    "supportingScan": "Place the label inside the frame. We'll fill in the details for you.",
     "supportingFound": "Please check these details before adding them to {{name}}'s plan.",
-    "tapCapture": "Tap to capture",
-    "keepLit": "Keep the label clear and well lit",
     "enterManual": "Enter details manually",
-    "scanLabel": "Scan the label",
-    "readingLabel": "Reading label…",
     "medication": "MEDICATION",
     "dosage": "DOSAGE",
     "frequency": "FREQUENCY",
@@ -557,9 +550,8 @@
   "screening": {
     "eyebrow": "A once-a-year task",
     "title": "Festival day is waiting",
-    "supporting": "Based on your age, it may be time for a health screening. When it is done, {{name}}'s garden celebrates too.",
-    "checkHealthHub": "Check on HealthHub",
-    "remindLater": "Remind me another day"
+    "supporting": "Based on your age, it may be time for a health screening.",
+    "checkHealthHub": "Check on HealthHub"
   },
   "settings": {
     "eyebrow": "{{name}}'s care",
@@ -567,13 +559,13 @@
     "myMeds": "My medicines",
     "myMedsSub": "Edit details and set the original pill photo",
     "addMed": "Add a medication",
-    "addMedSub": "Snap a label and set the routine",
+    "addMedSub": "Search the medicine and set the routine",
     "nudges": "{{name}}'s nudges",
-    "nudgesSub": "Times, sound and read-aloud",
-    "caretaker": "{{caretaker}}, caretaker",
+    "nudgesSub": "Today's medicine times",
+    "caretakerSeparator": " + ",
     "caretakerSub": "Connected to the same {{name}}",
-    "shareBp": "Share my blood pressure with {{caretaker}}",
-    "shareBpSub": "{{caretaker}} sees your latest reading and the notes you write with it.",
+    "shareBp": "Share my blood pressure",
+    "shareBpSub": "Your caretakers see your latest reading and the notes you write with it.",
     "privacyTitle": "Your information stays yours, unless specified otherwise.",
     "walkGoal": "Walk goal",
     "walkGoalOption": "{{key}} · {{minutes}} min",

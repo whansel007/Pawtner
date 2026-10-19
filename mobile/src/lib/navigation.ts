@@ -33,6 +33,11 @@ export function pushHistory(history: readonly Screen[], from: Screen, to: Screen
   return [...history, from].slice(-MAX_HISTORY);
 }
 
+/** The screen the current one was opened from (the top of the trail), or null for a top-level screen. */
+export function openedFrom(history: readonly Screen[]): Screen | null {
+  return history.length ? history[history.length - 1] : null;
+}
+
 /** Where "Back" goes, and the trail left behind. An empty trail falls back to Home. */
 export function popHistory(history: readonly Screen[]): { to: Screen; history: Screen[] } {
   if (history.length === 0) return { to: "home", history: [] };

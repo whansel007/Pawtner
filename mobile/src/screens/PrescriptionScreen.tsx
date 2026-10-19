@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { FullCard } from "../components/FullCard";
@@ -19,51 +19,6 @@ interface HsaProduct {
 
 type Stage = "search" | "results" | "confirm";
 
-/**
- * Extract text from a label photo using the browser's TextDetector (Shape Detection API)
- * where available, with a graceful fallback to the search screen.
- */
-async function extractLabelText(file: File): Promise<string | null> {
-  // Try the experimental TextDetector API (Chrome on some platforms)
-  const TD = (window as unknown as { TextDetector?: new () => { detect: (img: ImageBitmap) => Promise<{ rawValue: string }[]> } }).TextDetector;
-  if (!TD) return null;
-  try {
-    const bitmap = await createImageBitmap(file);
-    const detector = new TD();
-    const results = await detector.detect(bitmap);
-    bitmap.close?.();
-    const text = results.map((r) => r.rawValue).join(" ").trim();
-    return text || null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Extract the most likely medication name and strength from raw OCR text.
- * Looks for patterns like "Paracetamol 500mg" or "Amlodipine 5 mg".
- */
-function parseLabelFields(text: string): { name: string; strength: string | null } {
-  const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
-  // Try to find a line that looks like a medication name + strength
-  const medLine = lines.find((line) =>
-    /\d+\s*(?:mg|mcg|g|ml|iu)\b/i.test(line) || /^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*$/.test(line),
-  );
-  if (medLine) {
-    const strengthMatch = medLine.match(/(\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml|iu)\b)/i);
-    const strength = strengthMatch?.[1] ?? null;
-    const name = medLine.replace(strengthMatch?.[0] ?? "", "").trim() || medLine;
-    return { name: name.replace(/\s+/g, " "), strength };
-  }
-  // Fallback: use the first non-trivial line as the name
-  const firstLine = lines.find((l) => l.length >= 3 && l.length <= 60) ?? lines[0] ?? "";
-  const strengthMatch = firstLine.match(/(\d+(?:\.\d+)?\s*(?:mg|mcg|g|ml|iu)\b)/i);
-  return {
-    name: (strengthMatch ? firstLine.replace(strengthMatch[0], "") : firstLine).trim() || text.slice(0, 40),
-    strength: strengthMatch?.[1] ?? null,
-  };
-}
-
 export function PrescriptionScreen({
   back,
   onSaved,
@@ -79,9 +34,6 @@ export function PrescriptionScreen({
 }) {
   const { t } = useTranslation();
   const [stage, setStage] = useState<Stage>("search");
-  const [scanning, setScanning] = useState(false);
-  const [extractedText, setExtractedText] = useState<string | null>(null);
-  const scanInputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<HsaProduct[]>([]);
   const [searching, setSearching] = useState(false);
@@ -133,35 +85,6 @@ export function PrescriptionScreen({
     setPrescribedFor("");
     setDaysOfSupply("");
     setStage("confirm");
-  };
-
-  const onScanFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    event.target.value = "";
-    setScanning(true);
-    setExtractedText(null);
-    try {
-      const text = await extractLabelText(file);
-      if (text && text.trim().length >= 2) {
-        const { name: parsedName, strength: parsedStrength } = parseLabelFields(text);
-        setExtractedText(text);
-        // Auto-search the HSA register with the extracted name
-        const searchTerm = parsedName.slice(0, 50);
-        setQuery(searchTerm);
-        const res = await api.searchProducts(searchTerm);
-        setResults(res.products);
-        // Pre-fill fields from OCR in case no HSA match is selected
-        setName(parsedName);
-        setStrength(parsedStrength ?? "");
-        setStage("results");
-      }
-    } catch {
-      // Quiet fallback for optional scan — no error shown to the user
-      console.warn("Label scan failed");
-    } finally {
-      setScanning(false);
-    }
   };
 
   const save = async () => {
@@ -245,25 +168,6 @@ export function PrescriptionScreen({
             {t("prescription.enterManual")}
           </button>
 
-          {/* Optional label scan — falls back quietly if TextDetector is unavailable */}
-          <input
-            ref={scanInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={onScanFile}
-            style={{ display: "none" }}
-          />
-          <button className="text-button" onClick={() => scanInputRef.current?.click()}>
-            {t("prescription.scanLabel")}
-          </button>
-          {scanning && <p className="supporting">{t("prescription.readingLabel")}</p>}
-          {extractedText && (
-            <div className="ocr-preview">
-              <small>Text read from label:</small>
-              <p>{extractedText.slice(0, 200)}</p>
-            </div>
-          )}
           <p className="hsa-credit">HSA Listing of Registered Therapeutic Products (Open Data Licence)</p>
         </>
       )}

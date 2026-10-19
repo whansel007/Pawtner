@@ -43,6 +43,8 @@ import { mergeHealthMetrics } from "./lib/healthReadings";
 import { demoClockOnLoad, runningClock, saveDemoClock, searchWithout, type DemoClockAnchor } from "./lib/demoClock";
 import { useHomeView } from "./lib/useHomeView";
 import { useCardView } from "./lib/useCardView";
+import { remindersParts } from "./lib/reminders";
+import { caretakerNames } from "./lib/caretakers";
 import { isCardSheetScreen, sheetViewFor } from "./lib/homeView";
 import { useWalkGoal } from "./lib/useWalkGoal";
 import { useDoctorVisits } from "./lib/useDoctorVisits";
@@ -72,6 +74,7 @@ import {
   activityLink,
   clinicTasks,
   caregiver,
+  caregivers as mockCaregivers,
   restockAlert,
   worldOptions,
   accessoryOptions,
@@ -103,7 +106,7 @@ function localHeartCount(doses: DerivedDose[], bpLogged: boolean, walked: boolea
 export default function App({ startScreen, onRestart }: { startScreen?: Screen; onRestart?: (screen: Screen) => void } = {}) {
   const { t } = useTranslation();
   // Screen plus a small history: drilled-down screens go "Back" to where they came from (lib/navigation.ts).
-  const { screen, navigate, goHome, back } = useNavigation(startScreen ?? "cover");
+  const { screen, from, navigate, goHome, back } = useNavigation(startScreen ?? "cover");
   const [doseList, setDoseList] = useState<DerivedDose[]>(todayDoses);
   const [pendingDoseId, setPendingDoseId] = useState<string | null>(null);
   const [bpLogged, setBpLogged] = useState(false);
@@ -586,6 +589,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
             back={back}
             doses={doseList}
             now={demoNow() ?? new Date().toISOString()}
+            parts={remindersParts(from)}
             restockCard={restock.cards.length ? <>{restock.cards.map((card) => <RestockCard key={card.alert.medicationId} alert={card.alert} caretakerName={caretakerName} state={card.state} busy={card.busy} onAsk={() => void restock.askForHelp(card.alert)} onSelf={() => restock.getItMyself(card.alert)} />)}</> : null}
           />
         )}
@@ -597,9 +601,9 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         {screen === "walk" && <WalkScreen back={back} goalMinutes={walkGoal.minutes} simulateRequested={simulateWalkRequested} onSimulateStarted={handleSimulateStarted} petName={dogName} walkStartedAt={walkStartedAt} clockNow={clockNow} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
         {screen === "milestones" && <MilestonesScreen back={back} sheet={cardSheet} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} heartsTotal={heartsTotal} mood={mood} onTrick={(performance) => setTrickRequest((prev) => ({ id: (prev?.id ?? 0) + 1, performance }))} />}
         {screen === "health" && <HealthScreen back={back} sheet={cardSheet} bpLogged={bpLogged} healthMetrics={healthMetrics} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} onBpLog={() => navigate("bpLog")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} seniorName={today?.user.name ?? liveCaregiver.seniorName} topCard={healthTopCard(latestDecision, today?.sideEffectNote ?? showSideEffectCard(healthMetrics, demoNow() ?? new Date().toISOString(), SENIOR_TIMEZONE))} petName={dogName} />}
-        {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
+        {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={{ ...weekSummary, caringDays: careSummary?.caringDays ?? weekSummary.caringDays, doctorQuestion: visitNotes.latest?.text ?? t("visitNotes.empty") }} onVisitNotes={() => navigate("visitNotes")} goodWeek={isGoodWeek({ streak, caringDays: careSummary?.caringDays ?? weekSummary.caringDays })} />}
-        {screen === "settings" && <SettingsScreen back={back} sheet={cardSheet} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => toggleDemoTick(current, key))} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} walkGoalKey={walkGoal.key} onWalkGoal={setWalkGoal} onSimulateWalk={() => { setSimulateWalkRequested(true); navigate("walk"); }} doctorVisits={doctorVisits} onDoctorVisits={setDoctorVisits} />}
+        {screen === "settings" && <SettingsScreen back={back} sheet={cardSheet} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} caretakers={caretakerNames(careSummary, mockCaregivers)} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => toggleDemoTick(current, key))} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} walkGoalKey={walkGoal.key} onWalkGoal={setWalkGoal} onSimulateWalk={() => { setSimulateWalkRequested(true); navigate("walk"); }} doctorVisits={doctorVisits} onDoctorVisits={setDoctorVisits} />}
         {screen === "medicines" && <MedicinesScreen back={back} petName={dogName} caretakerName={caretakerName} onMedicinesChanged={() => void refreshToday()} />}
         {screen === "bpLog" && <BpLogContainer back={back} now={demoNow() ?? new Date().toISOString()} timeZone={SENIOR_TIMEZONE} fallback={healthMetrics} firstReading={firstReading} onOffline={(error) => reportApiProblem(error)} />}
         {screen === "visitNotes" && <VisitNotesScreen back={back} notes={visitNotes.notes} caretakerName={caretakerName} maxLength={visitNotes.maxLength} onAdd={visitNotes.add} onEdit={visitNotes.edit} onRemove={visitNotes.remove} />}

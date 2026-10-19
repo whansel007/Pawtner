@@ -202,10 +202,19 @@ export interface DemoResetDayRequest {
   now: string;
 }
 
+/** One of the senior's caretakers (user_caregivers). `receivesCheckIns` = that link's opted_in. */
+export interface CaregiverEntry {
+  id: string;
+  name: string;
+  receivesCheckIns: boolean;
+}
+
 export interface CaretakerSummaryResponse {
   period: { start: string; end: string };
   senior: { id: string; name: string };
   caregiver: { id: string; name: string } | null;
+  /** Every caretaker linked to the senior, in caregiver id order (the phone's Settings row names them all). */
+  caregivers: CaregiverEntry[];
   dog: DogView;
   careScore: number;
   caringDays: number;
