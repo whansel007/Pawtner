@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-19 — Doctor's prior and future visit (PR #105, migration 011)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| A possible side-effect note ("sleepy", "dizzy", "nausea") counts only if written after the doctor's prior visit, until the end of the future-visit day (`sideEffectNoteCounts`, `shared/nextVisit.ts`); Buddy's agent (`doctor_question`), `TodayResponse.sideEffectNote` and the Health card use the same rule. No future date, or a passed one, counts as that day; no prior date = no lower limit. | Owner: "it should be until the doctor's next visit", "next visit date defaults to today unless changed", "then we should remember two dates", "just do doctor's prior visit, then doctor's future visit in the demo". Before, the agent looked at every note ever, so one old "dizzy" note kept Buddy asking forever. | — | Final |
+| Both dates are set by hand in Settings > For demo only ("Doctor's prior visit", "Doctor's future visit"; hint "A date that has passed counts as today in this demo."), saved as given in two nullable columns on `users` (`prior_doctor_visit`, `next_doctor_visit`, migration 011, plain Postgres), only through `getDoctorVisits` / `setDoctorVisits`; `GET` / `PUT /api/doctor-visits`. Reset to morning doesn't touch them. | Owner: "as long as there is no additional table am ok", "easier to migrate also in the future with new db". | No automatic "last visit" (an earlier draft) — simpler and maps 1:1 onto a visits table later. | Final (hint wording: tentative) |
+
 ## 2026-10-19 — Blood-pressure log (PR #103)
 
 | Decision | Reason | Tradeoff | Status |
