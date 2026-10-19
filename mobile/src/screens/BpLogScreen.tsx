@@ -32,8 +32,8 @@ export function BpLogScreen({
   const { t, i18n } = useTranslation();
   const days = groupReadingsByDay(readings, now, timeZone);
   const secondLine = (reading: HealthMetric) => {
-    const { reasonKey, note } = logSecondLine(reading, firstReading);
-    return [reasonKey ? t(reasonKey) : null, note].filter(Boolean).join(" · ");
+    const { reasonKey, note, noteKey } = logSecondLine(reading, firstReading);
+    return [reasonKey ? t(reasonKey) : null, note ?? (noteKey ? t(noteKey) : null)].filter(Boolean).join(" · ");
   };
   return (
     <FullCard back={back}>

@@ -32,12 +32,14 @@ export function groupReadingsByDay(readings: readonly HealthMetric[], now: strin
 /**
  * A log card's one second line (owner, 18 Oct: "either i feel fine, or higher bp or some other conditions checked. no
  * need to interpret"): for a reading higher than her first, the line "higher than your first reading" (en.json key)
- * and then her note; otherwise only her note as written (ticked feelings or conditions). Nothing else.
+ * and then her note; otherwise only her note as written (ticked feelings or conditions). With no note (nothing ticked,
+ * nothing typed; the ticks aren't mandatory) the note part is "No symptoms logged" (owner, 18 Oct). Nothing else.
+ * `note` is her own text; `noteKey` is the en.json key used when she wrote nothing.
  */
-export function logSecondLine(reading: HealthMetric, first: HealthMetric | null): { reasonKey: string | null; note: string | null } {
+export function logSecondLine(reading: HealthMetric, first: HealthMetric | null): { reasonKey: string | null; note: string | null; noteKey: string | null } {
   const note = reading.note?.trim() ? reading.note.trim() : null;
   const higher = bloodPressureProgress(reading, first) === "warning";
-  return { reasonKey: higher ? "health.bpProgress.warning" : null, note };
+  return { reasonKey: higher ? "health.bpProgress.warning" : null, note, noteKey: note ? null : "bpLog.noSymptoms" };
 }
 
 /** An earlier day's heading, e.g. "Mon 13 Oct" (`day` is YYYY-MM-DD). */

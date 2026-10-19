@@ -71,19 +71,20 @@ describe("log: only the important stuff", () => {
 
 describe("log card: one second line, no interpretation", () => {
   it("higher than the first reading, no note → the 'higher' line only", () => {
-    expect(logSecondLine(reading("h", NOW, 185, 120), first)).toEqual({ reasonKey: "health.bpProgress.warning", note: null });
+    expect(logSecondLine(reading("h", NOW, 185, 120), first)).toEqual({ reasonKey: "health.bpProgress.warning", note: null, noteKey: "bpLog.noSymptoms" });
   });
   it("higher + her note → both", () => {
-    expect(logSecondLine(reading("h", NOW, 185, 120, "Headache"), first)).toEqual({ reasonKey: "health.bpProgress.warning", note: "Headache" });
+    expect(logSecondLine(reading("h", NOW, 185, 120, "Headache"), first)).toEqual({ reasonKey: "health.bpProgress.warning", note: "Headache", noteKey: null });
   });
   it("an emergency tick at normal numbers → her ticked condition only (it is the reason)", () => {
-    expect(logSecondLine(reading("e", NOW, 118, 76, "Chest pain"), first)).toEqual({ reasonKey: null, note: "Chest pain" });
+    expect(logSecondLine(reading("e", NOW, 118, 76, "Chest pain"), first)).toEqual({ reasonKey: null, note: "Chest pain", noteKey: null });
   });
   it("'I feel fine' → as written", () => {
-    expect(logSecondLine(reading("f", NOW, 138, 80, "I feel fine"), first)).toEqual({ reasonKey: null, note: "I feel fine" });
+    expect(logSecondLine(reading("f", NOW, 138, 80, "I feel fine"), first)).toEqual({ reasonKey: null, note: "I feel fine", noteKey: null });
   });
-  it("no note → nothing (the line's space is still reserved)", () => {
-    expect(logSecondLine(reading("n", NOW, 138, 80), first)).toEqual({ reasonKey: null, note: null });
-    expect(logSecondLine(reading("b", NOW, 138, 80, "   "), first)).toEqual({ reasonKey: null, note: null });
+  it("no note (nothing ticked or typed, or blank) → 'No symptoms logged'; a typed note shows as written", () => {
+    expect(logSecondLine(reading("n", NOW, 138, 80), first)).toEqual({ reasonKey: null, note: null, noteKey: "bpLog.noSymptoms" });
+    expect(logSecondLine(reading("b", NOW, 138, 80, "   "), first)).toEqual({ reasonKey: null, note: null, noteKey: "bpLog.noSymptoms" });
+    expect(logSecondLine(reading("t", NOW, 138, 80, "Slept badly"), first).note).toBe("Slept badly");
   });
 });

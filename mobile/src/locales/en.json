@@ -520,6 +520,7 @@
     "title": "Blood pressure log",
     "today": "Today",
     "yesterday": "Yesterday",
+    "noSymptoms": "No symptoms logged",
     "loading": "Loading your readings…",
     "empty": "No readings yet. Log your blood pressure on Health and it shows here."
   },
