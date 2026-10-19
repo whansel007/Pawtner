@@ -1,5 +1,7 @@
-import type { AgentDecision } from "../../../shared/contract.js";
-import { HEALTH_TOP_DECISIONS, RULES_WITH_PLAIN_REASON, URGENT_DECISIONS } from "../config/decisions.js";
+import type { AgentDecision, HealthMetric } from "../../../shared/contract.js";
+import { mentionsPossibleSideEffect } from "../../../shared/rules.js";
+import { DECISION_TEMPLATES } from "../../../shared/templates.js";
+import { RULES_WITH_PLAIN_REASON, URGENT_DECISIONS } from "../config/decisions.js";
 
 /**
  * Decision placement and the plain-language "Why?" (pure, no React, no i18n), shared by Health, DecisionLogCard and
@@ -11,14 +13,27 @@ export function isUrgentDecision(decision: Pick<AgentDecision, "decision"> | nul
   return decision !== null && URGENT_DECISIONS.includes(decision.decision);
 }
 
-/**
- * The card at the top of Health (owner, 18 Oct: "only keep the reading note mentions a possible side effect (only if)"):
- * the latest decision when it is a doctor question (a reading note that may mention a side effect), else null.
- * No other routine decision is shown anywhere (Milestones has no decision card).
- */
-export function healthTopDecision<T extends Pick<AgentDecision, "decision">>(decision: T | null): T | null {
-  return decision !== null && HEALTH_TOP_DECISIONS.includes(decision.decision) ? decision : null;
+/** The senior's local calendar day of an instant (YYYY-MM-DD). */
+function localDay(instant: string, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(instant));
 }
+
+/**
+ * The card at the top of Health (owner, 18 Oct): it shows for the rest of the day once one of today's readings has a
+ * note that may mention a possible side effect (shared/rules.ts mentionsPossibleSideEffect, the agent's own rule),
+ * whatever Buddy decided after. It goes at the next day, or after Reset to morning hides that reading.
+ * No other routine decision shows anywhere (Milestones has no decision card).
+ */
+export function showSideEffectCard(readings: readonly Pick<HealthMetric, "note" | "recordedAt">[], now: string, timeZone: string): boolean {
+  const today = localDay(now, timeZone);
+  return readings.some((reading) => localDay(reading.recordedAt, timeZone) === today && mentionsPossibleSideEffect(reading.note));
+}
+
+/** What the side-effect card says, and its "Why?" reason: the agent's template and its en.json reason, never retyped. */
+export const SIDE_EFFECT_CARD = {
+  summary: DECISION_TEMPLATES.doctor_question,
+  reasonKey: explainDecision({ ruleId: "possible_side_effect_note" }).reasonKey,
+} as const;
 
 export interface DecisionWhy {
   /** en.json key for the plain reason: decisionLog.why.<ruleId>, or decisionLog.why.generic. */

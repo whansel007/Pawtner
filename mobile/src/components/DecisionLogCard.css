@@ -1,28 +1,47 @@
+/* The prompt card at the top of Health: text on the left, "Why?" on the right; the reason swaps in place. */
 .decision-log {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px 12px;
   margin-top: 12px;
-}
-
-.decision-log--empty {
-  padding: 16px;
+  padding: 8px 8px 8px 16px;
+  overflow: hidden;
   border-radius: var(--radius-4xl);
   background: var(--color-surface-stone);
 }
 
-.decision-log--empty strong {
-  display: block;
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-black);
-  color: var(--color-primary);
-  margin-bottom: 4px;
+/* Both texts in one grid cell: the card is as tall as the longer one, so opening "Why?" moves nothing below. */
+.decision-log__texts {
+  flex: 1 1 0;
+  min-width: 0;
+  display: grid;
 }
 
-.decision-log--empty p {
+.decision-log__summary,
+.decision-log__reason {
+  grid-area: 1 / 1;
   margin: 0;
   font-size: var(--font-size-sm);
-  color: #6b7a6e;
+  line-height: 1.4;
+  transition: opacity 200ms ease;
 }
 
+.decision-log__summary {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+.decision-log__reason {
+  color: var(--color-text-heading);
+  opacity: 0;
+}
+
+.decision-log.is-open .decision-log__summary { opacity: 0; }
+.decision-log.is-open .decision-log__reason { opacity: 1; }
+
 .decision-log__toggle {
+  flex: 0 0 auto;
   min-height: 48px;
   padding: 0 16px;
   border: 2px solid #d0d8cc;
@@ -39,82 +58,39 @@
   border-color: var(--color-primary);
 }
 
-.decision-log__body {
-  margin: 12px 0 0;
-  padding: 16px;
-  border-radius: var(--radius-4xl);
-  background: var(--color-surface-stone);
+/* Screen-reader announcement of the reason (visually hidden). */
+.decision-log__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-.decision-log__body dl {
-  margin: 0;
+/* The time running out: a thin line along the bottom edge that shrinks to nothing (transform only). */
+.decision-log__timer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--color-primary);
+  transform-origin: left center;
+  animation: decision-log-timer var(--why-reveal-ms, 5000ms) linear forwards;
 }
 
-/* Opening "Why?" scrolls the details into view (useRevealWhenOpen); keep a little air below them. */
-.decision-log__body {
-  scroll-margin-bottom: 12px;
+.decision-log__timer.is-paused {
+  animation-play-state: paused;
 }
 
-
-.decision-log__reason {
-  margin: 0;
-  font-size: var(--font-size-base);
-  line-height: 1.4;
-  color: var(--color-text-heading);
+@keyframes decision-log-timer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
 }
 
-
-
-.decision-log__row {
-  display: flex;
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid #e0e4dc;
-  font-size: var(--font-size-base);
-  line-height: 1.35;
-}
-
-.decision-log__row:last-child {
-  border-bottom: 0;
-}
-
-.decision-log__row dt {
-  flex: 0 0 auto;
-  min-width: 100px;
-  color: #6b7a6e;
-  font-weight: var(--font-weight-bold);
-}
-
-.decision-log__row dd {
-  margin: 0;
-  flex: 1;
-  color: var(--color-text-heading);
-  word-break: break-word;
-}
-
-/* Summary row (wording + "Why?") on Health and Milestones; the details open below it. */
-.decision-log--summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  padding: 8px 8px 8px 16px;
-  border-radius: var(--radius-4xl);
-  background: var(--color-surface-stone);
-}
-
-.decision-log--summary .decision-log__summary {
-  flex: 1 1 0;
-  min-width: 0;
-  margin: 0;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-primary);
-}
-
-/* The row's own gap already separates the wording from the reason: no extra margin, less top padding. */
-.decision-log--summary .decision-log__body {
-  flex-basis: 100%;
-  margin-top: 0;
-  padding-top: 12px;
+@media (prefers-reduced-motion: reduce) {
+  .decision-log__summary,
+  .decision-log__reason { transition: none; }
+  .decision-log__timer { display: none; }
 }

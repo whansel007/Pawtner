@@ -435,7 +435,8 @@
     "comingSoonGift": "Soon: a gift from {{name}}"
   },
   "health": {
-    "title": "{{name}}'s Health Logs",
+    "eyebrow": "{{name}}'s",
+    "title": "Health Logs",
     "bpLabel": "BLOOD PRESSURE",
     "bpNeedsReading": "{{name}} needs one reading",
     "weekSummary": "Your week in plain words",
@@ -488,8 +489,6 @@
   "decisionLog": {
     "whyButton": "Why?",
     "whyButtonExpanded": "Hide why",
-    "emptyTitle": "Agent decision",
-    "emptyBody": "No rule has triggered yet.",
     "why": {
       "emergency_symptom_note": "Your note mentioned a sign that can be serious.",
       "bp_high_with_symptom": "The latest blood pressure reading was high and the note mentioned a symptom.",
@@ -535,6 +534,7 @@
   "summary": {
     "eyebrow": "Sunday summary",
     "title": "Your week in plain words",
+    "goodWeek": "Good week",
     "caringDays": "{{count}} of {{total}} caring days",
     "caringDays_one": "{{count}} of {{total}} caring day",
     "caringDays_other": "{{count}} of {{total}} caring days",

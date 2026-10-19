@@ -90,7 +90,6 @@ export const nudgeSettings: NudgeSettings = {
 };
 
 export const weekSummary: WeekSummary = {
-  rating: "Good week",
   caringDays: 6,
   totalDays: 7,
   doctorQuestion: "Is the sleepiness I feel in the evening expected?",

@@ -9,12 +9,9 @@ import type { DecisionKind } from "../../../shared/contract.js";
  */
 export const URGENT_DECISIONS: readonly DecisionKind[] = ["emergency_995", "see_gp_soon"];
 
-/**
- * The one routine decision that shows, as a card at the top of Health above "{{name}}'s Health Logs": a reading note
- * that may mention a side effect (owner, 18 Oct). Every other routine decision (nudge, celebrate, refill, quiet) shows
- * nowhere; Milestones has no decision card.
- */
-export const HEALTH_TOP_DECISIONS: readonly DecisionKind[] = ["doctor_question"];
+/** How long "Why?" shows its reason before the card folds back to the prompt (owner, 18 Oct: 5 s). */
+export const WHY_REVEAL_MS = 5000;
+
 
 /**
  * Rule ids that have a plain-language reason in en.json (decisionLog.why.<ruleId>). Any other rule shows

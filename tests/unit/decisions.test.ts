@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { explainDecision, healthTopDecision, isUrgentDecision } from "../../mobile/src/lib/decisions.js";
+import { explainDecision, isUrgentDecision, showSideEffectCard, SIDE_EFFECT_CARD } from "../../mobile/src/lib/decisions.js";
 import { RULES_WITH_PLAIN_REASON } from "../../mobile/src/config/decisions.js";
 import { decide } from "../../shared/rules.js";
+import { DECISION_TEMPLATES } from "../../shared/templates.js";
 import { sharedFixtures } from "../../shared/fixtures.js";
 import type { DecisionKind } from "../../shared/contract.js";
 
@@ -18,12 +19,22 @@ describe("decision placement", () => {
     expect(isUrgentDecision(null)).toBe(false);
   });
 
-  it("only a doctor question (possible side effect) shows at the top of Health; nothing else shows", () => {
-    for (const kind of ALL_KINDS) {
-      const decision = { decision: kind };
-      expect(healthTopDecision(decision)).toBe(kind === "doctor_question" ? decision : null);
-    }
-    expect(healthTopDecision(null)).toBeNull();
+  it("the side-effect card shows all day after a reading note that may mention a side effect (Singapore days)", () => {
+    const tz = "Asia/Singapore";
+    const reading = (recordedAt: string, note: string | null) => ({ recordedAt, note });
+    const morning = reading("2026-10-19T01:00:00.000Z", "Feeling a bit Dizzy today"); // 09:00 SGT, 19 Oct
+    expect(showSideEffectCard([morning], "2026-10-19T01:30:00.000Z", tz)).toBe(true);
+    expect(showSideEffectCard([morning], "2026-10-19T15:59:00.000Z", tz)).toBe(true); // 23:59 SGT, still 19 Oct
+    expect(showSideEffectCard([morning], "2026-10-19T16:00:00.000Z", tz)).toBe(false); // 00:00 SGT, 20 Oct
+    expect(showSideEffectCard([reading("2026-10-19T01:00:00.000Z", "I feel fine")], "2026-10-19T02:00:00.000Z", tz)).toBe(false);
+    expect(showSideEffectCard([reading("2026-10-19T01:00:00.000Z", null)], "2026-10-19T02:00:00.000Z", tz)).toBe(false);
+    expect(showSideEffectCard([], "2026-10-19T02:00:00.000Z", tz)).toBe(false);
+  });
+
+  it("the card's words come from the agent's template and the rule's plain reason", () => {
+    expect(SIDE_EFFECT_CARD.summary).toBe(DECISION_TEMPLATES.doctor_question);
+    expect(SIDE_EFFECT_CARD.reasonKey).toBe("decisionLog.why.possible_side_effect_note");
+    expect(en.decisionLog.why.possible_side_effect_note).toBeTruthy();
   });
 });
 

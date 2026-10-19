@@ -76,8 +76,6 @@ export interface NudgeSettings {
 }
 
 export interface WeekSummary {
-  /** Overall rating label, e.g. "Good week" */
-  rating: string;
   /** Number of caring days out of the week total */
   caringDays: number;
   /** Total days in the period */

@@ -5,7 +5,7 @@ import { FullCard } from "../components/FullCard";
 import { ActionRow } from "../components/ActionRow";
 import { ClinicMemoRow } from "../components/ClinicMemoRow";
 import type { BackAction } from "../lib/navigation";
-import { explainDecision, healthTopDecision, isUrgentDecision } from "../lib/decisions";
+import { explainDecision, isUrgentDecision, SIDE_EFFECT_CARD } from "../lib/decisions";
 import { DecisionLogCard } from "../components/DecisionLogCard";
 import { BP_RANGE } from "../config/bp";
 import { SYMPTOM_KEYS, type SymptomKey } from "../config/health";
@@ -28,6 +28,7 @@ export function HealthScreen({
   activityLink,
   clinicTasks,
   seniorName,
+  showSideEffect,
   petName,
   visitNoteLatest,
   onVisitNotes,
@@ -47,6 +48,8 @@ export function HealthScreen({
   clinicTasks: ClinicTask;
   /** The senior's name from data, for the title "{{name}}'s Health Logs". */
   seniorName: string;
+  /** Today has a reading note that may mention a side effect (lib/decisions.ts showSideEffectCard). */
+  showSideEffect: boolean;
   petName: string;
   /** Newest "For my next visit" note (her own words), or null. */
   visitNoteLatest: string | null;
@@ -148,12 +151,13 @@ export function HealthScreen({
     resultRef.current.focus({ preventScroll: true });
   }, [showResult]);
 
-  const sideEffect = healthTopDecision(latestDecision);
   return (
     <FullCard back={back}>
-      {/* Above the title: only a reading note that may mention a side effect (lib/decisions.ts, owner 18 Oct). */}
-      {sideEffect && <DecisionLogCard decision={sideEffect} summary={sideEffect.wording} />}
-      <h2>{t("health.title", { name: seniorName })}</h2>
+      {/* Above the title, for the rest of the day: a reading note that may mention a side effect (owner, 18 Oct). */}
+      {showSideEffect && <DecisionLogCard summary={SIDE_EFFECT_CARD.summary} reasonKey={SIDE_EFFECT_CARD.reasonKey} />}
+      {/* Same two lines as Milestones ("BUDDY IS LEARNING"): "ROSE'S" / "Health Logs". */}
+      <p className="eyebrow green">{t("health.eyebrow", { name: seniorName })}</p>
+      <h2>{t("health.title")}</h2>
 
       {/* With a warning, the Warning card replaces this one and carries the reading (owner, 18 Oct: no "Good job" under a Warning). */}
       {!showResult && <div className={`metric-card ${bpLogged ? "complete" : ""}`}>
