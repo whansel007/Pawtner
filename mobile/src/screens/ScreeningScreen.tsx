@@ -16,7 +16,6 @@ export function ScreeningScreen({
     <FullCard back={back}>
       <p className="eyebrow green">{t("screening.eyebrow")}</p>
       <h2>{t("screening.title")}</h2>
-      <p className="supporting">{t("screening.supporting")}</p>
       <div className="festival-card"><Icon name="star" size={42} /><h3>{screeningInfo.title}</h3><p>{screeningInfo.description}</p></div>
       <a className="primary-button" href={screeningInfo.url} target="_blank" rel="noreferrer">{t("screening.checkHealthHub")}</a>
     </FullCard>
