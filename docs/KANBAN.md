@@ -1,13 +1,12 @@
 # Kanban
 
-Updated 2026-10-18. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**. IDs refer to `PRD.md` §9.
+Updated 2026-10-19. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**. IDs refer to `PRD.md` §9.
 "Mock" = works on the phone against mock data in `mobile/src/mock`, not yet wired to the API.
 
 ## Doing
 
-Now (18 Oct, afternoon):
-1. Bug fixes the owner raises (coder, each on its own branch off `main`).
-2. Non-destructive Reset to morning: today's actions hidden with a `reset_at` column instead of deleted (migration 009). Brief drafted, waiting for the owner's OK.
+Now (19 Oct):
+1. Bug fixes the owner raises (coder, each on its own branch off `main`). Nothing in progress after #94–#98.
 
 Earlier items still listed below:
 
@@ -43,6 +42,11 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Start walk runs a live timer (no mock numbers); walks saved on the demo clock | [#94](https://github.com/whansel007/Pawtner/pull/94), merged 18 Oct |
+| — | Walk goal in Settings (3k/30, 5k/50, 10k/100 min, options in en.json); a day's walks add up; each walk stores its goal (migration 010); Simulate walk in the demo card, saved with its simulated length; no steps/calories/km/h on any walk; a short walk doesn't celebrate. **Migration 010 run by the owner before the merge.** | [#95](https://github.com/whansel007/Pawtner/pull/95), merged 19 Oct |
+| — | Heart toasts only when true ("heart is full" at 4, "gained a heart" on a gain); photo button "1/3 taken"; Buddy waves only with the Wave trick (7-day streak), else hearts; short walk: "Just a little bit more!" bubble | [#96](https://github.com/whansel007/Pawtner/pull/96), merged 19 Oct |
+| — | Reset to morning hides the day instead of deleting it (`reset_at`, migration 009; `resetAt` on list items; shared notes keep earlier wordings); hint "Today starts over at {{time}}. Earlier days stay." **Migration 009 run by the owner before the merge.** | [#97](https://github.com/whansel007/Pawtner/pull/97), merged 19 Oct |
+| — | No souvenirs for now (Milestones section and walk unlocks removed; table and shared code kept for badges) | [#98](https://github.com/whansel007/Pawtner/pull/98), merged 19 Oct |
 | — | Blood-pressure form saves only on "Save reading" (keyboard Enter/Go never submits), "Saving…", no warning after a save; one warning for every condition with the reading on the Warning card; toast "uh-oh, but thank you for logging the information" | [#91](https://github.com/whansel007/Pawtner/pull/91), merged 18 Oct |
 | — | "This is not medical advice." under every warning; Health heading ("This week", "Small steps, clearly told") removed | [#92](https://github.com/whansel007/Pawtner/pull/92), merged 18 Oct |
 | — | Only the latest stop keeps its Undo on My medicines (an earlier stopped row leaves the list) | [#85](https://github.com/whansel007/Pawtner/pull/85), merged 18 Oct |
@@ -113,6 +117,14 @@ Earlier items still listed below:
 
 | Item | Note |
 |---|---|
+| Log-in streak (owner, 18 Oct: "future will be logging in consecutive days") | The streak counts days with every medicine taken for now. A log-in streak needs accounts and a record of app opens. |
+| Badges (replace souvenirs) | Souvenirs removed from the screen in #98; the table, `shared/souvenirs.ts`, `GET /api/souvenirs` and the milestones fields `unlockedSouvenirs` / `nextSouvenirTarget` are unused until badges are designed. |
+| Walk goal per phone | Kept in localStorage (`pawtner.walkGoal`); another browser starts on 5k. Move to the server (a column on `users`) or a table with accounts. |
+| Day grouping uses the UTC date | `shared/selectors.ts` groups hearts, walks and the streak by `slice(0, 10)` of UTC times, so activities 00:00–07:59 SGT count on the previous day. Pre-existing, not changed. |
+| Reload race on the demo clock | After a reload without `?clock=`, the first `/api/today` can go out at real time and land after the demo-clock read, so the hearts briefly show the real-time count (seen once). Pre-existing (`demoClockOnLoad` / `refreshToday`). |
+| Buddy's bubble covers part of "today" | The bubble (toast slot under the hearts) overlaps the "today" label; seen in the #96 screenshots. Pre-existing placement. |
+| `tests/integration/api.test.ts` still fails | Loads only `001_init.sql`; should load every migration like the newer integration tests. Not briefed yet. |
+| `home.bpSub` ("Fill a heart") unused | Like the removed `home.walkSub`; delete when convenient. |
 | Wording waiting for the user (#65, #66) | Grab bar label and next-dose strip (`home.sheet.*`), Settings demo card (`settings.demo*`), "today" (`topZone.heartsToday`), /care check-in card (`care.web.week.checkIn*`) and Alerts switch/days strings (`care.web.alerts.*`). |
 | Health wording waiting for the user | "Snap your clinic memo" / "Your clinic memo" and the restock buttons are tentative; "Ask your doctor" / "Questions for the doctor" unchanged on purpose. |
 | Buddy clips: Safari/WebKit check (done 16 Oct by the user, portrait) | The `.mov` (HEVC-alpha) path is untested: Playwright WebKit isn't installed here. Check on an iPhone (Safari) and macOS Safari that the wave plays with no black box and lines up with the still. |
