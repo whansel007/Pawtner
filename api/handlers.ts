@@ -132,7 +132,7 @@ export function createApiHandler(repository: PawtnerRepository) {
         return json({ ok: true });
       }
       // ── T2-12: Milestones derived from data ──
-      if (request.method === "GET" && url.pathname === "/api/milestones") return json(await repository.getMilestones());
+      if (request.method === "GET" && url.pathname === "/api/milestones") return json(await repository.getMilestones(now));
       // ── T2-08: Pill photo recognition (demo only) ──
       // Set the SETTINGS-defined original picture for a medicine (one-time, in medicine settings).
       // Read the saved original picture back (My medicines shows it).

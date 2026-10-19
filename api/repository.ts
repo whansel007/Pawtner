@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient, QueryResultRow } from "pg";
-import { DEMO_RULES } from "../shared/config.js";
+import { DEMO_RULES, TRICK_STREAK_DAYS } from "../shared/config.js";
 import { decide, selectDogMood, firstReadingOf } from "../shared/rules.js";
 import { selectAgentInput, selectHeartActivities, selectHeartsAtInstants, selectHeartsTotal, walkHeartTimes, type AgentSelectionSource } from "../shared/selectors.js";
 import { applyModelWording } from "../shared/wording.js";
@@ -392,7 +392,7 @@ export class PawtnerRepository {
   private async today(client: PoolClient | Pool, userId: string, now: string, triggerEventId?: string): Promise<TodayResponse> {
     const { input, heartsTotal, activities } = await this.loadDogState(client, userId, now, triggerEventId);
     const userResult = await client.query("SELECT id::text, name FROM users WHERE id = $1", [userId]);
-    const dogResult = await client.query("SELECT id::text, name, mood FROM dogs WHERE user_id = $1", [userId]);
+    const dogResult = await client.query("SELECT id::text, name FROM dogs WHERE user_id = $1", [userId]);
     const timezoneResult = await client.query("SELECT timezone FROM users WHERE id = $1", [userId]);
     const today = localDate(now, timezoneResult.rows[0].timezone);
     const healthMetrics = input.healthMetrics.filter((metric) => localDate(metric.recordedAt, timezoneResult.rows[0].timezone) === today);
@@ -547,7 +547,7 @@ export class PawtnerRepository {
     const userId = await this.getDefaultUserId();
     const identity = await this.pool.query(
       `SELECT u.id::text AS user_id, u.name AS senior_name, u.timezone,
-              d.id::text AS dog_id, d.name AS dog_name, d.mood,
+              d.id::text AS dog_id, d.name AS dog_name,
               c.id::text AS caregiver_id, c.name AS caregiver_name
        FROM users u JOIN dogs d ON d.user_id = u.id
        LEFT JOIN user_caregivers uc ON uc.user_id = u.id
@@ -1218,14 +1218,10 @@ export class PawtnerRepository {
 
   // ── T2-12: Milestones derived from data ──
 
-  async getMilestones(): Promise<MilestonesResponse> {
+  async getMilestones(now = new Date().toISOString()): Promise<MilestonesResponse> {
     const userId = await this.getDefaultUserId();
-    const identity = await this.pool.query(
-      `SELECT u.timezone, d.heart, d.streak
-       FROM users u JOIN dogs d ON d.user_id = u.id WHERE u.id = $1`,
-      [userId],
-    );
-    const person = identity.rows[0];
+    // The streak derived on read, with the same selector as /api/today (not the cached dogs row).
+    const { input } = await this.loadDogState(this.pool, userId, now);
 
     const caringResult = await this.pool.query(
       `WITH first_dose AS (
@@ -1259,18 +1255,12 @@ export class PawtnerRepository {
       .filter((tier) => unlockedKeys.has(tier.key))
       .map((tier) => ({ key: tier.key, name: tier.name, note: tier.note }));
 
-    // Tricks derived from streak milestones
-    const streak = person.streak;
-    const trickDefs = [
-      { name: "Sit", threshold: 1, milestoneNote: "1 day streak" },
-      { name: "Wave", threshold: 7, milestoneNote: "7 day streak" },
-      { name: "Roll over", threshold: 14, milestoneNote: "14 day streak" },
-      { name: "New trick", threshold: 30, milestoneNote: "30 day streak" },
-    ];
-    const tricks = trickDefs.map((def) => ({
-      name: def.name,
-      note: streak >= def.threshold ? def.milestoneNote : `${def.threshold - streak} days to go`,
-      earned: streak >= def.threshold,
+    // Tricks from the streak and the one trick table (shared/config.ts TRICK_STREAK_DAYS).
+    const streak = input.dog.streak;
+    const tricks = Object.entries(TRICK_STREAK_DAYS).map(([name, threshold]) => ({
+      name,
+      note: streak >= threshold ? `${threshold} day streak` : `${threshold - streak} days to go`,
+      earned: streak >= threshold,
     }));
 
     // World derived from cumulative walk distance

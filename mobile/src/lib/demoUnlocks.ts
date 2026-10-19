@@ -45,14 +45,15 @@ export function demoHeartsTotal(real: number, ticked: ReadonlySet<DemoUnlockKey>
 }
 
 /**
- * Tricks at this streak: a trick counts as earned when its days are within the streak, and its note follows the
- * same number (same wording as api/repository.ts getMilestones). Tricks the API already marks earned stay earned.
+ * Tricks at this streak (the one live streak the phone shows, /api/today or a demo days tick): a trick counts as
+ * earned exactly when its days are within the streak, and its note follows the same number (same wording as
+ * api/repository.ts getMilestones). A trick the table doesn't know keeps what the API says.
  */
 export function withStreak<T extends { name: string; earned: boolean; note: string }>(tricks: readonly T[], streak: number): T[] {
   return tricks.map((trick) => {
     const needed = TRICK_STREAK_DAYS[trick.name];
     if (needed === undefined) return trick;
-    if (trick.earned || needed <= streak) return { ...trick, earned: true, note: `${needed} day streak` };
-    return { ...trick, note: `${needed - streak} days to go` };
+    if (needed <= streak) return { ...trick, earned: true, note: `${needed} day streak` };
+    return { ...trick, earned: false, note: `${needed - streak} days to go` };
   });
 }

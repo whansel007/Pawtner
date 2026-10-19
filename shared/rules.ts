@@ -46,11 +46,12 @@ export function selectDogMood(
   now: string,
 ): DogMood {
   // Hearts lead at both ends, before any decision (user, 16 Oct): low hearts are the sad (sleepy) face,
-  // full hearts are joyful. Decisions only shape the mood in between.
+  // full hearts are joyful. Decisions only shape the mood in between. The sad face comes ONLY from low hearts
+  // (owner, 18 Oct: "neutral state should be neutral"): a nudge for a late dose barks and reminds, but doesn't
+  // make Buddy sad.
   if (heart <= DEMO_RULES.lowHeartMaximum) return "sleepy";
   if (heart >= DEMO_RULES.heartMaximum) return "joyful";
   if (latestDecision?.decision === "emergency_995" || latestDecision?.decision === "see_gp_soon") return "attentive";
-  if (latestDecision?.decision === "nudge") return "sleepy";
 
   // Celebrate decisions keep the dog joyful for a fixed window, then expire (only matters below full hearts).
   if (latestDecision?.decision === "celebrate") {

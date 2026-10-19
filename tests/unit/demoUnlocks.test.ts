@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { demoHeartsTotal, demoStreak, demoTodayHearts, hasDemoTodayHearts, toggleDemoTick, withStreak } from "../../mobile/src/lib/demoUnlocks.js";
 import { TRICK_STREAK_DAYS } from "../../mobile/src/config/tricks.js";
+import { TRICK_STREAK_DAYS as SHARED_TRICK_STREAK_DAYS } from "../../shared/config.js";
 import { isUnlocked } from "../../mobile/src/lib/rewards.js";
 import type { DemoUnlockKey } from "../../mobile/src/config/demo.js";
 
@@ -47,10 +48,17 @@ describe("Settings > Demo ticks", () => {
     expect([...toggleDemoTick(ticks("days7"), "hearts20")].sort()).toEqual(["days7", "hearts20"]);
   });
 
-  it("trick days match api/repository.ts trickDefs", () => {
+  it("trick days come from one table (shared/config.ts), which the API reads too", () => {
+    expect(TRICK_STREAK_DAYS).toBe(SHARED_TRICK_STREAK_DAYS);
     const source = readFileSync(new URL("../../api/repository.ts", import.meta.url), "utf8");
-    for (const [name, days] of Object.entries(TRICK_STREAK_DAYS)) {
-      expect(source).toContain(`{ name: "${name}", threshold: ${days},`);
-    }
+    expect(source).toContain("Object.entries(TRICK_STREAK_DAYS)");
+    expect(source).not.toMatch(/name: "(Sit|Wave|Roll over|New trick)", threshold/);
+  });
+
+  it("tricks follow only the live streak: a trick the API marked earned is not kept below its days", () => {
+    const stale = [{ name: "Wave", note: "7 day streak", earned: true }];
+    expect(withStreak(stale, 6)[0]).toMatchObject({ earned: false, note: "1 days to go" });
+    expect(withStreak(stale, 7)[0]).toMatchObject({ earned: true, note: "7 day streak" });
+    expect(withStreak([{ name: "Unknown", note: "x", earned: true }], 0)[0].earned).toBe(true);
   });
 });

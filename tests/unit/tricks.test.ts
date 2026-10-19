@@ -1,3 +1,4 @@
+import { TRICK_STREAK_DAYS } from "../../shared/config.js";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { earnedPerformances, hasHeartsToPlay, isPerformable, resolveTrickRequest, tapRotation, trickCardTap, trickPerformance } from "../../mobile/src/lib/tricks.js";
@@ -28,7 +29,7 @@ describe("trick performances", () => {
     const mock = readFileSync(new URL("../../mobile/src/mock/milestones.ts", import.meta.url), "utf8");
     const api = readFileSync(new URL("../../api/repository.ts", import.meta.url), "utf8");
     expect(mock).toContain('{ name: "Wave", note: "7 day streak", earned: true }');
-    expect(api).toContain('{ name: "Wave", threshold: 7, milestoneNote: "7 day streak" }');
+    expect(TRICK_STREAK_DAYS.Wave).toBe(7);
     expect(mock + api).not.toMatch(/High five/i);
   });
 

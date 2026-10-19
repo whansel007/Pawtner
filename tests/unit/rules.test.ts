@@ -18,7 +18,7 @@ describe("deterministic decision rules", () => {
     const at59 = decide({ ...base, now: "2026-10-14T11:59:00+08:00", doses: [dose] });
     expect(at59.decision).toBe("stay_quiet");
     const at60 = decide({ ...base, now: "2026-10-14T12:00:00+08:00", doses: [dose] });
-    expect(at60).toMatchObject({ decision: "nudge", ruleId: "dose_nudge_1", mood: "sleepy", scheduleId: "s", scheduledFor: dose.scheduledAt });
+    expect(at60).toMatchObject({ decision: "nudge", ruleId: "dose_nudge_1", mood: "content", scheduleId: "s", scheduledFor: dose.scheduledAt });
     expect(decide({ ...base, now: "2026-10-14T12:59:00+08:00", doses: [{ ...dose, nudgeCount: 1, lastNudgeAt: "2026-10-14T12:00:00+08:00" }] }).decision).toBe("stay_quiet");
     expect(decide({ ...base, now: "2026-10-14T13:00:00+08:00", doses: [{ ...dose, nudgeCount: 1, lastNudgeAt: "2026-10-14T12:00:00+08:00" }] }).ruleId).toBe("dose_nudge_2");
     expect(decide({ ...base, doses: [{ ...dose, nudgeCount: 2, lastNudgeAt: "2026-10-14T11:00:00+08:00" }] }).decision).toBe("stay_quiet");
@@ -27,7 +27,7 @@ describe("deterministic decision rules", () => {
   it("sends one privacy-safe check-in per missed day once the caretaker's number of days is reached", () => {
     const missedYesterday = { ...base, consecutiveMissedDays: 1, lastMissedDay: "2026-10-13" };
     const result = decide({ ...missedYesterday, caretaker: { optedIn: true, threshold: 1 } });
-    expect(result).toMatchObject({ decision: "nudge", ruleId: "repeated_misses_caretaker_check_in", caretakerPing: true, mood: "sleepy" });
+    expect(result).toMatchObject({ decision: "nudge", ruleId: "repeated_misses_caretaker_check_in", caretakerPing: true, mood: "content" });
     expect(result.observations).toMatchObject({ consecutiveMissedDays: 1, lastMissedDay: "2026-10-13" });
     expect(result.wording).not.toMatch(/Fictional Tablet [AB]/);
     // Not turned on, or fewer days than the caretaker chose: no check-in.
@@ -124,7 +124,15 @@ describe("deterministic decision rules", () => {
     }
     // In between (2–3 hearts) decisions still shape the mood.
     expect(selectDogMood(3, { decision: "emergency_995", createdAt: base.now }, base.now)).toBe("attentive");
-    expect(selectDogMood(2, { decision: "nudge", createdAt: base.now }, base.now)).toBe("sleepy");
+  });
+
+  it("neutral is neutral (owner, 18 Oct): a nudge never makes Buddy sad; only low hearts do", () => {
+    const nudge = { decision: "nudge" as const, createdAt: base.now };
+    expect(selectDogMood(2, nudge, base.now)).toBe("content");
+    expect(selectDogMood(3, nudge, base.now)).toBe("content");
+    expect(selectDogMood(1, nudge, base.now)).toBe("sleepy");
+    expect(selectDogMood(1, null, base.now)).toBe("sleepy");
+    expect(selectDogMood(2, null, base.now)).toBe("content");
   });
 
   it("returns joyful at 4/4 hearts when there is no celebrate decision (or it expired)", () => {

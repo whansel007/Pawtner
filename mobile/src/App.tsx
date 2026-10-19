@@ -451,7 +451,8 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         userId: demoUser.id,
         dogId: demoDog.id,
         dogName,
-        heart: today?.dog.heart ?? localHeartCount(localDoses, bpLogged, today?.activities.walk ?? false),
+        // The same hearts the phone shows after this dose (shownHearts), demo tick included.
+        heart: heartsAfter,
         streak: today?.dog.streak ?? pet.streak,
         doses: localDoses,
         healthMetrics,

@@ -5402,6 +5402,12 @@ var EMERGENCY_SYMPTOM_KEYWORDS = [
   "one-sided weakness",
   "slurred speech"
 ];
+var TRICK_STREAK_DAYS = {
+  Sit: 1,
+  Wave: 7,
+  "Roll over": 14,
+  "New trick": 30
+};
 var POSSIBLE_SIDE_EFFECT_KEYWORDS = ["sleepy", "dizzy", "nausea"];
 
 // shared/templates.ts
@@ -5439,7 +5445,6 @@ function selectDogMood(heart, latestDecision, now) {
   if (heart <= DEMO_RULES.lowHeartMaximum) return "sleepy";
   if (heart >= DEMO_RULES.heartMaximum) return "joyful";
   if (latestDecision?.decision === "emergency_995" || latestDecision?.decision === "see_gp_soon") return "attentive";
-  if (latestDecision?.decision === "nudge") return "sleepy";
   if (latestDecision?.decision === "celebrate") {
     const elapsedMs = Date.parse(now) - Date.parse(latestDecision.createdAt);
     if (elapsedMs < DEMO_RULES.celebrateJoyfulMinutes * 6e4) return "joyful";
@@ -6155,7 +6160,7 @@ var PawtnerRepository = class {
   async today(client, userId, now, triggerEventId) {
     const { input, heartsTotal, activities } = await this.loadDogState(client, userId, now, triggerEventId);
     const userResult = await client.query("SELECT id::text, name FROM users WHERE id = $1", [userId]);
-    const dogResult = await client.query("SELECT id::text, name, mood FROM dogs WHERE user_id = $1", [userId]);
+    const dogResult = await client.query("SELECT id::text, name FROM dogs WHERE user_id = $1", [userId]);
     const timezoneResult = await client.query("SELECT timezone FROM users WHERE id = $1", [userId]);
     const today = localDate(now, timezoneResult.rows[0].timezone);
     const healthMetrics = input.healthMetrics.filter((metric) => localDate(metric.recordedAt, timezoneResult.rows[0].timezone) === today);
@@ -6308,7 +6313,7 @@ var PawtnerRepository = class {
     const userId = await this.getDefaultUserId();
     const identity = await this.pool.query(
       `SELECT u.id::text AS user_id, u.name AS senior_name, u.timezone,
-              d.id::text AS dog_id, d.name AS dog_name, d.mood,
+              d.id::text AS dog_id, d.name AS dog_name,
               c.id::text AS caregiver_id, c.name AS caregiver_name
        FROM users u JOIN dogs d ON d.user_id = u.id
        LEFT JOIN user_caregivers uc ON uc.user_id = u.id
@@ -6907,14 +6912,9 @@ var PawtnerRepository = class {
     });
   }
   // ── T2-12: Milestones derived from data ──
-  async getMilestones() {
+  async getMilestones(now = (/* @__PURE__ */ new Date()).toISOString()) {
     const userId = await this.getDefaultUserId();
-    const identity = await this.pool.query(
-      `SELECT u.timezone, d.heart, d.streak
-       FROM users u JOIN dogs d ON d.user_id = u.id WHERE u.id = $1`,
-      [userId]
-    );
-    const person = identity.rows[0];
+    const { input } = await this.loadDogState(this.pool, userId, now);
     const caringResult = await this.pool.query(
       `WITH first_dose AS (
          SELECT MIN(de.occurred_at) AS first_at
@@ -6941,17 +6941,11 @@ var PawtnerRepository = class {
     const unlockedKeys = new Set(souvenirResult.rows.map((row) => row.souvenir_key));
     for (const key of unlockedSouvenirs(cumulativeWalk)) unlockedKeys.add(key);
     const unlockedSouvenirsList = SOUVENIR_TIERS.filter((tier) => unlockedKeys.has(tier.key)).map((tier) => ({ key: tier.key, name: tier.name, note: tier.note }));
-    const streak = person.streak;
-    const trickDefs = [
-      { name: "Sit", threshold: 1, milestoneNote: "1 day streak" },
-      { name: "Wave", threshold: 7, milestoneNote: "7 day streak" },
-      { name: "Roll over", threshold: 14, milestoneNote: "14 day streak" },
-      { name: "New trick", threshold: 30, milestoneNote: "30 day streak" }
-    ];
-    const tricks = trickDefs.map((def) => ({
-      name: def.name,
-      note: streak >= def.threshold ? def.milestoneNote : `${def.threshold - streak} days to go`,
-      earned: streak >= def.threshold
+    const streak = input.dog.streak;
+    const tricks = Object.entries(TRICK_STREAK_DAYS).map(([name, threshold]) => ({
+      name,
+      note: streak >= threshold ? `${threshold} day streak` : `${threshold - streak} days to go`,
+      earned: streak >= threshold
     }));
     const worldThresholds = [
       { id: "flat", label: "Our flat", levelText: "WORLD 1", description: "Where it all begins.", threshold: 0 },
@@ -7241,7 +7235,7 @@ function createApiHandler(repository) {
         await repository.markTreatSeen(treatId);
         return json({ ok: true });
       }
-      if (request.method === "GET" && url.pathname === "/api/milestones") return json(await repository.getMilestones());
+      if (request.method === "GET" && url.pathname === "/api/milestones") return json(await repository.getMilestones(now));
       if (request.method === "GET" && url.pathname === "/api/pill-reference") {
         const medicationId = url.searchParams.get("medicationId") ?? "";
         if (!requiredString(medicationId)) throw new ApiError(400, "medicationId is required.");
