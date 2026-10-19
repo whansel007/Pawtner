@@ -49,7 +49,7 @@ Jamie decides when to be told: check-ins on or off, and after how many days in a
    <a href="https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/reminder.jpg"><img src="https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/reminder.jpg" alt="The dose-time reminder" width="390"></a>
 
 2. **If it's still not taken**, Buddy nudges 60 minutes later, and once more 60 minutes after that. Never more than twice.
-3. **Hearts carry over.** Each of three activities earns one, up to four: all of the day's medicines, a blood-pressure reading, a walk with Buddy. Every 12 hours without a new heart, Buddy loses one, never below one. Our first version gave a heart for one medicine out of three; we changed it so all of them count.
+3. **Hearts carry over.** Each of three activities earns one, up to four: all of the day's medicines, a blood-pressure reading, a walk with Buddy. Every 12 hours without a new heart, Buddy loses one, never below one. 
 4. **Each reading is compared with her first one.** About the same or lower says "Keep at it", 120/80 or below says "Good job", and more than 5 points above it, or any ticked emergency sign, shows a calm Warning.
 
    <a href="https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/bp-reading.jpg"><img src="https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/bp-reading.jpg" alt="A reading compared with her first one: Keep at it" width="390"></a>
