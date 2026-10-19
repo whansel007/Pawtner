@@ -7,7 +7,6 @@ Updated 2026-10-19. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 
 Now (19 Oct):
 1. Bug fixes the owner raises (coder, each on its own branch off `main`).
-2. `claude/card-drag` (coder, in progress): Health, Milestones and Settings get Home's grab bar and three views (full card / both / full Buddy), opening in "both" each time; the bar shows "- -" (both), "-" (full Buddy), "- - -" (full card), on Home too (owner, 19 Oct).
 
 Earlier items still listed below:
 
@@ -43,6 +42,7 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Health, Milestones and Settings drag like Home (full card / both / full Buddy, open in both); grab bar dashes "- -" / "-" / "- - -" on Home too; Health title "Health logs, clearly told" | [#109](https://github.com/whansel007/Pawtner/pull/109), merged 19 Oct |
 | — | Buddy comes back after Home's card is expanded and closed (ground measured again on every Home view change) | [#107](https://github.com/whansel007/Pawtner/pull/107), merged 19 Oct |
 | — | Doctor's prior and future visit in the demo card; side-effect notes count between them (agent, Health card); migration 011. **Migration 011 run by the owner before the merge.** | [#105](https://github.com/whansel007/Pawtner/pull/105), merged 19 Oct |
 | — | Blood pressure log: last 30 days on its own screen from Health; numbers, time, "higher than your first reading" and/or her note or "No symptoms logged"; Warning label; `GET /api/health-metrics` | [#103](https://github.com/whansel007/Pawtner/pull/103), merged 19 Oct |
@@ -131,6 +131,7 @@ Earlier items still listed below:
 | Reload race on the demo clock | After a reload without `?clock=`, the first `/api/today` can go out at real time and land after the demo-clock read, so the hearts briefly show the real-time count (seen once). Pre-existing (`demoClockOnLoad` / `refreshToday`). |
 | Buddy's bubble covers part of "today" | The bubble (toast slot under the hearts) overlaps the "today" label; seen in the #96 screenshots. Pre-existing placement. |
 | `tests/integration/api.test.ts` still fails | Loads only `001_init.sql`; should load every migration like the newer integration tests. Not briefed yet. |
+| Card drag: open questions (#109) | Not storing the three screens' view, Buddy's size on the strip, and the bar's screen-reader wording are tentative. Not checked on a real phone, with touch, or on a tablet held sideways. |
 | `home.bpSub` ("Fill a heart") unused | Like the removed `home.walkSub`; delete when convenient. |
 | Wording waiting for the user (#65, #66) | Grab bar label and next-dose strip (`home.sheet.*`), Settings demo card (`settings.demo*`), "today" (`topZone.heartsToday`), /care check-in card (`care.web.week.checkIn*`) and Alerts switch/days strings (`care.web.alerts.*`). |
 | Health wording waiting for the user | "Snap your clinic memo" / "Your clinic memo" and the restock buttons are tentative; "Ask your doctor" / "Questions for the doctor" unchanged on purpose. |

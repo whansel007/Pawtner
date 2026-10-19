@@ -1,5 +1,16 @@
 # Decisions
 
+## 2026-10-19 — Card drag on Health, Milestones and Settings; dashes on the grab bar; Health title (PR #109)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Health, Milestones and Settings get Home's grab bar and three views: full card / both / full Buddy (a strip with the back button and the screen's title). Other card screens don't drag. One handle (`SheetHandle`) and one set of view rules for Home and these screens (`config/homeView.ts` `CARD_SHEET`, `lib/homeView.ts`). | Owner: "all cards on health and milestones and settings can also be dragged full screen and or full dog screen such as at home ya". | Three more screens carry the drag code; content in full Buddy is hidden, not unmounted. | Final |
+| These screens open in "both" (small Buddy on the card's edge) every time; their choice isn't stored. Home keeps its stored choice and its larger Buddy. | Owner: "similar like home, but default is the small Buddy. Home is the larger one". Not storing was the advisor's reading. | Someone who likes the full card has to drag again on each visit. | Final (not storing: Tentative) |
+| In full Buddy, Buddy stands on the strip at Home's size limits (`strip` placement). | Advisor's proposal, matching Home's full Buddy. | — | Tentative |
+| The grab bar shows the view as short dashes in a row: "- -" both, "-" full Buddy, "- - -" full card, on Home too; same 120×28 bar. | Owner: "two lines on default. 1 line on minimize card, full card 3 lines", "just use --, - , and --- to save space", "Home same behaviour". | — | Final |
+| Screen-reader labels for the bar on these screens: "Drag up to see only this card, or down to see only {{name}}. Tap to see both." (landscape: left / right). | Advisor's wording. | — | Tentative |
+| Health's heading: "{{name}}'s" (eyebrow, unchanged) / "Health logs, clearly told" (title, same style as Milestones' "N caring days together"). | Owner: "ok Rose's is on the top. Health logs, clearly told similar to the 14 caring days together". Replaces "Health Logs" (19 Oct). | "clearly told" returns after "Small steps, clearly told" was removed on 18 Oct. | Final |
+
 ## 2026-10-19 — Buddy comes back after Home's card is closed (PR #107)
 
 | Decision | Reason | Tradeoff | Status |
