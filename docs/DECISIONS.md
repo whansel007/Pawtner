@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-19 — Blood-pressure log (PR #103)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Health has a "Blood pressure log" row under the Blood Pressure card; it opens her readings from the last 30 days (`BP_LOG_DAYS`, `shared/config.ts`), newest first, grouped by day. Each card: the numbers in bold, the time, and one line: "This reading is higher than your first reading." when it is, then her note as written, or "No symptoms logged" when blank. A warning reading gets a small "Warning" label. All cards the same height (two lines reserved). | Owner: "db and log new pr", "blood pressure log no need to input: keep at it! … just the important stuff", "the warning does not have a reason? … no need to interpret", "we can just say, no symptoms logged when there is no checked". | No "Keep at it" / "Good job" in the log; the "How do you feel?" ticks stay optional. | Final (30 days: tentative) |
+| Server: `GET /api/health-metrics?days=N` (1–366, default 30): one repository method (`listHealthMetrics`), user-scoped, skips readings hidden by Reset to morning (`notReset`). No new table, no migration. | The database already kept every reading; the phone only got today's. | No sign-in yet: anyone with the URL can read the list, as with `/api/today` (fictional demo user). | Final |
+| One rule for the Blood Pressure card's line and the log's Warning label (`readingLineKey`, `isWarningReading`, `lib/decisions.ts`); the emergency-sign check in one place (`mentionsEmergencySign`, `shared/rules.ts`). | One source of truth. | — | Final |
+
 ## 2026-10-19 — Health Logs, peekaboo warning, Buddy's mood, one streak (PRs #100, #101)
 
 | Decision | Reason | Tradeoff | Status |

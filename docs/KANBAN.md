@@ -7,8 +7,7 @@ Updated 2026-10-19. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 
 Now (19 Oct):
 1. Bug fixes the owner raises (coder, each on its own branch off `main`).
-2. Blood-pressure log on Health (`claude/bp-log`): past readings with her notes, last 30 days, own screen. Briefed 19 Oct, coder building.
-3. Next. Next-visit date (own bug-fix PR, after the log): side-effect notes count until the doctor's next visit; date in Settings > For demo only, a column on `users` (migration 011), no new table. Brief drafted; open: with no date set, today only or 7 days.
+2. Next-visit date (`claude/next-visit`, own bug-fix PR): side-effect notes count until the end of the doctor's next-visit day; the date defaults to today (a passed date counts as today, hint in the demo card); set in Settings > For demo only; a column on `users` (migration 011, owner runs it before the merge), no new table. Coder building since 19 Oct.
 
 Earlier items still listed below:
 
@@ -44,6 +43,7 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Blood pressure log: last 30 days on its own screen from Health; numbers, time, "higher than your first reading" and/or her note or "No symptoms logged"; Warning label; `GET /api/health-metrics` | [#103](https://github.com/whansel007/Pawtner/pull/103), merged 19 Oct |
 | — | Buddy's sad face only at low hearts (no sad face from a nudge); one streak for tricks (`/api/milestones` derived); trick thresholds in `shared/config.ts` | [#100](https://github.com/whansel007/Pawtner/pull/100), merged 19 Oct |
 | — | "ROSE'S / Health Logs"; Buddy's message + "Why?" peekaboo Warning / side-effect card (6 s, light blue front); BP card always shown, bold reading, warning reason on warning days; no warning on the weekly summary; no doses/walks boxes; "Good week" from data; Milestones without the decision card, "0 days in a row"; Home "Today's Schedule" | [#101](https://github.com/whansel007/Pawtner/pull/101), merged 19 Oct |
 | — | Start walk runs a live timer (no mock numbers); walks saved on the demo clock | [#94](https://github.com/whansel007/Pawtner/pull/94), merged 18 Oct |
