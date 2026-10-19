@@ -329,7 +329,7 @@
   "schedule": {
     "eyebrow": "Suggested routine",
     "title": "When should {{name}} nudge you?",
-    "supporting": "We made this from the label. Change it anytime.",
+    "supporting": "Change it anytime.",
     "confirm": "Confirm {{name}}'s routine"
   },
   "reference": {

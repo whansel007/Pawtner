@@ -18,7 +18,7 @@ import {
 } from "../../mobile/src/care/lib/rules.js";
 import { buildCaretakers, buildPersonas, findCaretaker, isCaretakerSlot } from "../../mobile/src/care/data/personas.js";
 import { buildMockCareData, MOCK_UPDATES_ONLY_CARETAKER } from "../../mobile/src/care/data/mock.js";
-import { CARE_PATHS, guardRoute, isCarePath, routeFromPath } from "../../mobile/src/care/routing.js";
+import { CARE_NAV_ROUTES, CARE_PATHS, footerNavRoutes, guardRoute, isCarePath, routeFromPath } from "../../mobile/src/care/routing.js";
 
 describe("care streak hearts", () => {
   it("fills the last min(streak, 7) days, oldest first", () => {
@@ -205,5 +205,12 @@ describe("careUpdates (one Updates card on This week)", () => {
 
   it("never carries the stopped medicine's name", () => {
     expect(JSON.stringify(careUpdates({ checkIn: null, stoppedMedicine }, checkIns, [], {}))).not.toMatch(/Tablet/);
+  });
+});
+
+describe("/care footer links", () => {
+  it("show the page links only once a persona is chosen", () => {
+    expect(footerNavRoutes(false)).toEqual([]);
+    expect(footerNavRoutes(true)).toEqual(CARE_NAV_ROUTES);
   });
 });
