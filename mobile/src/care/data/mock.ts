@@ -56,6 +56,7 @@ export function buildMockCareData(now: Date = new Date()): CareData {
       period: { start: at(now, -6, 0, 0).slice(0, 10), end: at(now, 0, 0, 0).slice(0, 10) },
       senior: SENIOR,
       caregiver: { ...MOCK_CHECK_INS_CARETAKER },
+      caregivers: [{ ...MOCK_CHECK_INS_CARETAKER, receivesCheckIns: true }, { ...MOCK_UPDATES_ONLY_CARETAKER }],
       dog,
       careScore: 86,
       caringDays: 5,

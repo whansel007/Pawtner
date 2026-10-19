@@ -47,6 +47,11 @@ export function isSignedInRoute(route: CareRoute): boolean {
   return SIGNED_IN_ROUTES.includes(route);
 }
 
+/** The footer's page links: only once a persona is chosen (owner, 19 Oct); before that they'd bounce to the picker. */
+export function footerNavRoutes(signedIn: boolean): readonly CareNavRoute[] {
+  return signedIn ? CARE_NAV_ROUTES : [];
+}
+
 /** The route actually shown: signed-in pages redirect to the picker when nobody is signed in. */
 export function guardRoute(route: CareRoute, signedIn: boolean): CareRoute {
   return isSignedInRoute(route) && !signedIn ? "signIn" : route;

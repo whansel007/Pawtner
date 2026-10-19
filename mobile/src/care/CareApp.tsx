@@ -146,7 +146,7 @@ export default function CareApp() {
         {signedInPage && route === "settings" && <SettingsPage data={data} viewer={viewer} />}
       </main>
 
-      <CareFooter onNavigate={go} />
+      <CareFooter onNavigate={go} signedIn={slot !== null} />
     </div>
   );
 }

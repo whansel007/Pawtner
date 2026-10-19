@@ -6345,6 +6345,17 @@ var PawtnerRepository = class {
       return this.today(client, userId, now);
     });
   }
+  /** The senior's caretakers (user_caregivers), in caregiver id order; `receivesCheckIns` = opted_in. */
+  async listCaregivers(userId, client = this.pool) {
+    const result = await client.query(
+      `SELECT c.id::text AS id, c.name, uc.opted_in
+       FROM user_caregivers uc JOIN caregivers c ON c.id = uc.caregiver_id
+       WHERE uc.user_id = $1
+       ORDER BY uc.caregiver_id`,
+      [userId]
+    );
+    return result.rows.map((row) => ({ id: row.id, name: row.name, receivesCheckIns: row.opted_in }));
+  }
   async getCaretakerSummary(now = (/* @__PURE__ */ new Date()).toISOString()) {
     const userId = await this.getDefaultUserId();
     const identity = await this.pool.query(
@@ -6452,6 +6463,7 @@ var PawtnerRepository = class {
       period: { start, end: today },
       senior: { id: person.user_id, name: person.senior_name },
       caregiver: person.caregiver_id ? { id: person.caregiver_id, name: person.caregiver_name } : null,
+      caregivers: await this.listCaregivers(userId),
       dog: { id: person.dog_id, name: person.dog_name, mood: selectDogMood(input.dog.heart, latestDecision, now), heart: input.dog.heart, streak: input.dog.streak, heartsTotal },
       careScore,
       caringDays: Math.max(stats.completed_days, 0),

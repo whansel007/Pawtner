@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import type { Screen } from "../types";
-import { backKindFor, popHistory, pushHistory, type BackAction } from "./navigation";
+import { backKindFor, openedFrom, popHistory, pushHistory, type BackAction } from "./navigation";
 
 /** Current screen plus a small history, so drilled-down screens return to the screen they came from. */
 export function useNavigation(initial: Screen) {
@@ -21,5 +21,5 @@ export function useNavigation(initial: Screen) {
   const kind = backKindFor(state.screen);
   const back: BackAction = { kind, onBack: kind === "home" ? goHome : goBack };
 
-  return { screen: state.screen, navigate, goBack, goHome, back };
+  return { screen: state.screen, from: openedFrom(state.history), navigate, goBack, goHome, back };
 }
