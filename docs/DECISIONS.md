@@ -1,5 +1,18 @@
 # Decisions
 
+## 2026-10-19 — Reminders, caretakers from data, no label scan, Screen for Life, /care footer (PR #111)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| No "Add a reminder" button anywhere (it had no action); Buddy's nudges (from Settings) shows no next-dose card. One screen, parts chosen by the way in. | Owner: "from home should not be able to add a reminder. remove the button", "buddy's nudge, remove next dose card. also, add a reminder button does not work.", then "1a". Reminders come from a medicine's schedule (Add a medication). | — | Final |
+| Caretakers come from the database: additive `caregivers[]` on the caretaker summary (reads `user_caregivers`, no new table, no migration); Settings reads "Jamie + Alex / Connected to the same Buddy". | Owner: "Jamie + Alex : connected to the same Buddy. do not hard code". | — | Final |
+| "Share my blood pressure" with "Your caretakers see your latest reading and the notes you write with it." | Owner: "remove "with Jamie" because can be with Alex also etc"; subtitle approved from the mock ("looks good"). | — | Final |
+| Texts about acting (refill "Ask Jamie to help", stop-medicine confirm) keep naming the check-ins caretaker only. | Owner: "2b because it'll be confusing for Alex. Alex only can see what's going on, no action". | — | Final |
+| Add a medication has no "Scan the label"; its Settings subtitle reads "Search the medicine and set the routine"; the schedule step reads "Change it anytime." | Owner: "remove "Scan the Label" as it currently doesn't work", mock approved, "2A". | No label reading until a working scan is built. | Final |
+| Buddy's nudges subtitle "Today's medicine times". | Owner approved the mock ("looks good"); "Times, sound and read-aloud" promised settings that don't exist. | — | Final |
+| Screen for Life: no paragraph and no button under "Check on HealthHub". | Owner: "for the HealthHub nothing on after the cta", "remove the sentence … celebrates too", "please remove the based on your age xxx also, that's not nice". | — | Final |
+| /care footer links (This week, Alerts & caregivers, Settings) show only once a caretaker is picked. | Owner: "1A" (they bounced back to the picker before). | — | Final |
+
 ## 2026-10-19 — Card drag on Health, Milestones and Settings; dashes on the grab bar; Health title (PR #109)
 
 | Decision | Reason | Tradeoff | Status |
