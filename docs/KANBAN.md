@@ -7,7 +7,6 @@ Updated 2026-10-19. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 
 Now (19 Oct):
 1. Bug fixes the owner raises (coder, each on its own branch off `main`).
-2. Next-visit date (`claude/next-visit`, own bug-fix PR): side-effect notes count until the end of the doctor's next-visit day; the date defaults to today (a passed date counts as today, hint in the demo card); set in Settings > For demo only; a column on `users` (migration 011, owner runs it before the merge), no new table. Coder building since 19 Oct.
 
 Earlier items still listed below:
 
@@ -43,6 +42,7 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Doctor's prior and future visit in the demo card; side-effect notes count between them (agent, Health card); migration 011. **Migration 011 run by the owner before the merge.** | [#105](https://github.com/whansel007/Pawtner/pull/105), merged 19 Oct |
 | — | Blood pressure log: last 30 days on its own screen from Health; numbers, time, "higher than your first reading" and/or her note or "No symptoms logged"; Warning label; `GET /api/health-metrics` | [#103](https://github.com/whansel007/Pawtner/pull/103), merged 19 Oct |
 | — | Buddy's sad face only at low hearts (no sad face from a nudge); one streak for tricks (`/api/milestones` derived); trick thresholds in `shared/config.ts` | [#100](https://github.com/whansel007/Pawtner/pull/100), merged 19 Oct |
 | — | "ROSE'S / Health Logs"; Buddy's message + "Why?" peekaboo Warning / side-effect card (6 s, light blue front); BP card always shown, bold reading, warning reason on warning days; no warning on the weekly summary; no doses/walks boxes; "Good week" from data; Milestones without the decision card, "0 days in a row"; Home "Today's Schedule" | [#101](https://github.com/whansel007/Pawtner/pull/101), merged 19 Oct |
@@ -125,7 +125,6 @@ Earlier items still listed below:
 | Badges (replace souvenirs) | Souvenirs removed from the screen in #98; the table, `shared/souvenirs.ts`, `GET /api/souvenirs` and the milestones fields `unlockedSouvenirs` / `nextSouvenirTarget` are unused until badges are designed. |
 | Walk goal per phone | Kept in localStorage (`pawtner.walkGoal`); another browser starts on 5k. Move to the server (a column on `users`) or a table with accounts. |
 | Day grouping uses the UTC date | `shared/selectors.ts` groups hearts, walks and the streak by `slice(0, 10)` of UTC times, so activities 00:00–07:59 SGT count on the previous day. Pre-existing, not changed. |
-| Side-effect rule looks at every reading ever | `shared/rules.ts` `possible_side_effect_note` checks all readings it gets, so one old "dizzy" note keeps later routine decisions as `doctor_question` (no celebrate). To be fixed by the next-visit date PR. |
 | BP card stays green on a warning day | The Blood Pressure card keeps its "done" colour while its line gives the warning's reason (#101). Owner not asked yet. |
 | Reload race on the demo clock | After a reload without `?clock=`, the first `/api/today` can go out at real time and land after the demo-clock read, so the hearts briefly show the real-time count (seen once). Pre-existing (`demoClockOnLoad` / `refreshToday`). |
 | Buddy's bubble covers part of "today" | The bubble (toast slot under the hearts) overlaps the "today" label; seen in the #96 screenshots. Pre-existing placement. |
