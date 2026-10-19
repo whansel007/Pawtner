@@ -7,6 +7,7 @@ Updated 2026-10-19. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 
 Now (19 Oct):
 1. Bug fixes the owner raises (coder, each on its own branch off `main`).
+2. `claude/card-drag` (coder, in progress): Health, Milestones and Settings get Home's grab bar and three views (full card / both / full Buddy), opening in "both" each time; the bar shows "- -" (both), "-" (full Buddy), "- - -" (full card), on Home too (owner, 19 Oct).
 
 Earlier items still listed below:
 
@@ -42,6 +43,7 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Buddy comes back after Home's card is expanded and closed (ground measured again on every Home view change) | [#107](https://github.com/whansel007/Pawtner/pull/107), merged 19 Oct |
 | — | Doctor's prior and future visit in the demo card; side-effect notes count between them (agent, Health card); migration 011. **Migration 011 run by the owner before the merge.** | [#105](https://github.com/whansel007/Pawtner/pull/105), merged 19 Oct |
 | — | Blood pressure log: last 30 days on its own screen from Health; numbers, time, "higher than your first reading" and/or her note or "No symptoms logged"; Warning label; `GET /api/health-metrics` | [#103](https://github.com/whansel007/Pawtner/pull/103), merged 19 Oct |
 | — | Buddy's sad face only at low hearts (no sad face from a nudge); one streak for tricks (`/api/milestones` derived); trick thresholds in `shared/config.ts` | [#100](https://github.com/whansel007/Pawtner/pull/100), merged 19 Oct |
@@ -61,7 +63,7 @@ Earlier items still listed below:
 | — | A stop is a moment: a stopped medicine's earlier doses keep counting (past hearts, lifetime, streak, check-ins never move), a stop never backdates a heart, its earlier doses leave today's list and nudges | [#86](https://github.com/whansel007/Pawtner/pull/86), merged 18 Oct |
 | — | Revision (design "A", 18 Oct): Stop moves inside each medicine's Edit panel (quiet text button, no Stop on the list); /care This week shows one "{{dog}}'s updates" card, e.g. "Buddy's updates" (check-in, stopped medicine, refill request, newest first) | [#83](https://github.com/whansel007/Pawtner/pull/83), merged 18 Oct |
 | — | Stop a medicine: My medicines "Stop this medicine" → confirm → "is stopped." + Undo (soft stop, `active` + `stopped_at`, migration 007); Home refreshes; /care This week "A medicine is stopped." (no name) for every caretaker. Migration 007 run on Supabase by the owner before the merge. | [#83](https://github.com/whansel007/Pawtner/pull/83), merged 18 Oct |
-| — | Health card ignores readings already saved today after a reload (found 17 Oct): `loadToday` now fills App's `healthMetrics` from `/api/today` (`today.healthMetrics`) via `mergeHealthMetrics` (`lib/healthReadings.ts`, tested), keeping readings saved offline and replacing the phone's copy with the server's row; after a reload the card shows the latest reading and its feedback line | [#82](https://github.com/whansel007/Pawtner/pull/82) (open, not merged) |
+| — | Health card ignores readings already saved today after a reload (found 17 Oct): `loadToday` now fills App's `healthMetrics` from `/api/today` (`today.healthMetrics`) via `mergeHealthMetrics` (`lib/healthReadings.ts`, tested), keeping readings saved offline and replacing the phone's copy with the server's row; after a reload the card shows the latest reading and its feedback line | [#82](https://github.com/whansel007/Pawtner/pull/82), merged 18 Oct |
 | — | Demo video https://youtu.be/xlip3x6tUjk: plays embedded at /care/video (address stays Pawtner's); footer link goes there; README links to it | [#79](https://github.com/whansel007/Pawtner/pull/79) |
 | — | Repo clean-up: unused `max-garden.jpg` removed, `playwright` moved to devDependencies, stale `functions/` ignore line dropped, CLAUDE.md PRD path fixed, favicon linked, `Pawtner.csv` → `docs/user-stories.csv`; old local worktrees and merged local branches removed (CodeBuddy ones kept) | [#75](https://github.com/whansel007/Pawtner/pull/75) |
 | — | /care footer "Watch the demo video" slot (`DEMO_VIDEO_URL`, "#" until the YouTube link exists) | [#76](https://github.com/whansel007/Pawtner/pull/76) |
@@ -138,10 +140,8 @@ Earlier items still listed below:
 | EdgeOne API fix (merged #33, 15 Oct) | `pawtner.edgeone.dev` served the front end but `/api/*` returned `index.html` (EdgeOne never scanned `functions/`). Fixed by `cloud-functions/api/[[default]].js` + root `edgeone.json`. Still needs: EdgeOne project deployed from the repo root, `DATABASE_URL` set, redeploy; then `/api/today` returns JSON. Old `functions/` folder can be deleted. Verified 15 Oct evening: `/api/today` on pawtner.edgeone.dev returns JSON (streak 7, heartsTotal 34). |
 | CodeBuddy credits below 5% (14 Oct) | Spend CodeBuddy only on judged features (T1-16, then T1-15). Claude Code does merges, structural fixes and screenshots. Ask organisers about a top-up. |
 | First load shows a plain green screen for ~3 s | Seen on the 14 Oct preview: `garden-day.webp` and `dog-base.webp` load after Home appears. Preload them during the cover/dedication. |
-| Toast says "heart is full!" at 3 of 4 hearts | `toast.bpLogged` text; pre-existing. |
 | Mock dog name `"max"` lowercase; mock medicines are veterinary (Apoquel, Gabapentin) | `mobile/src/mock/home.ts`; a judge may notice. |
 | BP inputs have no accessible name | Labels wrap a span and the input; the accessibility tree shows unnamed textboxes. Add `htmlFor`/`id` or `aria-label`. |
-| Heart score computed inline | `App.tsx` computes `heartCount` itself instead of `computeHeart` from `shared/selectors`; two sources of truth. |
 | Tap bubble on cramped Home (360×640) | When the dog's head already reaches under the name/hearts, the bubble is lifted above the head and briefly covers the name. Alternative: a smaller Home dog on short phones. |
 | `viewport-fit=cover` not set | `mobile/index.html` lacks it, so the `env(safe-area-inset-*)` paddings are 0 on iPhones (the browser letterboxes instead). Adding it is a separate, all-screens change. |
 | Stale checkouts mislead tools | On 14 Oct the main folder was still on the merged `cb/names-from-data` (no KANBAN/HANDOFF) and CodeBuddy tried to restart T1-08. Main folder switched to `main` the same morning. Start new work from `origin/main` in a worktree. |
