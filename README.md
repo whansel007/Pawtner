@@ -12,12 +12,6 @@ My mom's normal blood pressure is about 160. With her medicine, it comes down to
 
 Taking medicine on time, every day, is quiet and lonely work. Families want to help without hovering, and reminders that only beep are easy to ignore.
 
-## The idea in one line
-
-**Rules decide. Buddy only speaks.**
-
-Every decision (a nudge, a check-in, a warning) comes from fixed, tested rules. A language model may only reword the message, with a pre-written fallback, and the emergency message never uses a model.
-
 ## What Rose sees
 
 Rose opens the app to her garden and her dog.
