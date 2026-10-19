@@ -1,5 +1,6 @@
 import { HOME_VIEW, HOME_VIEWS, type HomeView } from "../config/homeView.js";
 import { browserStore, readItem, writeItem, type KeyValueStore } from "./localStore.js";
+import type { Screen } from "../types/common.js";
 
 /** What Home shows (pure helpers; chosen by dragging the card, config/homeView.ts). Anything unknown in storage reads as the default. */
 export function readHomeView(store: KeyValueStore | null = browserStore()): HomeView {
@@ -25,4 +26,12 @@ export function homeViewAfterDrag(view: HomeView, towardForm: number, snapPx: nu
 export function stepHomeView(view: HomeView, steps: number): HomeView {
   const index = Math.min(HOME_VIEWS.length - 1, Math.max(0, HOME_VIEWS.indexOf(view) + steps));
   return HOME_VIEWS[index]!;
+}
+
+/**
+ * When the scene's ground has to be measured again (useSceneGround's `screenKey`): on every screen change, and on Home
+ * whenever its view changes, because the views mount and unmount the chips Buddy stands on.
+ */
+export function sceneGroundKey(screen: Screen, homeView: HomeView): string {
+  return screen === "home" ? `${screen}:${homeView}` : screen;
 }

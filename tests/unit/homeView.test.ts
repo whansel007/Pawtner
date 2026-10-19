@@ -31,3 +31,14 @@ describe("dragging the Home card", () => {
     expect(stepHomeView("medicines", -1)).toBe("both");
   });
 });
+
+describe("measuring Buddy's ground again", () => {
+  it("changes with Home's view and equals the screen elsewhere", async () => {
+    const { sceneGroundKey } = await import("../../mobile/src/lib/homeView.js");
+    const homeKeys = new Set((["buddy", "both", "medicines"] as const).map((view) => sceneGroundKey("home", view)));
+    expect(homeKeys.size).toBe(3);
+    expect(sceneGroundKey("health", "medicines")).toBe("health");
+    expect(sceneGroundKey("health", "both")).toBe("health");
+    expect(sceneGroundKey("settings", "buddy")).toBe("settings");
+  });
+});

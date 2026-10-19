@@ -536,6 +536,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
       <div className="scene-shade" />
       <DogLayer
         screen={screen}
+        homeView={homeView}
         mood={mood}
         dogName={dogName}
         dizzy={dizzy}
