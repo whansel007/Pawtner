@@ -50,6 +50,7 @@ export function buildMockCareData(now: Date = new Date()): CareData {
       activities: { medicines: false, bloodPressure: false, walk: false },
       latestDecision: null,
       firstBloodPressure: null,
+      sideEffectNote: false,
     },
     summary: {
       period: { start: at(now, -6, 0, 0).slice(0, 10), end: at(now, 0, 0, 0).slice(0, 10) },

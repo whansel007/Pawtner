@@ -83,6 +83,15 @@ export interface AgentInput {
   } | null;
   walkFinished?: boolean;
   streakMilestoneReached?: boolean;
+  /** The senior's time zone (her days); without it the side-effect rule counts the UTC day. */
+  timeZone?: string;
+  /** Date of the doctor's next visit (YYYY-MM-DD) or null: side-effect notes count until then (shared/nextVisit.ts). */
+  nextDoctorVisit?: string | null;
+}
+
+/** GET / PUT /api/next-visit: the saved date of the doctor's next visit (YYYY-MM-DD), or null (= today). */
+export interface NextVisitState {
+  date: string | null;
 }
 
 export interface AgentDecision {
@@ -143,6 +152,8 @@ export interface TodayResponse {
   latestDecision: AgentDecision | null;
   /** The person's first blood-pressure reading ever (every reading is compared with it), or null. */
   firstBloodPressure: HealthMetric | null;
+  /** A reading note that may mention a side effect still counts (until the doctor's next visit): Health shows its card. */
+  sideEffectNote: boolean;
 }
 
 export interface DoseEventRequest {

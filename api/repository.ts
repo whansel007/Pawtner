@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient, QueryResultRow } from "pg";
 import { DEMO_RULES, TRICK_STREAK_DAYS } from "../shared/config.js";
-import { decide, selectDogMood, firstReadingOf } from "../shared/rules.js";
+import { activeSideEffectNote, decide, selectDogMood, firstReadingOf } from "../shared/rules.js";
 import { selectAgentInput, selectHeartActivities, selectHeartsAtInstants, selectHeartsTotal, walkHeartTimes, type AgentSelectionSource } from "../shared/selectors.js";
 import { applyModelWording } from "../shared/wording.js";
 import { isLive, resetItems, resetNotes, type Resettable, type VersionedNote } from "../shared/dayReset.js";
@@ -30,6 +30,7 @@ import type {
   EscalationSettingsResponse,
   HealthMetric,
   HealthMetricListResponse,
+  NextVisitState,
   HeartActivities,
   HealthMetricRequest,
   HealthMetricResponse,
@@ -261,7 +262,7 @@ export class PawtnerRepository {
     triggeringDoseEventId?: string,
   ): Promise<AgentSelectionSource> {
     const personResult = await client.query(
-      `SELECT u.timezone, d.id::text AS dog_id, d.name AS dog_name
+      `SELECT u.timezone, to_char(u.next_doctor_visit, 'YYYY-MM-DD') AS next_doctor_visit, d.id::text AS dog_id, d.name AS dog_name
        FROM users u JOIN dogs d ON d.user_id = u.id WHERE u.id = $1`,
       [userId],
     );
@@ -354,6 +355,8 @@ export class PawtnerRepository {
       now,
       today,
       userId,
+      timeZone: person.timezone,
+      nextDoctorVisit: person.next_doctor_visit ?? null,
       dog: { id: person.dog_id, name: person.dog_name },
       doseOccurrences: schedules,
       stopCutoffs,
@@ -391,7 +394,7 @@ export class PawtnerRepository {
   }
 
   private async today(client: PoolClient | Pool, userId: string, now: string, triggerEventId?: string): Promise<TodayResponse> {
-    const { input, heartsTotal, activities } = await this.loadDogState(client, userId, now, triggerEventId);
+    const { input, heartsTotal, activities, source } = await this.loadDogState(client, userId, now, triggerEventId);
     const userResult = await client.query("SELECT id::text, name FROM users WHERE id = $1", [userId]);
     const dogResult = await client.query("SELECT id::text, name FROM dogs WHERE user_id = $1", [userId]);
     const timezoneResult = await client.query("SELECT timezone FROM users WHERE id = $1", [userId]);
@@ -408,6 +411,8 @@ export class PawtnerRepository {
       activities,
       latestDecision,
       firstBloodPressure: firstReadingOf(input.healthMetrics),
+      // A side-effect note that still counts (until the doctor's next visit; the same rule as the agent's).
+      sideEffectNote: activeSideEffectNote(input.healthMetrics, now, timezoneResult.rows[0].timezone, source.nextDoctorVisit ?? null) !== null,
     };
   }
 
@@ -902,6 +907,20 @@ export class PawtnerRepository {
       await client.query("UPDATE users SET shared_visit_notes = $2::jsonb WHERE id = $1", [userId, JSON.stringify(kept)]);
       return { deleted: kept.length < notes.length };
     });
+  }
+
+  /** GET /api/next-visit: the saved date of the doctor's next visit (YYYY-MM-DD), or null (= today, shared/nextVisit.ts). */
+  async getNextVisit(): Promise<NextVisitState> {
+    const userId = await this.getDefaultUserId();
+    const row = (await this.pool.query("SELECT to_char(next_doctor_visit, 'YYYY-MM-DD') AS date FROM users WHERE id = $1", [userId])).rows[0];
+    return { date: row?.date ?? null };
+  }
+
+  /** PUT /api/next-visit: saves the date (a plain calendar date) or clears it (null). */
+  async setNextVisit(date: string | null): Promise<NextVisitState> {
+    const userId = await this.getDefaultUserId();
+    await this.pool.query("UPDATE users SET next_doctor_visit = $2::date WHERE id = $1", [userId, date]);
+    return this.getNextVisit();
   }
 
   async getSharing(): Promise<SharingSettings> {

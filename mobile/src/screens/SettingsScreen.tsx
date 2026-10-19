@@ -32,6 +32,8 @@ export function SettingsScreen({
   walkGoalKey,
   onWalkGoal,
   onSimulateWalk,
+  nextVisit,
+  onNextVisit,
 }: {
   back: BackAction;
   /** "My medicines": the medicine list with Edit and the original pill photo (T2-08). */
@@ -63,6 +65,9 @@ export function SettingsScreen({
   onWalkGoal: (key: string) => void;
   /** Demo card: open the Walk screen and run Simulate walk there. */
   onSimulateWalk: () => void;
+  /** The saved date of the doctor's next visit (YYYY-MM-DD) or null, and how to change it (empty = no date). */
+  nextVisit: string | null;
+  onNextVisit: (date: string | null) => void;
 }) {
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
@@ -122,6 +127,12 @@ export function SettingsScreen({
             <p>{t("settings.demoResetHint", { time: resetTime ? formatClockTime(resetTime) : DEMO_TIME_PRESETS[DEMO_RESET_PRESET], name: petName })}</p>
             <button type="button" className="secondary-button" onClick={onResetDemo}>{t("settings.demoReset", { time: resetTime ? formatClockTime(resetTime) : DEMO_TIME_PRESETS[DEMO_RESET_PRESET] })}</button>
             <button type="button" className="secondary-button" onClick={onSimulateWalk}>{t("walk.simulateWalk")}</button>
+          </section>
+          {/* Side-effect notes count until this day (shared/nextVisit.ts); not changed by Reset to morning. */}
+          <section className="demo-panel__section">
+            <label htmlFor="next-visit"><h3>{t("settings.nextVisitTitle")}</h3></label>
+            <input id="next-visit" type="date" value={nextVisit ?? ""} onChange={(event) => onNextVisit(event.target.value || null)} />
+            <p>{t("settings.nextVisitHint")}</p>
           </section>
           <section className="demo-panel__section">
             <h3>{t("settings.demoTimeTitle")}</h3>

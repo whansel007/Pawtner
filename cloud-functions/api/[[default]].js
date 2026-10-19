@@ -5425,6 +5425,22 @@ var DECISION_TEMPLATES = {
 };
 var WARNING_EMERGENCY_SIGN_WORDING = "Your note mentioned a sign that can be serious.";
 
+// shared/nextVisit.ts
+function localDay(instant, timeZone) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(instant));
+}
+function effectiveNextVisit(saved, day) {
+  return saved !== null && saved >= day ? saved : day;
+}
+function sideEffectNoteCounts(noteDay, today, saved) {
+  return noteDay <= today && today <= effectiveNextVisit(saved, noteDay);
+}
+function isCalendarDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = /* @__PURE__ */ new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
 // shared/rules.ts
 function includesAny(text, keywords) {
   const normalized = text.toLowerCase();
@@ -5435,6 +5451,10 @@ function mentionsEmergencySign(note) {
 }
 function mentionsPossibleSideEffect(note) {
   return includesAny(note ?? "", POSSIBLE_SIDE_EFFECT_KEYWORDS);
+}
+function activeSideEffectNote(readings, now, timeZone, saved) {
+  const today = localDay(now, timeZone);
+  return [...readings].filter((reading) => Date.parse(reading.recordedAt) <= Date.parse(now)).sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt)).find((reading) => mentionsPossibleSideEffect(reading.note) && sideEffectNoteCounts(localDay(reading.recordedAt, timeZone), today, saved)) ?? null;
 }
 function firstReadingOf(metrics) {
   return metrics.reduce((first, metric) => first === null || Date.parse(metric.recordedAt) < Date.parse(first.recordedAt) ? metric : first, null);
@@ -5499,7 +5519,7 @@ function decide(input) {
       { systolic: latestMetric.systolic, diastolic: latestMetric.diastolic, firstSystolic: firstReading.systolic, firstDiastolic: firstReading.diastolic }
     );
   }
-  const sideEffectMetric = [...metrics].reverse().find((metric) => mentionsPossibleSideEffect(metric.note));
+  const sideEffectMetric = activeSideEffectNote(metrics, input.now, input.timeZone ?? "UTC", input.nextDoctorVisit ?? null);
   if (sideEffectMetric) {
     return decision(
       input,
@@ -5755,7 +5775,9 @@ function selectAgentInput(source) {
     consecutiveMissedDays: missedDays.count,
     lastMissedDay: missedDays.lastMissedDay,
     lastCheckInDay: source.lastCheckInDay,
-    caretaker: source.caretaker
+    caretaker: source.caretaker,
+    timeZone: source.timeZone,
+    nextDoctorVisit: source.nextDoctorVisit ?? null
   });
 }
 function selectHeartsTotal(source) {
@@ -6044,7 +6066,7 @@ var PawtnerRepository = class {
    */
   async loadSource(client, userId, now, triggeringDoseEventId) {
     const personResult = await client.query(
-      `SELECT u.timezone, d.id::text AS dog_id, d.name AS dog_name
+      `SELECT u.timezone, to_char(u.next_doctor_visit, 'YYYY-MM-DD') AS next_doctor_visit, d.id::text AS dog_id, d.name AS dog_name
        FROM users u JOIN dogs d ON d.user_id = u.id WHERE u.id = $1`,
       [userId]
     );
@@ -6133,6 +6155,8 @@ var PawtnerRepository = class {
       now,
       today,
       userId,
+      timeZone: person.timezone,
+      nextDoctorVisit: person.next_doctor_visit ?? null,
       dog: { id: person.dog_id, name: person.dog_name },
       doseOccurrences: schedules,
       stopCutoffs,
@@ -6165,7 +6189,7 @@ var PawtnerRepository = class {
     return mapDecision(result.rows[0]);
   }
   async today(client, userId, now, triggerEventId) {
-    const { input, heartsTotal, activities } = await this.loadDogState(client, userId, now, triggerEventId);
+    const { input, heartsTotal, activities, source } = await this.loadDogState(client, userId, now, triggerEventId);
     const userResult = await client.query("SELECT id::text, name FROM users WHERE id = $1", [userId]);
     const dogResult = await client.query("SELECT id::text, name FROM dogs WHERE user_id = $1", [userId]);
     const timezoneResult = await client.query("SELECT timezone FROM users WHERE id = $1", [userId]);
@@ -6181,7 +6205,9 @@ var PawtnerRepository = class {
       bloodPressureLoggedToday: healthMetrics.length > 0,
       activities,
       latestDecision,
-      firstBloodPressure: firstReadingOf(input.healthMetrics)
+      firstBloodPressure: firstReadingOf(input.healthMetrics),
+      // A side-effect note that still counts (until the doctor's next visit; the same rule as the agent's).
+      sideEffectNote: activeSideEffectNote(input.healthMetrics, now, timezoneResult.rows[0].timezone, source.nextDoctorVisit ?? null) !== null
     };
   }
   async saveDecision(client, userId, decision2) {
@@ -6641,6 +6667,18 @@ var PawtnerRepository = class {
       await client.query("UPDATE users SET shared_visit_notes = $2::jsonb WHERE id = $1", [userId, JSON.stringify(kept)]);
       return { deleted: kept.length < notes.length };
     });
+  }
+  /** GET /api/next-visit: the saved date of the doctor's next visit (YYYY-MM-DD), or null (= today, shared/nextVisit.ts). */
+  async getNextVisit() {
+    const userId = await this.getDefaultUserId();
+    const row = (await this.pool.query("SELECT to_char(next_doctor_visit, 'YYYY-MM-DD') AS date FROM users WHERE id = $1", [userId])).rows[0];
+    return { date: row?.date ?? null };
+  }
+  /** PUT /api/next-visit: saves the date (a plain calendar date) or clears it (null). */
+  async setNextVisit(date) {
+    const userId = await this.getDefaultUserId();
+    await this.pool.query("UPDATE users SET next_doctor_visit = $2::date WHERE id = $1", [userId, date]);
+    return this.getNextVisit();
   }
   async getSharing() {
     const userId = await this.getDefaultUserId();
@@ -7214,6 +7252,12 @@ function createApiHandler(repository) {
         const data = await body(request);
         if (typeof data.text !== "string" || !validDate(data.updatedAt)) throw new ApiError(400, "text and an ISO updatedAt are required.");
         return json(await repository.upsertSharedNote(id, data));
+      }
+      if (request.method === "GET" && url.pathname === "/api/next-visit") return json(await repository.getNextVisit());
+      if (request.method === "PUT" && url.pathname === "/api/next-visit") {
+        const data = await body(request);
+        if (data.date !== null && !isCalendarDate(data.date)) throw new ApiError(400, "date must be a YYYY-MM-DD calendar date or null.");
+        return json(await repository.setNextVisit(data.date));
       }
       if (request.method === "GET" && url.pathname === "/api/sharing") return json(await repository.getSharing());
       if (request.method === "PUT" && url.pathname === "/api/sharing") {

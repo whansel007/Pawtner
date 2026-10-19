@@ -1,5 +1,5 @@
 import type { AgentDecision, HealthMetric } from "../../../shared/contract.js";
-import { mentionsPossibleSideEffect, readingStatus } from "../../../shared/rules.js";
+import { activeSideEffectNote, readingStatus } from "../../../shared/rules.js";
 import { DECISION_TEMPLATES } from "../../../shared/templates.js";
 import { RULES_WITH_PLAIN_REASON, URGENT_DECISIONS } from "../config/decisions.js";
 
@@ -12,20 +12,13 @@ export function isUrgentDecision(decision: Pick<AgentDecision, "decision"> | nul
   return decision !== null && URGENT_DECISIONS.includes(decision.decision);
 }
 
-/** The senior's local calendar day of an instant (YYYY-MM-DD). */
-function localDay(instant: string, timeZone: string): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(instant));
-}
-
 /**
- * The card at the top of Health (owner, 18 Oct): it shows for the rest of the day once one of today's readings has a
- * note that may mention a possible side effect (shared/rules.ts mentionsPossibleSideEffect, the agent's own rule),
- * whatever Buddy decided after. It goes at the next day, or after Reset to morning hides that reading.
- * No other routine decision shows anywhere (Milestones has no decision card).
+ * The side-effect card when the server can't be asked (offline): a note from today only (as with no visit date).
+ * Online the phone uses the server's TodayResponse.sideEffectNote, which also counts notes until the doctor's next
+ * visit. Both use the one rule, shared/rules.ts activeSideEffectNote.
  */
 export function showSideEffectCard(readings: readonly Pick<HealthMetric, "note" | "recordedAt">[], now: string, timeZone: string): boolean {
-  const today = localDay(now, timeZone);
-  return readings.some((reading) => localDay(reading.recordedAt, timeZone) === today && mentionsPossibleSideEffect(reading.note));
+  return activeSideEffectNote(readings, now, timeZone, null) !== null;
 }
 
 /** Buddy's message on a side-effect day: the agent's own template, never retyped. */
@@ -33,7 +26,7 @@ export const SIDE_EFFECT_PROMPT = DECISION_TEMPLATES.doctor_question;
 
 /**
  * The card at the top of Health today (owner, 18 Oct): a warning first (the latest decision is urgent), else a
- * side-effect note today, else nothing. Its front is Buddy's message with "Why?"; "Why?" shows the Warning card or the
+ * side-effect note that still counts (until the doctor's next visit), else nothing. Its front is Buddy's message with "Why?"; "Why?" shows the Warning card or the
  * side-effect reason for a moment (components/PeekCard).
  */
 type ReadingLike = Parameters<typeof readingStatus>[0];
@@ -70,14 +63,9 @@ export function bpCardLineKey(latest: ReadingLike | null, first: ReadingLike | n
 
 export type HealthTopCard<T> = { kind: "warning"; decision: T } | { kind: "sideEffect" } | null;
 
-export function healthTopCard<T extends Pick<AgentDecision, "decision">>(
-  latestDecision: T | null,
-  readings: readonly Pick<HealthMetric, "note" | "recordedAt">[],
-  now: string,
-  timeZone: string,
-): HealthTopCard<T> {
+export function healthTopCard<T extends Pick<AgentDecision, "decision">>(latestDecision: T | null, sideEffectNote: boolean): HealthTopCard<T> {
   if (latestDecision && isUrgentDecision(latestDecision)) return { kind: "warning", decision: latestDecision };
-  return showSideEffectCard(readings, now, timeZone) ? { kind: "sideEffect" } : null;
+  return sideEffectNote ? { kind: "sideEffect" } : null;
 }
 
 export interface DecisionWhy {

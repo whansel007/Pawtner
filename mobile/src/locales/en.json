@@ -579,6 +579,8 @@
     "demoSub": "Tools for showing Pawtner. Tap to open.",
     "demoBackToSettings": "Back to Settings",
     "demoResetTitle": "Start the day again",
+    "nextVisitTitle": "Date of doctor's next visit",
+    "nextVisitHint": "A date that has passed counts as today in this demo.",
     "demoReset": "Reset to morning ({{time}})",
     "demoResetHint": "Today starts over at {{time}}. Earlier days stay.",
     "demoTimeTitle": "Garden time",

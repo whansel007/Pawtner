@@ -43,6 +43,7 @@ import { mergeHealthMetrics } from "./lib/healthReadings";
 import { demoClockOnLoad, runningClock, saveDemoClock, searchWithout, type DemoClockAnchor } from "./lib/demoClock";
 import { useHomeView } from "./lib/useHomeView";
 import { useWalkGoal } from "./lib/useWalkGoal";
+import { useNextVisit } from "./lib/useNextVisit";
 import { useDoseReminder } from "./lib/useDoseReminder";
 import { shouldBarkFor } from "./lib/nudgeBark";
 import { activityToastKey, bpToastKey, heartChange } from "./lib/heartToast";
@@ -55,7 +56,7 @@ import { computeHeart, heartActivities, walkHeartTimes } from "../../shared/sele
 import { SENIOR_TIMEZONE } from "./config/scene";
 import type { World, Accessory, Screen } from "./types";
 import type { WalkCompletion } from "./lib/walkState";
-import { healthTopCard, isUrgentDecision } from "./lib/decisions";
+import { healthTopCard, isUrgentDecision, showSideEffectCard } from "./lib/decisions";
 import { isGoodWeek } from "./lib/weekRating";
 import type { TrickRequest } from "./lib/tricks";
 import {
@@ -230,6 +231,8 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
   const firstReading = firstReadingOf([...(today?.firstBloodPressure ? [today.firstBloodPressure] : []), ...healthMetrics]);
   // "Share my blood pressure with {{caretaker}}" (Settings; /care follows it in the same browser).
   const [shareBloodPressure, setShareBloodPressure] = useShareBloodPressure((error) => reportApiProblem(error, true));
+  // Settings > For demo only: the doctor's next visit; side-effect notes count until then (server, shared/nextVisit.ts).
+  const [nextVisit, setNextVisit] = useNextVisit((error) => reportApiProblem(error, true), () => { void refreshToday(); });
 
   const notify = (message: string, ms = 2400) => {
     setToast(message);
@@ -586,10 +589,10 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} medicationId={pendingDose?.medicationId} takenCount={countAfterTaking(doseList, pendingDoseId ?? "")} />}
         {screen === "walk" && <WalkScreen back={back} goalMinutes={walkGoal.minutes} simulateRequested={simulateWalkRequested} onSimulateStarted={handleSimulateStarted} petName={dogName} walkStartedAt={walkStartedAt} clockNow={clockNow} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
         {screen === "milestones" && <MilestonesScreen back={back} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} heartsTotal={heartsTotal} mood={mood} onTrick={(performance) => setTrickRequest((prev) => ({ id: (prev?.id ?? 0) + 1, performance }))} />}
-        {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} onBpLog={() => navigate("bpLog")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} seniorName={today?.user.name ?? liveCaregiver.seniorName} topCard={healthTopCard(latestDecision, healthMetrics, demoNow() ?? new Date().toISOString(), SENIOR_TIMEZONE)} petName={dogName} />}
+        {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} onBpLog={() => navigate("bpLog")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} seniorName={today?.user.name ?? liveCaregiver.seniorName} topCard={healthTopCard(latestDecision, today?.sideEffectNote ?? showSideEffectCard(healthMetrics, demoNow() ?? new Date().toISOString(), SENIOR_TIMEZONE))} petName={dogName} />}
         {screen === "screening" && <ScreeningScreen back={back} screeningInfo={screeningInfo} petName={dogName} />}
         {screen === "summary" && <WeeklySummaryScreen back={back} weekSummary={{ ...weekSummary, caringDays: careSummary?.caringDays ?? weekSummary.caringDays, doctorQuestion: visitNotes.latest?.text ?? t("visitNotes.empty") }} onVisitNotes={() => navigate("visitNotes")} goodWeek={isGoodWeek({ streak, caringDays: careSummary?.caringDays ?? weekSummary.caringDays })} />}
-        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => toggleDemoTick(current, key))} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} walkGoalKey={walkGoal.key} onWalkGoal={setWalkGoal} onSimulateWalk={() => { setSimulateWalkRequested(true); navigate("walk"); }} />}
+        {screen === "settings" && <SettingsScreen back={back} openMedicines={() => navigate("medicines")} addMedication={() => navigate("prescription")} openReminders={() => navigate("reminders")} caregiver={liveCaregiver} petName={dogName} demoClockValue={demoClockValue} onDemoClockChange={setDemoClockValue} onRunDemoClock={runAgentAtDemoTime} agentBusy={agentBusy} demoUnlocks={demoUnlocks} onToggleDemoUnlock={(key) => setDemoUnlocks((current) => toggleDemoTick(current, key))} activeTimePreset={scenePreset} onDemoTime={setDemoTime} onResetDemo={resetDemoToMorning} shareBloodPressure={shareBloodPressure} onShareBloodPressure={setShareBloodPressure} firstReading={firstReading} walkGoalKey={walkGoal.key} onWalkGoal={setWalkGoal} onSimulateWalk={() => { setSimulateWalkRequested(true); navigate("walk"); }} nextVisit={nextVisit} onNextVisit={setNextVisit} />}
         {screen === "medicines" && <MedicinesScreen back={back} petName={dogName} caretakerName={caretakerName} onMedicinesChanged={() => void refreshToday()} />}
         {screen === "bpLog" && <BpLogContainer back={back} now={demoNow() ?? new Date().toISOString()} timeZone={SENIOR_TIMEZONE} fallback={healthMetrics} firstReading={firstReading} onOffline={(error) => reportApiProblem(error)} />}
         {screen === "visitNotes" && <VisitNotesScreen back={back} notes={visitNotes.notes} caretakerName={caretakerName} maxLength={visitNotes.maxLength} onAdd={visitNotes.add} onEdit={visitNotes.edit} onRemove={visitNotes.remove} />}

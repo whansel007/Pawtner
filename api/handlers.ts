@@ -1,6 +1,7 @@
 import { ApiError, PawtnerRepository } from "./repository.js";
 import { BP_LOG_DAYS } from "../shared/config.js";
-import type { AgentDecideRequest, CreateMedicationRequest, DemoResetDayRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, PillReferenceRequest, PillVerifyRequest, UpdateMedicationRequest, WalkSessionRequest, CreateRestockRequest, SharedNoteRequest, SharingSettings, DemoClockState } from "../shared/contract.js";
+import { isCalendarDate } from "../shared/nextVisit.js";
+import type { AgentDecideRequest, CreateMedicationRequest, DemoResetDayRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, PillReferenceRequest, PillVerifyRequest, UpdateMedicationRequest, WalkSessionRequest, CreateRestockRequest, SharedNoteRequest, SharingSettings, DemoClockState, NextVisitState } from "../shared/contract.js";
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 async function body<T>(request: Request): Promise<T> {
@@ -84,6 +85,12 @@ export function createApiHandler(repository: PawtnerRepository) {
         const data = await body<SharedNoteRequest>(request);
         if (typeof data.text !== "string" || !validDate(data.updatedAt)) throw new ApiError(400, "text and an ISO updatedAt are required.");
         return json(await repository.upsertSharedNote(id, data));
+      }
+      if (request.method === "GET" && url.pathname === "/api/next-visit") return json(await repository.getNextVisit());
+      if (request.method === "PUT" && url.pathname === "/api/next-visit") {
+        const data = await body<NextVisitState>(request);
+        if (data.date !== null && !isCalendarDate(data.date)) throw new ApiError(400, "date must be a YYYY-MM-DD calendar date or null.");
+        return json(await repository.setNextVisit(data.date));
       }
       if (request.method === "GET" && url.pathname === "/api/sharing") return json(await repository.getSharing());
       if (request.method === "PUT" && url.pathname === "/api/sharing") {

@@ -31,18 +31,14 @@ describe("decision placement", () => {
     expect(showSideEffectCard([], "2026-10-19T02:00:00.000Z", tz)).toBe(false);
   });
 
-  it("the top card today: a warning first, else a side-effect note today, else nothing", () => {
-    const tz = "Asia/Singapore";
-    const now = "2026-10-19T03:00:00.000Z";
-    const dizzy = [{ recordedAt: "2026-10-19T01:00:00.000Z", note: "a bit dizzy" }];
-    const fine = [{ recordedAt: "2026-10-19T01:00:00.000Z", note: "I feel fine" }];
+  it("the top card today: a warning first, else a side-effect note that still counts, else nothing", () => {
     const warning = { decision: "see_gp_soon" as const };
-    expect(healthTopCard(warning, dizzy, now, tz)).toEqual({ kind: "warning", decision: warning });
-    expect(healthTopCard({ decision: "emergency_995" as const }, fine, now, tz)?.kind).toBe("warning");
-    expect(healthTopCard({ decision: "nudge" as const }, dizzy, now, tz)).toEqual({ kind: "sideEffect" });
-    expect(healthTopCard(null, dizzy, now, tz)).toEqual({ kind: "sideEffect" });
-    expect(healthTopCard({ decision: "celebrate" as const }, fine, now, tz)).toBeNull();
-    expect(healthTopCard(null, [], now, tz)).toBeNull();
+    expect(healthTopCard(warning, true)).toEqual({ kind: "warning", decision: warning });
+    expect(healthTopCard({ decision: "emergency_995" as const }, false)?.kind).toBe("warning");
+    expect(healthTopCard({ decision: "nudge" as const }, true)).toEqual({ kind: "sideEffect" });
+    expect(healthTopCard(null, true)).toEqual({ kind: "sideEffect" });
+    expect(healthTopCard({ decision: "celebrate" as const }, false)).toBeNull();
+    expect(healthTopCard(null, false)).toBeNull();
   });
 
   it("the BP card's line follows any warning (also an emergency sign at normal numbers), never 'Good job' under it", () => {
