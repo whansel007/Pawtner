@@ -7,7 +7,6 @@ Updated 2026-10-19. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 
 Now (19 Oct):
 1. Bug fixes the owner raises (coder, each on its own branch off `main`).
-2. #115 (demo clock wording "Pretend it's this time. Buddy reacts to it." / "Jump to this time"): open, waiting for the owner's merge.
 
 Earlier items still listed below:
 
@@ -43,6 +42,7 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | Demo clock wording: "Pretend it's this time. Buddy reacts to it." / "Jump to this time" | [#115](https://github.com/whansel007/Pawtner/pull/115), merged 19 Oct |
 | — | Shared notes name every caretaker; Settings and notes read the caretaker list from the API (fixes #111's fallback names) | [#113](https://github.com/whansel007/Pawtner/pull/113), merged 19 Oct |
 | — | README blood-pressure screenshot retaken | [#114](https://github.com/whansel007/Pawtner/pull/114), merged 19 Oct |
 | — | No "Add a reminder"; Buddy's nudges without the next-dose card; caretakers from data ("Jamie + Alex"); "Share my blood pressure"; no label scan; Screen for Life trimmed; /care footer links after sign-in | [#111](https://github.com/whansel007/Pawtner/pull/111), merged 19 Oct |
