@@ -16,6 +16,7 @@ export type Screen =
   | "settings"
   | "medicines"
   | "visitNotes"
+  | "bpLog"
   | "customize";
 
 export type World = "garden" | "beach" | "playground";

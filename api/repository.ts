@@ -29,6 +29,7 @@ import type {
   EscalationSettingsRequest,
   EscalationSettingsResponse,
   HealthMetric,
+  HealthMetricListResponse,
   HeartActivities,
   HealthMetricRequest,
   HealthMetricResponse,
@@ -740,6 +741,22 @@ export class PawtnerRepository {
         souvenirId: null,
       };
     });
+  }
+
+  /**
+   * GET /api/health-metrics: her blood-pressure readings of the `days` days up to `now`, newest first, skipping readings
+   * hidden by Reset to morning (notReset). Scoped by the user id; another provider only re-implements this method.
+   */
+  async listHealthMetrics(days: number, now = new Date().toISOString()): Promise<HealthMetricListResponse> {
+    const userId = await this.getDefaultUserId();
+    const result = await this.pool.query(
+      `SELECT id::text AS id, systolic, diastolic, note, recorded_at FROM health_metrics
+       WHERE user_id = $1 AND ${notReset("health_metrics")}
+         AND recorded_at <= $2::timestamptz AND recorded_at > $2::timestamptz - make_interval(days => $3::int)
+       ORDER BY recorded_at DESC`,
+      [userId, now, days],
+    );
+    return { healthMetrics: result.rows.map(mapMetric) };
   }
 
   // ── /care from any browser (migration 008) ──

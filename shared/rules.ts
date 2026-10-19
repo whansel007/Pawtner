@@ -11,6 +11,19 @@ function includesAny(text: string, keywords: readonly string[]): boolean {
   return keywords.some((word) => normalized.includes(word));
 }
 
+/** A reading note with an emergency sign (EMERGENCY_SYMPTOM_KEYWORDS). One rule for the agent and the phone. */
+export function mentionsEmergencySign(note: string | null | undefined): boolean {
+  return includesAny(note ?? "", EMERGENCY_SYMPTOM_KEYWORDS);
+}
+
+/**
+ * What one reading means on its own (the phone's blood-pressure card and log): an emergency sign in its note, else
+ * the comparison with her first reading (bloodPressureProgress). A warning is never "goodJob".
+ */
+export function readingStatus(reading: Reading & { note?: string | null }, first: Reading | null): "emergencySign" | BloodPressureProgress {
+  return mentionsEmergencySign(reading.note) ? "emergencySign" : bloodPressureProgress(reading, first);
+}
+
 /** A reading note that may mention a possible side effect (POSSIBLE_SIDE_EFFECT_KEYWORDS). One rule for the agent and the phone. */
 export function mentionsPossibleSideEffect(note: string | null | undefined): boolean {
   return includesAny(note ?? "", POSSIBLE_SIDE_EFFECT_KEYWORDS);
@@ -97,7 +110,7 @@ export function decide(input: AgentInput): AgentDecision {
   const latestMetric = [...metrics].sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))[0];
   // One warning for every condition (owner, 18 Oct: "They should be the same … All are see doctor immediately").
   // Emergency signs in the latest reading's note: the warning whatever the numbers, with its own line.
-  if (latestMetric && includesAny(latestMetric.note ?? "", EMERGENCY_SYMPTOM_KEYWORDS)) {
+  if (latestMetric && mentionsEmergencySign(latestMetric.note)) {
     return {
       ...decision(input, "see_gp_soon", "emergency_symptom_note",
         "The latest reading's note mentions a configured emergency symptom; the wording is fixed and uses no model.",
