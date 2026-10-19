@@ -48,6 +48,17 @@ export const EMERGENCY_SYMPTOM_KEYWORDS = [
   "slurred speech",
 ] as const;
 
+/**
+ * Buddy's tricks and the streak days each one needs (one place for the API's /api/milestones and the phone's
+ * tricks, demo "7 days" tick and Wave celebration). Names are matched by mobile/src/config/tricks.ts.
+ */
+export const TRICK_STREAK_DAYS: Readonly<Record<string, number>> = {
+  Sit: 1,
+  Wave: 7,
+  "Roll over": 14,
+  "New trick": 30,
+};
+
 export const POSSIBLE_SIDE_EFFECT_KEYWORDS = ["sleepy", "dizzy", "nausea"] as const;
 
 export const REFUSAL_RULES = {

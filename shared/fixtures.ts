@@ -27,7 +27,7 @@ export const sharedFixtures: AgentFixture[] = [
       ...baseInput,
       doses: [{ id: "schedule-am", medicationId: "med-a", medicationName: "Fictional Tablet A", strength: "5 mg", scheduledAt: "2026-10-14T09:00:00+08:00", status: "missed", eventAt: null, nudgeCount: 0, lastNudgeAt: null }],
     },
-    expected: { decision: "nudge", ruleId: "dose_nudge_1", mood: "sleepy", caretakerPing: false },
+    expected: { decision: "nudge", ruleId: "dose_nudge_1", mood: "content", caretakerPing: false },
   },
   {
     name: "caretaker-check-in",
@@ -38,7 +38,7 @@ export const sharedFixtures: AgentFixture[] = [
       caretaker: { optedIn: true, threshold: 1 },
       doses: [{ id: "schedule-am", medicationId: "med-a", medicationName: "Fictional Tablet A", strength: null, scheduledAt: "2026-10-14T08:00:00+08:00", status: "missed", eventAt: null, nudgeCount: 2, lastNudgeAt: "2026-10-14T09:00:00+08:00" }],
     },
-    expected: { decision: "nudge", ruleId: "repeated_misses_caretaker_check_in", mood: "sleepy", caretakerPing: true },
+    expected: { decision: "nudge", ruleId: "repeated_misses_caretaker_check_in", mood: "content", caretakerPing: true },
   },
   {
     name: "emergency-995",
