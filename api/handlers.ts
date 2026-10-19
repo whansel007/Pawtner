@@ -1,6 +1,7 @@
 import { ApiError, PawtnerRepository } from "./repository.js";
 import { BP_LOG_DAYS } from "../shared/config.js";
-import type { AgentDecideRequest, CreateMedicationRequest, DemoResetDayRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, PillReferenceRequest, PillVerifyRequest, UpdateMedicationRequest, WalkSessionRequest, CreateRestockRequest, SharedNoteRequest, SharingSettings, DemoClockState } from "../shared/contract.js";
+import { isCalendarDate } from "../shared/nextVisit.js";
+import type { AgentDecideRequest, CreateMedicationRequest, DemoResetDayRequest, CreateScheduleRequest, DoseEventRequest, EscalationSettingsRequest, HealthMetricRequest, PillReferenceRequest, PillVerifyRequest, UpdateMedicationRequest, WalkSessionRequest, CreateRestockRequest, SharedNoteRequest, SharingSettings, DemoClockState, DoctorVisits } from "../shared/contract.js";
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 async function body<T>(request: Request): Promise<T> {
@@ -84,6 +85,14 @@ export function createApiHandler(repository: PawtnerRepository) {
         const data = await body<SharedNoteRequest>(request);
         if (typeof data.text !== "string" || !validDate(data.updatedAt)) throw new ApiError(400, "text and an ISO updatedAt are required.");
         return json(await repository.upsertSharedNote(id, data));
+      }
+      if (request.method === "GET" && url.pathname === "/api/doctor-visits") return json(await repository.getDoctorVisits());
+      if (request.method === "PUT" && url.pathname === "/api/doctor-visits") {
+        const data = await body<DoctorVisits>(request);
+        for (const date of [data.priorVisit, data.nextVisit]) {
+          if (date !== null && !isCalendarDate(date)) throw new ApiError(400, "priorVisit and nextVisit must each be a YYYY-MM-DD calendar date or null.");
+        }
+        return json(await repository.setDoctorVisits({ priorVisit: data.priorVisit, nextVisit: data.nextVisit }));
       }
       if (request.method === "GET" && url.pathname === "/api/sharing") return json(await repository.getSharing());
       if (request.method === "PUT" && url.pathname === "/api/sharing") {

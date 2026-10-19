@@ -9,6 +9,7 @@ import type { Caregiver } from "../types";
 import { DEMO_RESET_PRESET, DEMO_TIME_PRESETS, type DemoTimePreset, DEMO_UNLOCK_GROUPS, DEMO_UNLOCKS, type DemoUnlockKey } from "../config/demo";
 import { formatClockTime, parseDemoTime } from "../lib/demoTime";
 import { WALK_GOALS } from "../lib/walkGoals";
+import type { DoctorVisits } from "../../../shared/contract";
 
 export function SettingsScreen({
   back,
@@ -32,6 +33,8 @@ export function SettingsScreen({
   walkGoalKey,
   onWalkGoal,
   onSimulateWalk,
+  doctorVisits,
+  onDoctorVisits,
 }: {
   back: BackAction;
   /** "My medicines": the medicine list with Edit and the original pill photo (T2-08). */
@@ -63,6 +66,9 @@ export function SettingsScreen({
   onWalkGoal: (key: string) => void;
   /** Demo card: open the Walk screen and run Simulate walk there. */
   onSimulateWalk: () => void;
+  /** The doctor's prior and future visit (YYYY-MM-DD each, or null) and how to change them (empty = no date). */
+  doctorVisits: DoctorVisits;
+  onDoctorVisits: (visits: DoctorVisits) => void;
 }) {
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
@@ -122,6 +128,14 @@ export function SettingsScreen({
             <p>{t("settings.demoResetHint", { time: resetTime ? formatClockTime(resetTime) : DEMO_TIME_PRESETS[DEMO_RESET_PRESET], name: petName })}</p>
             <button type="button" className="secondary-button" onClick={onResetDemo}>{t("settings.demoReset", { time: resetTime ? formatClockTime(resetTime) : DEMO_TIME_PRESETS[DEMO_RESET_PRESET] })}</button>
             <button type="button" className="secondary-button" onClick={onSimulateWalk}>{t("walk.simulateWalk")}</button>
+          </section>
+          {/* Side-effect notes count after the prior visit until the future visit (shared/nextVisit.ts); Reset keeps both. */}
+          <section className="demo-panel__section">
+            <label htmlFor="prior-visit"><h3>{t("settings.priorVisitTitle")}</h3></label>
+            <input id="prior-visit" type="date" value={doctorVisits.priorVisit ?? ""} max={doctorVisits.nextVisit ?? undefined} onChange={(event) => onDoctorVisits({ ...doctorVisits, priorVisit: event.target.value || null })} />
+            <label htmlFor="next-visit"><h3>{t("settings.nextVisitTitle")}</h3></label>
+            <input id="next-visit" type="date" value={doctorVisits.nextVisit ?? ""} min={doctorVisits.priorVisit ?? undefined} onChange={(event) => onDoctorVisits({ ...doctorVisits, nextVisit: event.target.value || null })} />
+            <p>{t("settings.nextVisitHint")}</p>
           </section>
           <section className="demo-panel__section">
             <h3>{t("settings.demoTimeTitle")}</h3>

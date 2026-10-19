@@ -16,6 +16,7 @@ import type {
   EscalationSettingsResponse,
   HealthMetricListResponse,
   HealthMetricResponse,
+  DoctorVisits,
   MedicationListResponse,
   MedicineExplanationResponse,
   MilestonesResponse,
@@ -78,6 +79,9 @@ export const api = {
   markRestockRequestHandled: (id: string) => request<RestockRequest>(`/restock-requests/${encodeURIComponent(id)}/handled`, { method: "POST" }),
   putSharedNote: (id: string, data: SharedNoteRequest) => request<SharedNote>(`/shared-notes/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteSharedNote: (id: string) => request<{ deleted: boolean }>(`/shared-notes/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  /** The doctor's prior and future visit (YYYY-MM-DD each, or null); PUT saves both as given. */
+  doctorVisits: () => request<DoctorVisits>("/doctor-visits"),
+  setDoctorVisits: (visits: DoctorVisits) => request<DoctorVisits>("/doctor-visits", { method: "PUT", body: JSON.stringify(visits) }),
   sharing: () => request<SharingSettings>("/sharing"),
   updateSharing: (data: SharingSettings) => request<SharingSettings>("/sharing", { method: "PUT", body: JSON.stringify(data) }),
   demoClock: () => request<DemoClockState>("/demo-clock"),

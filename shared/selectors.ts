@@ -172,6 +172,10 @@ export interface AgentSelectionSource {
   /** Set only when this selection follows a newly recorded event that should trigger a celebration. */
   triggeringDoseEventId?: string;
   caretaker: AgentInput["caretaker"];
+  /** The senior's time zone and the doctor's future / prior visit (side-effect notes count between them). */
+  timeZone?: string;
+  nextDoctorVisit?: string | null;
+  priorDoctorVisit?: string | null;
   /** The missed day the latest caretaker check-in was sent for (its `lastMissedDay` observation), or null. */
   lastCheckInDay: string | null;
 }
@@ -329,6 +333,9 @@ export function selectAgentInput(source: AgentSelectionSource): AgentInput {
     lastMissedDay: missedDays.lastMissedDay,
     lastCheckInDay: source.lastCheckInDay,
     caretaker: source.caretaker,
+    timeZone: source.timeZone,
+    nextDoctorVisit: source.nextDoctorVisit ?? null,
+    priorDoctorVisit: source.priorDoctorVisit ?? null,
   });
 }
 

@@ -5,6 +5,7 @@ import {
 } from "./config.js";
 import type { AgentDecision, AgentInput, DecisionKind, DogMood, HealthMetric } from "./contract.js";
 import { DECISION_TEMPLATES, WARNING_EMERGENCY_SIGN_WORDING } from "./templates.js";
+import { localDay, sideEffectNoteCounts } from "./nextVisit.js";
 
 function includesAny(text: string, keywords: readonly string[]): boolean {
   const normalized = text.toLowerCase();
@@ -28,6 +29,26 @@ export function readingStatus(reading: Reading & { note?: string | null }, first
 export function mentionsPossibleSideEffect(note: string | null | undefined): boolean {
   return includesAny(note ?? "", POSSIBLE_SIDE_EFFECT_KEYWORDS);
 }
+
+/**
+ * The newest reading whose note may mention a side effect and still counts at `now` (after the prior visit, until the
+ * future visit), or null. Used by the agent's
+ * doctor_question rule and by Health's side-effect card, so both follow the same visit date.
+ */
+export function activeSideEffectNote<T extends { note: string | null; recordedAt: string }>(
+  readings: readonly T[],
+  now: string,
+  timeZone: string,
+  nextVisit: string | null,
+  priorVisit: string | null = null,
+): T | null {
+  const today = localDay(now, timeZone);
+  return [...readings]
+    .filter((reading) => Date.parse(reading.recordedAt) <= Date.parse(now))
+    .sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))
+    .find((reading) => mentionsPossibleSideEffect(reading.note) && sideEffectNoteCounts(localDay(reading.recordedAt, timeZone), today, nextVisit, priorVisit)) ?? null;
+}
+
 
 type Reading = Pick<HealthMetric, "id" | "systolic" | "diastolic" | "recordedAt">;
 
@@ -127,7 +148,8 @@ export function decide(input: AgentInput): AgentDecision {
       { systolic: latestMetric.systolic, diastolic: latestMetric.diastolic, firstSystolic: firstReading.systolic, firstDiastolic: firstReading.diastolic });
   }
 
-  const sideEffectMetric = [...metrics].reverse().find((metric) => mentionsPossibleSideEffect(metric.note));
+  // Counts after the doctor's prior visit until the end of the future visit (shared/nextVisit.ts; no date = that day only).
+  const sideEffectMetric = activeSideEffectNote(metrics, input.now, input.timeZone ?? "UTC", input.nextDoctorVisit ?? null, input.priorDoctorVisit ?? null);
   if (sideEffectMetric) {
     return decision(input, "doctor_question", "possible_side_effect_note",
       "A note contains a configured possible-side-effect keyword; add it as a question for a professional.",

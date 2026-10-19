@@ -5425,6 +5425,22 @@ var DECISION_TEMPLATES = {
 };
 var WARNING_EMERGENCY_SIGN_WORDING = "Your note mentioned a sign that can be serious.";
 
+// shared/nextVisit.ts
+function localDay(instant, timeZone) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(instant));
+}
+function effectiveNextVisit(saved, day) {
+  return saved !== null && saved >= day ? saved : day;
+}
+function sideEffectNoteCounts(noteDay, today, nextVisit, priorVisit = null) {
+  return (priorVisit === null || noteDay > priorVisit) && noteDay <= today && today <= effectiveNextVisit(nextVisit, noteDay);
+}
+function isCalendarDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = /* @__PURE__ */ new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
 // shared/rules.ts
 function includesAny(text, keywords) {
   const normalized = text.toLowerCase();
@@ -5435,6 +5451,10 @@ function mentionsEmergencySign(note) {
 }
 function mentionsPossibleSideEffect(note) {
   return includesAny(note ?? "", POSSIBLE_SIDE_EFFECT_KEYWORDS);
+}
+function activeSideEffectNote(readings, now, timeZone, nextVisit, priorVisit = null) {
+  const today = localDay(now, timeZone);
+  return [...readings].filter((reading) => Date.parse(reading.recordedAt) <= Date.parse(now)).sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt)).find((reading) => mentionsPossibleSideEffect(reading.note) && sideEffectNoteCounts(localDay(reading.recordedAt, timeZone), today, nextVisit, priorVisit)) ?? null;
 }
 function firstReadingOf(metrics) {
   return metrics.reduce((first, metric) => first === null || Date.parse(metric.recordedAt) < Date.parse(first.recordedAt) ? metric : first, null);
@@ -5499,7 +5519,7 @@ function decide(input) {
       { systolic: latestMetric.systolic, diastolic: latestMetric.diastolic, firstSystolic: firstReading.systolic, firstDiastolic: firstReading.diastolic }
     );
   }
-  const sideEffectMetric = [...metrics].reverse().find((metric) => mentionsPossibleSideEffect(metric.note));
+  const sideEffectMetric = activeSideEffectNote(metrics, input.now, input.timeZone ?? "UTC", input.nextDoctorVisit ?? null, input.priorDoctorVisit ?? null);
   if (sideEffectMetric) {
     return decision(
       input,
@@ -5755,7 +5775,10 @@ function selectAgentInput(source) {
     consecutiveMissedDays: missedDays.count,
     lastMissedDay: missedDays.lastMissedDay,
     lastCheckInDay: source.lastCheckInDay,
-    caretaker: source.caretaker
+    caretaker: source.caretaker,
+    timeZone: source.timeZone,
+    nextDoctorVisit: source.nextDoctorVisit ?? null,
+    priorDoctorVisit: source.priorDoctorVisit ?? null
   });
 }
 function selectHeartsTotal(source) {
@@ -6044,7 +6067,8 @@ var PawtnerRepository = class {
    */
   async loadSource(client, userId, now, triggeringDoseEventId) {
     const personResult = await client.query(
-      `SELECT u.timezone, d.id::text AS dog_id, d.name AS dog_name
+      `SELECT u.timezone, to_char(u.next_doctor_visit, 'YYYY-MM-DD') AS next_doctor_visit,
+              to_char(u.prior_doctor_visit, 'YYYY-MM-DD') AS prior_doctor_visit, d.id::text AS dog_id, d.name AS dog_name
        FROM users u JOIN dogs d ON d.user_id = u.id WHERE u.id = $1`,
       [userId]
     );
@@ -6133,6 +6157,9 @@ var PawtnerRepository = class {
       now,
       today,
       userId,
+      timeZone: person.timezone,
+      nextDoctorVisit: person.next_doctor_visit ?? null,
+      priorDoctorVisit: person.prior_doctor_visit ?? null,
       dog: { id: person.dog_id, name: person.dog_name },
       doseOccurrences: schedules,
       stopCutoffs,
@@ -6165,7 +6192,7 @@ var PawtnerRepository = class {
     return mapDecision(result.rows[0]);
   }
   async today(client, userId, now, triggerEventId) {
-    const { input, heartsTotal, activities } = await this.loadDogState(client, userId, now, triggerEventId);
+    const { input, heartsTotal, activities, source } = await this.loadDogState(client, userId, now, triggerEventId);
     const userResult = await client.query("SELECT id::text, name FROM users WHERE id = $1", [userId]);
     const dogResult = await client.query("SELECT id::text, name FROM dogs WHERE user_id = $1", [userId]);
     const timezoneResult = await client.query("SELECT timezone FROM users WHERE id = $1", [userId]);
@@ -6181,7 +6208,9 @@ var PawtnerRepository = class {
       bloodPressureLoggedToday: healthMetrics.length > 0,
       activities,
       latestDecision,
-      firstBloodPressure: firstReadingOf(input.healthMetrics)
+      firstBloodPressure: firstReadingOf(input.healthMetrics),
+      // A side-effect note that still counts (after the prior visit, until the future visit; the agent's rule).
+      sideEffectNote: activeSideEffectNote(input.healthMetrics, now, timezoneResult.rows[0].timezone, source.nextDoctorVisit ?? null, source.priorDoctorVisit ?? null) !== null
     };
   }
   async saveDecision(client, userId, decision2) {
@@ -6641,6 +6670,25 @@ var PawtnerRepository = class {
       await client.query("UPDATE users SET shared_visit_notes = $2::jsonb WHERE id = $1", [userId, JSON.stringify(kept)]);
       return { deleted: kept.length < notes.length };
     });
+  }
+  /** GET /api/doctor-visits: the doctor's prior and future visit (YYYY-MM-DD each, or null). */
+  async getDoctorVisits() {
+    const userId = await this.getDefaultUserId();
+    const row = (await this.pool.query(
+      `SELECT to_char(prior_doctor_visit, 'YYYY-MM-DD') AS prior_visit, to_char(next_doctor_visit, 'YYYY-MM-DD') AS next_visit
+       FROM users WHERE id = $1`,
+      [userId]
+    )).rows[0];
+    return { priorVisit: row?.prior_visit ?? null, nextVisit: row?.next_visit ?? null };
+  }
+  /** PUT /api/doctor-visits: saves both dates as given (plain calendar dates, or null to clear). */
+  async setDoctorVisits(visits) {
+    const userId = await this.getDefaultUserId();
+    await this.pool.query(
+      "UPDATE users SET prior_doctor_visit = $2::date, next_doctor_visit = $3::date WHERE id = $1",
+      [userId, visits.priorVisit, visits.nextVisit]
+    );
+    return this.getDoctorVisits();
   }
   async getSharing() {
     const userId = await this.getDefaultUserId();
@@ -7214,6 +7262,14 @@ function createApiHandler(repository) {
         const data = await body(request);
         if (typeof data.text !== "string" || !validDate(data.updatedAt)) throw new ApiError(400, "text and an ISO updatedAt are required.");
         return json(await repository.upsertSharedNote(id, data));
+      }
+      if (request.method === "GET" && url.pathname === "/api/doctor-visits") return json(await repository.getDoctorVisits());
+      if (request.method === "PUT" && url.pathname === "/api/doctor-visits") {
+        const data = await body(request);
+        for (const date of [data.priorVisit, data.nextVisit]) {
+          if (date !== null && !isCalendarDate(date)) throw new ApiError(400, "priorVisit and nextVisit must each be a YYYY-MM-DD calendar date or null.");
+        }
+        return json(await repository.setDoctorVisits({ priorVisit: data.priorVisit, nextVisit: data.nextVisit }));
       }
       if (request.method === "GET" && url.pathname === "/api/sharing") return json(await repository.getSharing());
       if (request.method === "PUT" && url.pathname === "/api/sharing") {
