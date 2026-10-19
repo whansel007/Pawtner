@@ -179,7 +179,7 @@ export function SettingsScreen({
             <p>{t("settings.demoClockHint", { name: petName })}</p>
             <label htmlFor="demo-clock">{t("settings.demoClockLabel")}</label>
             <input id="demo-clock" type="datetime-local" value={demoClockValue} onChange={(event) => onDemoClockChange(event.target.value)} />
-            <button className="primary-button" disabled={agentBusy || !demoClockValue} onClick={onRunDemoClock}>{agentBusy ? t("settings.demoClockBusy") : t("settings.demoClockRun", { name: petName })}</button>
+            <button className="primary-button" disabled={agentBusy || !demoClockValue} onClick={onRunDemoClock}>{agentBusy ? t("settings.demoClockBusy") : t("settings.demoClockRun")}</button>
           </section>
         </div>
       </details>
