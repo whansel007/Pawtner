@@ -17,6 +17,8 @@ export interface PetReactionState {
   bubbleLineIndex: number;
   /** true while the bubble asks for a heart (too few hearts to play). */
   prompt: boolean;
+  /** A celebration (lib/celebration.ts): the Wave clip or the hearts reaction, now, even over a reaction already playing. */
+  celebrate: (animation: "wave" | "hearts") => void;
 }
 
 /** The Wave clip side of a tap, from useBuddyClip. */
@@ -122,5 +124,14 @@ export function usePetReaction(earned: ReadonlySet<TrickPerformance>, canPlay: b
     nextBasic();
   }, [blocked, canPlay, askForHeart, waveKind, clip, nextBasic]);
 
-  return { active, onTap, perform, bubbleLineIndex, prompt };
+  const celebrate = useCallback((animation: "wave" | "hearts") => {
+    if (animation === "wave" && waveKind) {
+      clip?.play(waveKind);
+      return;
+    }
+    if (timerRef.current) clearTimeout(timerRef.current);
+    playBasic("hearts");
+  }, [waveKind, clip, playBasic]);
+
+  return { active, onTap, perform, bubbleLineIndex, prompt, celebrate };
 }

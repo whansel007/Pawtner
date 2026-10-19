@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { celebrationClipFor, clipMatchesMood, clipOverlayBox, pickClipSource, waveClipFor } from "../../mobile/src/lib/buddyClips.js";
+import { clipMatchesMood, clipOverlayBox, pickClipSource, waveClipFor } from "../../mobile/src/lib/buddyClips.js";
 import { BUDDY_CLIPS, CLIP_CANVAS, CLIP_MEDIA_TYPES } from "../../mobile/src/config/clips.js";
 
 const SOURCES = BUDDY_CLIPS.wave;
@@ -59,14 +59,8 @@ describe("clip triggers", () => {
     expect(waveClipFor("sleepy", ok)).toBeNull();
   });
 
-  it("fresh heart: only a joyful Home plays the joyful clip", () => {
-    expect(celebrationClipFor("joyful", ok)).toBe("joyful");
-    for (const mood of ["content", "sleepy", "attentive"] as const) expect(celebrationClipFor(mood, ok)).toBeNull();
-  });
-
   it("reduced motion or an unplayable clip → no clip", () => {
     expect(waveClipFor("content", { reducedMotion: true, canPlay: () => true })).toBeNull();
-    expect(celebrationClipFor("joyful", { reducedMotion: true, canPlay: () => true })).toBeNull();
     expect(waveClipFor("content", { reducedMotion: false, canPlay: () => false })).toBeNull();
     expect(waveClipFor("joyful", { reducedMotion: false, canPlay: (kind) => kind === "wave" })).toBeNull();
   });

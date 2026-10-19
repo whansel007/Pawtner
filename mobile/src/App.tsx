@@ -44,6 +44,8 @@ import { useHomeView } from "./lib/useHomeView";
 import { useWalkGoal } from "./lib/useWalkGoal";
 import { useDoseReminder } from "./lib/useDoseReminder";
 import { shouldBarkFor } from "./lib/nudgeBark";
+import { activityToastKey, bpToastKey, heartChange } from "./lib/heartToast";
+import { countAfterTaking } from "./lib/doseCount";
 import { RESTOCK_SOON_DAYS } from "./config/restock";
 import { demoInstantToday, demoNowFromSearch, parseDemoTime, toDateTimeLocal } from "./lib/demoTime";
 import { DEMO_CLOCK_PARAM, DEMO_RESET_PRESET, DEMO_TIME_PARAM, DEMO_TIME_PRESETS, type DemoTimePreset, type DemoUnlockKey } from "./config/demo";
@@ -141,7 +143,10 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
   // The Morning / Evening button that set the scene time (null: real time or a ?time= link).
   const [scenePreset, setScenePreset] = useState<DemoTimePreset | null>(null);
   // Bumped after each "Give Buddy a heart"; DogLayer then plays the joyful clip once on Home (if Buddy is joyful).
+  // Buddy's celebrations (lib/celebration.ts, played by DogLayer): a heart earned by a walk or the day's last dose,
+  // and a walk that didn't reach the day's goal yet ("Just a little bit more!").
   const [celebrateRequest, setCelebrateRequest] = useState(0);
+  const [encourageRequest, setEncourageRequest] = useState(0);
   // Set when a trick card on Milestones is tapped; DogLayer performs the trick once per id.
   const [trickRequest, setTrickRequest] = useState<TrickRequest | null>(null);
   const { bark } = useBark();
@@ -161,11 +166,11 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
     if (barkNow) bark();
   }, [today, latestDecision, bark]);
 
-  /** GET /api/today. `now`: undefined = the current demo clock; null = real time; a string = that instant. */
-  const refreshToday = async (now?: string | null) => {
-    try { await loadToday(now); } finally { setDosesLoaded(true); }
+  /** GET /api/today. `now`: undefined = the current demo clock; null = real time; a string = that instant. Returns the answer, or null on failure. */
+  const refreshToday = async (now?: string | null): Promise<TodayResponse | null> => {
+    try { return await loadToday(now); } finally { setDosesLoaded(true); }
   };
-  const loadToday = async (now?: string | null) => {
+  const loadToday = async (now?: string | null): Promise<TodayResponse | null> => {
     const at = now === undefined ? demoNow() : now;
     try {
       const result = await api.today(at ?? undefined);
@@ -175,8 +180,9 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
       serverMetrics.current = result.healthMetrics;
       setHealthMetrics((prev) => mergeHealthMetrics(result.healthMetrics, prev, previousServer));
       apiWarned.current = false;
+      return result;
     }
-    catch (error) { reportApiProblem(error); }
+    catch (error) { reportApiProblem(error); return null; }
   };
   useEffect(() => { void refreshToday(); }, []);
   // The demo clock lives on the server (any browser; /care reads it): on load a ?clock= link is written, else the server's clock is adopted (demoClockOnLoad).
@@ -191,7 +197,10 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
 
   const pendingDose = doseList.find((item) => item.id === pendingDoseId);
   // Today's hearts: the API's, or a Settings "Today" demo tick (then Buddy's mood follows those hearts below).
-  const heartCount = demoTodayHearts(today?.dog.heart ?? localHeartCount(doseList, bpLogged, today?.activities.walk ?? false), demoUnlocks);
+  // One rule for the hearts shown, also used to tell whether a save gained a heart (lib/heartToast.ts).
+  const shownHearts = (data: TodayResponse | null, doses: DerivedDose[], bp: boolean, walked = data?.activities.walk ?? false) =>
+    demoTodayHearts(data?.dog.heart ?? localHeartCount(doses, bp, walked), demoUnlocks);
+  const heartCount = shownHearts(today, doseList, bpLogged);
   // One number each for the whole phone app: the API's (or mock) value, raised by a Settings demo tick if one is on.
   const heartsTotal = demoHeartsTotal(today?.dog?.heartsTotal ?? mockHeartsTotal, demoUnlocks);
   const streak = demoStreak(today?.dog.streak ?? pet.streak, demoUnlocks);
@@ -253,6 +262,8 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
     // The local copy carries the same time the API gets, so it matches the server's row (first-reading check).
     const metric = { ...logged, recordedAt };
     setHealthMetrics((prev) => [...prev, metric]);
+    const heartsBefore = heartCount;
+    let after: TodayResponse | null = today;
     let decision: AgentDecision;
     try {
       const result = await api.healthMetric({
@@ -263,7 +274,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
       });
       decision = result.decision;
       setLatestDecision(decision);
-      await refreshToday();
+      after = (await refreshToday()) ?? today;
     } catch {
       // Offline fallback: call the rules engine directly so the beat still works.
       const updatedMetrics = [...healthMetrics, metric];
@@ -282,8 +293,9 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
       reportApiProblem("health-metric request failed");
     }
     setBpLogged(true);
-    // Every warning gets the same gentle toast (owner, 18 Oct: one warning for every condition).
-    notify(isUrgentDecision(decision) ? t("toast.bpWarning") : t("toast.bpLogged", { name: dogName }));
+    // Every warning gets the same gentle toast (owner, 18 Oct: one warning for every condition); otherwise the toast
+    // says "full" only at max hearts and "gained" only when the shown hearts went up.
+    notify(t(bpToastKey(heartChange(heartsBefore, shownHearts(after, doseList, true)), isUrgentDecision(decision)), { name: dogName }));
   }
 
   /**
@@ -305,6 +317,12 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
     const goalMinutes = walkGoal.minutes;
     setWalkStartedAt(null);
     setDizzy(false);
+    const heartsBefore = heartCount;
+    let heartsAfter = heartsBefore;
+    let refreshed: TodayResponse | null = null;
+    const walkHeartBefore = today?.activities.walk ?? false;
+    // The day's walk heart after this walk; null = unknown (not saved, or no fresh answer).
+    let walkHeartAfter: boolean | null = null;
     try {
       const result = await api.walkSession({
         startedAt,
@@ -315,11 +333,18 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         goalMinutes,
       });
       setLatestDecision(result.decision);
-      await refreshToday();
+      refreshed = await refreshToday();
+      heartsAfter = shownHearts(refreshed ?? today, doseList, bpLogged);
+      if (refreshed) walkHeartAfter = refreshed.activities.walk;
       setCareSummary(await api.caretakerSummary());
     } catch (error) {
       reportApiProblem(error, true);
       if (simulated) {
+        if (!refreshed) {
+          const earnedAlone = walkHeartTimes([{ startedAt, finishedAt, goalMinutes }]).length > 0;
+          heartsAfter = shownHearts(today, doseList, bpLogged, earnedAlone);
+          walkHeartAfter = walkHeartBefore || earnedAlone;
+        }
         const input = buildAgentInputFromState({
           now: finishedAt,
           userId: demoUser.id,
@@ -335,6 +360,12 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         setLatestDecision(await requestDecision(input));
       }
     }
+    // Same rule as a dose (owner, 18 Oct): a toast only when the walk gained a heart.
+    const toastKey = activityToastKey(heartChange(heartsBefore, heartsAfter));
+    if (toastKey) notify(t(toastKey, { name: dogName }));
+    // Buddy: celebrates the walk that earned the day's walk heart; after a shorter one, says "Just a little bit more!".
+    if (walkHeartAfter === true && !walkHeartBefore) setCelebrateRequest((n) => n + 1);
+    else if (walkHeartAfter === false) setEncourageRequest((n) => n + 1);
   }
 
   /**
@@ -397,15 +428,23 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
     if (!pendingDose) return;
     const occurredAt = demoNow() ?? new Date().toISOString();
     const doseEvent = { scheduleId: pendingDose.id, scheduledFor: pendingDose.scheduledAt, event: "taken" as const, occurredAt, proofPhotoUrl };
+    const heartsBefore = heartCount;
+    let heartsAfter = heartsBefore;
+    const medicinesBefore = today?.activities.medicines ?? heartActivities(doseList, bpLogged, false).medicines;
+    let medicinesAfter = medicinesBefore;
     try {
       const result = await api.doseEvent(doseEvent);
       setToday(result.today);
       setDoseList(result.today.doses);
+      heartsAfter = shownHearts(result.today, result.today.doses, result.today.bloodPressureLoggedToday);
+      medicinesAfter = result.today.activities.medicines;
     } catch (error) {
       // Background notice (once per outage), not "didn't save": the dose is shown as taken locally.
       reportApiProblem(error);
       const localDoses = doseList.map((d) => (d.id === pendingDose.id ? { ...d, status: "taken" as const, eventAt: occurredAt } : d));
       setDoseList(localDoses);
+      heartsAfter = shownHearts(today, localDoses, bpLogged);
+      medicinesAfter = heartActivities(localDoses, bpLogged, false).medicines;
       const localEvent: DoseEvent = { id: `local-${pendingDose.id}-${occurredAt}`, ...doseEvent };
       const input = buildAgentInputFromState({
         now: occurredAt,
@@ -421,8 +460,11 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
       setLatestDecision(await requestDecision(input));
     }
     navigate("home");
-    setCelebrateRequest((n) => n + 1);
-    notify(t("toast.heartGained", { name: dogName }));
+    // Buddy celebrates the dose that completes the day's medicines (the medicine heart), not every dose.
+    if (!medicinesBefore && medicinesAfter) setCelebrateRequest((n) => n + 1);
+    // Only when a heart was really gained (owner, 18 Oct); otherwise no toast.
+    const toastKey = activityToastKey(heartChange(heartsBefore, heartsAfter));
+    if (toastKey) notify(t(toastKey, { name: dogName }));
   }
 
   const runAgentAtDemoTime = async () => {
@@ -492,6 +534,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         dizzy={dizzy}
         accessory={<PetAccessory accessory={accessory} dogName={dogName} />}
         celebrateRequest={celebrateRequest}
+        encourageRequest={encourageRequest}
         trickRequest={trickRequest}
         heartCount={heartCount}
         streak={streak}
@@ -536,7 +579,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
         {screen === "explanation" && <ExplanationScreen back={back} onContinue={() => navigate("schedule")} medicineName={savedMedicationName} />}
         {screen === "schedule" && <ScheduleScreen back={back} onConfirm={handleScheduleConfirmed} petName={dogName} medicationId={savedMedicationId} />}
         {screen === "reference" && <ReferenceScreen back={back} onDone={handleReferenceDone} onSkip={handleReferenceDone} petName={dogName} medicationId={savedMedicationId} />}
-        {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} medicationId={pendingDose?.medicationId} />}
+        {screen === "proof" && <ProofScreen back={back} onVerified={handleDoseVerified} petName={dogName} medicationName={pendingDose?.medicationName} medicationId={pendingDose?.medicationId} takenCount={countAfterTaking(doseList, pendingDoseId ?? "")} />}
         {screen === "walk" && <WalkScreen back={back} goalMinutes={walkGoal.minutes} simulateRequested={simulateWalkRequested} onSimulateStarted={handleSimulateStarted} petName={dogName} walkStartedAt={walkStartedAt} clockNow={clockNow} onDizzyChange={setDizzy} onWalkState={(walking, simulated) => void handleWalkState(walking, simulated)} />}
         {screen === "milestones" && <MilestonesScreen back={back} onWalk={() => navigate("walk")} onCustomize={() => navigate("customize")} pet={livePet} petName={dogName} heartsTotal={heartsTotal} mood={mood} decision={routineDecision(latestDecision)} onTrick={(performance) => setTrickRequest((prev) => ({ id: (prev?.id ?? 0) + 1, performance }))} />}
         {screen === "health" && <HealthScreen back={back} bpLogged={bpLogged} healthMetrics={healthMetrics} latestDecision={latestDecision} onLogBp={handleLogBp} onScreening={() => navigate("screening")} onSummary={() => navigate("summary")} visitNoteLatest={visitNotes.latest?.text ?? null} onVisitNotes={() => navigate("visitNotes")} firstReading={firstReading} bloodPressureReading={bloodPressureReading} screeningInfo={screeningInfo} activityLink={activityLink} clinicTasks={clinicTasks} weekSummary={weekSummary} petName={dogName} />}

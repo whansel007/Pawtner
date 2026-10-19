@@ -361,7 +361,7 @@
     "onePill": "One pill in the frame",
     "verified": "Photo saved!",
     "retake": "Please retake the picture",
-    "giveHeart": "Give {{name}} a heart",
+    "markTaken": "{{done}}/{{total}} taken",
     "notNow": "Not now",
     "check": {
       "button": "Compare with my pill",
@@ -516,6 +516,7 @@
       "happy3": "One more? {{name}} could do this all day!",
       "happy4": "You and {{name}} make a great team."
     },
+    "walkMore": "Just a little bit more!",
     "lowHeart": "{{name}} needs a heart to play. Take your medicine or log your blood pressure to give one."
   },
   "visitNotes": {
@@ -654,7 +655,10 @@
     "treatWaiting": "A treat from {{caretaker}} is waiting for {{name}}!",
     "nudgeSet": "{{name}} knows when to nudge you.",
     "heartGained": "{{name}} gained a heart!",
+    "heartFull": "{{name}}'s heart is full!",
     "bpLogged": "Reading logged. {{name}}'s heart is full!",
+    "bpLoggedHeart": "Reading logged. {{name}} gained a heart!",
+    "bpLoggedPlain": "Reading logged. Thank you!",
     "bpWarning": "uh-oh, but thank you for logging the information",
     "worlds": {
       "garden": "The garden is now behind {{name}}.",

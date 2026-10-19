@@ -1,5 +1,5 @@
 import type { DogMood } from "../../../shared/contract.js";
-import { CELEBRATION_CLIP, CLIP_CANVAS, CLIP_MEDIA_TYPES, WAVE_CLIP_BY_MOOD, type BuddyClipKind, type ClipSources } from "../config/clips.js";
+import { CLIP_CANVAS, CLIP_MEDIA_TYPES, WAVE_CLIP_BY_MOOD, type BuddyClipKind, type ClipSources } from "../config/clips.js";
 
 /**
  * Buddy clip rules (pure, no React, no DOM), shared by useBuddyClip and the unit tests.
@@ -55,11 +55,6 @@ function allowedClip(kind: BuddyClipKind | null, opts: ClipTriggerOptions): Budd
 /** The clip the Wave trick plays in this mood, or null (no wave: sleepy, attentive, reduced motion, no playable format). */
 export function waveClipFor(mood: DogMood, opts: ClipTriggerOptions): BuddyClipKind | null {
   return allowedClip(WAVE_CLIP_BY_MOOD[mood], opts);
-}
-
-/** The clip a fresh heart plays once Home shows the dog, or null when Home isn't showing the joyful mood. */
-export function celebrationClipFor(mood: DogMood, opts: ClipTriggerOptions): BuddyClipKind | null {
-  return allowedClip(mood === CELEBRATION_CLIP.mood ? CELEBRATION_CLIP.clip : null, opts);
 }
 
 /** A playing clip stops early when the dog's mood no longer has that clip's face. */
