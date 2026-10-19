@@ -1,0 +1,10 @@
+.prompt-card {
+  margin: 12px 0 16px;
+  padding: 14px 16px;
+  border-radius: var(--radius-4xl);
+  background: var(--color-surface-stone);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+  color: var(--color-primary);
+}

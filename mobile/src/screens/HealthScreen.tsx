@@ -5,8 +5,8 @@ import { FullCard } from "../components/FullCard";
 import { ActionRow } from "../components/ActionRow";
 import { ClinicMemoRow } from "../components/ClinicMemoRow";
 import type { BackAction } from "../lib/navigation";
-import { explainDecision, isUrgentDecision, SIDE_EFFECT_CARD } from "../lib/decisions";
-import { DecisionLogCard } from "../components/DecisionLogCard";
+import { explainDecision, isUrgentDecision, SIDE_EFFECT_PROMPT } from "../lib/decisions";
+import { PromptCard } from "../components/PromptCard";
 import { BP_RANGE } from "../config/bp";
 import { SYMPTOM_KEYS, type SymptomKey } from "../config/health";
 import { buildBpNote } from "../lib/bpNote";
@@ -154,7 +154,7 @@ export function HealthScreen({
   return (
     <FullCard back={back}>
       {/* Above the title, for the rest of the day: a reading note that may mention a side effect (owner, 18 Oct). */}
-      {showSideEffect && <DecisionLogCard summary={SIDE_EFFECT_CARD.summary} reasonKey={SIDE_EFFECT_CARD.reasonKey} />}
+      {showSideEffect && <PromptCard text={SIDE_EFFECT_PROMPT} />}
       {/* Same two lines as Milestones ("BUDDY IS LEARNING"): "ROSE'S" / "Health Logs". */}
       <p className="eyebrow green">{t("health.eyebrow", { name: seniorName })}</p>
       <h2>{t("health.title")}</h2>

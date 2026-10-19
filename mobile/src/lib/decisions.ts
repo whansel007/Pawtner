@@ -4,8 +4,7 @@ import { DECISION_TEMPLATES } from "../../../shared/templates.js";
 import { RULES_WITH_PLAIN_REASON, URGENT_DECISIONS } from "../config/decisions.js";
 
 /**
- * Decision placement and the plain-language "Why?" (pure, no React, no i18n), shared by Health, DecisionLogCard and
- * the unit tests.
+ * Decision placement and the plain-language reason (pure, no React, no i18n), shared by Health and the unit tests.
  */
 
 /** Urgent / safety decisions (995, see a GP) show on Health. */
@@ -29,18 +28,15 @@ export function showSideEffectCard(readings: readonly Pick<HealthMetric, "note" 
   return readings.some((reading) => localDay(reading.recordedAt, timeZone) === today && mentionsPossibleSideEffect(reading.note));
 }
 
-/** What the side-effect card says, and its "Why?" reason: the agent's template and its en.json reason, never retyped. */
-export const SIDE_EFFECT_CARD = {
-  summary: DECISION_TEMPLATES.doctor_question,
-  reasonKey: explainDecision({ ruleId: "possible_side_effect_note" }).reasonKey,
-} as const;
+/** What the side-effect card says: the agent's own template, never retyped. Text only, no "Why?" (owner, 18 Oct). */
+export const SIDE_EFFECT_PROMPT = DECISION_TEMPLATES.doctor_question;
 
 export interface DecisionWhy {
   /** en.json key for the plain reason: decisionLog.why.<ruleId>, or decisionLog.why.generic. */
   reasonKey: string;
 }
 
-/** The plain-language "Why?" for a decision: a reason sentence key, never the rule id. */
+/** The plain-language reason for a decision (Health's Warning card line): a reason sentence key, never the rule id. */
 export function explainDecision(decision: Pick<AgentDecision, "ruleId">): DecisionWhy {
   return {
     reasonKey: RULES_WITH_PLAIN_REASON.includes(decision.ruleId)

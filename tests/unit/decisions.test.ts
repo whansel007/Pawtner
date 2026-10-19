@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { explainDecision, isUrgentDecision, showSideEffectCard, SIDE_EFFECT_CARD } from "../../mobile/src/lib/decisions.js";
+import { explainDecision, isUrgentDecision, showSideEffectCard, SIDE_EFFECT_PROMPT } from "../../mobile/src/lib/decisions.js";
 import { RULES_WITH_PLAIN_REASON } from "../../mobile/src/config/decisions.js";
 import { decide } from "../../shared/rules.js";
 import { DECISION_TEMPLATES } from "../../shared/templates.js";
@@ -31,10 +31,8 @@ describe("decision placement", () => {
     expect(showSideEffectCard([], "2026-10-19T02:00:00.000Z", tz)).toBe(false);
   });
 
-  it("the card's words come from the agent's template and the rule's plain reason", () => {
-    expect(SIDE_EFFECT_CARD.summary).toBe(DECISION_TEMPLATES.doctor_question);
-    expect(SIDE_EFFECT_CARD.reasonKey).toBe("decisionLog.why.possible_side_effect_note");
-    expect(en.decisionLog.why.possible_side_effect_note).toBeTruthy();
+  it("the card's words are the agent's own template (text only, no Why?)", () => {
+    expect(SIDE_EFFECT_PROMPT).toBe(DECISION_TEMPLATES.doctor_question);
   });
 });
 

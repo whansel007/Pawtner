@@ -487,8 +487,6 @@
     }
   },
   "decisionLog": {
-    "whyButton": "Why?",
-    "whyButtonExpanded": "Hide why",
     "why": {
       "emergency_symptom_note": "Your note mentioned a sign that can be serious.",
       "bp_high_with_symptom": "The latest blood pressure reading was high and the note mentioned a symptom.",
