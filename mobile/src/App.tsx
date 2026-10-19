@@ -45,6 +45,7 @@ import { useHomeView } from "./lib/useHomeView";
 import { useCardView } from "./lib/useCardView";
 import { remindersParts } from "./lib/reminders";
 import { caretakersLine } from "./lib/caretakers";
+import { CARE_SUMMARY_SCREENS } from "./config/sharing";
 import { isCardSheetScreen, sheetViewFor } from "./lib/homeView";
 import { useWalkGoal } from "./lib/useWalkGoal";
 import { useDoctorVisits } from "./lib/useDoctorVisits";
@@ -200,7 +201,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
   useEffect(() => { const plan = demoClockOnLoad(demoClock?.at ?? null); if (plan.action === "write") { void api.setDemoClock({ at: plan.at }).catch((error) => reportApiProblem(error)); window.history.replaceState(null, "", `${window.location.pathname}${searchWithout(window.location.search, DEMO_CLOCK_PARAM)}${window.location.hash}`); } else void api.demoClock().then((clock) => { if (clock.at) { setDemoClock({ at: clock.at, setAtMs: Date.now() }); setDemoClockValue(toDateTimeLocal(new Date(clock.at))); void refreshToday(clock.at); } }).catch((error) => console.warn("Demo clock: server clock unavailable", error)); }, []);
   useEffect(() => { saveDemoClock(demoClock); }, [demoClock]);
   useEffect(() => {
-    if (screen === "summary") void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
+    if (CARE_SUMMARY_SCREENS.includes(screen)) void api.caretakerSummary().then(setCareSummary).catch((error) => reportApiProblem(error));
     // On launch (Home's "See all" dot) and each time Reminders opens (a medicine may have been added).
     // Quiet on failure (console only, mock alert stays): the hosted list 500s until migration 005 runs.
     if (screen === "home" || screen === "reminders") void api.listMedications().then((result) => setMedications(result.medications)).catch((error) => console.warn("Restock: medicine list unavailable", error));
