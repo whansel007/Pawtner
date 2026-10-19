@@ -2,15 +2,16 @@ import { useTranslation } from "react-i18next";
 import { FullCard } from "../components/FullCard";
 import type { HealthMetric } from "../../../shared/contract";
 import type { BackAction } from "../lib/navigation";
-import { formatLogDay, formatLogTime, groupReadingsByDay } from "../lib/bpLog";
+import { formatLogDay, formatLogTime, groupReadingsByDay, logSecondLine } from "../lib/bpLog";
 import { isWarningReading } from "../lib/decisions";
 import "./BpLogScreen.css";
 
 /**
  * Blood pressure log (Health → "Blood pressure log"): her readings of the last days, grouped by day ("Today",
- * "Yesterday", then "Mon 13 Oct"), newest first. Each reading: the numbers in bold, the time and her note in her own
- * words; nothing else (owner, 18 Oct: "just the important stuff"), except a small "Warning" label on a reading that is
- * a warning (lib/decisions.ts isWarningReading). Presentational: readings come from useBpLog (App.tsx).
+ * "Yesterday", then "Mon 13 Oct"), newest first. Each reading: the numbers in bold, a small "Warning" label on a reading
+ * that is a warning (lib/decisions.ts isWarningReading), the time, and ONE second line (lib/bpLog.ts logSecondLine):
+ * "higher than your first reading" and/or her note as written. Every card reserves that line, so they line up.
+ * Presentational: readings come from useBpLog (App.tsx).
  */
 export function BpLogScreen({
   back,
@@ -30,6 +31,10 @@ export function BpLogScreen({
 }) {
   const { t, i18n } = useTranslation();
   const days = groupReadingsByDay(readings, now, timeZone);
+  const secondLine = (reading: HealthMetric) => {
+    const { reasonKey, note } = logSecondLine(reading, firstReading);
+    return [reasonKey ? t(reasonKey) : null, note].filter(Boolean).join(" · ");
+  };
   return (
     <FullCard back={back}>
       <h2>{t("bpLog.title")}</h2>
@@ -46,7 +51,7 @@ export function BpLogScreen({
                   {isWarningReading(reading, firstReading) && <span className="bp-log__warning">{t("health.warning")}</span>}
                   <span className="bp-log__time">{formatLogTime(reading.recordedAt, i18n.language, timeZone)}</span>
                 </div>
-                {reading.note && <p className="bp-log__note">{reading.note}</p>}
+                <p className="bp-log__note">{secondLine(reading)}</p>
               </li>
             ))}
           </ul>

@@ -1,4 +1,5 @@
 import type { HealthMetric } from "../../../shared/contract.js";
+import { bloodPressureProgress } from "../../../shared/rules.js";
 
 /**
  * The blood-pressure log (pure, no React): her readings grouped by the senior's local day, newest day first and newest
@@ -26,6 +27,17 @@ export function groupReadingsByDay(readings: readonly HealthMetric[], now: strin
   return [...days.entries()]
     .sort(([a], [b]) => (a < b ? 1 : -1))
     .map(([day, items]) => ({ day, when: day === today ? "today" : day === yesterday ? "yesterday" : "earlier", readings: items }));
+}
+
+/**
+ * A log card's one second line (owner, 18 Oct: "either i feel fine, or higher bp or some other conditions checked. no
+ * need to interpret"): for a reading higher than her first, the line "higher than your first reading" (en.json key)
+ * and then her note; otherwise only her note as written (ticked feelings or conditions). Nothing else.
+ */
+export function logSecondLine(reading: HealthMetric, first: HealthMetric | null): { reasonKey: string | null; note: string | null } {
+  const note = reading.note?.trim() ? reading.note.trim() : null;
+  const higher = bloodPressureProgress(reading, first) === "warning";
+  return { reasonKey: higher ? "health.bpProgress.warning" : null, note };
 }
 
 /** An earlier day's heading, e.g. "Mon 13 Oct" (`day` is YYYY-MM-DD). */

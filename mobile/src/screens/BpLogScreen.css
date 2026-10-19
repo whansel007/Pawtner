@@ -62,10 +62,17 @@
   color: var(--color-text-heading);
 }
 
+/* The one second line: reserved on every card (same height), at most two lines, then an ellipsis. */
 .bp-log__note {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  min-height: 1.4em;
   margin: 6px 0 0;
   font-size: var(--font-size-sm);
-  font-style: italic;
+  line-height: 1.4;
   color: var(--color-text-body);
   overflow-wrap: anywhere;
 }

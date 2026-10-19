@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatLogDay, formatLogTime, groupReadingsByDay } from "../../mobile/src/lib/bpLog.js";
+import { formatLogDay, formatLogTime, groupReadingsByDay, logSecondLine } from "../../mobile/src/lib/bpLog.js";
 import { bpCardLineKey, isWarningReading, readingLineKey } from "../../mobile/src/lib/decisions.js";
 import { readingStatus } from "../../shared/rules.js";
 import type { HealthMetric } from "../../shared/contract.js";
@@ -66,5 +66,24 @@ describe("log: only the important stuff", () => {
     expect(isWarningReading(reading("k", NOW, 150, 90), first)).toBe(false);
     expect(isWarningReading(reading("g", NOW, 118, 76, "I feel fine"), first)).toBe(false);
     expect(isWarningReading(first, first)).toBe(false);
+  });
+});
+
+describe("log card: one second line, no interpretation", () => {
+  it("higher than the first reading, no note → the 'higher' line only", () => {
+    expect(logSecondLine(reading("h", NOW, 185, 120), first)).toEqual({ reasonKey: "health.bpProgress.warning", note: null });
+  });
+  it("higher + her note → both", () => {
+    expect(logSecondLine(reading("h", NOW, 185, 120, "Headache"), first)).toEqual({ reasonKey: "health.bpProgress.warning", note: "Headache" });
+  });
+  it("an emergency tick at normal numbers → her ticked condition only (it is the reason)", () => {
+    expect(logSecondLine(reading("e", NOW, 118, 76, "Chest pain"), first)).toEqual({ reasonKey: null, note: "Chest pain" });
+  });
+  it("'I feel fine' → as written", () => {
+    expect(logSecondLine(reading("f", NOW, 138, 80, "I feel fine"), first)).toEqual({ reasonKey: null, note: "I feel fine" });
+  });
+  it("no note → nothing (the line's space is still reserved)", () => {
+    expect(logSecondLine(reading("n", NOW, 138, 80), first)).toEqual({ reasonKey: null, note: null });
+    expect(logSecondLine(reading("b", NOW, 138, 80, "   "), first)).toEqual({ reasonKey: null, note: null });
   });
 });
