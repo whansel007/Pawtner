@@ -5,20 +5,20 @@ import { FullCard } from "../components/FullCard";
 import { ActionRow } from "../components/ActionRow";
 import { ClinicMemoRow } from "../components/ClinicMemoRow";
 import type { BackAction } from "../lib/navigation";
-import { explainDecision, isUrgentDecision } from "../lib/decisions";
+import { bpCardLineKey, explainDecision, SIDE_EFFECT_PROMPT, type HealthTopCard } from "../lib/decisions";
+import { PeekCard } from "../components/PeekCard";
 import { BP_RANGE } from "../config/bp";
 import { SYMPTOM_KEYS, type SymptomKey } from "../config/health";
 import { buildBpNote } from "../lib/bpNote";
 import { bloodPressureProgress } from "../../../shared/rules";
 import type { AgentDecision, HealthMetric } from "../../../shared/contract";
-import type { BloodPressureReading, ScreeningInfo, ActivityLink, ClinicTask, WeekSummary } from "../types";
+import type { BloodPressureReading, ScreeningInfo, ActivityLink, ClinicTask } from "../types";
 import "./HealthScreen.css";
 
 export function HealthScreen({
   back,
   bpLogged,
   healthMetrics,
-  latestDecision,
   onLogBp,
   onScreening,
   onSummary,
@@ -26,7 +26,8 @@ export function HealthScreen({
   screeningInfo,
   activityLink,
   clinicTasks,
-  weekSummary,
+  seniorName,
+  topCard,
   petName,
   visitNoteLatest,
   onVisitNotes,
@@ -35,7 +36,6 @@ export function HealthScreen({
   back: BackAction;
   bpLogged: boolean;
   healthMetrics: HealthMetric[];
-  latestDecision: AgentDecision | null;
   /** Saves the reading (App: API, then the toast); the button shows "Saving…" until it resolves. */
   onLogBp: (metric: HealthMetric) => Promise<void> | void;
   onScreening: () => void;
@@ -44,7 +44,10 @@ export function HealthScreen({
   screeningInfo: ScreeningInfo;
   activityLink: ActivityLink;
   clinicTasks: ClinicTask;
-  weekSummary: WeekSummary;
+  /** The senior's name from data, for the title "{{name}}'s Health Logs". */
+  seniorName: string;
+  /** The card at the top today: a warning, a side-effect note, or none (lib/decisions.ts healthTopCard). */
+  topCard: HealthTopCard<AgentDecision>;
   petName: string;
   /** Newest "For my next visit" note (her own words), or null. */
   visitNoteLatest: string | null;
@@ -134,46 +137,62 @@ export function HealthScreen({
   }
 
   // One warning for every condition (owner, 18 Oct); its line names the condition (explainDecision).
-  const showResult = isUrgentDecision(latestDecision);
+  const warning = topCard?.kind === "warning" ? topCard.decision : null;
+  const reading = lastMetric ? `${lastMetric.systolic} / ${lastMetric.diastolic}` : null;
+  const warningReason = warning ? t(explainDecision(warning).reasonKey) : "";
+  const sideEffectReason = t(explainDecision({ ruleId: "possible_side_effect_note" }).reasonKey);
+  const bpLine = bpCardLineKey(lastMetric ?? null, firstReading, warning);
 
-  // Scroll the result card into view after the decision arrives, without smooth scroll under reduced motion.
+  // Bring the top card into view when a warning arrives, without smooth scroll under reduced motion.
   useEffect(() => {
-    if (!showResult || !resultRef.current) return;
+    if (!warning || !resultRef.current) return;
     const prefersReduced = typeof window !== "undefined"
       && typeof window.matchMedia === "function"
       && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     resultRef.current.scrollIntoView({ behavior: prefersReduced ? "auto" : "smooth", block: "start" });
-    resultRef.current.focus({ preventScroll: true });
-  }, [showResult]);
+  }, [warning]);
 
   return (
     <FullCard back={back}>
+      {/* Same two lines as Milestones ("BUDDY IS LEARNING"): "ROSE'S" / "Health Logs". */}
+      <p className="eyebrow green">{t("health.eyebrow", { name: seniorName })}</p>
+      <h2>{t("health.title")}</h2>
+      {/* Under the title (owner, 18 Oct: "title will start first"), only on a warning or side-effect day: Buddy's
+          message + "Why?", which shows the Warning card or the side-effect reason for a moment ("peekaboo"). */}
+      <div ref={resultRef}>
+        {warning && (
+          <PeekCard
+            tone="warning"
+            message={t("health.warningFront")}
+            announce={[`${t("health.warning")}.`, reading ? `${reading}.` : "", warningReason, t("health.warningNotAdvice")].filter(Boolean).join(" ")}
+            back={(
+              <>
+                <p className="peek-warning__head">
+                  <span className="peek-warning__title">{t("health.warning")}</span>
+                  {reading && <span className="peek-warning__reading">{reading}</span>}
+                </p>
+                <p className="peek-card__reason">{warningReason}</p>
+                <p className="peek-warning__note">{t("health.warningNotAdvice")}</p>
+              </>
+            )}
+          />
+        )}
+        {topCard?.kind === "sideEffect" && (
+          <PeekCard message={SIDE_EFFECT_PROMPT} announce={sideEffectReason} back={<p className="peek-card__reason">{sideEffectReason}</p>} />
+        )}
+      </div>
 
-      {/* With a warning, the Warning card replaces this one and carries the reading (owner, 18 Oct: no "Good job" under a Warning). */}
-      {!showResult && <div className={`metric-card ${bpLogged ? "complete" : ""}`}>
+      {/* Always shown, also on a warning day: the latest reading in bold and its line (a warning reads "higher than your first reading"). */}
+      <div className={`metric-card ${bpLogged ? "complete" : ""}`}>
         <span className="feature-icon sage"><Icon name="heart" /></span>
         <div>
           <small>{t("health.bpLabel")}</small>
           <h3>{lastMetric ? `${lastMetric.systolic} / ${lastMetric.diastolic}` : t("health.bpNeedsReading", { name: petName })}</h3>
           {/* Compared with her first reading (shared/rules.ts bloodPressureProgress): first / keep at it / good job / warning. */}
-          <p>{lastMetric ? t(`health.bpProgress.${bloodPressureProgress(lastMetric, firstReading)}`, { name: petName }) : (bpLogged ? bloodPressureReading.note : bloodPressureReading.pendingNote)}</p>
+          {/* lib/decisions.ts bpCardLineKey: follows the warning on a warning day, else compares with her first reading. */}
+          <p>{bpLine ? t(bpLine, { name: petName }) : (bpLogged ? bloodPressureReading.note : bloodPressureReading.pendingNote)}</p>
         </div>
-      </div>}
-
-      {showResult && latestDecision && (
-        <div
-          ref={resultRef}
-          className="bp-result bp-result--warning"
-          tabIndex={-1}
-        >
-          {/* The warning lives here, not on Home (routine decisions are on Milestones). User, 16 Oct: just "Warning"
-              and the plain reason (it follows the condition); no action line, no button, no "Why?". */}
-          <p className="bp-result__title">{t("health.warning")}</p>
-          {lastMetric && <p className="bp-result__reading">{`${lastMetric.systolic} / ${lastMetric.diastolic}`}</p>}
-          <p className="bp-result__wording">{t(explainDecision(latestDecision).reasonKey)}</p>
-          <p className="bp-result__disclaimer">{t("health.warningNotAdvice")}</p>
-        </div>
-      )}
+      </div>
 
       <form className="bp-form" onSubmit={(e) => e.preventDefault()}>
         <p className="bp-form__title">{t("health.bpFormTitle")}</p>
@@ -236,7 +255,7 @@ export function HealthScreen({
         <button className="bp-form__submit" type="button" disabled={saving} onClick={() => void handleSave()}>{saving ? t("health.bpSaving") : t("health.bpSubmit")}</button>
       </form>
 
-      <ActionRow icon={<Icon name="book" />} title={t("health.weekSummary")} subtitle={t("health.weekSummarySub", { doses: weekSummary.metrics[0].value, walks: weekSummary.metrics[1].value })} onClick={onSummary} />
+      <ActionRow icon={<Icon name="book" />} title={t("health.weekSummary")} onClick={onSummary} />
       <ClinicMemoRow title={clinicTasks.title} />
       <ActionRow icon={<Icon name="note" />} title={t("visitNotes.title")} subtitle={visitNoteLatest ?? t("visitNotes.empty")} onClick={onVisitNotes} />
       <ActionRow icon={<Icon name="star" />} iconTone="peach" tone="warm" title={t("health.screeningTitle")} subtitle={t("health.screeningSub")} onClick={onScreening} />

@@ -45,7 +45,7 @@ export function HomeScreen({
   // the label as on the card, the time in grey, only the medicine name bold.
   const peek = nextDose ? (
     <>
-      <span className="home-sheet__peek-label">{t(nextDose.status === "missed" ? "home.stillToTake" : "home.next")}</span>
+      <span className="home-sheet__peek-label">{t(nextDose.status === "missed" ? "home.stillToTake" : "home.title")}</span>
       <span className="home-sheet__peek-dose">
         <time>{formatDoseTime(nextDose.scheduledAt)}</time>
         <strong>{nextDose.medicationName}</strong>

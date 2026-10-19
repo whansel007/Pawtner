@@ -34,3 +34,13 @@ export const VISIT_NOTES = {
  */
 export const SYMPTOM_KEYS = ["chestPain", "breath", "fainting", "confusion", "weakness", "speech"] as const;
 export type SymptomKey = (typeof SYMPTOM_KEYS)[number];
+
+/**
+ * "Good week" on the weekly summary (owner, 18 Oct: it follows the data; lib/weekRating.ts). It shows when the streak
+ * shown on the phone (the demo "7-day streak" tick counts) reaches `streakDays`, or the week has at least
+ * `caringDays` caring days of 7 (TENTATIVE: 5 of 7). Otherwise no rating line at all, never a negative label.
+ */
+export const GOOD_WEEK = {
+  streakDays: 7,
+  caringDays: 5,
+} as const;

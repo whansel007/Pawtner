@@ -11,6 +11,11 @@ function includesAny(text: string, keywords: readonly string[]): boolean {
   return keywords.some((word) => normalized.includes(word));
 }
 
+/** A reading note that may mention a possible side effect (POSSIBLE_SIDE_EFFECT_KEYWORDS). One rule for the agent and the phone. */
+export function mentionsPossibleSideEffect(note: string | null | undefined): boolean {
+  return includesAny(note ?? "", POSSIBLE_SIDE_EFFECT_KEYWORDS);
+}
+
 type Reading = Pick<HealthMetric, "id" | "systolic" | "diastolic" | "recordedAt">;
 
 /** The person's first blood-pressure reading (earliest recorded), or null. Everything is compared with it. */
@@ -109,7 +114,7 @@ export function decide(input: AgentInput): AgentDecision {
       { systolic: latestMetric.systolic, diastolic: latestMetric.diastolic, firstSystolic: firstReading.systolic, firstDiastolic: firstReading.diastolic });
   }
 
-  const sideEffectMetric = [...metrics].reverse().find((metric) => includesAny(metric.note ?? "", POSSIBLE_SIDE_EFFECT_KEYWORDS));
+  const sideEffectMetric = [...metrics].reverse().find((metric) => mentionsPossibleSideEffect(metric.note));
   if (sideEffectMetric) {
     return decision(input, "doctor_question", "possible_side_effect_note",
       "A note contains a configured possible-side-effect keyword; add it as a question for a professional.",

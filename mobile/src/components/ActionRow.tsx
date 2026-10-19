@@ -9,7 +9,8 @@ interface ActionRowBase {
   icon: ReactNode;
   iconTone?: IconTone;
   title: string;
-  subtitle: string;
+  /** Optional second line. */
+  subtitle?: string;
   /** "warm" = cream background (e.g. Screen for Life); default white. */
   tone?: "plain" | "warm";
 }
@@ -31,7 +32,7 @@ export function ActionRow(props: ActionRowProps) {
       <span className={`action-row__icon action-row__icon--${iconTone}`}>{icon}</span>
       <span className="action-row__text">
         <strong>{title}</strong>
-        <small>{subtitle}</small>
+        {subtitle && <small>{subtitle}</small>}
       </span>
       <Icon name="chevron" className="action-row__chevron" />
     </>

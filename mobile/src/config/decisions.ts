@@ -6,10 +6,12 @@ import type { DecisionKind } from "../../../shared/contract.js";
 /**
  * The warning (see a doctor; owner 18 Oct: one warning for every condition, `see_gp_soon`; `emergency_995` is only
  * on warnings saved before): it shows on Health with the blood-pressure result (user, 16 Oct: not on Home).
- * Every other decision is routine and shows at the top of Milestones.
- * TENTATIVE: doctor_question (a possible side effect, asked at the next visit) is treated as routine.
  */
 export const URGENT_DECISIONS: readonly DecisionKind[] = ["emergency_995", "see_gp_soon"];
+
+/** How long "Why?" shows the peekaboo card (Warning / side-effect reason) before it flips back (owner: "5 to 8 s"). */
+export const PEEK_MS = 6000;
+
 
 /**
  * Rule ids that have a plain-language reason in en.json (decisionLog.why.<ruleId>). Any other rule shows

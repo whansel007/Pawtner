@@ -1,0 +1,145 @@
+/* Buddy's message card at the top of Health; "Why?" flips it to the peekaboo card for PEEK_MS. */
+.peek-card {
+  position: relative;
+  margin: 12px 0 16px;
+}
+
+/* Both faces in one grid cell: the card is as tall as the taller face, so swapping moves nothing below. */
+.peek-card__stack {
+  display: grid;
+}
+
+.peek-card__face {
+  grid-area: 1 / 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 8px 8px 16px;
+  overflow: hidden;
+  border-radius: var(--radius-4xl);
+  background: var(--color-surface-stone);
+  transition: opacity 250ms ease, visibility 250ms;
+}
+
+/* Cross-fade: the hidden face fades out and stops taking taps. */
+.peek-card__stack:not(.is-open) .peek-card__face--back,
+.peek-card__stack.is-open .peek-card__face--front {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* The front (Buddy's message + "Why?") in light blue so it stands out (owner, 18 Oct). */
+.peek-card__face--front {
+  background: var(--color-surface-sky);
+}
+
+/* The Warning card's colours on the back of a warning day. */
+.peek-card__face--warning {
+  background: var(--color-surface-cream-warm);
+  box-shadow: inset 0 0 0 2px var(--color-surface-cream);
+}
+
+.peek-card__message {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+  color: var(--color-primary);
+}
+
+.peek-card__back {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Warning back, compact: "Warning" and the reading on one line, then the condition and the disclaimer. */
+.peek-warning__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin: 0 0 2px;
+}
+
+.peek-warning__title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-black);
+  color: var(--color-text-heading);
+}
+
+.peek-warning__reading {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-black);
+  color: var(--color-text-heading);
+}
+
+.peek-warning__note {
+  margin: 4px 0 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-body);
+}
+
+.peek-card__reason {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  color: var(--color-text-heading);
+}
+
+.peek-card__toggle {
+  flex: 0 0 auto;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 2px solid #d0d8cc;
+  border-radius: var(--radius-pill);
+  background: white;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-black);
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: border-color .15s;
+}
+
+.peek-card__toggle:hover {
+  border-color: var(--color-primary);
+}
+
+/* Screen-reader announcement of the back (visually hidden). */
+.peek-card__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The time running out, on the back: a thin line along the bottom edge that shrinks to nothing (transform only). */
+.peek-card__timer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--color-primary);
+  transform-origin: left center;
+  animation: peek-card-timer var(--peek-ms, 6000ms) linear forwards;
+}
+
+.peek-card__timer.is-paused {
+  animation-play-state: paused;
+}
+
+@keyframes peek-card-timer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* Reduced motion: an instant swap with the same timing, no line. */
+@media (prefers-reduced-motion: reduce) {
+  .peek-card__face { transition: none; }
+  .peek-card__timer { display: none; }
+}

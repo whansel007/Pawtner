@@ -1,9 +1,10 @@
-import type { AgentDecision } from "../../../shared/contract.js";
+import type { AgentDecision, HealthMetric } from "../../../shared/contract.js";
+import { bloodPressureProgress, mentionsPossibleSideEffect } from "../../../shared/rules.js";
+import { DECISION_TEMPLATES } from "../../../shared/templates.js";
 import { RULES_WITH_PLAIN_REASON, URGENT_DECISIONS } from "../config/decisions.js";
 
 /**
- * Decision placement and the plain-language "Why?" (pure, no React, no i18n), shared by Health, Milestones,
- * DecisionLogCard and the unit tests.
+ * Decision placement and the plain-language reason (pure, no React, no i18n), shared by Health and the unit tests.
  */
 
 /** Urgent / safety decisions (995, see a GP) show on Health. */
@@ -11,9 +12,54 @@ export function isUrgentDecision(decision: Pick<AgentDecision, "decision"> | nul
   return decision !== null && URGENT_DECISIONS.includes(decision.decision);
 }
 
-/** The decision Milestones shows at its top (routine only), or null. */
-export function routineDecision<T extends Pick<AgentDecision, "decision">>(decision: T | null): T | null {
-  return decision !== null && !isUrgentDecision(decision) ? decision : null;
+/** The senior's local calendar day of an instant (YYYY-MM-DD). */
+function localDay(instant: string, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(instant));
+}
+
+/**
+ * The card at the top of Health (owner, 18 Oct): it shows for the rest of the day once one of today's readings has a
+ * note that may mention a possible side effect (shared/rules.ts mentionsPossibleSideEffect, the agent's own rule),
+ * whatever Buddy decided after. It goes at the next day, or after Reset to morning hides that reading.
+ * No other routine decision shows anywhere (Milestones has no decision card).
+ */
+export function showSideEffectCard(readings: readonly Pick<HealthMetric, "note" | "recordedAt">[], now: string, timeZone: string): boolean {
+  const today = localDay(now, timeZone);
+  return readings.some((reading) => localDay(reading.recordedAt, timeZone) === today && mentionsPossibleSideEffect(reading.note));
+}
+
+/** Buddy's message on a side-effect day: the agent's own template, never retyped. */
+export const SIDE_EFFECT_PROMPT = DECISION_TEMPLATES.doctor_question;
+
+/**
+ * The card at the top of Health today (owner, 18 Oct): a warning first (the latest decision is urgent), else a
+ * side-effect note today, else nothing. Its front is Buddy's message with "Why?"; "Why?" shows the Warning card or the
+ * side-effect reason for a moment (components/PeekCard).
+ */
+/**
+ * The Blood Pressure card's line (en.json key), or null before any reading. On ANY warning day it follows the warning,
+ * with the same condition line as the Warning face (explainDecision), never "Keep at it" / "Good job" (owner, 18 Oct:
+ * no "Good job" under a Warning). Otherwise it compares the reading with her first one (bloodPressureProgress).
+ */
+export function bpCardLineKey(
+  latest: Parameters<typeof bloodPressureProgress>[0] | null,
+  first: Parameters<typeof bloodPressureProgress>[1],
+  warning: Pick<AgentDecision, "ruleId"> | null,
+): string | null {
+  if (warning) return explainDecision(warning).reasonKey;
+  return latest ? `health.bpProgress.${bloodPressureProgress(latest, first)}` : null;
+}
+
+export type HealthTopCard<T> = { kind: "warning"; decision: T } | { kind: "sideEffect" } | null;
+
+export function healthTopCard<T extends Pick<AgentDecision, "decision">>(
+  latestDecision: T | null,
+  readings: readonly Pick<HealthMetric, "note" | "recordedAt">[],
+  now: string,
+  timeZone: string,
+): HealthTopCard<T> {
+  if (latestDecision && isUrgentDecision(latestDecision)) return { kind: "warning", decision: latestDecision };
+  return showSideEffectCard(readings, now, timeZone) ? { kind: "sideEffect" } : null;
 }
 
 export interface DecisionWhy {
@@ -21,7 +67,7 @@ export interface DecisionWhy {
   reasonKey: string;
 }
 
-/** The plain-language "Why?" for a decision: a reason sentence key, never the rule id. */
+/** The plain-language reason for a decision (Health's Warning card line): a reason sentence key, never the rule id. */
 export function explainDecision(decision: Pick<AgentDecision, "ruleId">): DecisionWhy {
   return {
     reasonKey: RULES_WITH_PLAIN_REASON.includes(decision.ruleId)

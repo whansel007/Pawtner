@@ -76,14 +76,10 @@ export interface NudgeSettings {
 }
 
 export interface WeekSummary {
-  /** Overall rating label, e.g. "Good week" */
-  rating: string;
   /** Number of caring days out of the week total */
   caringDays: number;
   /** Total days in the period */
   totalDays: number;
-  /** Aggregate metrics */
-  metrics: { value: string; label: string }[];
   /** Suggested question to ask the doctor */
   doctorQuestion: string;
 }

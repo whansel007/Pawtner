@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decide, selectDogMood, bloodPressureProgress, firstReadingOf } from "../../shared/rules.js";
+import { decide, selectDogMood, bloodPressureProgress, firstReadingOf, mentionsPossibleSideEffect } from "../../shared/rules.js";
 import type { AgentInput } from "../../shared/contract.js";
 
 const base: AgentInput = {
@@ -141,5 +141,14 @@ describe("deterministic decision rules", () => {
     // An expired celebrate decision below full hearts falls back to content
     const expiredCelebrate = { decision: "celebrate" as const, createdAt: "2026-10-14T11:00:00+08:00" };
     expect(selectDogMood(3, expiredCelebrate, base.now)).toBe("content");
+  });
+});
+
+describe("possible side effect in a note (one rule for the agent and the phone)", () => {
+  it("matches the configured keywords, case-insensitive; nothing for empty notes", () => {
+    expect(mentionsPossibleSideEffect("Feeling a bit DIZZY")).toBe(true);
+    expect(mentionsPossibleSideEffect("sleepy after lunch")).toBe(true);
+    expect(mentionsPossibleSideEffect("I feel fine")).toBe(false);
+    expect(mentionsPossibleSideEffect(null)).toBe(false);
   });
 });

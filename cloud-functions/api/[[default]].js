@@ -5429,6 +5429,9 @@ function includesAny(text, keywords) {
   const normalized = text.toLowerCase();
   return keywords.some((word) => normalized.includes(word));
 }
+function mentionsPossibleSideEffect(note) {
+  return includesAny(note ?? "", POSSIBLE_SIDE_EFFECT_KEYWORDS);
+}
 function firstReadingOf(metrics) {
   return metrics.reduce((first, metric) => first === null || Date.parse(metric.recordedAt) < Date.parse(first.recordedAt) ? metric : first, null);
 }
@@ -5492,7 +5495,7 @@ function decide(input) {
       { systolic: latestMetric.systolic, diastolic: latestMetric.diastolic, firstSystolic: firstReading.systolic, firstDiastolic: firstReading.diastolic }
     );
   }
-  const sideEffectMetric = [...metrics].reverse().find((metric) => includesAny(metric.note ?? "", POSSIBLE_SIDE_EFFECT_KEYWORDS));
+  const sideEffectMetric = [...metrics].reverse().find((metric) => mentionsPossibleSideEffect(metric.note));
   if (sideEffectMetric) {
     return decision(
       input,
