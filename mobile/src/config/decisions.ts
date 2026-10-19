@@ -9,6 +9,9 @@ import type { DecisionKind } from "../../../shared/contract.js";
  */
 export const URGENT_DECISIONS: readonly DecisionKind[] = ["emergency_995", "see_gp_soon"];
 
+/** How long "Why?" shows the peekaboo card (Warning / side-effect reason) before it flips back (owner: "5 to 8 s"). */
+export const PEEK_MS = 6000;
+
 
 /**
  * Rule ids that have a plain-language reason in en.json (decisionLog.why.<ruleId>). Any other rule shows

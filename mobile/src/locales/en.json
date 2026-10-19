@@ -468,6 +468,9 @@
     "bpNoReadingYet": "No reading logged yet",
     "resultTitle": "What the app noticed",
     "warning": "Warning",
+    "warningFront": "Please check with your doctor soon.",
+    "peekWhy": "Why?",
+    "peekClose": "Close",
     "warningNotAdvice": "This is not medical advice.",
     "symptomsTitle": "How do you feel?",
     "symptoms": {

@@ -1,5 +1,5 @@
 import type { AgentDecision, HealthMetric } from "../../../shared/contract.js";
-import { mentionsPossibleSideEffect } from "../../../shared/rules.js";
+import { bloodPressureProgress, mentionsPossibleSideEffect } from "../../../shared/rules.js";
 import { DECISION_TEMPLATES } from "../../../shared/templates.js";
 import { RULES_WITH_PLAIN_REASON, URGENT_DECISIONS } from "../config/decisions.js";
 
@@ -28,8 +28,39 @@ export function showSideEffectCard(readings: readonly Pick<HealthMetric, "note" 
   return readings.some((reading) => localDay(reading.recordedAt, timeZone) === today && mentionsPossibleSideEffect(reading.note));
 }
 
-/** What the side-effect card says: the agent's own template, never retyped. Text only, no "Why?" (owner, 18 Oct). */
+/** Buddy's message on a side-effect day: the agent's own template, never retyped. */
 export const SIDE_EFFECT_PROMPT = DECISION_TEMPLATES.doctor_question;
+
+/**
+ * The card at the top of Health today (owner, 18 Oct): a warning first (the latest decision is urgent), else a
+ * side-effect note today, else nothing. Its front is Buddy's message with "Why?"; "Why?" shows the Warning card or the
+ * side-effect reason for a moment (components/PeekCard).
+ */
+/**
+ * The Blood Pressure card's line (en.json key), or null before any reading. On ANY warning day it follows the warning,
+ * with the same condition line as the Warning face (explainDecision), never "Keep at it" / "Good job" (owner, 18 Oct:
+ * no "Good job" under a Warning). Otherwise it compares the reading with her first one (bloodPressureProgress).
+ */
+export function bpCardLineKey(
+  latest: Parameters<typeof bloodPressureProgress>[0] | null,
+  first: Parameters<typeof bloodPressureProgress>[1],
+  warning: Pick<AgentDecision, "ruleId"> | null,
+): string | null {
+  if (warning) return explainDecision(warning).reasonKey;
+  return latest ? `health.bpProgress.${bloodPressureProgress(latest, first)}` : null;
+}
+
+export type HealthTopCard<T> = { kind: "warning"; decision: T } | { kind: "sideEffect" } | null;
+
+export function healthTopCard<T extends Pick<AgentDecision, "decision">>(
+  latestDecision: T | null,
+  readings: readonly Pick<HealthMetric, "note" | "recordedAt">[],
+  now: string,
+  timeZone: string,
+): HealthTopCard<T> {
+  if (latestDecision && isUrgentDecision(latestDecision)) return { kind: "warning", decision: latestDecision };
+  return showSideEffectCard(readings, now, timeZone) ? { kind: "sideEffect" } : null;
+}
 
 export interface DecisionWhy {
   /** en.json key for the plain reason: decisionLog.why.<ruleId>, or decisionLog.why.generic. */
