@@ -6,14 +6,14 @@ import type { VisitNote } from "../lib/visitNotes";
 import "./VisitNotesScreen.css";
 
 /**
- * "For my next visit": the senior's own notes for the doctor, in two sections: shared with her caretaker
+ * "For my next visit": the senior's own notes for the doctor, in two sections: shared with her caretakers
  * (shown on /care) and just for her. Newest first; add, edit, delete.
  * Presentational: notes and actions come from useVisitNotes (App.tsx).
  */
 export function VisitNotesScreen({
   back,
   notes,
-  caretakerName,
+  caretakers,
   maxLength,
   onAdd,
   onEdit,
@@ -21,7 +21,8 @@ export function VisitNotesScreen({
 }: {
   back: BackAction;
   notes: VisitNote[];
-  caretakerName: string;
+  /** Everyone caring for her, as one line (lib/caretakers.ts caretakersLine): every caretaker sees the shared notes on /care. */
+  caretakers: string;
   maxLength: number;
   onAdd: (text: string, shared: boolean) => void;
   onEdit: (id: string, text: string) => void;
@@ -30,8 +31,8 @@ export function VisitNotesScreen({
   const { t } = useTranslation();
   const section = (shared: boolean) => (
     <NotesSection
-      title={shared ? t("visitNotes.sharedTitle", { caretaker: caretakerName }) : t("visitNotes.privateTitle")}
-      hint={shared ? t("visitNotes.sharedHint", { caretaker: caretakerName }) : t("visitNotes.privateHint")}
+      title={shared ? t("visitNotes.sharedTitle", { caretaker: caretakers }) : t("visitNotes.privateTitle")}
+      hint={shared ? t("visitNotes.sharedHint", { caretaker: caretakers }) : t("visitNotes.privateHint")}
       tone={shared ? "shared" : "private"}
       notes={notes.filter((note) => note.shared === shared)}
       maxLength={maxLength}
