@@ -30,6 +30,34 @@ export function deriveDoseStatus(
   };
 }
 
+/** A saved walk as the walk heart rule sees it; `goalMinutes` null = saved before goals existed (or by an older phone). */
+export interface WalkForHeart {
+  startedAt: string;
+  finishedAt: string;
+  goalMinutes?: number | null;
+}
+
+/**
+ * The walk heart rule (owner, 18 Oct: "User can stop then continue then stop. For one day it will add up"): a day's
+ * walks add up. The day's walk heart is earned at the finish of the first walk where the day's walked minutes so far
+ * reach that walk's own goal (stored on the walk, so a later goal change never rewrites the past). A walk with no goal
+ * earns it as before, at any length. Days are grouped like the other hearts (finish date). Returns the finish times
+ * that earn a heart, at most one per day. The one rule for the server's hearts and the phone's offline count.
+ */
+export function walkHeartTimes(walks: readonly WalkForHeart[]): string[] {
+  const earned: string[] = [];
+  const walkedMs = new Map<string, number>();
+  const sorted = [...walks].sort((a, b) => Date.parse(a.finishedAt) - Date.parse(b.finishedAt));
+  for (const walk of sorted) {
+    const day = walk.finishedAt.slice(0, 10);
+    if (earned.some((time) => time.slice(0, 10) === day)) continue;
+    const total = (walkedMs.get(day) ?? 0) + Math.max(0, Date.parse(walk.finishedAt) - Date.parse(walk.startedAt));
+    walkedMs.set(day, total);
+    if (walk.goalMinutes === null || walk.goalMinutes === undefined || total >= walk.goalMinutes * 60_000) earned.push(walk.finishedAt);
+  }
+  return earned;
+}
+
 /** Today's (or any day's) three heart activities from that day's doses, readings and walks. */
 export function heartActivities(doses: Pick<DerivedDose, "status">[], bloodPressureLogged: boolean, walked: boolean): HeartActivities {
   return { medicines: doses.length > 0 && doses.every((dose) => dose.status === "taken"), bloodPressure: bloodPressureLogged, walk: walked };
@@ -139,7 +167,7 @@ export interface AgentSelectionSource {
   nudges: NudgeRecord[];
   healthMetrics: HealthMetric[];
   daysOfSupplyByMedicationId: Record<string, number | null>;
-  /** Finish times of the user's walks up to `now` (a walk earns that day's walk heart). */
+  /** Finish times that earn a day's walk heart (`walkHeartTimes`: a day's walks add up to the goal). */
   walkFinishedAt: string[];
   /** Set only when this selection follows a newly recorded event that should trigger a celebration. */
   triggeringDoseEventId?: string;

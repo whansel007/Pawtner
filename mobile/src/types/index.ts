@@ -209,11 +209,6 @@ export interface WorldOption {
   note: string;
 }
 
-export interface WalkStats {
-  /** Today's goal text */
-  goal: string;
-}
-
 // Re-export shared types so screens can import everything from types/
 import type { Screen, World, Accessory } from "./common";
 export type { Screen, World, Accessory };
