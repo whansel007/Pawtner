@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-19 — Buddy comes back after Home's card is closed (PR #107)
+
+| Decision | Reason | Tradeoff | Status |
+|---|---|---|---|
+| Buddy's ground line is measured again whenever Home's view changes, not only when the screen changes (`sceneGroundKey(screen, homeView)` in `mobile/src/lib/homeView.ts`, passed by `DogLayer` to `useSceneGround`). The views themselves are unchanged: the full-screen form still unmounts the chips. | Owner: "currently when i expand the card, and close the card again, my Buddy dog is gone". Closing the form mounted new chips while the hook kept measuring the old, detached ones (feet line 0, Buddy 0 px tall); opening on the form, or coming back to Home on it, left no ground at all. | One extra measurement (and a fresh ResizeObserver) per Home view change. | Final |
+
 ## 2026-10-19 — Doctor's prior and future visit (PR #105, migration 011)
 
 | Decision | Reason | Tradeoff | Status |
