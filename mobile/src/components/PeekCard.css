@@ -29,6 +29,11 @@
   visibility: hidden;
 }
 
+/* The front (Buddy's message + "Why?") in light blue so it stands out (owner, 18 Oct). */
+.peek-card__face--front {
+  background: var(--color-surface-sky);
+}
+
 /* The Warning card's colours on the back of a warning day. */
 .peek-card__face--warning {
   background: var(--color-surface-cream-warm);

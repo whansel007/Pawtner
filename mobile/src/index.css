@@ -38,6 +38,8 @@
   /* Surfaces — neutral / stone */
   --color-surface-stone: #f2f3ee;
   --color-surface-stone-alt: #f4f5f1;
+  /* Light blue: the front of Health's "Why?" card (owner, 18 Oct). */
+  --color-surface-sky: #e6f0fa;
   --color-surface-fog: #f1f3ed;
   --color-surface-scanner: #e8efe3;
   --color-surface-white: #fffdf7;
