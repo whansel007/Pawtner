@@ -90,7 +90,7 @@ export function createApiHandler(repository: PawtnerRepository) {
       if (request.method === "PUT" && url.pathname === "/api/next-visit") {
         const data = await body<NextVisitState>(request);
         if (data.date !== null && !isCalendarDate(data.date)) throw new ApiError(400, "date must be a YYYY-MM-DD calendar date or null.");
-        return json(await repository.setNextVisit(data.date));
+        return json(await repository.setNextVisit(data.date, now));
       }
       if (request.method === "GET" && url.pathname === "/api/sharing") return json(await repository.getSharing());
       if (request.method === "PUT" && url.pathname === "/api/sharing") {

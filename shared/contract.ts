@@ -87,11 +87,17 @@ export interface AgentInput {
   timeZone?: string;
   /** Date of the doctor's next visit (YYYY-MM-DD) or null: side-effect notes count until then (shared/nextVisit.ts). */
   nextDoctorVisit?: string | null;
+  /** Date of the doctor's last visit (YYYY-MM-DD) or null: notes from that day or before never count again. */
+  lastDoctorVisit?: string | null;
 }
 
-/** GET / PUT /api/next-visit: the saved date of the doctor's next visit (YYYY-MM-DD), or null (= today). */
+/**
+ * GET / PUT /api/next-visit: the saved date of the doctor's next visit (YYYY-MM-DD), or null (= today), and the last
+ * visit (read-only; set by the server when a new date replaces one that has passed). PUT takes { date } only.
+ */
 export interface NextVisitState {
   date: string | null;
+  lastVisit: string | null;
 }
 
 export interface AgentDecision {

@@ -16,9 +16,17 @@ export function effectiveNextVisit(saved: string | null, day: string): string {
   return saved !== null && saved >= day ? saved : day;
 }
 
-/** A note written on `noteDay` counts on `today` from that day until the end of its next-visit day. */
-export function sideEffectNoteCounts(noteDay: string, today: string, saved: string | null): boolean {
-  return noteDay <= today && today <= effectiveNextVisit(saved, noteDay);
+/**
+ * A note written on `noteDay` counts on `today` when it was written after the last visit day (a note already discussed
+ * at a visit never comes back; no last visit = no lower bound), from that day until the end of its next-visit day.
+ */
+export function sideEffectNoteCounts(noteDay: string, today: string, saved: string | null, lastVisit: string | null = null): boolean {
+  return (lastVisit === null || noteDay > lastVisit) && noteDay <= today && today <= effectiveNextVisit(saved, noteDay);
+}
+
+/** When a new next date is saved: the previous next date becomes the last visit if it has passed (before `today`). */
+export function lastVisitAfterSaving(previousNext: string | null, previousLast: string | null, today: string): string | null {
+  return previousNext !== null && previousNext < today ? previousNext : previousLast;
 }
 
 /** A plain YYYY-MM-DD calendar date that exists (e.g. not 2026-02-30). */

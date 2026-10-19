@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { effectiveNextVisit, isCalendarDate, localDay, sideEffectNoteCounts } from "../../shared/nextVisit.js";
+import { effectiveNextVisit, isCalendarDate, lastVisitAfterSaving, localDay, sideEffectNoteCounts } from "../../shared/nextVisit.js";
 import { activeSideEffectNote, decide } from "../../shared/rules.js";
 import type { AgentInput } from "../../shared/contract.js";
 
@@ -46,6 +46,26 @@ describe("the doctor's next visit: one condition", () => {
   });
 });
 
+describe("two dates: a note discussed at a visit never comes back (owner: 'we should remember two dates')", () => {
+  it("owner's example: note 1 Oct, visit 10 Oct, then the date set to 2 Nov after 10 Oct", () => {
+    // On 15 Oct the 10 Oct visit has passed; saving 2 Nov makes 10 Oct the last visit.
+    const last = lastVisitAfterSaving("2026-10-10", null, "2026-10-15");
+    expect(last).toBe("2026-10-10");
+    expect(sideEffectNoteCounts("2026-10-01", "2026-10-15", "2026-11-02", last)).toBe(false); // discussed on 10 Oct
+    expect(sideEffectNoteCounts("2026-10-12", "2026-10-15", "2026-11-02", last)).toBe(true);
+    expect(sideEffectNoteCounts("2026-10-12", "2026-11-02", "2026-11-02", last)).toBe(true);
+    expect(sideEffectNoteCounts("2026-10-12", "2026-11-03", "2026-11-02", last)).toBe(false);
+    expect(sideEffectNoteCounts("2026-10-10", "2026-10-15", "2026-11-02", last)).toBe(false); // written on the visit day
+  });
+
+  it("rescheduling a future date keeps the last visit; no last visit = no lower bound", () => {
+    expect(lastVisitAfterSaving("2026-11-02", "2026-10-10", "2026-10-15")).toBe("2026-10-10");
+    expect(lastVisitAfterSaving(null, "2026-10-10", "2026-10-15")).toBe("2026-10-10");
+    expect(lastVisitAfterSaving("2026-10-15", null, "2026-10-15")).toBeNull(); // today's visit hasn't passed yet
+    expect(sideEffectNoteCounts("2026-09-01", "2026-10-15", "2026-11-02", null)).toBe(true);
+  });
+});
+
 describe("Buddy's doctor_question follows the same date", () => {
   const base: AgentInput = {
     now: sgt("2026-10-19", "12:00"), userId: "u", dog: { id: "d", name: "Buddy", heart: 2, streak: 0 },
@@ -57,5 +77,10 @@ describe("Buddy's doctor_question follows the same date", () => {
     expect(decide({ ...base, now: sgt("2026-10-20", "12:00"), nextDoctorVisit: "2026-10-19" }).decision).not.toBe("doctor_question");
     expect(decide({ ...base, nextDoctorVisit: null }).decision).not.toBe("doctor_question");
     expect(decide({ ...base, healthMetrics: [{ ...base.healthMetrics[0], recordedAt: sgt("2026-10-19") }], nextDoctorVisit: null }).decision).toBe("doctor_question");
+  });
+
+  it("a note from before the last visit never asks again", () => {
+    expect(decide({ ...base, nextDoctorVisit: "2026-10-25", lastDoctorVisit: "2026-10-17" }).decision).not.toBe("doctor_question");
+    expect(decide({ ...base, nextDoctorVisit: "2026-10-25", lastDoctorVisit: "2026-10-15" }).decision).toBe("doctor_question");
   });
 });

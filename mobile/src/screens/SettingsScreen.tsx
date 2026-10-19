@@ -33,6 +33,7 @@ export function SettingsScreen({
   onWalkGoal,
   onSimulateWalk,
   nextVisit,
+  lastVisit,
   onNextVisit,
 }: {
   back: BackAction;
@@ -67,6 +68,8 @@ export function SettingsScreen({
   onSimulateWalk: () => void;
   /** The saved date of the doctor's next visit (YYYY-MM-DD) or null, and how to change it (empty = no date). */
   nextVisit: string | null;
+  /** The last visit (read-only, YYYY-MM-DD) or null: notes from that day or before don't count again. */
+  lastVisit: string | null;
   onNextVisit: (date: string | null) => void;
 }) {
   const { t } = useTranslation();
@@ -133,6 +136,7 @@ export function SettingsScreen({
             <label htmlFor="next-visit"><h3>{t("settings.nextVisitTitle")}</h3></label>
             <input id="next-visit" type="date" value={nextVisit ?? ""} onChange={(event) => onNextVisit(event.target.value || null)} />
             <p>{t("settings.nextVisitHint")}</p>
+            {lastVisit && <p>{t("settings.lastVisit", { date: new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${lastVisit}T00:00:00Z`)) })}</p>}
           </section>
           <section className="demo-panel__section">
             <h3>{t("settings.demoTimeTitle")}</h3>

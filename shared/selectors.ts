@@ -175,6 +175,7 @@ export interface AgentSelectionSource {
   /** The senior's time zone and the saved date of the doctor's next visit (side-effect notes count until then). */
   timeZone?: string;
   nextDoctorVisit?: string | null;
+  lastDoctorVisit?: string | null;
   /** The missed day the latest caretaker check-in was sent for (its `lastMissedDay` observation), or null. */
   lastCheckInDay: string | null;
 }
@@ -334,6 +335,7 @@ export function selectAgentInput(source: AgentSelectionSource): AgentInput {
     caretaker: source.caretaker,
     timeZone: source.timeZone,
     nextDoctorVisit: source.nextDoctorVisit ?? null,
+    lastDoctorVisit: source.lastDoctorVisit ?? null,
   });
 }
 

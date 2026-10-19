@@ -39,12 +39,13 @@ export function activeSideEffectNote<T extends { note: string | null; recordedAt
   now: string,
   timeZone: string,
   saved: string | null,
+  lastVisit: string | null = null,
 ): T | null {
   const today = localDay(now, timeZone);
   return [...readings]
     .filter((reading) => Date.parse(reading.recordedAt) <= Date.parse(now))
     .sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))
-    .find((reading) => mentionsPossibleSideEffect(reading.note) && sideEffectNoteCounts(localDay(reading.recordedAt, timeZone), today, saved)) ?? null;
+    .find((reading) => mentionsPossibleSideEffect(reading.note) && sideEffectNoteCounts(localDay(reading.recordedAt, timeZone), today, saved, lastVisit)) ?? null;
 }
 
 
@@ -147,7 +148,7 @@ export function decide(input: AgentInput): AgentDecision {
   }
 
   // Counts from the note until the end of the doctor's next visit (shared/nextVisit.ts; no date = that day only).
-  const sideEffectMetric = activeSideEffectNote(metrics, input.now, input.timeZone ?? "UTC", input.nextDoctorVisit ?? null);
+  const sideEffectMetric = activeSideEffectNote(metrics, input.now, input.timeZone ?? "UTC", input.nextDoctorVisit ?? null, input.lastDoctorVisit ?? null);
   if (sideEffectMetric) {
     return decision(input, "doctor_question", "possible_side_effect_note",
       "A note contains a configured possible-side-effect keyword; add it as a question for a professional.",
