@@ -11,7 +11,7 @@ const DOG_FIGURE_SELECTOR = ".dog-stage__figure";
  *   --dog-top, --dog-height: the dog's layout box (before mood/tap motion), so overlays such as the
  *                  tap bubble can keep clear of its head.
  * The dog layer and the backdrop's lawn line both read --ground-y, so they always agree.
- * `screenKey` re-runs the measurement when the screen changes.
+ * `screenKey` re-runs the measurement when the ground element may have been replaced (lib/homeView.ts sceneGroundKey).
  */
 export function useSceneGround(anchor: RefObject<HTMLElement | null>, placement: DogPlacement | null, screenKey: string) {
   useLayoutEffect(() => {

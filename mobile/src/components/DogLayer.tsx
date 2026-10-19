@@ -6,6 +6,7 @@ import { bubbleLineKey, PET_REACTIONS } from "../config/pet";
 import { celebrationFor, type CelebrationReason } from "../lib/celebration";
 import { useReducedMotion } from "../lib/useReducedMotion";
 import { useSceneGround } from "../lib/useSceneGround";
+import { sceneGroundKey } from "../lib/homeView";
 import { useSceneLayout } from "../lib/useSceneLayout";
 import { usePetReaction } from "../lib/usePetReaction";
 import { useBuddyClip } from "../lib/useBuddyClip";
@@ -13,6 +14,7 @@ import { useMilestones } from "../lib/useMilestones";
 import { withStreak } from "../lib/demoUnlocks";
 import { earnedPerformances, hasHeartsToPlay, type TrickRequest } from "../lib/tricks";
 import type { Screen } from "../types";
+import type { HomeView } from "../config/homeView";
 import { DogStage } from "./DogStage";
 import { PetBubble } from "./PetBubble";
 import "./DogLayer.css";
@@ -28,6 +30,7 @@ import "./DogLayer.css";
  */
 export function DogLayer({
   screen,
+  homeView,
   mood,
   dogName,
   dizzy,
@@ -39,6 +42,8 @@ export function DogLayer({
   streak,
 }: {
   screen: Screen;
+  /** What Home shows (App's useHomeView): the chips Buddy stands on come and go with it. */
+  homeView: HomeView;
   mood: DogMood;
   dogName: string;
   dizzy?: boolean;
@@ -58,7 +63,7 @@ export function DogLayer({
   const anchor = useRef<HTMLDivElement>(null);
   const layout = useSceneLayout();
   const placement = dogPlacementFor(screen, layout);
-  useSceneGround(anchor, placement, screen);
+  useSceneGround(anchor, placement, sceneGroundKey(screen, homeView));
   const clip = useBuddyClip({ mood, screen, dizzy: Boolean(dizzy) });
   const { tricks } = useMilestones();
   const earned = useMemo(() => earnedPerformances(tricks ? withStreak(tricks, streak) : tricks), [tricks, streak]);
