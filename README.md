@@ -26,8 +26,6 @@ Drag the card up and the whole screen becomes her medicines for today, in large 
 
 <a href="https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/full-form.jpg"><img src="https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/full-form.jpg" alt="Today's medicines on the full screen" width="390"></a>
 
-Buddy alone keeps the next medicine in sight on a slim strip.
-
 <a href="https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/buddy-only.jpg"><img src="https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/buddy-only.jpg" alt="Buddy on the full screen with the next dose strip" width="390"></a>
 
 Blood pressure is compared with her own first reading, and "How do you feel?" uses tick boxes, so she never has to think of the right words.
