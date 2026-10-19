@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { CLINIC_MEMO } from "../config/health";
+import { liveItems } from "../../../shared/dayReset";
 import { addClinicMemo, fitWithin, readClinicMemos, removeClinicMemo, writeClinicMemos, type MemoPhoto } from "./clinicMemo";
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -65,5 +66,6 @@ export function useClinicMemo() {
     });
   }, []);
 
-  return { photos, busy, failed, add, remove };
+  // Photos hidden by Reset to morning stay in storage but are not shown.
+  return { photos: liveItems(photos), busy, failed, add, remove };
 }

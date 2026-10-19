@@ -133,11 +133,11 @@ describe("reset demo", () => {
     const store = memoryStore();
     DEMO_STORAGE_KEYS.forEach((key) => store.setItem(key, "x"));
     store.setItem("unrelated", "keep");
-    resetDemoStorage(store);
+    resetDemoStorage("Asia/Singapore", store);
     expect([...store.data.keys()]).toEqual(["unrelated"]);
   });
 
   it("does nothing when storage is blocked", () => {
-    expect(() => resetDemoStorage(blockedStore)).not.toThrow();
+    expect(() => resetDemoStorage("Asia/Singapore", blockedStore)).not.toThrow();
   });
 });

@@ -491,8 +491,9 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
   };
 
   /**
-   * Settings > For demo only > Reset to morning: the API deletes today's dose taps, readings and decisions and decides
-   * at 9:00 (lib/api.ts resetDemoDay); this phone's demo choices are cleared; the app restarts in place (no page reload,
+   * Settings > For demo only > Reset to morning: the API hides (never deletes) today's dose taps, readings, decisions
+   * and walks and decides at 9:00 (lib/api.ts resetDemoDay); this phone's demo choices are cleared and today's visit
+   * notes and memo photos hidden (lib/demoReset.ts); the app restarts in place (no page reload,
    * owner 18 Oct) on Settings, with the agent clock at 9:00 from the ?clock= link.
    * If the API is unreachable, the phone side still resets (the toast says the action failed).
    */
@@ -501,7 +502,7 @@ export default function App({ startScreen, onRestart }: { startScreen?: Screen; 
     if (!morning) return;
     try { await api.resetDemoDay(demoInstantToday(morning, new Date(), SENIOR_TIMEZONE)); }
     catch (error) { reportApiProblem(error, true); }
-    resetDemoStorage();
+    resetDemoStorage(SENIOR_TIMEZONE);
     window.history.replaceState(null, "", `${window.location.pathname}?${DEMO_CLOCK_PARAM}=${DEMO_RESET_PRESET}`);
     if (onRestart) onRestart("settings"); else window.location.reload();
   };
