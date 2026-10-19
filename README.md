@@ -32,7 +32,7 @@ Buddy alone keeps the next medicine in sight on a slim strip.
 
 Blood pressure is compared with her own first reading, and "How do you feel?" uses tick boxes, so she never has to think of the right words.
 
-<a href="https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/health.jpg"><img src="https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/health.jpg" alt="Logging blood pressure" width="390"></a>
+   <a href="https://github.com/whansel007/Pawtner/blob/main/docs/screenshots/readme/bp-reading.jpg"><img src="https://raw.githubusercontent.com/whansel007/Pawtner/main/docs/screenshots/readme/bp-reading.jpg" alt="A reading compared with her first one: Keep at it" width="390"></a>
 
 ## What Jamie sees
 
@@ -71,7 +71,7 @@ As of 16 Oct 2026, built from 13 Oct:
 
 ## Built with
 
-William built the API, the agent rules and the hosting; I built the phone app and the caregiver's page. We use CodeBuddy and Miora for this project; Miora is the backdrop and the pet dog companion. Claude Code helped with fixes and reviews. Screenshots of the CodeBuddy chats are in [`proof/`](proof/), and the full chat histories in [`proof/chat-history/`](proof/chat-history/).
+We use CodeBuddy and Miora for this project; Miora is the backdrop and the pet dog companion. Claude Code helped with fixes and reviews. Screenshots of the CodeBuddy chats are in [`proof/`](proof/), and the full chat histories in [`proof/chat-history/`](proof/chat-history/).
 
 React 19, TypeScript, Vite 6, Tailwind CSS 4 and i18next for the app; a TypeScript API on Tencent EdgeOne Pages cloud functions; PostgreSQL on Supabase.
 
