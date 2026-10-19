@@ -5432,11 +5432,8 @@ function localDay(instant, timeZone) {
 function effectiveNextVisit(saved, day) {
   return saved !== null && saved >= day ? saved : day;
 }
-function sideEffectNoteCounts(noteDay, today, saved, lastVisit = null) {
-  return (lastVisit === null || noteDay > lastVisit) && noteDay <= today && today <= effectiveNextVisit(saved, noteDay);
-}
-function lastVisitAfterSaving(previousNext, previousLast, today) {
-  return previousNext !== null && previousNext < today ? previousNext : previousLast;
+function sideEffectNoteCounts(noteDay, today, nextVisit, priorVisit = null) {
+  return (priorVisit === null || noteDay > priorVisit) && noteDay <= today && today <= effectiveNextVisit(nextVisit, noteDay);
 }
 function isCalendarDate(value) {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -5455,9 +5452,9 @@ function mentionsEmergencySign(note) {
 function mentionsPossibleSideEffect(note) {
   return includesAny(note ?? "", POSSIBLE_SIDE_EFFECT_KEYWORDS);
 }
-function activeSideEffectNote(readings, now, timeZone, saved, lastVisit = null) {
+function activeSideEffectNote(readings, now, timeZone, nextVisit, priorVisit = null) {
   const today = localDay(now, timeZone);
-  return [...readings].filter((reading) => Date.parse(reading.recordedAt) <= Date.parse(now)).sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt)).find((reading) => mentionsPossibleSideEffect(reading.note) && sideEffectNoteCounts(localDay(reading.recordedAt, timeZone), today, saved, lastVisit)) ?? null;
+  return [...readings].filter((reading) => Date.parse(reading.recordedAt) <= Date.parse(now)).sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt)).find((reading) => mentionsPossibleSideEffect(reading.note) && sideEffectNoteCounts(localDay(reading.recordedAt, timeZone), today, nextVisit, priorVisit)) ?? null;
 }
 function firstReadingOf(metrics) {
   return metrics.reduce((first, metric) => first === null || Date.parse(metric.recordedAt) < Date.parse(first.recordedAt) ? metric : first, null);
@@ -5522,7 +5519,7 @@ function decide(input) {
       { systolic: latestMetric.systolic, diastolic: latestMetric.diastolic, firstSystolic: firstReading.systolic, firstDiastolic: firstReading.diastolic }
     );
   }
-  const sideEffectMetric = activeSideEffectNote(metrics, input.now, input.timeZone ?? "UTC", input.nextDoctorVisit ?? null, input.lastDoctorVisit ?? null);
+  const sideEffectMetric = activeSideEffectNote(metrics, input.now, input.timeZone ?? "UTC", input.nextDoctorVisit ?? null, input.priorDoctorVisit ?? null);
   if (sideEffectMetric) {
     return decision(
       input,
@@ -5781,7 +5778,7 @@ function selectAgentInput(source) {
     caretaker: source.caretaker,
     timeZone: source.timeZone,
     nextDoctorVisit: source.nextDoctorVisit ?? null,
-    lastDoctorVisit: source.lastDoctorVisit ?? null
+    priorDoctorVisit: source.priorDoctorVisit ?? null
   });
 }
 function selectHeartsTotal(source) {
@@ -6071,7 +6068,7 @@ var PawtnerRepository = class {
   async loadSource(client, userId, now, triggeringDoseEventId) {
     const personResult = await client.query(
       `SELECT u.timezone, to_char(u.next_doctor_visit, 'YYYY-MM-DD') AS next_doctor_visit,
-              to_char(u.last_doctor_visit, 'YYYY-MM-DD') AS last_doctor_visit, d.id::text AS dog_id, d.name AS dog_name
+              to_char(u.prior_doctor_visit, 'YYYY-MM-DD') AS prior_doctor_visit, d.id::text AS dog_id, d.name AS dog_name
        FROM users u JOIN dogs d ON d.user_id = u.id WHERE u.id = $1`,
       [userId]
     );
@@ -6162,7 +6159,7 @@ var PawtnerRepository = class {
       userId,
       timeZone: person.timezone,
       nextDoctorVisit: person.next_doctor_visit ?? null,
-      lastDoctorVisit: person.last_doctor_visit ?? null,
+      priorDoctorVisit: person.prior_doctor_visit ?? null,
       dog: { id: person.dog_id, name: person.dog_name },
       doseOccurrences: schedules,
       stopCutoffs,
@@ -6212,8 +6209,8 @@ var PawtnerRepository = class {
       activities,
       latestDecision,
       firstBloodPressure: firstReadingOf(input.healthMetrics),
-      // A side-effect note that still counts (until the doctor's next visit; the same rule as the agent's).
-      sideEffectNote: activeSideEffectNote(input.healthMetrics, now, timezoneResult.rows[0].timezone, source.nextDoctorVisit ?? null, source.lastDoctorVisit ?? null) !== null
+      // A side-effect note that still counts (after the prior visit, until the future visit; the agent's rule).
+      sideEffectNote: activeSideEffectNote(input.healthMetrics, now, timezoneResult.rows[0].timezone, source.nextDoctorVisit ?? null, source.priorDoctorVisit ?? null) !== null
     };
   }
   async saveDecision(client, userId, decision2) {
@@ -6674,33 +6671,24 @@ var PawtnerRepository = class {
       return { deleted: kept.length < notes.length };
     });
   }
-  /** GET /api/next-visit: the saved next visit (YYYY-MM-DD, or null = today) and the last visit (or null). */
-  async getNextVisit(client = this.pool) {
-    const userId = await this.getDefaultUserId(client);
-    const row = (await client.query(
-      `SELECT to_char(next_doctor_visit, 'YYYY-MM-DD') AS date, to_char(last_doctor_visit, 'YYYY-MM-DD') AS last_visit, timezone
+  /** GET /api/doctor-visits: the doctor's prior and future visit (YYYY-MM-DD each, or null). */
+  async getDoctorVisits() {
+    const userId = await this.getDefaultUserId();
+    const row = (await this.pool.query(
+      `SELECT to_char(prior_doctor_visit, 'YYYY-MM-DD') AS prior_visit, to_char(next_doctor_visit, 'YYYY-MM-DD') AS next_visit
        FROM users WHERE id = $1`,
       [userId]
     )).rows[0];
-    return { date: row?.date ?? null, lastVisit: row?.last_visit ?? null };
+    return { priorVisit: row?.prior_visit ?? null, nextVisit: row?.next_visit ?? null };
   }
-  /**
-   * PUT /api/next-visit: saves the next visit (a plain calendar date) or clears it (null). When a new date replaces one
-   * that has passed (before `now`'s day in the senior's zone), the old one becomes the last visit
-   * (shared/nextVisit.ts lastVisitAfterSaving). Clearing, or rescheduling a future date, keeps the last visit.
-   */
-  async setNextVisit(date, now = (/* @__PURE__ */ new Date()).toISOString()) {
-    return this.transaction(async (client) => {
-      const userId = await this.getDefaultUserId(client);
-      const current = (await client.query(
-        `SELECT to_char(next_doctor_visit, 'YYYY-MM-DD') AS next_visit, to_char(last_doctor_visit, 'YYYY-MM-DD') AS last_visit, timezone
-         FROM users WHERE id = $1 FOR UPDATE`,
-        [userId]
-      )).rows[0];
-      const lastVisit = date === null ? current.last_visit : lastVisitAfterSaving(current.next_visit, current.last_visit, localDate(now, current.timezone));
-      await client.query("UPDATE users SET next_doctor_visit = $2::date, last_doctor_visit = $3::date WHERE id = $1", [userId, date, lastVisit]);
-      return this.getNextVisit(client);
-    });
+  /** PUT /api/doctor-visits: saves both dates as given (plain calendar dates, or null to clear). */
+  async setDoctorVisits(visits) {
+    const userId = await this.getDefaultUserId();
+    await this.pool.query(
+      "UPDATE users SET prior_doctor_visit = $2::date, next_doctor_visit = $3::date WHERE id = $1",
+      [userId, visits.priorVisit, visits.nextVisit]
+    );
+    return this.getDoctorVisits();
   }
   async getSharing() {
     const userId = await this.getDefaultUserId();
@@ -7275,11 +7263,13 @@ function createApiHandler(repository) {
         if (typeof data.text !== "string" || !validDate(data.updatedAt)) throw new ApiError(400, "text and an ISO updatedAt are required.");
         return json(await repository.upsertSharedNote(id, data));
       }
-      if (request.method === "GET" && url.pathname === "/api/next-visit") return json(await repository.getNextVisit());
-      if (request.method === "PUT" && url.pathname === "/api/next-visit") {
+      if (request.method === "GET" && url.pathname === "/api/doctor-visits") return json(await repository.getDoctorVisits());
+      if (request.method === "PUT" && url.pathname === "/api/doctor-visits") {
         const data = await body(request);
-        if (data.date !== null && !isCalendarDate(data.date)) throw new ApiError(400, "date must be a YYYY-MM-DD calendar date or null.");
-        return json(await repository.setNextVisit(data.date, now));
+        for (const date of [data.priorVisit, data.nextVisit]) {
+          if (date !== null && !isCalendarDate(date)) throw new ApiError(400, "priorVisit and nextVisit must each be a YYYY-MM-DD calendar date or null.");
+        }
+        return json(await repository.setDoctorVisits({ priorVisit: data.priorVisit, nextVisit: data.nextVisit }));
       }
       if (request.method === "GET" && url.pathname === "/api/sharing") return json(await repository.getSharing());
       if (request.method === "PUT" && url.pathname === "/api/sharing") {

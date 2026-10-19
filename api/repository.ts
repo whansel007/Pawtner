@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient, QueryResultRow } from "pg";
 import { DEMO_RULES, TRICK_STREAK_DAYS } from "../shared/config.js";
 import { activeSideEffectNote, decide, selectDogMood, firstReadingOf } from "../shared/rules.js";
-import { lastVisitAfterSaving } from "../shared/nextVisit.js";
 import { selectAgentInput, selectHeartActivities, selectHeartsAtInstants, selectHeartsTotal, walkHeartTimes, type AgentSelectionSource } from "../shared/selectors.js";
 import { applyModelWording } from "../shared/wording.js";
 import { isLive, resetItems, resetNotes, type Resettable, type VersionedNote } from "../shared/dayReset.js";
@@ -31,7 +30,7 @@ import type {
   EscalationSettingsResponse,
   HealthMetric,
   HealthMetricListResponse,
-  NextVisitState,
+  DoctorVisits,
   HeartActivities,
   HealthMetricRequest,
   HealthMetricResponse,
@@ -264,7 +263,7 @@ export class PawtnerRepository {
   ): Promise<AgentSelectionSource> {
     const personResult = await client.query(
       `SELECT u.timezone, to_char(u.next_doctor_visit, 'YYYY-MM-DD') AS next_doctor_visit,
-              to_char(u.last_doctor_visit, 'YYYY-MM-DD') AS last_doctor_visit, d.id::text AS dog_id, d.name AS dog_name
+              to_char(u.prior_doctor_visit, 'YYYY-MM-DD') AS prior_doctor_visit, d.id::text AS dog_id, d.name AS dog_name
        FROM users u JOIN dogs d ON d.user_id = u.id WHERE u.id = $1`,
       [userId],
     );
@@ -359,7 +358,7 @@ export class PawtnerRepository {
       userId,
       timeZone: person.timezone,
       nextDoctorVisit: person.next_doctor_visit ?? null,
-      lastDoctorVisit: person.last_doctor_visit ?? null,
+      priorDoctorVisit: person.prior_doctor_visit ?? null,
       dog: { id: person.dog_id, name: person.dog_name },
       doseOccurrences: schedules,
       stopCutoffs,
@@ -414,8 +413,8 @@ export class PawtnerRepository {
       activities,
       latestDecision,
       firstBloodPressure: firstReadingOf(input.healthMetrics),
-      // A side-effect note that still counts (until the doctor's next visit; the same rule as the agent's).
-      sideEffectNote: activeSideEffectNote(input.healthMetrics, now, timezoneResult.rows[0].timezone, source.nextDoctorVisit ?? null, source.lastDoctorVisit ?? null) !== null,
+      // A side-effect note that still counts (after the prior visit, until the future visit; the agent's rule).
+      sideEffectNote: activeSideEffectNote(input.healthMetrics, now, timezoneResult.rows[0].timezone, source.nextDoctorVisit ?? null, source.priorDoctorVisit ?? null) !== null,
     };
   }
 
@@ -912,34 +911,25 @@ export class PawtnerRepository {
     });
   }
 
-  /** GET /api/next-visit: the saved next visit (YYYY-MM-DD, or null = today) and the last visit (or null). */
-  async getNextVisit(client: PoolClient | Pool = this.pool): Promise<NextVisitState> {
-    const userId = await this.getDefaultUserId(client);
-    const row = (await client.query(
-      `SELECT to_char(next_doctor_visit, 'YYYY-MM-DD') AS date, to_char(last_doctor_visit, 'YYYY-MM-DD') AS last_visit, timezone
+  /** GET /api/doctor-visits: the doctor's prior and future visit (YYYY-MM-DD each, or null). */
+  async getDoctorVisits(): Promise<DoctorVisits> {
+    const userId = await this.getDefaultUserId();
+    const row = (await this.pool.query(
+      `SELECT to_char(prior_doctor_visit, 'YYYY-MM-DD') AS prior_visit, to_char(next_doctor_visit, 'YYYY-MM-DD') AS next_visit
        FROM users WHERE id = $1`,
       [userId],
     )).rows[0];
-    return { date: row?.date ?? null, lastVisit: row?.last_visit ?? null };
+    return { priorVisit: row?.prior_visit ?? null, nextVisit: row?.next_visit ?? null };
   }
 
-  /**
-   * PUT /api/next-visit: saves the next visit (a plain calendar date) or clears it (null). When a new date replaces one
-   * that has passed (before `now`'s day in the senior's zone), the old one becomes the last visit
-   * (shared/nextVisit.ts lastVisitAfterSaving). Clearing, or rescheduling a future date, keeps the last visit.
-   */
-  async setNextVisit(date: string | null, now = new Date().toISOString()): Promise<NextVisitState> {
-    return this.transaction(async (client) => {
-      const userId = await this.getDefaultUserId(client);
-      const current = (await client.query(
-        `SELECT to_char(next_doctor_visit, 'YYYY-MM-DD') AS next_visit, to_char(last_doctor_visit, 'YYYY-MM-DD') AS last_visit, timezone
-         FROM users WHERE id = $1 FOR UPDATE`,
-        [userId],
-      )).rows[0];
-      const lastVisit = date === null ? current.last_visit : lastVisitAfterSaving(current.next_visit, current.last_visit, localDate(now, current.timezone));
-      await client.query("UPDATE users SET next_doctor_visit = $2::date, last_doctor_visit = $3::date WHERE id = $1", [userId, date, lastVisit]);
-      return this.getNextVisit(client);
-    });
+  /** PUT /api/doctor-visits: saves both dates as given (plain calendar dates, or null to clear). */
+  async setDoctorVisits(visits: DoctorVisits): Promise<DoctorVisits> {
+    const userId = await this.getDefaultUserId();
+    await this.pool.query(
+      "UPDATE users SET prior_doctor_visit = $2::date, next_doctor_visit = $3::date WHERE id = $1",
+      [userId, visits.priorVisit, visits.nextVisit],
+    );
+    return this.getDoctorVisits();
   }
 
   async getSharing(): Promise<SharingSettings> {

@@ -85,19 +85,16 @@ export interface AgentInput {
   streakMilestoneReached?: boolean;
   /** The senior's time zone (her days); without it the side-effect rule counts the UTC day. */
   timeZone?: string;
-  /** Date of the doctor's next visit (YYYY-MM-DD) or null: side-effect notes count until then (shared/nextVisit.ts). */
+  /** The doctor's future visit (YYYY-MM-DD) or null: side-effect notes count until then (shared/nextVisit.ts). */
   nextDoctorVisit?: string | null;
-  /** Date of the doctor's last visit (YYYY-MM-DD) or null: notes from that day or before never count again. */
-  lastDoctorVisit?: string | null;
+  /** The doctor's prior visit (YYYY-MM-DD) or null: notes from that day or before don't count. */
+  priorDoctorVisit?: string | null;
 }
 
-/**
- * GET / PUT /api/next-visit: the saved date of the doctor's next visit (YYYY-MM-DD), or null (= today), and the last
- * visit (read-only; set by the server when a new date replaces one that has passed). PUT takes { date } only.
- */
-export interface NextVisitState {
-  date: string | null;
-  lastVisit: string | null;
+/** GET / PUT /api/doctor-visits: the doctor's prior and future visit (YYYY-MM-DD each, or null), saved as given. */
+export interface DoctorVisits {
+  priorVisit: string | null;
+  nextVisit: string | null;
 }
 
 export interface AgentDecision {

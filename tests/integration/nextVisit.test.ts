@@ -15,7 +15,7 @@ const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Singapore" }).f
 const sgt = (date: string, time: string) => new Date(`${date}T${time}:00+08:00`).toISOString();
 const shift = (date: string, days: number) => new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
 
-testApi("Next visit date: side-effect notes count until the doctor's next visit (migration 011)", () => {
+testApi("Doctor's prior and future visit: side-effect notes count between them (migration 011)", () => {
   let setup: Client;
   let pool: Pool;
   let schema: string;
@@ -51,7 +51,8 @@ testApi("Next visit date: side-effect notes count until the doctor's next visit 
   };
   const get = async (path: string, now: string) => (await call("GET", `${path}?now=${encodeURIComponent(now)}`)).body;
   const note = (recordedAt: string, text: string) => call("POST", "/api/health-metric", { systolic: 140, diastolic: 85, note: text, recordedAt });
-  const setVisit = (date: string | null) => call("PUT", "/api/next-visit", { date });
+  const setVisits = (priorVisit: string | null, nextVisit: string | null) => call("PUT", "/api/doctor-visits", { priorVisit, nextVisit });
+  const setVisit = (nextVisit: string | null) => setVisits(null, nextVisit);
   const decideAt = async (now: string) => {
     const { user } = await get("/api/today", now);
     return (await call("POST", "/api/agent/decide", { userId: user.id, now })).body.decision.decision as string;
@@ -59,13 +60,13 @@ testApi("Next visit date: side-effect notes count until the doctor's next visit 
   // 09:30: Tablet A (10:00) isn't late yet, so no nudge comes before the side-effect rule.
   const AT = (date: string) => sgt(date, "09:30");
 
-  it("saves, reads and clears the date; rejects anything that isn't a calendar date; Reset to morning keeps it", async () => {
-    expect((await call("GET", "/api/next-visit")).body).toEqual({ date: null, lastVisit: null });
-    expect((await setVisit(shift(today, 3))).body).toEqual({ date: shift(today, 3), lastVisit: null });
-    for (const bad of ["2026-02-30", "tomorrow", "2026-10-25T09:00"]) expect((await setVisit(bad)).status).toBe(400);
+  it("saves both dates as given, reads and clears them; rejects anything that isn't a calendar date; Reset keeps both", async () => {
+    expect((await call("GET", "/api/doctor-visits")).body).toEqual({ priorVisit: null, nextVisit: null });
+    expect((await setVisits(shift(today, -9), shift(today, 3))).body).toEqual({ priorVisit: shift(today, -9), nextVisit: shift(today, 3) });
+    for (const bad of [["2026-02-30", null], [null, "tomorrow"], ["2026-10-25T09:00", null]]) expect((await setVisits(bad[0], bad[1])).status).toBe(400);
     expect((await call("POST", "/api/demo/reset-day", { now: sgt(today, "09:00") })).status).toBe(200);
-    expect((await call("GET", "/api/next-visit")).body).toEqual({ date: shift(today, 3), lastVisit: null });
-    expect((await setVisit(null)).body).toEqual({ date: null, lastVisit: null });
+    expect((await call("GET", "/api/doctor-visits")).body).toEqual({ priorVisit: shift(today, -9), nextVisit: shift(today, 3) });
+    expect((await setVisits(null, null)).body).toEqual({ priorVisit: null, nextVisit: null });
   });
 
   it("a 'dizzy' note 3 days before the visit still shows the card and the agent asks; the day after the visit it doesn't", async () => {
@@ -88,24 +89,16 @@ testApi("Next visit date: side-effect notes count until the doctor's next visit 
     expect((await get("/api/today", AT(shift(today, 1)))).sideEffectNote).toBe(false);
   });
 
-  it("two dates: a passed next date becomes the last visit; notes from before it never count again", async () => {
-    const setAt = (date: string | null) => call("PUT", `/api/next-visit?now=${encodeURIComponent(AT(today))}`, { date });
-    await note(sgt(shift(today, -14), "09:00"), "Feeling a bit dizzy"); // discussed at the visit 5 days ago
-    expect((await setAt(shift(today, -5))).body).toEqual({ date: shift(today, -5), lastVisit: null });
-    // Today the next visit is set to two weeks ahead: the passed date becomes the last visit.
-    expect((await setAt(shift(today, 14))).body).toEqual({ date: shift(today, 14), lastVisit: shift(today, -5) });
+  it("owner's example: a note before the prior visit doesn't count; one after it counts through the future visit", async () => {
+    await note(sgt(shift(today, -14), "09:00"), "Feeling a bit dizzy"); // discussed at the prior visit
+    await setVisits(shift(today, -5), shift(today, 14));
     expect((await get("/api/today", AT(today))).sideEffectNote).toBe(false);
     expect(await decideAt(AT(today))).not.toBe("doctor_question");
-    // A new note after the last visit counts until the next visit.
     await note(sgt(shift(today, -3), "09:00"), "sleepy after lunch");
     expect((await get("/api/today", AT(today))).sideEffectNote).toBe(true);
+    expect(await decideAt(AT(today))).toBe("doctor_question");
     expect((await get("/api/today", AT(shift(today, 14)))).sideEffectNote).toBe(true);
     expect((await get("/api/today", AT(shift(today, 15)))).sideEffectNote).toBe(false);
-    // Rescheduling the future date, clearing it and Reset to morning keep the last visit.
-    expect((await setAt(shift(today, 20))).body.lastVisit).toBe(shift(today, -5));
-    expect((await setAt(null)).body).toEqual({ date: null, lastVisit: shift(today, -5) });
-    expect((await call("POST", "/api/demo/reset-day", { now: sgt(today, "09:00") })).status).toBe(200);
-    expect((await call("GET", "/api/next-visit")).body.lastVisit).toBe(shift(today, -5));
   });
 
   it("past hearts, streak and lifetime hearts don't change with the date", async () => {
@@ -116,7 +109,7 @@ testApi("Next visit date: side-effect notes count until the doctor's next visit 
       return { dayHearts: summary.dayHearts, days };
     };
     const before = await past();
-    await setVisit(shift(today, 10));
+    await setVisits(shift(today, -2), shift(today, 10));
     expect(await past()).toEqual(before);
   });
 });

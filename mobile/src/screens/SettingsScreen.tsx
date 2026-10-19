@@ -9,6 +9,7 @@ import type { Caregiver } from "../types";
 import { DEMO_RESET_PRESET, DEMO_TIME_PRESETS, type DemoTimePreset, DEMO_UNLOCK_GROUPS, DEMO_UNLOCKS, type DemoUnlockKey } from "../config/demo";
 import { formatClockTime, parseDemoTime } from "../lib/demoTime";
 import { WALK_GOALS } from "../lib/walkGoals";
+import type { DoctorVisits } from "../../../shared/contract";
 
 export function SettingsScreen({
   back,
@@ -32,9 +33,8 @@ export function SettingsScreen({
   walkGoalKey,
   onWalkGoal,
   onSimulateWalk,
-  nextVisit,
-  lastVisit,
-  onNextVisit,
+  doctorVisits,
+  onDoctorVisits,
 }: {
   back: BackAction;
   /** "My medicines": the medicine list with Edit and the original pill photo (T2-08). */
@@ -66,11 +66,9 @@ export function SettingsScreen({
   onWalkGoal: (key: string) => void;
   /** Demo card: open the Walk screen and run Simulate walk there. */
   onSimulateWalk: () => void;
-  /** The saved date of the doctor's next visit (YYYY-MM-DD) or null, and how to change it (empty = no date). */
-  nextVisit: string | null;
-  /** The last visit (read-only, YYYY-MM-DD) or null: notes from that day or before don't count again. */
-  lastVisit: string | null;
-  onNextVisit: (date: string | null) => void;
+  /** The doctor's prior and future visit (YYYY-MM-DD each, or null) and how to change them (empty = no date). */
+  doctorVisits: DoctorVisits;
+  onDoctorVisits: (visits: DoctorVisits) => void;
 }) {
   const { t } = useTranslation();
   const caretakerName = caregiver.caretakerName;
@@ -131,12 +129,13 @@ export function SettingsScreen({
             <button type="button" className="secondary-button" onClick={onResetDemo}>{t("settings.demoReset", { time: resetTime ? formatClockTime(resetTime) : DEMO_TIME_PRESETS[DEMO_RESET_PRESET] })}</button>
             <button type="button" className="secondary-button" onClick={onSimulateWalk}>{t("walk.simulateWalk")}</button>
           </section>
-          {/* Side-effect notes count until this day (shared/nextVisit.ts); not changed by Reset to morning. */}
+          {/* Side-effect notes count after the prior visit until the future visit (shared/nextVisit.ts); Reset keeps both. */}
           <section className="demo-panel__section">
+            <label htmlFor="prior-visit"><h3>{t("settings.priorVisitTitle")}</h3></label>
+            <input id="prior-visit" type="date" value={doctorVisits.priorVisit ?? ""} max={doctorVisits.nextVisit ?? undefined} onChange={(event) => onDoctorVisits({ ...doctorVisits, priorVisit: event.target.value || null })} />
             <label htmlFor="next-visit"><h3>{t("settings.nextVisitTitle")}</h3></label>
-            <input id="next-visit" type="date" value={nextVisit ?? ""} onChange={(event) => onNextVisit(event.target.value || null)} />
+            <input id="next-visit" type="date" value={doctorVisits.nextVisit ?? ""} min={doctorVisits.priorVisit ?? undefined} onChange={(event) => onDoctorVisits({ ...doctorVisits, nextVisit: event.target.value || null })} />
             <p>{t("settings.nextVisitHint")}</p>
-            {lastVisit && <p>{t("settings.lastVisit", { date: new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${lastVisit}T00:00:00Z`)) })}</p>}
           </section>
           <section className="demo-panel__section">
             <h3>{t("settings.demoTimeTitle")}</h3>

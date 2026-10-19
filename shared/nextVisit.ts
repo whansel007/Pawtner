@@ -1,6 +1,7 @@
 /**
- * The doctor's next visit and the side-effect notes that count until it (owner, 19 Oct: "it should be until the
- * doctor's next visit"). Plain values only (dates as YYYY-MM-DD, instants as ISO), never a database row.
+ * The doctor's prior and future visit, and the side-effect notes that count between them (owner, 19 Oct: "it should be
+ * until the doctor's next visit", "just do doctor's prior visit, then doctor's future visit"). Plain values only (dates
+ * as YYYY-MM-DD, instants as ISO), never a database row.
  */
 
 /** The senior's local calendar day of an instant (YYYY-MM-DD). */
@@ -17,16 +18,11 @@ export function effectiveNextVisit(saved: string | null, day: string): string {
 }
 
 /**
- * A note written on `noteDay` counts on `today` when it was written after the last visit day (a note already discussed
- * at a visit never comes back; no last visit = no lower bound), from that day until the end of its next-visit day.
+ * A note written on `noteDay` counts on `today` when it was written after the prior visit day (a note already discussed
+ * at that visit doesn't come back; no prior visit = no lower bound), from that day until the end of its next-visit day.
  */
-export function sideEffectNoteCounts(noteDay: string, today: string, saved: string | null, lastVisit: string | null = null): boolean {
-  return (lastVisit === null || noteDay > lastVisit) && noteDay <= today && today <= effectiveNextVisit(saved, noteDay);
-}
-
-/** When a new next date is saved: the previous next date becomes the last visit if it has passed (before `today`). */
-export function lastVisitAfterSaving(previousNext: string | null, previousLast: string | null, today: string): string | null {
-  return previousNext !== null && previousNext < today ? previousNext : previousLast;
+export function sideEffectNoteCounts(noteDay: string, today: string, nextVisit: string | null, priorVisit: string | null = null): boolean {
+  return (priorVisit === null || noteDay > priorVisit) && noteDay <= today && today <= effectiveNextVisit(nextVisit, noteDay);
 }
 
 /** A plain YYYY-MM-DD calendar date that exists (e.g. not 2026-02-30). */

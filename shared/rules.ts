@@ -31,21 +31,22 @@ export function mentionsPossibleSideEffect(note: string | null | undefined): boo
 }
 
 /**
- * The newest reading whose note may mention a side effect and still counts at `now`, or null. Used by the agent's
+ * The newest reading whose note may mention a side effect and still counts at `now` (after the prior visit, until the
+ * future visit), or null. Used by the agent's
  * doctor_question rule and by Health's side-effect card, so both follow the same visit date.
  */
 export function activeSideEffectNote<T extends { note: string | null; recordedAt: string }>(
   readings: readonly T[],
   now: string,
   timeZone: string,
-  saved: string | null,
-  lastVisit: string | null = null,
+  nextVisit: string | null,
+  priorVisit: string | null = null,
 ): T | null {
   const today = localDay(now, timeZone);
   return [...readings]
     .filter((reading) => Date.parse(reading.recordedAt) <= Date.parse(now))
     .sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))
-    .find((reading) => mentionsPossibleSideEffect(reading.note) && sideEffectNoteCounts(localDay(reading.recordedAt, timeZone), today, saved, lastVisit)) ?? null;
+    .find((reading) => mentionsPossibleSideEffect(reading.note) && sideEffectNoteCounts(localDay(reading.recordedAt, timeZone), today, nextVisit, priorVisit)) ?? null;
 }
 
 
@@ -147,8 +148,8 @@ export function decide(input: AgentInput): AgentDecision {
       { systolic: latestMetric.systolic, diastolic: latestMetric.diastolic, firstSystolic: firstReading.systolic, firstDiastolic: firstReading.diastolic });
   }
 
-  // Counts from the note until the end of the doctor's next visit (shared/nextVisit.ts; no date = that day only).
-  const sideEffectMetric = activeSideEffectNote(metrics, input.now, input.timeZone ?? "UTC", input.nextDoctorVisit ?? null, input.lastDoctorVisit ?? null);
+  // Counts after the doctor's prior visit until the end of the future visit (shared/nextVisit.ts; no date = that day only).
+  const sideEffectMetric = activeSideEffectNote(metrics, input.now, input.timeZone ?? "UTC", input.nextDoctorVisit ?? null, input.priorDoctorVisit ?? null);
   if (sideEffectMetric) {
     return decision(input, "doctor_question", "possible_side_effect_note",
       "A note contains a configured possible-side-effect keyword; add it as a question for a professional.",
