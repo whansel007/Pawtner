@@ -7,6 +7,7 @@ Updated 2026-10-19. Tier 1 is due **Wednesday night**; submission **Fri 16 Oct**
 
 Now (19 Oct):
 1. Bug fixes the owner raises (coder, each on its own branch off `main`).
+2. `claude/notes-shared-caretakers` (coder): "For my next visit" shared section names every caretaker ("Shared with Jamie + Alex"). `claude/readme-bp-screenshot`: README blood-pressure screenshot retaken, waiting for the owner.
 
 Earlier items still listed below:
 
@@ -42,6 +43,7 @@ Earlier items still listed below:
 
 | ID | Item | PR |
 |---|---|---|
+| — | No "Add a reminder"; Buddy's nudges without the next-dose card; caretakers from data ("Jamie + Alex"); "Share my blood pressure"; no label scan; Screen for Life trimmed; /care footer links after sign-in | [#111](https://github.com/whansel007/Pawtner/pull/111), merged 19 Oct |
 | — | Health, Milestones and Settings drag like Home (full card / both / full Buddy, open in both); grab bar dashes "- -" / "-" / "- - -" on Home too; Health title "Health logs, clearly told" | [#109](https://github.com/whansel007/Pawtner/pull/109), merged 19 Oct |
 | — | Buddy comes back after Home's card is expanded and closed (ground measured again on every Home view change) | [#107](https://github.com/whansel007/Pawtner/pull/107), merged 19 Oct |
 | — | Doctor's prior and future visit in the demo card; side-effect notes count between them (agent, Health card); migration 011. **Migration 011 run by the owner before the merge.** | [#105](https://github.com/whansel007/Pawtner/pull/105), merged 19 Oct |
@@ -117,7 +119,7 @@ Earlier items still listed below:
 | Item | Blocked on |
 |---|---|
 | HSA import script date bug (P1) | `scripts/import-hsa-products.ts` passes day-first HSA dates (`13/10/1992`) to a `date` column; Postgres reads them month-first, so the import fails (rollback) or stores wrong dates. Not urgent: the hosted table was filled by CSV import (5,511 rows, 15 Oct night). Fix: convert to ISO before insert. |
-| T1-15 caretaker list on the web (real data) | P1: `caregivers: { id, name, receivesCheckIns }[]` in `CaretakerSummaryResponse`, 3–4 seeded caretakers, check-in template in `shared/templates.ts`. Until then `/care` shows the API caregiver (gets check-ins) plus the mock updates-only slot `MOCK_UPDATES_ONLY_CARETAKER` in `mobile/src/care/data/mock.ts`. Also wanted: the senior's time zone in the summary (moment times use the viewer's zone). |
+| T1-15 caretaker picker on /care (real data) | Since #111 the API lists every caretaker (`caregivers[]`); /care's picker still uses the mock updates-only slot. Also: hosted Alex has `opted_in = true` (a data fix waits for the owner). |
 
 ## Kept in view (KIV) / follow-ups
 
