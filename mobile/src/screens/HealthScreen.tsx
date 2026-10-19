@@ -154,8 +154,11 @@ export function HealthScreen({
 
   return (
     <FullCard back={back}>
-      {/* Above the title, only on a warning or side-effect day: Buddy's message + "Why?", which shows the Warning card or
-          the side-effect reason for a moment (owner, 18 Oct: "peekaboo ... it's not there all the time"). */}
+      {/* Same two lines as Milestones ("BUDDY IS LEARNING"): "ROSE'S" / "Health Logs". */}
+      <p className="eyebrow green">{t("health.eyebrow", { name: seniorName })}</p>
+      <h2>{t("health.title")}</h2>
+      {/* Under the title (owner, 18 Oct: "title will start first"), only on a warning or side-effect day: Buddy's
+          message + "Why?", which shows the Warning card or the side-effect reason for a moment ("peekaboo"). */}
       <div ref={resultRef}>
         {warning && (
           <PeekCard
@@ -178,9 +181,6 @@ export function HealthScreen({
           <PeekCard message={SIDE_EFFECT_PROMPT} announce={sideEffectReason} back={<p className="peek-card__reason">{sideEffectReason}</p>} />
         )}
       </div>
-      {/* Same two lines as Milestones ("BUDDY IS LEARNING"): "ROSE'S" / "Health Logs". */}
-      <p className="eyebrow green">{t("health.eyebrow", { name: seniorName })}</p>
-      <h2>{t("health.title")}</h2>
 
       {/* Always shown, also on a warning day: the latest reading in bold and its line (a warning reads "higher than your first reading"). */}
       <div className={`metric-card ${bpLogged ? "complete" : ""}`}>

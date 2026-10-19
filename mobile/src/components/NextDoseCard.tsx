@@ -70,7 +70,7 @@ export function NextDoseCard({
             ? t("home.title")
             : nextDose && nextDose.status === "missed"
               ? t("home.stillToTake")
-              : t("home.next")}
+              : t("home.title")}
         </span>
         <span className="next-dose-card__progress">
           {t("home.progress", { count: takenCount, total })}

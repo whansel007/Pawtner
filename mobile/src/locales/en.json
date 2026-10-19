@@ -47,7 +47,7 @@
       "landscape": "Drag left to see only your medicines, or right to see only {{name}}. Tap to see both."
     },
     "dailyCare": "Daily care",
-    "title": "Today's schedule",
+    "title": "Today's Schedule",
     "progress": "{{count}} of {{total}} done",
     "progress_one": "{{count}} of {{total}} done",
     "progress_other": "{{count}} of {{total}} done",
@@ -58,7 +58,6 @@
     "takeNow": "Take now",
     "taken": "Taken",
     "later": "Later",
-    "next": "Next",
     "stillToTake": "Still to take",
     "allDone": "All done for today",
     "noDoses": "Nothing scheduled today",
@@ -396,8 +395,8 @@
   "milestones": {
     "eyebrow": "{{name}} is learning",
     "title": "{{count}} caring days together",
-    "streakLine_one": "{{count}} day in a row with every dose taken.",
-    "streakLine_other": "{{count}} days in a row with every dose taken.",
+    "streakLine_one": "{{count}} day in a row",
+    "streakLine_other": "{{count}} days in a row",
     "hearts": "{{count}} hearts together",
     "hearts_one": "{{count}} heart together",
     "hearts_other": "{{count}} hearts together",
